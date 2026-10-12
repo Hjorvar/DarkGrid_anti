@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Darkgrid — Yfirferð á eldri skrímslamyndum</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    .review-header {
+      text-align: center;
+      margin: 2rem 0 2.5rem;
+    }
+    .review-subtitle {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 750px;
+      margin: 0.5rem auto 1.5rem;
+    }
+    .stats-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-medium);
+      border-radius: 6px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .stat-number {
+      font-family: var(--font-serif);
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 0.35rem;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+    }
+    .badge-a { color: #66bb6a; border-color: rgba(76, 175, 80, 0.4); }
+    .badge-b { color: #ffa726; border-color: rgba(255, 167, 38, 0.4); }
+    .badge-c { color: #ef5350; border-color: rgba(239, 83, 80, 0.4); }
+    .badge-u { color: #ab47bc; border-color: rgba(171, 71, 188, 0.4); }
+
+    .monster-review-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-medium);
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .monster-review-card:hover {
+      border-color: var(--border-gold);
+    }
+    .card-image-col {
+      background: #05070a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 1.25rem;
+      border-right: 1px solid var(--border-subtle);
+    }
+    .monster-img {
+      width: 100%;
+      max-width: 280px;
+      height: auto;
+      aspect-ratio: 1/1;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid var(--border-gold);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
+    }
+    .card-info-col {
+      padding: 1.5rem 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 0.75rem;
+    }
+    .monster-name-title {
+      font-family: var(--font-serif);
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      letter-spacing: 0.5px;
+    }
+    .monster-meta {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+    .status-badge {
+      font-family: var(--font-serif);
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 0.35rem 0.85rem;
+      border-radius: 4px;
+      border: 1px solid currentColor;
+      display: inline-block;
+      white-space: nowrap;
+    }
+    .status-badge.A {
+      background: rgba(76, 175, 80, 0.15);
+      color: #81c784;
+      border-color: #4caf50;
+    }
+    .status-badge.B {
+      background: rgba(255, 167, 38, 0.15);
+      color: #ffb74d;
+      border-color: #ffa726;
+    }
+    .status-badge.C {
+      background: rgba(239, 83, 80, 0.15);
+      color: #e57373;
+      border-color: #ef5350;
+    }
+    .status-badge.U {
+      background: rgba(171, 71, 188, 0.15);
+      color: #ba68c8;
+      border-color: #ab47bc;
+    }
+    .section-block {
+      background: var(--bg-surface-sunken);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 0.85rem 1rem;
+      font-size: 0.92rem;
+    }
+    .section-title {
+      font-family: var(--font-serif);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent-gold);
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .quote-box {
+      font-style: italic;
+      color: #e2e8f0;
+      border-left: 3px solid var(--accent-gold);
+      padding-left: 0.75rem;
+      margin-top: 0.35rem;
+    }
+    .evaluation-text {
+      line-height: 1.6;
+      color: var(--text-body);
+    }
+    .highlight-match {
+      color: #a5d6a7;
+    }
+    .highlight-diff {
+      color: #ffe082;
+    }
+    .tag-reference {
+      display: inline-block;
+      font-size: 0.75rem;
+      background: rgba(197, 160, 89, 0.15);
+      color: var(--accent-gold-bright);
+      border: 1px solid var(--border-gold);
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      margin-top: 0.5rem;
+    }
+    .tag-reworked {
+      display: inline-block;
+      font-size: 0.75rem;
+      background: rgba(76, 175, 80, 0.2);
+      color: #81c784;
+      border: 1px solid #4caf50;
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      margin-top: 0.5rem;
+    }
+    @media (max-width: 800px) {
+      .monster-review-card {
+        grid-template-columns: 1fr;
+      }
+      .card-image-col {
+        border-right: none;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-container">
+      <div class="logo-link">
+        <span class="logo-emblem">⚔️</span>
+        <div class="logo-text-group">
+          <span class="logo-text">DARKGRID</span>
+          <span class="tagline">Monster Art Review</span>
+        </div>
+      </div>
+      <div class="user-nav">
+        <a href="monster_comparison.html" class="nav-link">Samanburður á endurgerð</a>
+        <a href="/" class="nav-link">Aftur í leik</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="review-header">
+      <h1 class="card-title" style="font-size: 2.4rem;">Yfirferð á skrímslamyndum</h1>
+      <p class="review-subtitle">
+        Sannprófun á öllum 10 skrímslamyndum Darkgrid gagnvart staðfestu grunnútliti í Pathfinder 1e (Archives of Nethys) og opinberum Darkgrid-myndstíl.
+      </p>
+    </div>
+
+    <!-- Tölfræðiyfirlit -->
+    <div class="stats-summary">
+      <div class="stat-card">
+        <div class="stat-number" style="color: var(--text-heading);">10</div>
+        <div class="stat-label">Heildarfjöldi mynda</div>
+      </div>
+      <div class="stat-card badge-a">
+        <div class="stat-number">9</div>
+        <div class="stat-label">A – Samþykkt</div>
+      </div>
+      <div class="stat-card badge-b">
+        <div class="stat-number">0</div>
+        <div class="stat-label">B – Minniháttar frávik</div>
+      </div>
+      <div class="stat-card badge-c">
+        <div class="stat-number">0</div>
+        <div class="stat-label">C – Þarfnast endurgerðar</div>
+      </div>
+      <div class="stat-card badge-u">
+        <div class="stat-number">1</div>
+        <div class="stat-label">Óstaðfest</div>
+      </div>
+    </div>
+
+    <!-- 1. Assassin Vine -->
+    <article class="monster-review-card">
+      <div class="card-image-col">
+        <img src="images/monsters/assassin_vine.png" alt="Assassin Vine" class="monster-img">
+        <span class="tag-reference">★ Opinber viðmiðunarmynd (Ref Art)</span>
+      </div>
+      <div class="card-info-col">
+        <div class="card-top">
+          <div>
+            <h2 class="monster-name-title">1. Assassin Vine</h2>
+            <div class="monster-meta">CR 3 • Planta • Búsvæði: Skógur, Frumskógur, Mýri (F, J, S)</div>
+          </div>
+          <span class="status-badge A">A – Samþykkt</span>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">📜 Pathfinder 1e Heimild (Archives of Nethys)</div>
+          <div><a href="https://aonprd.com/MonsterDisplay.aspx?ItemName=Assassin%20Vine" target="_blank" rel="noopener">Archives of Nethys: Assassin Vine</a></div>
+          <div class="quote-box">„This gnarled vine, as thick as a man’s arm and bearing hand-shaped leaves, convulses across the ground in an unnatural slither.“</div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">🔍 Greining & Samanburður</div>
+          <p class="evaluation-text">
+            <strong>Útlit:</strong> S-laga þéttfléttaður þyrnarunni með dökkfjólubláum blómum, beittum þyrnum og tönnuðum kjafti. Í Pathfinder 1e er veran laumuleg planta án kjafts sem líkist venjulegum gróðri, en í Darkgrid er hún með sérstakan þyrnakjaft sem er meðvitað hönnunarval leiksins.<br>
+            <strong>Myndstíll:</strong> Handmálað 2D stafrænt málverk, lágstemmd lýsing, náttúrulegir skógarlitir með fjólubláum hápunktum. Er ein af þremur opinberum viðmiðunarmyndum sem allar nýjar myndir taka mið af.
+          </p>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">💡 Niðurstaða</div>
+          <p class="evaluation-text">
+            <span class="highlight-match">Passar fullkomlega við samþykktan stíl og leikjalýsingu.</span>
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <!-- 2. Marsh Leech -->
+    <article class="monster-review-card">
+      <div class="card-image-col">
+        <img src="images/monsters/marsh_leech.png" alt="Marsh Leech" class="monster-img">
+      </div>
+      <div class="card-info-col">
+        <div class="card-top">
+          <div>
+            <h2 class="monster-name-title">2. Marsh Leech <small style="font-size:0.9rem; color:var(--text-muted);">[DEV-PLACEHOLDER]</small></h2>
+            <div class="monster-meta">CR 0.5 • Sníkjudýr/Vermin • Búsvæði: Mýri, Skógur, Árvötn (S, F, R)</div>
+          </div>
+          <span class="status-badge A">A – Samþykkt</span>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">📜 Pathfinder 1e Heimild (Archives of Nethys)</div>
+          <div><a href="https://aonprd.com/MonsterDisplay.aspx?ItemName=Giant%20Leech" target="_blank" rel="noopener">Archives of Nethys: Giant Leech</a></div>
+          <div class="quote-box">„A parasite ballooned to monstrous proportions undulates in the muck, its circular maw a spiral of teeth.“</div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">🔍 Greining & Samanburður</div>
+          <p class="evaluation-text">
+            <strong>Útlit:</strong> Risavaxin, hringskipt og slímug blóðsuga sem rís upp úr gruggugu mýrarvatni með hringlaga kjaft fullan af nálatönnum í þéttum hringjum. Samsvarar nákvæmlega lýsingu Pathfinder 1e á Giant Leech.<br>
+            <strong>Myndstíll:</strong> Handmálað 2D málverk, lágstemmd mýrarlýsing, slímáferð, fullkomlega miðjusett og fyllir vel út í rammann án afskurðar.
+          </p>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">💡 Niðurstaða</div>
+          <p class="evaluation-text">
+            <span class="highlight-match">Framúrskarandi samræmi við lýsingu og myndstíl.</span>
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <!-- 3. Shadow Bramble -->
+    <article class="monster-review-card">
+      <div class="card-image-col">
+        <img src="images/monsters/shadow_bramble.png" alt="Shadow Bramble" class="monster-img">
+      </div>
+      <div class="card-info-col">
+        <div class="card-top">
+          <div>
+            <h2 class="monster-name-title">3. Shadow Bramble <small style="font-size:0.9rem; color:var(--text-muted);">[DEV-PLACEHOLDER]</small></h2>
+            <div class="monster-meta">CR 0.5 • Planta • Búsvæði: Skógur, Sléttur (F, P)</div>
+          </div>
+          <span class="status-badge U">Óstaðfest</span>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">📜 Pathfinder 1e Heimild (Archives of Nethys)</div>
+          <div><em>Engin bein Pathfinder 1e heimild til staðar á Archives of Nethys.</em> (Sérstakt þróunarskrímsli Darkgrid)</div>
+          <div class="quote-box">Darkgrid SQLite lýsing: „A tangled ball of black thorns and twisted roots lashing out with barbed tendrils... thorns clicking together like teeth.“</div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">🔍 Greining & Samanburður</div>
+          <p class="evaluation-text">
+            <strong>Útlit:</strong> Kúlulaga vafningur af dökkum trjágreinum og svörtum þyrnum sem mynda tannaðan kjaft með grænleitum plöntusafa.<br>
+            <strong>Heimildagrundvöllur:</strong> Formlega flokkað sem Óstaðfest samkvæmt reglum verkefnisins þar sem það er ekki til í opinberum Pathfinder gögnum.<br>
+            <strong>Myndstíll:</strong> Fylgir Darkgrid-stemningu og stílreglum leiksins prýðilega innanhúss.
+          </p>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">💡 Niðurstaða</div>
+          <p class="evaluation-text">
+            <span class="highlight-diff">Formlega óstaðfest gagnvart Pathfinder 1e, en fylgir leikjastíl Darkgrid vel innanhúss.</span> Haldið óbreyttu að ósk leikjahönnuðar.
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <!-- 4. Feral Wolf -->
+    <article class="monster-review-card">
+      <div class="card-image-col">
+        <img src="images/monsters/feral_wolf.png" alt="Feral Wolf" class="monster-img">
+        <span class="tag-reference">★ Opinber viðmiðunarmynd (Ref Art)</span>
+      </div>
+      <div class="card-info-col">
+        <div class="card-top">
+          <div>
+            <h2 class="monster-name-title">4. Feral Wolf <small style="font-size:0.9rem; color:var(--text-muted);">[DEV-PLACEHOLDER]</small></h2>
+            <div class="monster-meta">CR 1 • Dýr • Búsvæði: Skógur, Sléttur, Hæðir (F, P, H)</div>
+          </div>
+          <span class="status-badge A">A – Samþykkt</span>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">📜 Pathfinder 1e Heimild (Archives of Nethys)</div>
+          <div><a href="https://aonprd.com/MonsterDisplay.aspx?ItemName=Wolf" target="_blank" rel="noopener">Archives of Nethys: Wolf</a></div>
+          <div class="quote-box">„This powerful canine watches its prey with piercing yellow eyes, darting its tongue across sharp white teeth.“</div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">🔍 Greining & Samanburður</div>
+          <p class="evaluation-text">
+            <strong>Útlit:</strong> Úfinn, grásvartur feldur með veðruðum sárum, glóandi gulbrún augu, beraðar hvítar vígtennur með dökku slefi, læðingsstaða (stalking posture). Öll dýralíffærafræðin er sýnileg frá trýni að skotti.<br>
+            <strong>Myndstíll:</strong> Opinber viðmiðunarmynd Darkgrid fyrir dýr og ferfætlinga (`images/monsters/_references/feral_wolf.png`).
+          </p>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">💡 Niðurstaða</div>
+          <p class="evaluation-text">
+            <span class="highlight-match">Passar fullkomlega við heimild og skilgreinir opinberan myndstíl leiksins.</span>
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <!-- 5. Grave Troll -->
+    <article class="monster-review-card">
+      <div class="card-image-col">
+        <img src="images/monsters/grave_troll.png" alt="Grave Troll" class="monster-img">
+        <span class="tag-reference">★ Opinber viðmiðunarmynd (Ref Art)</span>
+      </div>
+      <div class="card-info-col">
+        <div class="card-top">
+          <div>
+            <h2 class="monster-name-title">5. Grave Troll <small style="font-size:0.9rem; color:var(--text-muted);">[DEV-PLACEHOLDER]</small></h2>
+            <div class="monster-meta">CR 4 • Risavaxin óvættur • Búsvæði: Mýri, Skógur, Rústir (S, F, U)</div>
+          </div>
+          <span class="status-badge A">A – Samþykkt</span>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">📜 Pathfinder 1e Heimild (Archives of Nethys)</div>
+          <div><a href="https://aonprd.com/MonsterDisplay.aspx?ItemName=Troll" target="_blank" rel="noopener">Archives of Nethys: Troll</a> / <a href="https://aonprd.com/MonsterDisplay.aspx?ItemName=Moss%20Troll" target="_blank" rel="noopener">Moss Troll</a></div>
+          <div class="quote-box">„This tall creature has rough, green hide. Its hands end in claws, and its bestial face has a hideous, tusked underbite.“</div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">🔍 Greining & Samanburður</div>
+          <p class="evaluation-text">
+            <strong>Útlit:</strong> Risavaxin, hokin ófreskja með grófa, vörtótta og mosavaxna græna húð, vígtennur í neðri góm, járnbeittar klær, slitnar leppar og keðjur, sem heldur á ryðguðum haka í þokukenndum kirkjugarði.<br>
+            <strong>Myndstíll:</strong> Opinber viðmiðunarmynd Darkgrid fyrir risa og mannlaga óvættir (`images/monsters/_references/grave_troll.png`).
+          </p>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">💡 Niðurstaða</div>
+          <p class="evaluation-text">
+            <span class="highlight-match">Passar fullkomlega við heimild og skilgreinir opinberan myndstíl leiksins.</span>
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <!-- 6. Ghoul -->
+    <article class="monster-review-card">
+      <div class="card-image-col">
+        <img src="images/monsters/ghoul.png" alt="Ghoul" class="monster-img">
+      </div>
+      <div class="card-info-col">
+        <div class="card-top">
+          <div>
+            <h2 class="monster-name-title">6. Ghoul</h2>
+            <div class="monster-meta">CR 1 • Uppvakningur (Undead) • Búsvæði: Neðanjarðar, Sléttur, Mýri (U, P, S)</div>
+          </div>
+          <span class="status-badge A">A – Samþykkt</span>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">📜 Pathfinder 1e Heimild (Archives of Nethys)</div>
+          <div><a href="https://aonprd.com/MonsterDisplay.aspx?ItemName=Ghoul" target="_blank" rel="noopener">Archives of Nethys: Ghoul</a></div>
+          <div class="quote-box">„This humanoid creature has long, sharp teeth, and its pallid flesh is stretched tightly over its starved frame.“</div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">🔍 Greining & Samanburður</div>
+          <p class="evaluation-text">
+            <strong>Útlit:</strong> Hokin, mögur mannvera með öskugráa rotna húð strekta yfir rifbein, beittar tennur, langan slefandi fjólubláan tungubrodd og langa klófingur, krúpandi á legsteini í dimmum kirkjugarði.<br>
+            <strong>Myndstíll:</strong> Mjög áhrifamikil handmáluð 2D málverksáferð, lágstemmd lýsing, öll veran sýnileg með góðu öryggisbili, dökkur bakgrunnur með vignette.
+          </p>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">💡 Niðurstaða</div>
+          <p class="evaluation-text">
+            <span class="highlight-match">Fullkomið samræmi við Pathfinder 1e og samþykktan myndstíl.</span>
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <!-- 7. Giant Spider -->
+    <article class="monster-review-card">
+      <div class="card-image-col">
+        <img src="images/monsters/giant_spider.png" alt="Giant Spider" class="monster-img">
+      </div>
+      <div class="card-info-col">
+        <div class="card-top">
+          <div>
+            <h2 class="monster-name-title">7. Giant Spider</h2>
+            <div class="monster-meta">CR 1 • Skordýr/Vermin • Búsvæði: Skógur, Frumskógur, Mýri, Neðanjarðar (F, J, S, U)</div>
+          </div>
+          <span class="status-badge A">A – Samþykkt</span>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">📜 Pathfinder 1e Heimild (Archives of Nethys)</div>
+          <div><a href="https://aonprd.com/MonsterDisplay.aspx?ItemName=Giant%20Spider" target="_blank" rel="noopener">Archives of Nethys: Giant Spider</a></div>
+          <div class="quote-box">„A spider the size of a man crawls silently from the depths of its funnel-shaped web.“</div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">🔍 Greining & Samanburður</div>
+          <p class="evaluation-text">
+            <strong>Útlit:</strong> Gríðarstór burstótt áttfætla á klettum, átta glóandi rauð augu, stórar eiturtannir sem leka eitri, allir 8 fætur innan ramma, og vefir í dimmum helli.<br>
+            <strong>Myndstíll:</strong> Handmálað 2D málverk, lágstemmd lýsing með rauðum augnahápunktum, enginn afskurður við ramma.
+          </p>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">💡 Niðurstaða</div>
+          <p class="evaluation-text">
+            <span class="highlight-match">Fullkomið samræmi við lýsingu og myndstíl.</span>
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <!-- 8. Choker (Samþykkt endurgerð) -->
+    <article class="monster-review-card">
+      <div class="card-image-col">
+        <img src="images/monsters/choker.png" alt="Choker" class="monster-img">
+        <span class="tag-reworked">✓ Endurgert & Samþykkt</span>
+      </div>
+      <div class="card-info-col">
+        <div class="card-top">
+          <div>
+            <h2 class="monster-name-title">8. Choker</h2>
+            <div class="monster-meta">CR 2 • Ófreskja (Aberration) • Búsvæði: Neðanjarðar, Hæðir, Fjöll (U, H, M)</div>
+          </div>
+          <span class="status-badge A">A – Samþykkt</span>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">📜 Pathfinder 1e Heimild (Archives of Nethys)</div>
+          <div><a href="https://aonprd.com/MonsterDisplay.aspx?ItemName=Choker" target="_blank" rel="noopener">Archives of Nethys: Choker</a></div>
+          <div class="quote-box">„This hunched-over wretch has long, pliable arms like tentacles capped with five wide, spiny claws.“</div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">🔍 Greining & Samanburður (Endurgerð)</div>
+          <p class="evaluation-text">
+            <strong>Líffærafræði í Pathfinder:</strong> Lítill hokin neðanjarðaróvættur með tvo liðalausa gúmmíkennda handleggi (með fimm klóm) og tvo stutta fótleggi án sogskála.<br>
+            <strong>Ný samþykkt mynd:</strong> Nýja myndin sýnir nákvæmlega <strong>tvo</strong> langa, liðalausa og sveigjanlega gúmmíarma með fimm beittum klóm, tvær bognar lappir, gráleita leðjuhúð og <em>engar kolkrabbasogskálar</em>.<br>
+            <strong>Myndstíll:</strong> Handmálað 2D málverk, lágstemmd lýsing og dimmur hellisbakgrunnur í fullkomnu samræmi við Darkgrid-stíl.
+          </p>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">💡 Niðurstaða</div>
+          <p class="evaluation-text">
+            <span class="highlight-match">Endurgerð samþykkt. 100% nákvæmt samræmi við lýsingu Pathfinder 1e og samþykktan myndstíl Darkgrid.</span>
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <!-- 9. Rust Monster -->
+    <article class="monster-review-card">
+      <div class="card-image-col">
+        <img src="images/monsters/rust_monster.png" alt="Rust Monster" class="monster-img">
+      </div>
+      <div class="card-info-col">
+        <div class="card-top">
+          <div>
+            <h2 class="monster-name-title">9. Rust Monster</h2>
+            <div class="monster-meta">CR 3 • Ófreskja (Aberration) • Búsvæði: Neðanjarðar, Hæðir, Fjöll (U, H, M)</div>
+          </div>
+          <span class="status-badge A">A – Samþykkt</span>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">📜 Pathfinder 1e Heimild (Archives of Nethys)</div>
+          <div><a href="https://aonprd.com/MonsterDisplay.aspx?ItemName=Rust%20Monster" target="_blank" rel="noopener">Archives of Nethys: Rust Monster</a></div>
+          <div class="quote-box">„This insectile monster has four legs, a strange propeller-shaped protrusion at the end of its tail, and two long, feathery antennae.“</div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">🔍 Greining & Samanburður</div>
+          <p class="evaluation-text">
+            <strong>Útlit:</strong> Þykk ryðrauð skelplötuklæðning (carapace), tveir langir fjaðurlaga fálmarar (feathery antennae), liðskiptur hali með spaða/skrúfulaga enda (propeller tail), fjórir klófætur og umhverfi stráð ryðguðum vopnum.<br>
+            <strong>Myndstíll:</strong> Handmálað 2D stafrænt málverk, lágstemmd hellislýsing, ryð- og jarðtónar, öll veran sýnileg með góðum spássíum.
+          </p>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">💡 Niðurstaða</div>
+          <p class="evaluation-text">
+            <span class="highlight-match">Framúrskarandi samræmi við lýsingu og myndstíl.</span>
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <!-- 10. Manticore (Samþykkt endurgerð) -->
+    <article class="monster-review-card">
+      <div class="card-image-col">
+        <img src="images/monsters/manticore.png" alt="Manticore" class="monster-img">
+        <span class="tag-reworked">✓ Endurgert & Samþykkt</span>
+      </div>
+      <div class="card-info-col">
+        <div class="card-top">
+          <div>
+            <h2 class="monster-name-title">10. Manticore</h2>
+            <div class="monster-meta">CR 5 • Töfrakvikindi (Magical Beast) • Búsvæði: Hæðir, Fjöll, Sléttur, Mýri (H, M, P, S)</div>
+          </div>
+          <span class="status-badge A">A – Samþykkt</span>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">📜 Pathfinder 1e Heimild (Archives of Nethys)</div>
+          <div><a href="https://aonprd.com/MonsterDisplay.aspx?ItemName=Manticore" target="_blank" rel="noopener">Archives of Nethys: Manticore</a></div>
+          <div class="quote-box">„This creature has a vaguely humanoid head, the body of a lion, and the wings of a dragon. Its tail ends in long, sharp spikes.“</div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">🔍 Greining & Samanburður (Endurgerð)</div>
+          <p class="evaluation-text">
+            <strong>Líffærafræði í Pathfinder:</strong> Ljónsbúkur, leðurblöku-/drekavængir, broddahali sem getur skotið göddum, og sérstaklega <em>hálf-manneskjulegt andlit</em> („vaguely humanoid head / more human-like heads, usually with beards“). Engin hrútshorn.<br>
+            <strong>Ný samþykkt mynd:</strong> <em>Engin hrútshorn</em>, heldur óhugnanlegt mannslegt andlit með djúpsettum augum, beittum tönnum og dökkum miklum makka sem rennur saman við villt skegg um kjálkann, stóra leðurvængi og þunga broddakúlu á halaenda.<br>
+            <strong>Myndstíll:</strong> Listræn gæði eru í hæsta flokki, handmálað 2D málverk, lágstemmd lýsing á klettanös í fjallaþoku án ramma eða pappírsáhrifa.
+          </p>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">💡 Niðurstaða</div>
+          <p class="evaluation-text">
+            <span class="highlight-match">Endurgerð samþykkt. Fangar hinn óhugnanlega hálf-mannlega persónuleika og líffærafræði Pathfinder 1e fullkomlega.</span>
+          </p>
+        </div>
+      </div>
+    </article>
+
+  </main>
+</body>
+</html>

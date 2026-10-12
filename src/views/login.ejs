@@ -1,0 +1,41 @@
+<%- include('partials/header') %>
+
+<div class="auth-wrapper">
+  <div class="auth-container">
+    <div class="auth-corner top-left"></div>
+    <div class="auth-corner top-right"></div>
+    <div class="auth-corner bottom-left"></div>
+    <div class="auth-corner bottom-right"></div>
+
+    <div class="auth-header-emblem">🗝️</div>
+    <h1 class="card-title">Sign In to Darkgrid</h1>
+    <p class="card-subtitle">Step into the shadows of the persistent realm</p>
+
+    <% if (error) { %>
+      <div class="alert alert-error">
+        <span class="alert-icon">⚠️</span>
+        <span><%= error %></span>
+      </div>
+    <% } %>
+
+    <form action="/login" method="POST" class="auth-form">
+      <div class="form-group">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" id="username" name="username" class="form-input" value="<%= typeof username !== 'undefined' ? username : '' %>" required autofocus placeholder="Player name">
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" id="password" name="password" class="form-input" required placeholder="••••••••">
+      </div>
+
+      <button type="submit" class="btn btn-primary">Enter the Shadows</button>
+    </form>
+
+    <div class="auth-footer-nav">
+      Don't have an account? <a href="/register">Register here</a>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

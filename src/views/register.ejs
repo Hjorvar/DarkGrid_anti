@@ -1,0 +1,46 @@
+<%- include('partials/header') %>
+
+<div class="auth-wrapper">
+  <div class="auth-container">
+    <div class="auth-corner top-left"></div>
+    <div class="auth-corner top-right"></div>
+    <div class="auth-corner bottom-left"></div>
+    <div class="auth-corner bottom-right"></div>
+
+    <div class="auth-header-emblem">📜</div>
+    <h1 class="card-title">Join Darkgrid</h1>
+    <p class="card-subtitle">Create an account to forge your first hero</p>
+
+    <% if (error) { %>
+      <div class="alert alert-error">
+        <span class="alert-icon">⚠️</span>
+        <span><%= error %></span>
+      </div>
+    <% } %>
+
+    <form action="/register" method="POST" class="auth-form">
+      <div class="form-group">
+        <label for="username" class="form-label">Username (3-20 characters)</label>
+        <input type="text" id="username" name="username" class="form-input" value="<%= typeof username !== 'undefined' ? username : '' %>" required autofocus pattern="[a-zA-Z0-9_]{3,20}" placeholder="Chosen username">
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Password (minimum 6 characters)</label>
+        <input type="password" id="password" name="password" class="form-input" required minlength="6" placeholder="••••••••">
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword" class="form-label">Confirm Password</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" class="form-input" required minlength="6" placeholder="••••••••">
+      </div>
+
+      <button type="submit" class="btn btn-primary">Create Account</button>
+    </form>
+
+    <div class="auth-footer-nav">
+      Already have an account? <a href="/login">Log in here</a>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

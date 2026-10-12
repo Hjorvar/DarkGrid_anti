@@ -1,0 +1,122 @@
+<%- include('partials/header') %>
+
+<div class="creator-wrapper">
+  <div class="character-creator">
+    <div class="creator-corner top-left"></div>
+    <div class="creator-corner top-right"></div>
+    <div class="creator-corner bottom-left"></div>
+    <div class="creator-corner bottom-right"></div>
+
+    <div class="auth-header-emblem">⚔️</div>
+    <h1 class="card-title">Create Your Hero</h1>
+    <p class="card-subtitle">Choose a class and allocate your attribute points. Remember: death is permanent in Darkgrid.</p>
+
+    <% if (error) { %>
+      <div class="alert alert-error">
+        <span class="alert-icon">⚠️</span>
+        <div>
+          <strong><%= error %></strong>
+          <% if (errors && errors.length > 1) { %>
+            <ul style="margin-top: 0.5rem; padding-left: 1.25rem;">
+              <% errors.forEach(function(err) { %>
+                <li><%= err %></li>
+              <% }); %>
+            </ul>
+          <% } %>
+        </div>
+      </div>
+    <% } %>
+
+    <form id="character-creation-form" action="/character/create" method="POST">
+      <!-- Hero Name -->
+      <div class="form-group">
+        <label for="char-name" class="form-label">Hero Name</label>
+        <input type="text" id="char-name" name="name" class="form-input hero-name-input" value="<%= formData.name || '' %>" required placeholder="e.g. Roland Shadowbane" maxlength="30" autofocus>
+      </div>
+
+      <!-- Hidden Class Input -->
+      <input type="hidden" id="selected-class-input" name="classType" value="<%= formData.classType || 'FIGHTER' %>">
+
+      <!-- Class Selector -->
+      <div class="form-group">
+        <label class="form-label">Choose Class</label>
+        <div class="class-selector-grid">
+          <% Object.entries(classBases).forEach(([key, info]) => { %>
+            <div class="class-card <%= (formData.classType || 'FIGHTER') === key ? 'selected' : '' %>" data-class="<%= key %>">
+              <div class="class-card-header">
+                <h3 class="class-name"><%= info.name %></h3>
+                <span class="class-badge"><%= key %></span>
+              </div>
+              <p class="class-desc"><%= info.description %></p>
+              <div class="class-preview-stats">
+                <div class="class-stat-chip">STR <%= info.strength %></div>
+                <div class="class-stat-chip">CON <%= info.constitution %></div>
+                <div class="class-stat-chip">DEX <%= info.dexterity %></div>
+                <div class="class-stat-chip">INT <%= info.intelligence %></div>
+                <div class="class-stat-chip">WIS <%= info.wisdom %></div>
+                <div class="class-stat-chip">CHA <%= info.charisma %></div>
+                <div class="class-hp-badge">HP per level: <strong><%= info.hpPerLevel %></strong></div>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+
+      <!-- Stats Builder -->
+      <div class="stats-builder">
+        <div class="points-budget-banner">
+          <div>
+            <span class="budget-title">Attribute Points Available</span>
+            <span class="budget-subtitle">You may decrease any attribute by up to 2 points to reallocate elsewhere (maximum 18).</span>
+          </div>
+          <div class="points-counter">
+            <span id="remaining-points-count">3</span> <span class="points-label">remaining</span>
+          </div>
+        </div>
+
+        <div class="stat-rows-container">
+          <% 
+            const statDisplayNames = {
+              strength: 'STR (Strength)',
+              constitution: 'CON (Constitution)',
+              dexterity: 'DEX (Dexterity)',
+              intelligence: 'INT (Intelligence)',
+              wisdom: 'WIS (Wisdom)',
+              charisma: 'CHA (Charisma)'
+            };
+            ['strength', 'constitution', 'dexterity', 'intelligence', 'wisdom', 'charisma'].forEach(stat => { 
+          %>
+            <div class="stat-control-row">
+              <div class="stat-label-group">
+                <span class="stat-name"><%= statDisplayNames[stat] %></span>
+                <span id="base-<%= stat %>" class="stat-base-label">(base)</span>
+              </div>
+
+              <div class="stat-stepper">
+                <button type="button" class="btn-step" id="btn-minus-<%= stat %>" title="Decrease">−</button>
+                <span class="stat-value-display" id="val-<%= stat %>">10</span>
+                <button type="button" class="btn-step" id="btn-plus-<%= stat %>" title="Increase">+</button>
+                <input type="hidden" name="<%= stat %>" id="input-<%= stat %>" value="10">
+              </div>
+
+              <div class="stat-mod-tag">
+                Modifier:
+              </div>
+
+              <div class="stat-modifier" id="mod-<%= stat %>">+0</div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+
+      <button type="submit" id="create-hero-btn" class="btn btn-primary btn-submit-hero">Begin Journey</button>
+    </form>
+  </div>
+</div>
+
+<!-- Embedded JSON configuration for client-side script -->
+<script type="application/json" id="class-bases-json"><%- JSON.stringify(classBases) %></script>
+<script type="application/json" id="stat-rules-json"><%- JSON.stringify(statRules) %></script>
+<script src="/js/character-builder.js"></script>
+
+<%- include('partials/footer') %>

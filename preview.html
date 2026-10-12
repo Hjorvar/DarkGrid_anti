@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Darkgrid — Skrímslamyndir: Stílprófun</title>
+  <style>
+    :root {
+      --bg: #0a0b0e;
+      --card-bg: #14171d;
+      --border: #2c3240;
+      --border-accent: #6b5b3e;
+      --text: #d6d9e0;
+      --text-muted: #8d95a5;
+      --heading: #f0e6d2;
+      --gold: #c5a059;
+      --red: #8b2626;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      color: var(--heading);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: var(--gold);
+      margin-bottom: 0.5rem;
+    }
+
+    .criteria {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      max-width: 800px;
+      margin: 0.5rem auto 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    .monster-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      transition: transform 0.2s ease, border-color 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .monster-card:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-4px);
+    }
+
+    .image-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 100%; /* 1:1 Aspect ratio */
+      background: #050608;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .image-wrapper img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+    }
+
+    .monster-name {
+      font-size: 1.4rem;
+      color: var(--heading);
+      margin-bottom: 0.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .monster-cr {
+      font-size: 0.9rem;
+      color: var(--gold);
+      font-weight: normal;
+    }
+
+    .monster-meta {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      background: rgba(107, 91, 62, 0.25);
+      color: var(--gold);
+      border: 1px solid rgba(197, 160, 89, 0.4);
+    }
+
+    .badge.habitat {
+      background: rgba(44, 50, 64, 0.5);
+      color: var(--text-muted);
+      border-color: var(--border);
+    }
+
+    .badge.reference {
+      background: rgba(34, 75, 45, 0.35);
+      color: #7cd68d;
+      border-color: rgba(124, 214, 141, 0.45);
+    }
+
+    .badge.new-test {
+      background: rgba(40, 70, 120, 0.35);
+      color: #9cbbf0;
+      border-color: rgba(156, 187, 240, 0.45);
+    }
+
+    .description {
+      font-size: 0.95rem;
+      color: var(--text);
+      font-style: italic;
+      margin-bottom: 1rem;
+      border-left: 2px solid var(--border-accent);
+      padding-left: 0.8rem;
+    }
+
+    .distant-lore {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: auto;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .review-checklist {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .review-checklist h2 {
+      font-size: 1.2rem;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+
+    .review-checklist ul {
+      list-style-type: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .review-checklist li {
+      color: var(--text);
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .review-checklist li::before {
+      content: "⚔️";
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Darkgrid — Skrímslamyndir</h1>
+      <p class="subtitle">Stílprófun (Art Style Validation) — 3 samþykktar viðmiðanir og 2 nýjar prófanir</p>
+      <p class="criteria">
+        Prófun á samræmi í stíl, litum, smáatriðum og dökku RPG-andrúmslofti samkvæmt reglum í <code>.agents/rules/monster-art.md</code> og <code>docs/monster-art-style.md</code>.
+      </p>
+    </header>
+
+    <main class="grid">
+      <!-- 1. Assassin Vine -->
+      <article class="monster-card">
+        <div class="image-wrapper">
+          <img src="images/monsters/assassin_vine.png" alt="Assassin Vine">
+        </div>
+        <div class="card-body">
+          <h2 class="monster-name">
+            Assassin Vine
+            <span class="monster-cr">CR 3</span>
+          </h2>
+          <div class="monster-meta">
+            <span class="badge reference">Samþykkt viðmiðun</span>
+            <span class="badge">Planta</span>
+            <span class="badge habitat">Skógur / Frumskógur / Mýri</span>
+          </div>
+          <p class="description">
+            „A thick, knotted vine with purple flowers and thorns the size of daggers that lashes out like a snake.“
+          </p>
+          <p class="distant-lore">
+            <strong>Fjarlægð:</strong> The undergrowth here is unusually thick, and the vines seem to twitch against the wind.
+          </p>
+        </div>
+      </article>
+
+      <!-- 2. Grave Troll -->
+      <article class="monster-card">
+        <div class="image-wrapper">
+          <img src="images/monsters/grave_troll.png" alt="Grave Troll">
+        </div>
+        <div class="card-body">
+          <h2 class="monster-name">
+            Grave Troll
+            <span class="monster-cr">CR 4</span>
+          </h2>
+          <div class="monster-meta">
+            <span class="badge reference">Samþykkt viðmiðun</span>
+            <span class="badge">Mannlaga skrímsli</span>
+            <span class="badge habitat">Mýri / Rústir / Undirheimar</span>
+          </div>
+          <p class="description">
+            „A hulking behemoth with moss-covered warty green skin and claws like iron pickaxes.“
+          </p>
+          <p class="distant-lore">
+            <strong>Fjarlægð:</strong> The earth trembles faintly under heavy, thudding footsteps accompanied by the stench of rotten carrion.
+          </p>
+        </div>
+      </article>
+
+      <!-- 3. Feral Wolf -->
+      <article class="monster-card">
+        <div class="image-wrapper">
+          <img src="images/monsters/feral_wolf.png" alt="Feral Wolf">
+        </div>
+        <div class="card-body">
+          <h2 class="monster-name">
+            Feral Wolf
+            <span class="monster-cr">CR 1</span>
+          </h2>
+          <div class="monster-meta">
+            <span class="badge reference">Samþykkt viðmiðun</span>
+            <span class="badge">Dýr / Rándýr</span>
+            <span class="badge habitat">Skógur / Sléttur / Hæðir</span>
+          </div>
+          <p class="description">
+            „A gaunt grey wolf with bared fangs dripping foul saliva, crouching to pounce at your throat.“
+          </p>
+          <p class="distant-lore">
+            <strong>Fjarlægð:</strong> Low amber eyes gleam in the dark shadows between the trees, followed by a muffled snarl.
+          </p>
+        </div>
+      </article>
+
+      <!-- 4. Marsh Leech -->
+      <article class="monster-card">
+        <div class="image-wrapper">
+          <img src="images/monsters/marsh_leech.png" alt="Marsh Leech">
+        </div>
+        <div class="card-body">
+          <h2 class="monster-name">
+            Marsh Leech
+            <span class="monster-cr">CR 1/2</span>
+          </h2>
+          <div class="monster-meta">
+            <span class="badge new-test">Ný mynd</span>
+            <span class="badge">Snýkjudýr / Sníkill</span>
+            <span class="badge habitat">Mýri / Skógur / Á eða vatn</span>
+          </div>
+          <p class="description">
+            „A bloated, slimy parasite rearing up with a circular maw lined with needle teeth.“
+          </p>
+          <p class="distant-lore">
+            <strong>Fjarlægð:</strong> A wet, glistening shape wriggles slowly through the shallow murky puddles.
+          </p>
+        </div>
+      </article>
+
+      <!-- 5. Shadow Bramble -->
+      <article class="monster-card">
+        <div class="image-wrapper">
+          <img src="images/monsters/shadow_bramble.png" alt="Shadow Bramble">
+        </div>
+        <div class="card-body">
+          <h2 class="monster-name">
+            Shadow Bramble
+            <span class="monster-cr">CR 1/2</span>
+          </h2>
+          <div class="monster-meta">
+            <span class="badge new-test">Ný mynd</span>
+            <span class="badge">Planta / Óvættur</span>
+            <span class="badge habitat">Skógur / Sléttur</span>
+          </div>
+          <p class="description">
+            „A tangled ball of black thorns and twisted roots lashing out with barbed tendrils.“
+          </p>
+          <p class="distant-lore">
+            <strong>Fjarlægð:</strong> Thorny brambles rustle in the shadow of the trees, creeping unnaturally forward.
+          </p>
+        </div>
+      </article>
+    </main>
+
+    <section class="review-checklist">
+      <h2>Matsatriði fyrir samþykki:</h2>
+      <ul>
+        <li>Eru myndirnar í sama myndstílnum?</li>
+        <li>Passa litirnir og lýsingin saman?</li>
+        <li>Er smáatriðamagn hæfilegt (ekki of teiknimyndalegt, ekki ljósmyndaraunsætt)?</li>
+        <li>Passar andrúmsloftið við Darkgrid?</li>
+        <li>Henta myndirnar vel í leikinn og mini-skjámyndir?</li>
+      </ul>
+    </section>
+  </div>
+</body>
+</html>

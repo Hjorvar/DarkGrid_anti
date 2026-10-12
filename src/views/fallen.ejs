@@ -1,0 +1,46 @@
+<%- include('partials/header') %>
+
+<div class="auth-card fallen-card" style="max-width: 650px; text-align: center; margin: 40px auto; border: 1px solid var(--accent-crimson); box-shadow: 0 0 30px rgba(180, 20, 20, 0.25);">
+  <div style="font-size: 3rem; margin-bottom: 12px; color: var(--accent-crimson);">☠️</div>
+  <h1 style="color: var(--accent-crimson); font-family: var(--font-display); letter-spacing: 2px; margin-bottom: 8px;">
+    A Champion Has Fallen
+  </h1>
+  <p style="color: var(--text-muted); font-style: italic; margin-bottom: 24px;">
+    “The darkness does not bargain. It merely claims what is left behind.”
+  </p>
+
+  <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-dark); border-radius: 6px; padding: 20px; margin-bottom: 28px; text-align: left;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid var(--border-dark); padding-bottom: 8px;">
+      <span style="color: var(--text-muted);">Hero Name:</span>
+      <strong style="color: var(--text-light);"><%= fallen.name %></strong>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid var(--border-dark); padding-bottom: 8px;">
+      <span style="color: var(--text-muted);">Class & Rank:</span>
+      <span style="color: var(--accent-gold);"><%= fallen.class %> • Level <%= fallen.level %></span>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid var(--border-dark); padding-bottom: 8px;">
+      <span style="color: var(--text-muted);">Fallen At:</span>
+      <span style="color: var(--text-light);"><%= fallen.tile_name || 'The Wilderness' %></span>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid var(--border-dark); padding-bottom: 8px;">
+      <span style="color: var(--text-muted);">Slain By:</span>
+      <strong style="color: var(--accent-crimson);"><%= fallen.killer_name || 'A Savage Horror' %></strong>
+    </div>
+    <div style="display: flex; justify-content: space-between;">
+      <span style="color: var(--text-muted);">Time of Passing:</span>
+      <span style="color: var(--text-light); font-size: 0.85rem;"><%= fallen.died_at || 'Just now' %></span>
+    </div>
+  </div>
+
+  <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 30px;">
+    Permadeath is absolute in Darkgrid. The creature that ended your life now prowls the wilderness as a <strong>Persistent Monster</strong>, guarding the spoils of your fallen champion.
+  </p>
+
+  <div>
+    <a href="/character/create" class="btn btn-primary" style="padding: 12px 32px; font-size: 1.1rem; display: inline-block; text-decoration: none;">
+      Venture Forth Anew (Create Hero)
+    </a>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

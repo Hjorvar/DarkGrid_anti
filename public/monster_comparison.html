@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Darkgrid — Samanburður: Choker & Manticore</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    .comparison-container {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .header-section {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    .comparison-pair {
+      background: var(--bg-card);
+      border: 1px solid var(--border-medium);
+      border-radius: 8px;
+      padding: 1.75rem;
+      margin-bottom: 3rem;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+    }
+    .pair-title {
+      font-family: var(--font-serif);
+      font-size: 1.8rem;
+      color: var(--text-heading);
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-gold);
+      padding-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-top: 1.5rem;
+    }
+    .version-card {
+      background: var(--bg-surface-sunken);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .version-card.new-version {
+      border-color: var(--accent-gold);
+      background: linear-gradient(180deg, rgba(197, 160, 89, 0.05) 0%, rgba(13, 17, 23, 0.95) 100%);
+    }
+    .version-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .version-title {
+      font-family: var(--font-serif);
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .version-img {
+      width: 100%;
+      max-width: 380px;
+      height: auto;
+      aspect-ratio: 1/1;
+      border-radius: 4px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8);
+      margin-bottom: 1.25rem;
+    }
+    .new-version .version-img {
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 20px rgba(197, 160, 89, 0.25), 0 8px 24px rgba(0, 0, 0, 0.9);
+    }
+    .feature-list {
+      width: 100%;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .feature-list li {
+      margin-bottom: 0.5rem;
+      list-style-type: none;
+      padding-left: 1.25rem;
+      position: relative;
+    }
+    .feature-list li::before {
+      content: "•";
+      color: var(--accent-gold);
+      position: absolute;
+      left: 0;
+      font-weight: bold;
+    }
+    .highlight-good {
+      color: #81c784;
+    }
+    .highlight-warn {
+      color: #ffb74d;
+    }
+    .verdict-box {
+      margin-top: 1.5rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-gold);
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+    }
+    .verdict-title {
+      font-family: var(--font-serif);
+      color: var(--accent-gold-bright);
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.35rem;
+    }
+    @media (max-width: 768px) {
+      .grid-2col {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-container">
+      <div class="logo-link">
+        <span class="logo-emblem">⚔️</span>
+        <div class="logo-text-group">
+          <span class="logo-text">DARKGRID</span>
+          <span class="tagline">Monster Art Rework Review</span>
+        </div>
+      </div>
+      <div class="user-nav">
+        <a href="monster_review.html" class="nav-link">Yfirlit allra skrímsla</a>
+        <a href="/" class="nav-link">Aftur í leik</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content comparison-container">
+    <div class="header-section">
+      <h1 class="card-title" style="font-size: 2.2rem;">Samanburður á eldri og nýjum myndum</h1>
+      <p style="color: var(--text-muted); font-size: 1.05rem; max-width: 750px; margin: 0.5rem auto;">
+        Hér má bera saman eldri myndirnar sem höfðu minniháttar frávik (Flokkur B) og nýgerðar myndir sem voru hannaðar til að fylgja nákvæmlega líffærafræði Pathfinder 1e (Archives of Nethys).
+      </p>
+    </div>
+
+    <!-- 1. Choker Comparison -->
+    <section class="comparison-pair">
+      <div class="pair-title">
+        <span>1. Choker (CR 2 • Aberration)</span>
+        <span style="font-size: 0.9rem; color: var(--accent-gold); font-family: var(--font-sans);">Pathfinder: „long, pliable arms like tentacles capped with five wide, spiny claws“</span>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Eldri mynd -->
+        <div class="version-card">
+          <div class="version-header">
+            <span class="version-title" style="color: #ffb74d;">Eldri mynd (Flokkur B)</span>
+            <span class="status-badge B">Frávik</span>
+          </div>
+          <img src="images/monsters/choker.png" alt="Choker Eldri Mynd" class="version-img">
+          <ul class="feature-list">
+            <li><span class="highlight-warn">Líffærafræðilegt frávik:</span> Hentar tveimur mannlaga framhandleggjum með klóm, <em>plús tveimur aukafálmum úr baki með kolkrabbasogskálum</em>.</li>
+            <li>Í Pathfinder 1e eru engar kolkrabbasogskálar né fjórir sjálfstæðir útlimir á efri búk.</li>
+            <li>Stíll og lýsing eru góð, en líffærafræðin er óþarflega „kolkrabbakennd“.</li>
+          </ul>
+        </div>
+
+        <!-- Ný mynd -->
+        <div class="version-card new-version">
+          <div class="version-header">
+            <span class="version-title" style="color: #81c784;">Ný mynd (Flokkur A) ★</span>
+            <span class="status-badge A">Samþykkt</span>
+          </div>
+          <img src="images/monsters/preview/choker_new.jpg" alt="Choker Ný Mynd" class="version-img">
+          <ul class="feature-list">
+            <li><span class="highlight-good">100% nákvæm Pathfinder-líffærafræði:</span> Nákvæmlega <strong>tveir</strong> langir, liðalausir og sveigjanlegir armar eins og gúmmífálmar sem enda á fimm hvössum klóm.</li>
+            <li><span class="highlight-good">Engar sogskálar:</span> Náttúruleg hrjúf og slétt leðjuraufuð holdhúð neðanjarðarveru.</li>
+            <li>Hokin stelling, skelfileg nálar-tennt kjaftglufa og glóandi gulbrún augu á klettanös í dimmum helli.</li>
+            <li>Handmáluð 2D málverksáferð í fullu samræmi við Darkgrid-stíl.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="verdict-box">
+        <div class="verdict-title">Niðurstaða um Choker</div>
+        <p style="font-size: 0.95rem; line-height: 1.5; color: var(--text-body);">
+          <strong>Nýja myndin er mun betri og réttari.</strong> Hún losnar við misvísandi kolkrabbasogskálar og fangar nákvæmlega hinn klassíska Pathfinder 1e Choker með tvo teygjanlega kyrkingararma.
+        </p>
+      </div>
+    </section>
+
+    <!-- 2. Manticore Comparison -->
+    <section class="comparison-pair">
+      <div class="pair-title">
+        <span>2. Manticore (CR 5 • Magical Beast)</span>
+        <span style="font-size: 0.9rem; color: var(--accent-gold); font-family: var(--font-sans);">Pathfinder: „vaguely humanoid head, body of a lion, wings of a dragon, spiked tail“</span>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Eldri mynd -->
+        <div class="version-card">
+          <div class="version-header">
+            <span class="version-title" style="color: #ffb74d;">Eldri mynd (Flokkur B)</span>
+            <span class="status-badge B">Frávik</span>
+          </div>
+          <img src="images/monsters/manticore.png" alt="Manticore Eldri Mynd" class="version-img">
+          <ul class="feature-list">
+            <li><span class="highlight-warn">Líffærafræðilegt frávik:</span> Er með stór sveigð hrútshorn (ram horns) sem ekki tilheyra Manticore í Pathfinder.</li>
+            <li>Andlitið er nær eingöngu hefðbundið dýrslegt ljónsandlit í stað hins óhugnanlega hálf-mannlega andlits.</li>
+            <li>Líkaminn, vængirnir og broddahalinn eru mjög flottir, en heildin minnir frekar á Chimera.</li>
+          </ul>
+        </div>
+
+        <!-- Ný mynd -->
+        <div class="version-card new-version">
+          <div class="version-header">
+            <span class="version-title" style="color: #81c784;">Ný mynd (Flokkur A) ★</span>
+            <span class="status-badge A">Samþykkt</span>
+          </div>
+          <img src="images/monsters/preview/manticore_new.jpg" alt="Manticore Ný Mynd" class="version-img">
+          <ul class="feature-list">
+            <li><span class="highlight-good">Engin hrútshorn:</span> Höfuðið er laust við framandi hrútshorn og fylgir réttri Pathfinder-líffærafræði.</li>
+            <li><span class="highlight-good">Óhugnanlegt mannslegt andlit:</span> Andlitsfallið ber greinileg mannlaga einkenni (nef, augnumgjarðir, grimmt glott) umlukið dökku ljónsmakkaskeggi og rauðglóandi augum.</li>
+            <li>Öflugur ljónsbúkur, stórir leðurvængir og þung broddakúla á halaenda sem skýtur járngöddum.</li>
+            <li>Dökkur klettatindur í fjallaþoku, engin ramma- eða pappírsáhrif, fullkominn Darkgrid-stíll.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="verdict-box">
+        <div class="verdict-title">Niðurstaða um Manticore</div>
+        <p style="font-size: 0.95rem; line-height: 1.5; color: var(--text-body);">
+          <strong>Nýja myndin fangar sérkenni Manticore mun dýpra.</strong> Hið mannslega andlit fær veruna til að virka mun óhugnanlegri og gáfaðri en venjulegt dýr, sem passar fullkomlega við lore-ið í Pathfinder 1e.
+        </p>
+      </div>
+    </section>
+
+  </main>
+</body>
+</html>

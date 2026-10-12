@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DARKGRID — Dark Fantasy RPG</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-container">
+      <a href="/" class="logo-link">
+        <span class="logo-emblem">⚔️</span>
+        <div class="logo-text-group">
+          <span class="logo-text">DARKGRID</span>
+          <span class="tagline">Shared World RPG</span>
+        </div>
+      </a>
+
+      <nav class="user-nav">
+        <% if (currentUser) { %>
+          <span class="user-badge">Player: <strong><%= currentUser.username %></strong></span>
+          <a href="/logout" class="logout-link">Log Out</a>
+        <% } else { %>
+          <a href="/login" class="nav-link">Log In</a>
+          <a href="/register" class="nav-link nav-link-register">Register</a>
+        <% } %>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-content">
