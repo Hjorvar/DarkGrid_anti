@@ -83,6 +83,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  const favoredGroup = document.getElementById('ranger-favored-enemy-group');
+  const favoredSelect = document.getElementById('favored-enemy-select');
+  const favoredTypeInput = document.getElementById('favored-enemy-type-input');
+  const favoredSubtypeInput = document.getElementById('favored-enemy-subtype-input');
+
+  function syncFavoredEnemy() {
+    if (!favoredSelect || !favoredTypeInput || !favoredSubtypeInput) return;
+    const parts = (favoredSelect.value || 'ANIMAL:').split(':');
+    favoredTypeInput.value = parts[0] || 'ANIMAL';
+    favoredSubtypeInput.value = parts[1] || '';
+  }
+
+  if (favoredSelect) {
+    favoredSelect.addEventListener('change', syncFavoredEnemy);
+    syncFavoredEnemy();
+  }
+
   // Class selection handler
   classCards.forEach(card => {
     card.addEventListener('click', () => {
@@ -92,6 +109,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       currentClass = selectedClass;
       classInput.value = selectedClass;
+
+      if (favoredGroup) {
+        favoredGroup.style.display = selectedClass === 'RANGER' ? 'block' : 'none';
+      }
 
       initStatsForClass(selectedClass);
       updateUI();

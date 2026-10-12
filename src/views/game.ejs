@@ -2,7 +2,14 @@
 <%
   const safePotionCount = (typeof potionCount !== 'undefined' && potionCount !== null) ? potionCount : 0;
   const safeCombatState = (typeof combatState !== 'undefined' && combatState !== null) ? combatState : null;
-  const safeEquipment = (typeof equipment !== 'undefined' && equipment !== null) ? equipment : null;
+  const safeEquipment = (typeof equipment !== 'undefined' && equipment !== null) ? equipment : {};
+  const safeInventory = (typeof inventory !== 'undefined' && Array.isArray(inventory)) ? inventory : [];
+  const safeHeroAC = (typeof heroAC !== 'undefined' && heroAC !== null) ? heroAC : 10;
+  const safeMeleeAtk = (typeof meleeAttackBonus !== 'undefined' && meleeAttackBonus !== null) ? (meleeAttackBonus >= 0 ? '+' + meleeAttackBonus : '' + meleeAttackBonus) : '+0';
+  const safeRangedAtk = (typeof rangedAttackBonus !== 'undefined' && rangedAttackBonus !== null) ? (rangedAttackBonus >= 0 ? '+' + rangedAttackBonus : '' + rangedAttackBonus) : '+0';
+  const safeClericHealInfo = (typeof clericHealInfo !== 'undefined') ? clericHealInfo : null;
+  const safeIsSafeCity = (typeof isSafeCity !== 'undefined') ? Boolean(isSafeCity) : (currentTile && currentTile.is_safe === 1 && currentTile.terrain === 'CITY');
+  const safeShopStock = (typeof shopStock !== 'undefined') ? shopStock : null;
 %>
 
 <div class="game-viewport">
@@ -338,7 +345,7 @@
           </div>
         </div>
 
-        <div class="vitals-grid" style="margin-top: 8px; margin-bottom: 12px;">
+        <div class="vitals-grid" style="margin-top: 8px; margin-bottom: 8px;">
           <div class="vital-box">
             <div class="vital-header-row">
               <div class="vital-label">Healing Potions</div>
@@ -348,12 +355,41 @@
           </div>
           <div class="vital-box">
             <div class="vital-header-row">
-              <div class="vital-label">Weapon / Armor</div>
-              <div class="vital-value" style="font-size: 0.9rem; color: var(--text-light);"><%= (safeEquipment && safeEquipment.weapon) ? safeEquipment.weapon.name : 'Bare Hands' %></div>
+              <div class="vital-label">Armor Class (AC)</div>
+              <div class="vital-value" style="color: var(--accent-gold);"><%= safeHeroAC %></div>
             </div>
-            <div class="vital-gold-decor">🛡️ <%= (safeEquipment && safeEquipment.armor) ? safeEquipment.armor.name : 'Unarmored' %></div>
+            <div class="vital-gold-decor">⚔️ Melee <%= safeMeleeAtk %> • 🏹 Ranged <%= safeRangedAtk %></div>
           </div>
         </div>
+
+        <div class="vital-box" style="margin-bottom: 12px; padding: 8px 12px;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 4px;">Prepared Gear</div>
+          <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem;">
+            <div>🗡️ <strong>Melee:</strong> <%= (safeEquipment.meleeWeapon ? safeEquipment.meleeWeapon.name : (safeEquipment.weapon ? safeEquipment.weapon.name : 'Bare Hands')) %></div>
+            <div>🏹 <strong>Ranged:</strong> <%= (safeEquipment.rangedWeapon ? safeEquipment.rangedWeapon.name : 'None') %></div>
+            <div>🛡️ <strong>Protection:</strong> <%= (safeEquipment.armor ? safeEquipment.armor.name : 'Unarmored') %> <%= safeEquipment.shield ? ('+ ' + safeEquipment.shield.name) : '' %></div>
+          </div>
+        </div>
+
+        <% if (safeClericHealInfo && (!encounter || encounter.status !== 'IN_COMBAT')) { %>
+          <div style="margin-bottom: 10px;">
+            <form action="/game/cleric/heal" method="POST">
+              <button type="submit" class="btn btn-secondary" style="width: 100%; border: 1px solid var(--accent-gold); font-size: 0.85rem;" <%= (safeClericHealInfo.remainingUses <= 0 || character.current_hp >= character.max_hp) ? 'disabled' : '' %>>
+                ✨ Channel Divine Healing (<%= safeClericHealInfo.remainingUses %>/<%= safeClericHealInfo.maxUses %> uses • <%= safeClericHealInfo.diceCount %>d6+WIS)
+              </button>
+            </form>
+          </div>
+        <% } %>
+
+        <% if (safeIsSafeCity && (!encounter || encounter.status !== 'IN_COMBAT')) { %>
+          <div style="margin-bottom: 10px;">
+            <form action="/game/rest" method="POST">
+              <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 0.85rem;">
+                🛌 Rest at Sanctuary (Full Heal & Ability Recharge)
+              </button>
+            </form>
+          </div>
+        <% } %>
 
         <!-- Ability Scores Table -->
         <table class="stats-table">
@@ -398,16 +434,163 @@
           </tbody>
         </table>
 
-        <!-- Navigation Tabs for Inventory / Equipment -->
+        <!-- Navigation Tabs for Inventory / Equipment / Shop -->
         <div class="tabs-container">
-          <button type="button" class="tab-btn active">Status</button>
-          <button type="button" class="tab-btn" onclick="alert('Inventory unlocks in Phase 4');">Inventory</button>
-          <button type="button" class="tab-btn" onclick="alert('Equipment interface unlocks in Phase 4');">Equipment</button>
+          <button type="button" class="tab-btn active" id="tab-btn-status" onclick="switchGameTab('status')">Status</button>
+          <button type="button" class="tab-btn" id="tab-btn-inventory" onclick="switchGameTab('inventory')">Backpack (<%= safeInventory.length %>)</button>
+          <% if (safeIsSafeCity && safeShopStock) { %>
+            <button type="button" class="tab-btn" id="tab-btn-shop" onclick="switchGameTab('shop')">Town Market</button>
+          <% } %>
         </div>
-        <div class="tab-content">
-          <span>XP: <strong><%= character.xp %></strong></span>
-          <span class="status-alive-badge">● Alive</span>
+
+        <!-- Tab Panel: Status -->
+        <div class="tab-content" id="tab-panel-status">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span>XP: <strong><%= character.xp %></strong></span>
+            <span class="status-alive-badge">● Alive</span>
+          </div>
+          <% if (character.class === 'FIGHTER') { %>
+            <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;">
+              ⚔️ <strong>Fighter Disciplines:</strong> Weapon Training (all weapons) & Armor Training (higher DEX mobility).
+            </div>
+          <% } else if (character.class === 'RANGER') { %>
+            <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;">
+              🏹 <strong>Favored Enemy:</strong> <%= character.favored_enemy_type %><%= character.favored_enemy_subtype ? (' (' + character.favored_enemy_subtype + ')') : '' %> (+1 to +3 atk/dmg).
+            </div>
+          <% } else if (character.class === 'CLERIC') { %>
+            <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;">
+              ✨ <strong>Divine Power:</strong> Sacred Smite against Undead (+2 to +4 atk/dmg).
+            </div>
+          <% } %>
         </div>
+
+        <!-- Tab Panel: Inventory & Equipment -->
+        <div class="tab-content" id="tab-panel-inventory" style="display: none;">
+          <div style="margin-bottom: 8px;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-gold); margin-bottom: 4px;">Equipped Gear</div>
+            <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem;">
+              <% const equippedItems = [safeEquipment.meleeWeapon, safeEquipment.rangedWeapon, safeEquipment.armor, safeEquipment.shield].filter(Boolean); %>
+              <% if (equippedItems.length === 0) { %>
+                <div style="color: var(--text-dim);">No gear equipped.</div>
+              <% } else { %>
+                <% equippedItems.forEach(item => { %>
+                  <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 4px 6px; border-radius: 4px;">
+                    <span><strong>[<%= item.equipped_slot %>]</strong> <%= item.name %> <%= item.is_magical ? '✨' : '' %></span>
+                    <form action="/game/inventory/unequip" method="POST" style="margin: 0;">
+                      <input type="hidden" name="itemInstanceId" value="<%= item.instance_id %>">
+                      <button type="submit" class="btn btn-subtle" style="padding: 2px 6px; font-size: 0.75rem;">Unequip</button>
+                    </form>
+                  </div>
+                <% }); %>
+              <% } %>
+            </div>
+          </div>
+
+          <div style="margin-top: 8px;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-gold); margin-bottom: 4px;">Backpack Items</div>
+            <% if (safeInventory.length === 0) { %>
+              <div style="color: var(--text-dim); font-size: 0.8rem;">Your backpack is empty.</div>
+            <% } else { %>
+              <div style="display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; font-size: 0.8rem;">
+                <% safeInventory.forEach(item => { %>
+                  <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 4px;">
+                    <div>
+                      <div><%= item.name %> <%= item.is_magical ? '✨' : '' %></div>
+                      <div style="font-size: 0.7rem; color: var(--text-dim);"><%= item.category %> <%= item.damage_dice || '' %> <%= item.armor_bonus ? ('AC+' + item.armor_bonus) : '' %></div>
+                    </div>
+                    <% if (['WEAPON', 'ARMOR', 'SHIELD'].includes(item.category)) { %>
+                      <form action="/game/inventory/equip" method="POST" style="margin: 0;">
+                        <input type="hidden" name="itemInstanceId" value="<%= item.id %>">
+                        <button type="submit" class="btn btn-secondary" style="padding: 2px 6px; font-size: 0.75rem;">Equip</button>
+                      </form>
+                    <% } %>
+                  </div>
+                <% }); %>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Tab Panel: Town Market (Safe City only) -->
+        <% if (safeIsSafeCity && safeShopStock) { %>
+          <div class="tab-content" id="tab-panel-shop" style="display: none;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-gold); margin-bottom: 4px;">Market Stock</div>
+            
+            <% if (safeShopStock.resaleListings && safeShopStock.resaleListings.length > 0) { %>
+              <div style="margin-bottom: 8px;">
+                <div style="font-size: 0.75rem; color: #b794f4; margin-bottom: 2px;">✨ Magical Resale Market:</div>
+                <div style="display: flex; flex-direction: column; gap: 4px; max-height: 100px; overflow-y: auto; font-size: 0.8rem;">
+                  <% safeShopStock.resaleListings.forEach(item => { %>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(76, 29, 149, 0.2); padding: 4px 6px; border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 4px;">
+                      <div>
+                        <div style="color: #d6bcfa;"><%= item.name %> ✨</div>
+                        <div style="font-size: 0.7rem; color: var(--accent-gold);"><%= item.resale_price %> gp</div>
+                      </div>
+                      <form action="/game/shop/buy" method="POST" style="margin: 0;">
+                        <input type="hidden" name="listingId" value="<%= item.listing_id %>">
+                        <button type="submit" class="btn btn-primary" style="padding: 2px 6px; font-size: 0.75rem;" <%= character.gold < item.resale_price ? 'disabled' : '' %>>Buy</button>
+                      </form>
+                    </div>
+                  <% }); %>
+                </div>
+              </div>
+            <% } %>
+
+            <div style="margin-bottom: 8px;">
+              <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 2px;">Standard Armory & Supplies:</div>
+              <div style="display: flex; flex-direction: column; gap: 4px; max-height: 120px; overflow-y: auto; font-size: 0.8rem;">
+                <% safeShopStock.standardItems.forEach(item => { %>
+                  <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 4px;">
+                    <div>
+                      <div><%= item.name %></div>
+                      <div style="font-size: 0.7rem; color: var(--accent-gold);"><%= item.buy_price %> gp</div>
+                    </div>
+                    <form action="/game/shop/buy" method="POST" style="margin: 0;">
+                      <input type="hidden" name="itemDefinitionId" value="<%= item.id %>">
+                      <button type="submit" class="btn btn-secondary" style="padding: 2px 6px; font-size: 0.75rem;" <%= character.gold < item.buy_price ? 'disabled' : '' %>>Buy</button>
+                    </form>
+                  </div>
+                <% }); %>
+              </div>
+            </div>
+
+            <% if (safeInventory.length > 0) { %>
+              <div style="margin-top: 6px; border-top: 1px solid var(--border-dark); padding-top: 6px;">
+                <div style="font-size: 0.75rem; color: var(--accent-gold); margin-bottom: 2px;">Sell from Backpack:</div>
+                <div style="display: flex; flex-direction: column; gap: 4px; max-height: 100px; overflow-y: auto; font-size: 0.8rem;">
+                  <% safeInventory.forEach(item => { %>
+                    <% const payout = item.is_magical ? Math.floor(item.buy_price * 0.4) : Math.floor(item.buy_price * 0.5); %>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 4px;">
+                      <div>
+                        <div><%= item.name %> <%= item.is_magical ? '✨' : '' %></div>
+                        <div style="font-size: 0.7rem; color: #68d391;">Payout: <%= payout %> gp</div>
+                      </div>
+                      <form action="/game/shop/sell" method="POST" style="margin: 0;">
+                        <input type="hidden" name="itemInstanceId" value="<%= item.id %>">
+                        <button type="submit" class="btn btn-subtle" style="padding: 2px 6px; font-size: 0.75rem;">Sell</button>
+                      </form>
+                    </div>
+                  <% }); %>
+                </div>
+              </div>
+            <% } %>
+          </div>
+        <% } %>
+
+        <script>
+          function switchGameTab(tabName) {
+            ['status', 'inventory', 'shop'].forEach(function(t) {
+              var btn = document.getElementById('tab-btn-' + t);
+              var panel = document.getElementById('tab-panel-' + t);
+              if (btn) btn.classList.remove('active');
+              if (panel) panel.style.display = 'none';
+            });
+            var activeBtn = document.getElementById('tab-btn-' + tabName);
+            var activePanel = document.getElementById('tab-panel-' + tabName);
+            if (activeBtn) activeBtn.classList.add('active');
+            if (activePanel) activePanel.style.display = 'block';
+          }
+        </script>
       </div>
     </div>
   </div>

@@ -45,7 +45,9 @@ router.post('/create', (req, res) => {
     dexterity,
     intelligence,
     wisdom,
-    charisma
+    charisma,
+    favoredEnemyType,
+    favoredEnemySubtype
   } = req.body;
 
   const stats = {
@@ -62,7 +64,9 @@ router.post('/create', (req, res) => {
       userId: req.user.id,
       name,
       classType,
-      stats
+      stats,
+      favoredEnemyType: favoredEnemyType || null,
+      favoredEnemySubtype: favoredEnemySubtype || null
     });
 
     res.redirect('/game');
@@ -77,6 +81,8 @@ router.post('/create', (req, res) => {
       formData: {
         name,
         classType,
+        favoredEnemyType,
+        favoredEnemySubtype,
         ...stats
       }
     });

@@ -6,8 +6,24 @@ const {
   getModifier,
   formatModifier,
   getCharacterEquipment,
-  getCharacterPotionCount
+  getCharacterInventory,
+  getCharacterPotionCount,
+  equipItem,
+  unequipItem,
+  performClericSelfHeal,
+  performCityRest,
+  getClericSelfHealInfo,
+  getClericRemainingHealUses
 } = require('../domain/character/rules');
+const {
+  calculateHeroAC,
+  calculateHeroAttackBonus
+} = require('../domain/combat/rules');
+const {
+  getCityStoreStock,
+  buyItem,
+  sellItem
+} = require('../domain/economy/shop');
 const {
   getTileById,
   getMinimapData,
@@ -81,9 +97,28 @@ router.get('/game', (req, res) => {
     combatState = getCombatState(req.db, character.id, activeEncounter.id);
   }
 
-  // Equipment & Potion count
+  // Equipment & Inventory
   const equipment = getCharacterEquipment(req.db, character.id);
+  const inventory = getCharacterInventory(req.db, character.id);
   const potionCount = getCharacterPotionCount(req.db, character.id);
+
+  // Computed Combat stats
+  const meleeAttackBonus = calculateHeroAttackBonus(character, equipment.meleeWeapon, null, false);
+  const rangedAttackBonus = calculateHeroAttackBonus(character, equipment.rangedWeapon, null, true);
+  const heroAC = calculateHeroAC(character, equipment, false);
+
+  // Cleric healing info
+  let clericHealInfo = null;
+  if ((character.class || '').toUpperCase() === 'CLERIC') {
+    clericHealInfo = {
+      ...getClericSelfHealInfo(character.level),
+      remainingUses: getClericRemainingHealUses(character)
+    };
+  }
+
+  // Shop stock if in safe haven city
+  const isSafeCity = (currentTile.terrain === 'CITY' && currentTile.is_safe === 1);
+  const shopStock = isSafeCity ? getCityStoreStock(req.db) : null;
 
   // 5x5 minimap around current tile
   const minimap = getMinimapData(req.db, currentTile, 2);
@@ -112,7 +147,14 @@ router.get('/game', (req, res) => {
     encounter: activeEncounter,
     combatState,
     equipment,
+    inventory,
     potionCount,
+    meleeAttackBonus,
+    rangedAttackBonus,
+    heroAC,
+    clericHealInfo,
+    isSafeCity,
+    shopStock,
     modifiers,
     errorMessage,
     infoMessage
@@ -293,6 +335,128 @@ router.post('/game/combat/flee', (req, res) => {
       return res.redirect('/game?info=' + encodeURIComponent('You broke away from the creature and escaped!'));
     }
     res.redirect('/game');
+  } catch (err) {
+    res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
+  }
+});
+
+/**
+ * Rest in Safe Haven (City)
+ */
+router.post('/game/rest', (req, res) => {
+  const character = getLivingCharacterByUserId(req.db, req.user.id);
+  if (!character) {
+    return res.redirect('/game');
+  }
+
+  try {
+    const result = performCityRest(req.db, character.id);
+    res.redirect('/game?info=' + encodeURIComponent(`You rested peacefully in the sanctuary. Vitality restored to full (${result.maxHp} HP) and abilities refreshed.`));
+  } catch (err) {
+    res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
+  }
+});
+
+/**
+ * Cleric Out-of-Combat Self-Healing
+ */
+router.post('/game/cleric/heal', (req, res) => {
+  const character = getLivingCharacterByUserId(req.db, req.user.id);
+  if (!character) {
+    return res.redirect('/game');
+  }
+
+  // Ensure not in combat
+  const activeEncounter = getActiveEncounterForCharacter(req.db, character.id, character.class);
+  if (activeEncounter && activeEncounter.status === 'IN_COMBAT') {
+    return res.redirect('/game?error=' + encodeURIComponent('Cannot use meditative self-healing during active combat!'));
+  }
+
+  try {
+    const result = performClericSelfHeal(req.db, character.id);
+    res.redirect('/game?info=' + encodeURIComponent(`Divine power flows through you, restoring ${result.healed} HP (${result.currentHp}/${result.maxHp} HP). ${result.remainingUses} uses remain.`));
+  } catch (err) {
+    res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
+  }
+});
+
+/**
+ * Equip Item
+ */
+router.post('/game/inventory/equip', (req, res) => {
+  const character = getLivingCharacterByUserId(req.db, req.user.id);
+  if (!character) {
+    return res.redirect('/game');
+  }
+
+  const itemInstanceId = parseInt(req.body.itemInstanceId, 10);
+  const targetSlot = req.body.targetSlot || null;
+
+  try {
+    equipItem(req.db, character.id, itemInstanceId, targetSlot);
+    res.redirect('/game?info=' + encodeURIComponent('Equipment updated.'));
+  } catch (err) {
+    res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
+  }
+});
+
+/**
+ * Unequip Item
+ */
+router.post('/game/inventory/unequip', (req, res) => {
+  const character = getLivingCharacterByUserId(req.db, req.user.id);
+  if (!character) {
+    return res.redirect('/game');
+  }
+
+  const itemInstanceId = parseInt(req.body.itemInstanceId, 10);
+
+  try {
+    unequipItem(req.db, character.id, itemInstanceId);
+    res.redirect('/game?info=' + encodeURIComponent('Item unequipped to backpack.'));
+  } catch (err) {
+    res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
+  }
+});
+
+/**
+ * Shop Buy Action
+ */
+router.post('/game/shop/buy', (req, res) => {
+  const character = getLivingCharacterByUserId(req.db, req.user.id);
+  if (!character) {
+    return res.redirect('/game');
+  }
+
+  const itemDefinitionId = req.body.itemDefinitionId ? parseInt(req.body.itemDefinitionId, 10) : null;
+  const listingId = req.body.listingId ? parseInt(req.body.listingId, 10) : null;
+
+  try {
+    const result = buyItem(req.db, character.id, { itemDefinitionId, listingId });
+    res.redirect('/game?info=' + encodeURIComponent(`Purchased ${result.purchasedItem.name} for ${result.purchasedItem.price} gp. Remaining gold: ${result.remainingGold} gp.`));
+  } catch (err) {
+    res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
+  }
+});
+
+/**
+ * Shop Sell Action
+ */
+router.post('/game/shop/sell', (req, res) => {
+  const character = getLivingCharacterByUserId(req.db, req.user.id);
+  if (!character) {
+    return res.redirect('/game');
+  }
+
+  const itemInstanceId = parseInt(req.body.itemInstanceId, 10);
+
+  try {
+    const result = sellItem(req.db, character.id, itemInstanceId);
+    let msg = `Sold ${result.itemName} for ${result.goldEarned} gp.`;
+    if (result.movedToMarket) {
+      msg += ` The artifact is now listed in the global resale market for ${result.resalePrice} gp.`;
+    }
+    res.redirect('/game?info=' + encodeURIComponent(msg));
   } catch (err) {
     res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
   }
