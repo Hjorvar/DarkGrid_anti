@@ -11,7 +11,11 @@
  */
 function rollDie(sides, rng = Math.random) {
   if (sides <= 0) return 0;
-  return Math.floor(rng() * sides) + 1;
+  const raw = rng(sides);
+  if (Number.isInteger(raw) && raw >= 1 && raw <= sides) {
+    return raw;
+  }
+  return Math.floor(raw * sides) + 1;
 }
 
 /**

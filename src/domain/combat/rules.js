@@ -77,6 +77,14 @@ function calculateHeroAttackBonus(character, equippedWeapon = null, monster = nu
  * @returns {number}
  */
 function calculateHeroAC(character, equippedArmor = null, equippedShield = null, isRangedActive = false) {
+  // Support both calculateHeroAC(hero, equipment, isRangedActive) and calculateHeroAC(hero, armor, shield, isRangedActive)
+  if (equippedArmor && typeof equippedArmor === 'object' && ('armor' in equippedArmor || 'shield' in equippedArmor)) {
+    isRangedActive = Boolean(equippedShield);
+    const bag = equippedArmor;
+    equippedArmor = bag.armor || null;
+    equippedShield = bag.shield || null;
+  }
+
   const dexMod = getModifier(character.dexterity);
 
   let effectiveDex = dexMod;

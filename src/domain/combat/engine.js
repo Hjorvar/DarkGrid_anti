@@ -158,7 +158,8 @@ function getCombatState(db, characterId, encounterId) {
     SELECT e.*, m.name as monster_name, m.symbol as monster_symbol, m.color as monster_color,
            m.descriptions as monster_descriptions, m.image_path as monster_image_path,
            m.challenge_rating, m.armor_class as monster_ac, m.attack_bonus as monster_ab,
-           m.damage_dice as monster_damage_dice, m.xp_reward, m.base_hp, m.creature_type
+           m.damage_dice as monster_damage_dice, m.xp_reward, m.base_hp, m.creature_type,
+           m.movement_type
     FROM encounters e
     JOIN monsters m ON e.monster_id = m.id
     WHERE e.id = ? AND e.character_id = ?
@@ -175,6 +176,12 @@ function getCombatState(db, characterId, encounterId) {
   const equipment = getCharacterEquipment(db, characterId);
   const potionCount = getCharacterPotionCount(db, characterId);
 
+  const isAirborne = (encounter.movement_type === 'FLY');
+  const activeWeapon = (isAirborne && equipment.rangedWeapon)
+    ? equipment.rangedWeapon
+    : (equipment.meleeWeapon || equipment.rangedWeapon || equipment.weapon);
+  const isRangedActive = Boolean(activeWeapon && activeWeapon.weapon_range_type === 'RANGED');
+
   const currentBracket = getHealthBracket(encounter.current_monster_hp, encounter.monster_max_hp || encounter.base_hp);
   const currentConditionText = getConditionTextForBracket(encounter.monster_descriptions, currentBracket);
 
@@ -183,6 +190,8 @@ function getCombatState(db, characterId, encounterId) {
     encounter,
     events,
     equipment,
+    activeWeapon,
+    isRangedActive,
     potionCount,
     currentBracket,
     currentConditionText

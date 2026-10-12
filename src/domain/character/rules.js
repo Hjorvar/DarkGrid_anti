@@ -146,18 +146,33 @@ function getRangerFavoredEnemyBonus(character, monster) {
  * Level 9+:  +4 Atk / +4 Dmg
  */
 function getClericDivinePowerBonus(character, monster) {
-  if (!character || (character.class || '').toUpperCase() !== 'CLERIC') {
+  let charClass = '';
+  let charLevel = 1;
+  let targetMonster = monster;
+
+  if (typeof character === 'string') {
+    charClass = character;
+    if (arguments.length >= 3) {
+      charLevel = arguments[1] || 1;
+      targetMonster = arguments[2];
+    }
+  } else if (character && typeof character === 'object') {
+    charClass = character.class || '';
+    charLevel = character.level || 1;
+  }
+
+  if (charClass.toUpperCase() !== 'CLERIC') {
     return { attack: 0, damage: 0 };
   }
-  if (!monster) {
+  if (!targetMonster) {
     return { attack: 0, damage: 0 };
   }
-  const monsterType = (monster.creature_type || '').trim().toUpperCase();
+  const monsterType = (targetMonster.creature_type || '').trim().toUpperCase();
   if (monsterType !== 'UNDEAD') {
     return { attack: 0, damage: 0 };
   }
 
-  const lvl = Math.max(1, parseInt(character.level, 10) || 1);
+  const lvl = Math.max(1, parseInt(charLevel, 10) || 1);
   const bonus = lvl >= 9 ? 4 : (lvl >= 5 ? 3 : 2);
   return { attack: bonus, damage: bonus };
 }
@@ -182,7 +197,7 @@ function getClericSelfHealInfo(level) {
     dice = '2d6';
     maxUses = 2;
   }
-  return { dice, maxUses };
+  return { dice, diceCount: parseInt(dice, 10) || 1, maxUses };
 }
 
 /**
@@ -201,7 +216,7 @@ function getClericRemainingHealUses(character) {
  * Performs Cleric Self-Healing outside of combat.
  */
 function performClericSelfHeal(db, characterId, options = {}) {
-  const rng = options.rng || Math.random;
+  const rng = typeof options === 'function' ? options : (options && options.rng ? options.rng : Math.random);
 
   return withTransaction(db, (tx) => {
     const character = tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
