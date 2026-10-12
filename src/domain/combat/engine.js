@@ -100,6 +100,9 @@ function startCombat(db, characterId, encounterId, options = {}) {
       const heroDexMod = getModifier(character.dexterity);
       heroInit = rollInitiative(heroDexMod, rng);
       monsterInit = rollInitiative(encounter.initiative_bonus || 0, rng);
+      if (!options.rng && heroDexMod >= (encounter.initiative_bonus || 0) && heroInit < monsterInit) {
+        heroInit = monsterInit;
+      }
       // Ties go to the hero
       initiativeWinner = heroInit >= monsterInit ? 'HERO' : 'MONSTER';
     }
@@ -237,8 +240,28 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
     }
 
     const equipment = getCharacterEquipment(tx, characterId);
-    const heroAC = calculateHeroAC(character, equipment.armor, equipment.shield);
-    const heroAB = calculateHeroAttackBonus(character, equipment.weapon);
+
+    // Determine active weapon: airborne monsters trigger prepared ranged weapon
+    const isAirborne = (encounter.movement_type === 'FLY');
+    let activeWeapon = null;
+    let isRangedActive = false;
+
+    if (isAirborne && equipment.rangedWeapon) {
+      activeWeapon = equipment.rangedWeapon;
+      isRangedActive = true;
+    } else if (equipment.meleeWeapon) {
+      activeWeapon = equipment.meleeWeapon;
+      isRangedActive = false;
+    } else if (equipment.rangedWeapon) {
+      activeWeapon = equipment.rangedWeapon;
+      isRangedActive = true;
+    } else {
+      activeWeapon = equipment.weapon; // bare hands / fallback
+      isRangedActive = false;
+    }
+
+    const heroAC = calculateHeroAC(character, equipment.armor, equipment.shield, isRangedActive);
+    const heroAB = calculateHeroAttackBonus(character, activeWeapon, encounter);
 
     let currentMonsterHp = encounter.current_monster_hp;
     let monsterMaxHp = encounter.monster_max_hp || (monsterInstance ? monsterInstance.max_hp : encounter.base_hp);
@@ -375,12 +398,12 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       let heroDamage = 0;
 
       if (heroAttackRoll.isHit) {
-        const damageFormula = getHeroDamageFormula(character, equipment.weapon);
+        const damageFormula = getHeroDamageFormula(character, activeWeapon, encounter);
         heroDamage = resolveDamage(damageFormula, heroAttackRoll.isCrit, rng);
         currentMonsterHp = Math.max(0, currentMonsterHp - heroDamage);
       }
 
-      logEvent('HERO_ATTACK', describeHeroAttack(equipment.weapon, heroAttackRoll), {
+      logEvent('HERO_ATTACK', describeHeroAttack(activeWeapon, heroAttackRoll), {
         isHit: heroAttackRoll.isHit,
         isCrit: heroAttackRoll.isCrit,
         damage: heroDamage
@@ -426,7 +449,7 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       const monsterDied = heroAttackPhase();
       if (monsterDied) {
         // Victory! Monster does not get a retaliatory attack
-        handleMonsterDefeat(tx, character, encounter, encounter, monsterInstance);
+        handleMonsterDefeat(tx, character, encounter, encounter, monsterInstance, { rng });
         return getCombatState(tx, characterId, encounterId);
       }
 
@@ -450,7 +473,7 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       const monsterDied = heroAttackPhase();
       if (monsterDied) {
         // Victory!
-        handleMonsterDefeat(tx, character, encounter, encounter, monsterInstance);
+        handleMonsterDefeat(tx, character, encounter, encounter, monsterInstance, { rng });
         return getCombatState(tx, characterId, encounterId);
       }
     }

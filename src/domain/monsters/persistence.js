@@ -5,7 +5,8 @@
  */
 
 const { withTransaction } = require('../../db/connection');
-const { getAllCharacterItems } = require('../character/rules');
+const { getAllCharacterItems, getLevelForXp, getHpPerLevel } = require('../character/rules');
+const { generateMonsterLoot } = require('../combat/loot');
 
 /**
  * Handles the complete permadeath lifecycle of a fallen hero.
@@ -206,7 +207,7 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
  * @param {object|null} monsterInstance Persistent monster instance if applicable
  * @returns {{ xpAwarded: number, goldLooted: number, itemsLooted: number }}
  */
-function handleMonsterDefeat(db, character, encounter, monster, monsterInstance = null) {
+function handleMonsterDefeat(db, character, encounter, monster, monsterInstance = null, options = {}) {
   return withTransaction(db, (tx) => {
     let goldLooted = 0;
     let itemsLooted = 0;
@@ -251,15 +252,38 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
             equipped_slot = NULL
         WHERE owner_type = 'MONSTER' AND owner_monster_id = ?
       `).run(character.id, instanceId);
+    } else {
+      // Random encounter defeated: generate Pathfinder-inspired loot drop
+      const lootResult = generateMonsterLoot(tx, monster, character.id, options);
+      goldLooted = lootResult.goldAwarded;
+      itemsLooted = lootResult.itemsAwarded.length;
     }
 
-    // Award standard XP reward
+    // Award standard XP reward and check for level-up
     const xpAwarded = monster.xp_reward || 0;
+    const charRow = tx.prepare('SELECT * FROM characters WHERE id = ?').get(character.id) || character;
+    const newXp = (charRow.xp || 0) + xpAwarded;
+    const oldLevel = charRow.level || 1;
+    const newLevel = getLevelForXp(newXp);
+
+    let currentHp = charRow.current_hp;
+    let maxHp = charRow.max_hp;
+    let totalHpGain = 0;
+
+    if (newLevel > oldLevel) {
+      for (let lvl = oldLevel + 1; lvl <= newLevel; lvl++) {
+        const hpGain = getHpPerLevel(charRow.class, charRow.constitution);
+        currentHp += hpGain;
+        maxHp += hpGain;
+        totalHpGain += hpGain;
+      }
+    }
+
     tx.prepare(`
       UPDATE characters
-      SET xp = xp + ?
+      SET xp = ?, level = ?, current_hp = ?, max_hp = ?
       WHERE id = ?
-    `).run(xpAwarded, character.id);
+    `).run(newXp, newLevel, currentHp, maxHp, character.id);
 
     // Conclude encounter with VICTORY
     tx.prepare(`
@@ -283,14 +307,34 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
       JSON.stringify({
         xp_awarded: xpAwarded,
         gold_looted: goldLooted,
-        items_looted: itemsLooted
+        items_looted: itemsLooted,
+        leveled_up: newLevel > oldLevel,
+        new_level: newLevel,
+        hp_gain: totalHpGain
       })
     );
+
+    if (newLevel > oldLevel) {
+      const levelUpText = `Triumph! You have attained Level ${newLevel}! Maximum vitality increased by +${totalHpGain} HP.`;
+      tx.prepare(`
+        INSERT INTO combat_events (
+          encounter_id, round_number, event_type, public_text, details
+        ) VALUES (?, ?, 'LEVEL_UP', ?, ?)
+      `).run(
+        encounter.id,
+        encounter.combat_round || 1,
+        levelUpText,
+        JSON.stringify({ new_level: newLevel, hp_gain: totalHpGain })
+      );
+    }
 
     return {
       xpAwarded,
       goldLooted,
-      itemsLooted
+      itemsLooted,
+      leveledUp: newLevel > oldLevel,
+      newLevel,
+      totalHpGain
     };
   });
 }

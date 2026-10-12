@@ -1,59 +1,112 @@
 /**
  * Darkgrid Combat System — Core Rules & Formulas
  * Handles attack rolls, critical hits, armor class, initiative, and damage resolution.
+ * Integrates character progression, class abilities, and weapon/armor enhancement bonuses.
  */
 
-const { getModifier } = require('../character/rules');
+const {
+  getModifier,
+  getLevelAttackBonus,
+  getFighterWeaponTraining,
+  getFighterArmorTrainingMaxDexBonus,
+  getRangerFavoredEnemyBonus,
+  getClericDivinePowerBonus
+} = require('../character/rules');
 const { rollD20, rollDice } = require('./dice');
 
 /**
  * Calculates hero Attack Bonus according to DARKGRID_GAME_SPEC.md §8.1:
- * floor((STR_modifier + DEX_modifier) / 2) + weapon_attack_bonus
+ * floor((STR_modifier + DEX_modifier) / 2) + level_progression + weapon_enhancement + class_bonuses
  * @param {object} character
  * @param {object|null} equippedWeapon
+ * @param {object|null} monster
  * @returns {number}
  */
-function calculateHeroAttackBonus(character, equippedWeapon = null) {
+function calculateHeroAttackBonus(character, equippedWeapon = null, monster = null) {
   const strMod = getModifier(character.strength);
   const dexMod = getModifier(character.dexterity);
   const baseBonus = Math.floor((strMod + dexMod) / 2);
 
+  // Level Attack Progression
+  const levelBonus = getLevelAttackBonus(character.class, character.level || 1);
+
+  // Weapon enhancement bonus or attribute bonus
   let weaponBonus = 0;
-  if (equippedWeapon && equippedWeapon.attributes) {
-    let attrs = equippedWeapon.attributes;
-    if (typeof attrs === 'string') {
-      try { attrs = JSON.parse(attrs); } catch { attrs = {}; }
+  if (equippedWeapon) {
+    if (equippedWeapon.enhancement_bonus) {
+      weaponBonus += Number(equippedWeapon.enhancement_bonus);
+    } else if (equippedWeapon.attributes) {
+      let attrs = equippedWeapon.attributes;
+      if (typeof attrs === 'string') {
+        try { attrs = JSON.parse(attrs); } catch { attrs = {}; }
+      }
+      weaponBonus += Number(attrs.attack_bonus || 0);
     }
-    weaponBonus = Number(attrs.attack_bonus || 0);
   }
 
-  return baseBonus + weaponBonus;
+  // Fighter Weapon Training
+  let fighterBonus = 0;
+  if (character.class === 'FIGHTER') {
+    fighterBonus = getFighterWeaponTraining(character.level || 1).attack;
+  }
+
+  // Ranger Favored Enemy
+  let rangerBonus = 0;
+  if (character.class === 'RANGER' && monster) {
+    rangerBonus = getRangerFavoredEnemyBonus(character, monster).attack;
+  }
+
+  // Cleric Divine Power
+  let clericBonus = 0;
+  if (character.class === 'CLERIC' && monster) {
+    clericBonus = getClericDivinePowerBonus(character, monster).attack;
+  }
+
+  return baseBonus + levelBonus + weaponBonus + fighterBonus + rangerBonus + clericBonus;
 }
 
 /**
  * Calculates hero Armor Class:
- * 10 + DEX_modifier + armor_bonus + shield_bonus
+ * 10 + effective_DEX + armor_bonus + shield_bonus
+ * Effective DEX respects armor Max DEX limit, boosted by Fighter Armor Training.
+ * Shield bonus drops to 0 when ranged weapon is active.
  * @param {object} character
  * @param {object|null} equippedArmor
  * @param {object|null} equippedShield
+ * @param {boolean} isRangedActive
  * @returns {number}
  */
-function calculateHeroAC(character, equippedArmor = null, equippedShield = null) {
+function calculateHeroAC(character, equippedArmor = null, equippedShield = null, isRangedActive = false) {
   const dexMod = getModifier(character.dexterity);
-  const armorBonus = equippedArmor ? Number(equippedArmor.armor_bonus || 0) : 0;
-  const shieldBonus = equippedShield ? Number(equippedShield.shield_bonus || 0) : 0;
 
-  return 10 + dexMod + armorBonus + shieldBonus;
+  let effectiveDex = dexMod;
+  if (equippedArmor && equippedArmor.max_dex_bonus !== null && equippedArmor.max_dex_bonus !== undefined) {
+    const armorMaxDex = Number(equippedArmor.max_dex_bonus);
+    const fighterBonus = (character.class === 'FIGHTER') ? getFighterArmorTrainingMaxDexBonus(character.level || 1) : 0;
+    const effectiveMax = armorMaxDex + fighterBonus;
+    effectiveDex = dexMod >= 0 ? Math.min(dexMod, effectiveMax) : dexMod;
+  }
+
+  const armorBonus = equippedArmor ? (Number(equippedArmor.armor_bonus || 0) + Number(equippedArmor.enhancement_bonus || 0)) : 0;
+
+  // Shield bonus does NOT apply when fighting with a ranged weapon
+  let shieldBonus = 0;
+  if (!isRangedActive && equippedShield) {
+    shieldBonus = Number(equippedShield.shield_bonus || 0) + Number(equippedShield.enhancement_bonus || 0);
+  }
+
+  return 10 + effectiveDex + armorBonus + shieldBonus;
 }
 
 /**
- * Determines damage formula for hero based on equipped weapon and STR modifier.
- * Default unequipped damage is 1d4 + max(0, STR_mod).
+ * Determines damage formula for hero based on equipped weapon, STR modifier,
+ * enhancement bonuses, and class ability bonuses.
  * @param {object} character
  * @param {object|null} equippedWeapon
+ * @param {object|null} monster
  * @returns {string} e.g. '1d8+2' or '1d6+1'
  */
-function getHeroDamageFormula(character, equippedWeapon = null) {
+function getHeroDamageFormula(character, equippedWeapon = null, monster = null) {
   const strMod = getModifier(character.strength);
   let baseDice = '1d4';
 
@@ -61,10 +114,27 @@ function getHeroDamageFormula(character, equippedWeapon = null) {
     baseDice = equippedWeapon.damage_dice;
   }
 
-  if (strMod > 0) {
-    return `${baseDice}+${strMod}`;
-  } else if (strMod < 0) {
-    return `${baseDice}${strMod}`;
+  let flatBonus = strMod;
+  if (equippedWeapon && equippedWeapon.enhancement_bonus) {
+    flatBonus += Number(equippedWeapon.enhancement_bonus);
+  }
+
+  if (character.class === 'FIGHTER') {
+    flatBonus += getFighterWeaponTraining(character.level || 1).damage;
+  }
+
+  if (character.class === 'RANGER' && monster) {
+    flatBonus += getRangerFavoredEnemyBonus(character, monster).damage;
+  }
+
+  if (character.class === 'CLERIC' && monster) {
+    flatBonus += getClericDivinePowerBonus(character, monster).damage;
+  }
+
+  if (flatBonus > 0) {
+    return `${baseDice}+${flatBonus}`;
+  } else if (flatBonus < 0) {
+    return `${baseDice}${flatBonus}`;
   }
   return baseDice;
 }
@@ -74,7 +144,7 @@ function getHeroDamageFormula(character, equippedWeapon = null) {
  * @param {number} attackBonus
  * @param {number} targetAC
  * @param {() => number} rng
- * @returns {{ roll: number, total: number, isHit: boolean, isCrit: boolean, isFumble: boolean }}
+ * @returns {{ roll: number, total: number, isHit: boolean, isCrit: boolean, isFumble: boolean, isNat1: boolean, isNat20: boolean, d20: number }}
  */
 function resolveAttackRoll(attackBonus, targetAC, rng = Math.random) {
   const roll = rollD20(rng);
@@ -115,7 +185,7 @@ function rollInitiative(bonus, rng = Math.random) {
 
 /**
  * Calculates healing amount for potion.
- * Defaults to '1d8+1'.
+ * Defaults to '1d8+1' if not specified in potion attributes.
  * @param {object|null} potionItem
  * @param {() => number} rng
  * @returns {number}
