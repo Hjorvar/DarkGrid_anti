@@ -1,10 +1,19 @@
 const path = require('path');
 
+const isTestEnv =
+  process.env.NODE_ENV === 'test' ||
+  process.execArgv.some(arg => typeof arg === 'string' && arg.includes('test')) ||
+  process.argv.some(arg => typeof arg === 'string' && (arg.includes('test') || arg.endsWith('.test.js')));
+
+const defaultDbPath = isTestEnv
+  ? ':memory:'
+  : path.join(__dirname, '../../data/darkgrid.sqlite');
+
 const config = {
   port: parseInt(process.env.PORT, 10) || 3000,
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv: process.env.NODE_ENV || (isTestEnv ? 'test' : 'development'),
   sessionSecret: process.env.SESSION_SECRET || 'darkgrid-dev-secret-key-change-in-production',
-  dbPath: process.env.DB_PATH || path.join(__dirname, '../../data/darkgrid.sqlite'),
+  dbPath: process.env.DB_PATH || defaultDbPath,
 
   // Configurable game mechanics (Phase 1)
   encounterChancePercent: parseInt(process.env.ENCOUNTER_CHANCE_PERCENT, 10) || 25,

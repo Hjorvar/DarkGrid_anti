@@ -1,17 +1,16 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('http');
+const { createTestDb } = require('./test_helpers');
+const { setDb, closeDb } = require('../src/db/connection');
 const app = require('../src/app');
-const { getDb } = require('../src/db/connection');
-const { runMigrations, runSeeds } = require('../src/db/migrate');
 
 let server;
 let baseUrl;
 
 test.before(() => {
-  const db = getDb();
-  runMigrations(db);
-  runSeeds(db);
+  const db = createTestDb();
+  setDb(db);
 
   return new Promise((resolve) => {
     server = http.createServer(app);
@@ -24,6 +23,7 @@ test.before(() => {
 });
 
 test.after(() => {
+  closeDb();
   return new Promise((resolve) => {
     server.close(resolve);
   });

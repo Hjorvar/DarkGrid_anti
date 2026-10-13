@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node --test tests/*.test.js",
+    "test": "node --require ./tests/test_helpers.js --test tests/*.test.js",
     "db:setup": "node scripts/setup_db.js",
     "setup:db": "node scripts/setup_db.js",
     "db:world": "node scripts/generate_world_seed.js"

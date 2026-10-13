@@ -1,4 +1,6 @@
-const { initializeDatabase, setDb } = require('../src/db/connection');
+process.env.NODE_ENV = 'test';
+
+const { initializeDatabase, setDb, closeDb } = require('../src/db/connection');
 const { runMigrations, runSeeds } = require('../src/db/migrate');
 
 /**

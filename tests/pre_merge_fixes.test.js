@@ -3,12 +3,11 @@ const assert = require('node:assert/strict');
 const http = require('http');
 const config = require('../src/config');
 const app = require('../src/app');
-const { getDb } = require('../src/db/connection');
-const { runMigrations, runSeeds } = require('../src/db/migrate');
+const { createTestDb } = require('./test_helpers');
+const { getDb, setDb, closeDb } = require('../src/db/connection');
 const { registerUser } = require('../src/domain/auth/service');
 const {
   createCharacter,
-  getCharacterById,
   performCityRest,
   equipItem,
   getCharacterEquipment,
@@ -27,9 +26,8 @@ let server;
 let baseUrl;
 
 test.before(() => {
-  const db = getDb();
-  runMigrations(db);
-  runSeeds(db);
+  const db = createTestDb();
+  setDb(db);
 
   return new Promise((resolve) => {
     server = http.createServer(app);
@@ -42,6 +40,7 @@ test.before(() => {
 });
 
 test.after(() => {
+  closeDb();
   return new Promise((resolve) => {
     server.close(resolve);
   });
@@ -573,8 +572,9 @@ test('6. UI & HTTP Integration: Renders potion dropdown in combat and processes 
     VALUES (?, 'CHARACTER', ?)
   `).run(modDef.id, hero.id).lastInsertRowid;
 
-  // Create active combat encounter
-  const monster = db.prepare('SELECT * FROM monsters LIMIT 1').get();
+  // Ensure hero has sufficient HP to survive round and select low CR monster
+  db.prepare('UPDATE characters SET current_hp = 50, max_hp = 50 WHERE id = ?').run(hero.id);
+  const monster = db.prepare('SELECT * FROM monsters WHERE challenge_rating <= 0.25 ORDER BY id ASC LIMIT 1').get() || db.prepare('SELECT * FROM monsters LIMIT 1').get();
   const encRes = db.prepare(`
     INSERT INTO encounters (
       character_id, monster_id, tile_id, status, is_ambush, current_monster_hp, monster_max_hp, combat_round

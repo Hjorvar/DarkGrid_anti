@@ -155,14 +155,17 @@ function validateMovement(db, character, directionKey) {
 
   // 1. Enforce encounter lock: Cannot move if an open encounter exists
   const activeEncounter = db.prepare(`
-    SELECT id FROM encounters
+    SELECT id, status FROM encounters
     WHERE character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT')
   `).get(character.id);
 
   if (activeEncounter) {
+    const reason = activeEncounter.status === 'IN_COMBAT'
+      ? 'You cannot walk away while engaged in combat! You must fight or flee.'
+      : 'You must resolve the encounter (Investigate or Ignore) before traveling further!';
     return {
       allowed: false,
-      reason: 'You must resolve the encounter (Investigate or Ignore) before traveling further!'
+      reason
     };
   }
 

@@ -9,8 +9,7 @@ const {
   checkTileEncounter,
   getActiveEncounterForCharacter,
   investigateEncounter,
-  ignoreEncounter,
-  concludeEncounter
+  ignoreEncounter
 } = require('../src/domain/encounters/engine');
 const { formatModifier } = require('../src/domain/character/rules');
 
@@ -140,19 +139,29 @@ test('Encounter Revelation Stage 2: Proceeding reveals exact same monster, name,
   // 3. Monster symbol badge MUST now appear
   assert.ok(html.includes(`[${revealedEncounter.monster_symbol}]`), 'Monster symbol must appear upon reveal');
 
-  // 4. Standoff action: Option to withdraw
-  assert.ok(html.includes('/game/encounter/conclude'), 'Must offer conclude / withdraw form');
-  assert.ok(html.includes('Withdraw Carefully'), 'Must offer "Withdraw Carefully" button');
+  // 4. Standoff action: Conclude / Withdraw form must NOT exist
+  assert.equal(html.includes('/game/encounter/conclude'), false, 'Must NOT offer illegal conclude / withdraw form');
+  assert.equal(html.includes('Withdraw Carefully'), false, 'Must NOT offer illegal "Withdraw Carefully" button');
 
-  // 5. Conclude standoff -> movement unlocks
-  const concludeRes = concludeEncounter(db, hero.id, revealedEncounter.id);
-  assert.equal(concludeRes.success, true);
+  // 5. Attempting to ignore an active combat encounter must be rejected
+  assert.throws(() => {
+    ignoreEncounter(db, hero.id, revealedEncounter.id);
+  }, /Cannot ignore an encounter during active combat/);
 
-  const activeAfterConclude = getActiveEncounterForCharacter(db, hero.id, hero.class);
-  assert.equal(activeAfterConclude, null);
+  // 6. Movement remains locked during active combat
+  const moveAttemptBlocked = validateMovement(db, hero, 'NORTH');
+  assert.equal(moveAttemptBlocked.allowed, false, 'Movement must remain locked during active combat');
 
-  const moveAttempt = validateMovement(db, hero, 'NORTH');
-  assert.equal(moveAttempt.allowed, true);
+  // 7. Legal Flee action resolves combat with Attack of Opportunity and unlocks movement
+  const { executeCombatRound } = require('../src/domain/combat/engine');
+  const fleeState = executeCombatRound(db, hero.id, revealedEncounter.id, 'FLEE');
+  assert.equal(fleeState.encounter.status, 'ESCAPED', 'Legal flee must set status to ESCAPED');
+
+  const activeAfterFlee = getActiveEncounterForCharacter(db, hero.id, hero.class);
+  assert.equal(activeAfterFlee, null, 'Active encounter must be resolved after fleeing');
+
+  const moveAttemptAllowed = validateMovement(db, hero, 'NORTH');
+  assert.equal(moveAttemptAllowed.allowed, true, 'Movement must be unlocked after fleeing');
 });
 
 test('Encounter lifecycle across multiple monster types verifies consistency and secrecy', async () => {

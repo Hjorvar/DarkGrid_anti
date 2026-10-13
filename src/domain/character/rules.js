@@ -539,7 +539,7 @@ function createCharacter(db, {
  */
 function getCharacterEquipment(db, characterId) {
   const items = db.prepare(`
-    SELECT ii.id, ii.equipped_slot, id.name, id.category, id.damage_dice,
+    SELECT ii.id, ii.id AS instance_id, ii.equipped_slot, id.name, id.category, id.damage_dice,
            id.armor_bonus, id.shield_bonus, id.is_magical, id.buy_price, id.attributes,
            id.max_dex_bonus, id.enhancement_bonus, id.weapon_range_type, id.is_two_handed
     FROM item_instances ii
@@ -588,7 +588,7 @@ function getCharacterEquipment(db, characterId) {
  */
 function getCharacterInventory(db, characterId) {
   return db.prepare(`
-    SELECT ii.id, ii.item_definition_id, ii.equipped_slot, ii.owner_character_id,
+    SELECT ii.id, ii.id AS instance_id, ii.item_definition_id, ii.equipped_slot, ii.owner_character_id,
            id.name, id.category, id.buy_price, id.sell_price, id.is_magical,
            id.damage_dice, id.armor_bonus, id.shield_bonus, id.max_dex_bonus,
            id.enhancement_bonus, id.weapon_range_type, id.is_two_handed,
@@ -632,7 +632,17 @@ function equipItem(db, characterId, itemInstanceId, targetSlot) {
       throw new Error(`The ${item.name} cannot be equipped by a ${character.class}.`);
     }
 
-    const slot = (targetSlot || '').toUpperCase();
+    let slot = (targetSlot || '').toUpperCase().trim();
+    if (!slot) {
+      if (item.category === 'WEAPON') {
+        slot = item.weapon_range_type === 'RANGED' ? 'RANGED' : 'MELEE';
+      } else if (item.category === 'ARMOR') {
+        slot = 'ARMOR';
+      } else if (item.category === 'SHIELD') {
+        slot = 'SHIELD';
+      }
+    }
+
     if (!['MELEE', 'RANGED', 'ARMOR', 'SHIELD'].includes(slot)) {
       throw new Error(`Invalid equipment slot: ${targetSlot}. Allowed: MELEE, RANGED, ARMOR, SHIELD.`);
     }

@@ -242,13 +242,6 @@
                       🏃 Flee
                     </button>
                   </form>
-
-                  <!-- Hidden fallback for Phase 1 conclude standoff compatibility -->
-                  <form action="/game/encounter/conclude" method="POST" style="display: none;" aria-hidden="true">
-                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                    <input type="hidden" name="encounterId" value="<%= encounter.id %>">
-                    <button type="submit">Withdraw Carefully</button>
-                  </form>
                 </div>
               <% } %>
             </div>
@@ -412,10 +405,13 @@
               Active: <%= safeIsRangedActive ? '🏹 Ranged' : '🗡️ Melee' %>
             </div>
           </div>
+          <%
+            const isTwoHandedMeleeActive = !safeIsRangedActive && Boolean(safeEquipment.meleeWeapon && (Number(safeEquipment.meleeWeapon.is_two_handed) === 1 || safeEquipment.meleeWeapon.is_two_handed === true));
+          %>
           <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; margin-bottom: 8px;">
             <div>🗡️ <strong>Melee:</strong> <%= (safeEquipment.meleeWeapon ? safeEquipment.meleeWeapon.name : (safeEquipment.weapon ? safeEquipment.weapon.name : 'Bare Hands')) %></div>
             <div>🏹 <strong>Ranged:</strong> <%= (safeEquipment.rangedWeapon ? safeEquipment.rangedWeapon.name : 'None') %></div>
-            <div>🛡️ <strong>Protection:</strong> <%= (safeEquipment.armor ? safeEquipment.armor.name : 'Unarmored') %> <%= safeEquipment.shield ? ('+ ' + safeEquipment.shield.name) : '' %> <%= safeIsRangedActive && safeEquipment.shield ? '<span style="color: var(--text-dim); font-size: 0.75rem;">(Shield disabled with ranged)</span>' : '' %></div>
+            <div>🛡️ <strong>Protection:</strong> <%= (safeEquipment.armor ? safeEquipment.armor.name : 'Unarmored') %> <%= safeEquipment.shield ? ('+ ' + safeEquipment.shield.name) : '' %> <%= safeIsRangedActive && safeEquipment.shield ? '<span style="color: var(--text-dim); font-size: 0.75rem;">(Shield disabled with ranged)</span>' : (isTwoHandedMeleeActive && safeEquipment.shield ? '<span style="color: var(--text-dim); font-size: 0.75rem;">(Shield disabled with two-handed weapon)</span>' : '') %></div>
           </div>
 
           <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 6px;">
@@ -511,7 +507,8 @@
         <!-- Navigation Tabs for Inventory / Equipment / Shop -->
         <div class="tabs-container">
           <button type="button" class="tab-btn active" id="tab-btn-status" onclick="switchGameTab('status')">Status</button>
-          <button type="button" class="tab-btn" id="tab-btn-inventory" onclick="switchGameTab('inventory')">Backpack (<%= safeInventory.length %>)</button>
+          <% const backpackItems = safeInventory.filter(item => !item.equipped_slot); %>
+          <button type="button" class="tab-btn" id="tab-btn-inventory" onclick="switchGameTab('inventory')">Backpack (<%= backpackItems.length %>)</button>
           <% if (safeIsSafeCity && safeShopStock) { %>
             <button type="button" class="tab-btn" id="tab-btn-shop" onclick="switchGameTab('shop')">Town Market</button>
           <% } %>
@@ -552,8 +549,8 @@
                   <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 4px 6px; border-radius: 4px;">
                     <span><strong>[<%= item.equipped_slot %>]</strong> <%= item.name %> <%= item.is_magical ? '✨' : '' %></span>
                     <form action="/game/inventory/unequip" method="POST" style="margin: 0;">
-                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                      <input type="hidden" name="itemInstanceId" value="<%= item.instance_id %>">
+                      <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                      <input type="hidden" name="itemInstanceId" value="<%= item.id || item.instance_id %>">
                       <button type="submit" class="btn btn-subtle" style="padding: 2px 6px; font-size: 0.75rem;" <%= isEquipLocked ? 'disabled title="Cannot change gear during combat"' : '' %>>Unequip</button>
                     </form>
                   </div>
@@ -564,11 +561,21 @@
 
           <div style="margin-top: 8px;">
             <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-gold); margin-bottom: 4px;">Backpack Items</div>
-            <% if (safeInventory.length === 0) { %>
+            <% if (backpackItems.length === 0) { %>
               <div style="color: var(--text-dim); font-size: 0.8rem;">Your backpack is empty.</div>
             <% } else { %>
               <div style="display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; font-size: 0.8rem;">
-                <% safeInventory.forEach(item => { %>
+                <% backpackItems.forEach(item => { %>
+                  <%
+                    let derivedSlot = '';
+                    if (item.category === 'WEAPON') {
+                      derivedSlot = item.weapon_range_type === 'RANGED' ? 'RANGED' : 'MELEE';
+                    } else if (item.category === 'ARMOR') {
+                      derivedSlot = 'ARMOR';
+                    } else if (item.category === 'SHIELD') {
+                      derivedSlot = 'SHIELD';
+                    }
+                  %>
                   <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 4px;">
                     <div>
                       <div><%= item.name %> <%= item.is_magical ? '✨' : '' %></div>
@@ -576,8 +583,9 @@
                     </div>
                     <% if (['WEAPON', 'ARMOR', 'SHIELD'].includes(item.category)) { %>
                       <form action="/game/inventory/equip" method="POST" style="margin: 0;">
-                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                        <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                         <input type="hidden" name="itemInstanceId" value="<%= item.id %>">
+                        <input type="hidden" name="targetSlot" value="<%= derivedSlot %>">
                         <button type="submit" class="btn btn-secondary" style="padding: 2px 6px; font-size: 0.75rem;" <%= isEquipLocked ? 'disabled title="Cannot change gear during combat"' : '' %>>Equip</button>
                       </form>
                     <% } %>
@@ -633,11 +641,12 @@
               </div>
             </div>
 
-            <% if (safeInventory.length > 0) { %>
+            <% const sellableItems = safeInventory.filter(item => !item.equipped_slot); %>
+            <% if (sellableItems.length > 0) { %>
               <div style="margin-top: 6px; border-top: 1px solid var(--border-dark); padding-top: 6px;">
                 <div style="font-size: 0.75rem; color: var(--accent-gold); margin-bottom: 2px;">Sell from Backpack:</div>
                 <div style="display: flex; flex-direction: column; gap: 4px; max-height: 100px; overflow-y: auto; font-size: 0.8rem;">
-                  <% safeInventory.forEach(item => { %>
+                  <% sellableItems.forEach(item => { %>
                     <% const payout = item.is_magical ? Math.floor(item.buy_price * 0.4) : Math.floor(item.buy_price * 0.5); %>
                     <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 4px;">
                       <div>
@@ -645,7 +654,7 @@
                         <div style="font-size: 0.7rem; color: #68d391;">Payout: <%= payout %> gp</div>
                       </div>
                       <form action="/game/shop/sell" method="POST" style="margin: 0;">
-                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                        <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                         <input type="hidden" name="itemInstanceId" value="<%= item.id %>">
                         <button type="submit" class="btn btn-subtle" style="padding: 2px 6px; font-size: 0.75rem;">Sell</button>
                       </form>

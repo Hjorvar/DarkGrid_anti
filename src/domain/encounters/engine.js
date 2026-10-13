@@ -374,17 +374,25 @@ function getActiveEncounterForCharacter(db, characterId, heroClass) {
 }
 
 /**
- * Handle "Ignore" action - dismisses the encounter and allows travel
+ * Handle "Ignore" action - dismisses the pre-combat encounter and allows travel
  */
 function ignoreEncounter(db, characterId, encounterId) {
   return withTransaction(db, (tx) => {
     const enc = tx.prepare(`
       SELECT * FROM encounters
-      WHERE id = ? AND character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT')
+      WHERE id = ? AND character_id = ?
     `).get(encounterId, characterId);
 
     if (!enc) {
       throw new Error('No active encounter found to ignore.');
+    }
+
+    if (enc.status === 'IN_COMBAT') {
+      throw new Error('Cannot ignore an encounter during active combat! You must fight or flee.');
+    }
+
+    if (enc.status !== 'DISCOVERED') {
+      throw new Error(`Encounter cannot be ignored in status: ${enc.status}`);
     }
 
     tx.prepare(`
@@ -417,30 +425,6 @@ function investigateEncounter(db, characterId, encounterId, heroClass) {
   });
 }
 
-/**
- * Conclude Phase 1 investigation (standoff resolution)
- */
-function concludeEncounter(db, characterId, encounterId) {
-  return withTransaction(db, (txDb) => {
-    const enc = txDb.prepare(`
-      SELECT * FROM encounters
-      WHERE id = ? AND character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT')
-    `).get(encounterId, characterId);
-
-    if (!enc) {
-      throw new Error('No active encounter found to conclude.');
-    }
-
-    txDb.prepare(`
-      UPDATE encounters
-      SET status = 'ESCAPED', updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `).run(encounterId);
-
-    return { success: true };
-  });
-}
-
 module.exports = {
   calculateNormalWeight,
   weightedPick,
@@ -451,6 +435,5 @@ module.exports = {
   getActiveEncounterForCharacter,
   ignoreEncounter,
   investigateEncounter,
-  concludeEncounter,
   getMaxCrForDistance
 };

@@ -37,8 +37,7 @@ const {
   checkTileEncounter,
   getActiveEncounterForCharacter,
   ignoreEncounter,
-  investigateEncounter,
-  concludeEncounter
+  investigateEncounter
 } = require('../domain/encounters/engine');
 const {
   getCombatState,
@@ -254,24 +253,6 @@ router.post('/game/encounter/investigate', (req, res) => {
   try {
     investigateEncounter(req.db, character.id, encounterId, character.class);
     res.redirect('/game');
-  } catch (err) {
-    res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
-  }
-});
-
-/**
- * Conclude encounter standoff
- */
-router.post('/game/encounter/conclude', (req, res) => {
-  const character = getLivingCharacterByUserId(req.db, req.user.id);
-  if (!character) {
-    return res.redirect('/game');
-  }
-
-  const encounterId = parseInt(req.body.encounterId, 10);
-  try {
-    concludeEncounter(req.db, character.id, encounterId);
-    res.redirect('/game?info=' + encodeURIComponent('You carefully withdrew from close quarters with the creature.'));
   } catch (err) {
     res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
   }
