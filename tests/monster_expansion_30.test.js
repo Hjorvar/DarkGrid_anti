@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { createTestDb } = require('./test_helpers');
 const { 
   selectMonsterForTerrainAndHero, 
@@ -116,6 +117,43 @@ test('Session 2 Artwork: Every monster has image on disk and resolves in encount
     const publicPath = path.join(__dirname, '../public/', m.image_path);
     assert.ok(fs.existsSync(publicPath), `Public artwork missing at ${publicPath} for '${m.name}'`);
   }
+});
+
+test('Session 2 & Artwork Expansion: All 30 monsters have unique non-placeholder images', () => {
+  const ALL_30_SLUGS = [
+    'stirge', 'dire_rat', 'viper', 'giant_centipede', 'skeletal_champion',
+    'iron_cobra', 'blink_dog', 'duergar', 'drow', 'orc',
+    'wight', 'harpy', 'doppelganger', 'griffon', 'giant_scorpion',
+    'cloaker', 'phase_spider', 'wraith', 'gibbering_mouther', 'peryton',
+    'giant_stag_beetle', 'vegepygmy', 'ghast', 'giant_bat', 'morlock',
+    'violet_fungus', 'grick', 'krenshar', 'bunyip', 'sahuagin'
+  ];
+  const wolfPath = path.join(__dirname, '../images/monsters/feral_wolf.png');
+  const wolfHash = crypto.createHash('sha256').update(fs.readFileSync(wolfPath)).digest('hex');
+
+  const seenHashes = new Set();
+  // Include wolf hash to prevent any match
+  seenHashes.add(wolfHash);
+
+  for (const slug of ALL_30_SLUGS) {
+    const rootPath = path.join(__dirname, `../images/monsters/${slug}.png`);
+    const publicPath = path.join(__dirname, `../public/images/monsters/${slug}.png`);
+
+    assert.ok(fs.existsSync(rootPath), `Image file must exist at ${rootPath}`);
+    assert.ok(fs.existsSync(publicPath), `Public image file must exist at ${publicPath}`);
+
+    const rootBuf = fs.readFileSync(rootPath);
+    const pubBuf = fs.readFileSync(publicPath);
+    assert.ok(rootBuf.equals(pubBuf), `Root and public images for ${slug} must be identical`);
+
+    const hash = crypto.createHash('sha256').update(rootBuf).digest('hex');
+    assert.notEqual(hash, wolfHash, `${slug}.png must NOT be a copy of feral_wolf.png placeholder`);
+    assert.ok(!seenHashes.has(hash), `${slug}.png must have a unique SHA-256 hash`);
+    seenHashes.add(hash);
+  }
+
+  // Confirm exactly 30 unique hashes were added (excluding wolf)
+  assert.equal(seenHashes.size, 31, 'Exactly 30 unique monster hashes plus 1 wolf hash must be verified');
 });
 
 test('Session 2 Terrains: Full coverage and exactly ONE primary terrain per monster', () => {

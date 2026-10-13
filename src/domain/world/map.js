@@ -190,6 +190,73 @@ function validateMovement(db, character, directionKey) {
   };
 }
 
+/**
+ * Calculates the shortest passable path distance (in grid steps) from targetTile
+ * to the nearest safe city haven (terrain = 'CITY' AND is_safe = 1).
+ * Respects impassable terrain boundaries and valid map movement adjacency (NORTH, SOUTH, EAST, WEST).
+ * Returns:
+ * - 0: if targetTile is a safe city itself.
+ * - number (1, 2, 3...): steps along shortest passable path.
+ * - Infinity: if unreachable or targetTile is impassable.
+ */
+function getDistanceToNearestSafeCity(db, targetTile) {
+  if (!targetTile) return Infinity;
+  if (targetTile.is_passable === 0) return Infinity;
+
+  // Safe city check
+  if (targetTile.terrain === 'CITY' && targetTile.is_safe === 1) {
+    return 0;
+  }
+
+  // Find all safe city origins
+  const safeCities = db.prepare("SELECT id, x, y FROM map_tiles WHERE terrain = 'CITY' AND is_safe = 1").all();
+  if (safeCities.length === 0) {
+    return Infinity;
+  }
+
+  // Check if targetTile is in safeCities
+  for (const city of safeCities) {
+    if (city.id === targetTile.id || (city.x === targetTile.x && city.y === targetTile.y)) {
+      return 0;
+    }
+  }
+
+  // Pre-load all passable tiles into a fast coordinate map
+  const passableTiles = db.prepare('SELECT id, x, y FROM map_tiles WHERE is_passable = 1').all();
+  const passableCoordSet = new Set(passableTiles.map(t => `${t.x},${t.y}`));
+
+  // Multi-source BFS starting from all safe city nodes
+  const queue = [];
+  const visited = new Map();
+
+  for (const city of safeCities) {
+    const key = `${city.x},${city.y}`;
+    visited.set(key, 0);
+    queue.push({ x: city.x, y: city.y, dist: 0 });
+  }
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+
+    if (current.x === targetTile.x && current.y === targetTile.y) {
+      return current.dist;
+    }
+
+    for (const dir of Object.values(DIRECTIONS)) {
+      const nx = current.x + dir.dx;
+      const ny = current.y + dir.dy;
+      const nKey = `${nx},${ny}`;
+
+      if (passableCoordSet.has(nKey) && !visited.has(nKey)) {
+        visited.set(nKey, current.dist + 1);
+        queue.push({ x: nx, y: ny, dist: current.dist + 1 });
+      }
+    }
+  }
+
+  return Infinity;
+}
+
 module.exports = {
   DIRECTIONS,
   TERRAIN_SYMBOLS,
@@ -197,5 +264,6 @@ module.exports = {
   getTileByCoords,
   getAvailableDirections,
   getMinimapData,
-  validateMovement
+  validateMovement,
+  getDistanceToNearestSafeCity
 };

@@ -10,6 +10,8 @@ const {
   getCharacterPotionCount,
   equipItem,
   unequipItem,
+  setPrimaryWeaponPreference,
+  getActiveWeapon,
   performClericSelfHeal,
   performCityRest,
   getClericSelfHealInfo,
@@ -103,9 +105,10 @@ router.get('/game', (req, res) => {
   const potionCount = getCharacterPotionCount(req.db, character.id);
 
   // Computed Combat stats
-  const meleeAttackBonus = calculateHeroAttackBonus(character, equipment.meleeWeapon, null, false);
-  const rangedAttackBonus = calculateHeroAttackBonus(character, equipment.rangedWeapon, null, true);
-  const heroAC = calculateHeroAC(character, equipment, false);
+  const { activeWeapon, isRangedActive } = getActiveWeapon(character, equipment, activeEncounter);
+  const meleeAttackBonus = calculateHeroAttackBonus(character, equipment.meleeWeapon, activeEncounter);
+  const rangedAttackBonus = calculateHeroAttackBonus(character, equipment.rangedWeapon, activeEncounter);
+  const heroAC = calculateHeroAC(character, equipment.armor, equipment.shield, isRangedActive, activeEncounter);
 
   // Cleric healing info
   let clericHealInfo = null;
@@ -149,6 +152,8 @@ router.get('/game', (req, res) => {
     equipment,
     inventory,
     potionCount,
+    activeWeapon,
+    isRangedActive,
     meleeAttackBonus,
     rangedAttackBonus,
     heroAC,
@@ -414,6 +419,25 @@ router.post('/game/inventory/unequip', (req, res) => {
   try {
     unequipItem(req.db, character.id, itemInstanceId);
     res.redirect('/game?info=' + encodeURIComponent('Item unequipped to backpack.'));
+  } catch (err) {
+    res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
+  }
+});
+
+/**
+ * Switch Primary Weapon Preference (Melee vs Ranged)
+ */
+router.post('/game/character/primary-weapon', (req, res) => {
+  const character = getLivingCharacterByUserId(req.db, req.user.id);
+  if (!character) {
+    return res.redirect('/game');
+  }
+
+  const { primaryWeapon } = req.body;
+  try {
+    setPrimaryWeaponPreference(req.db, character.id, primaryWeapon);
+    const prefLabel = (primaryWeapon || '').toUpperCase() === 'RANGED' ? 'Ranged' : 'Melee';
+    res.redirect('/game?info=' + encodeURIComponent(`Primary weapon preference set to ${prefLabel}.`));
   } catch (err) {
     res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
   }

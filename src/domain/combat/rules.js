@@ -10,6 +10,7 @@ const {
   getFighterWeaponTraining,
   getFighterArmorTrainingMaxDexBonus,
   getRangerFavoredEnemyBonus,
+  getClericHolyRadianceBonus,
   getClericDivinePowerBonus
 } = require('../character/rules');
 const { rollD20, rollDice } = require('./dice');
@@ -50,16 +51,16 @@ function calculateHeroAttackBonus(character, equippedWeapon = null, monster = nu
     fighterBonus = getFighterWeaponTraining(character.level || 1).attack;
   }
 
-  // Ranger Favored Enemy
+  // Ranger Favored Enemy (guaranteed 0 vs Undead)
   let rangerBonus = 0;
   if (character.class === 'RANGER' && monster) {
     rangerBonus = getRangerFavoredEnemyBonus(character, monster).attack;
   }
 
-  // Cleric Divine Power
+  // Cleric Holy Radiance vs Undead (replaces Divine Power)
   let clericBonus = 0;
   if (character.class === 'CLERIC' && monster) {
-    clericBonus = getClericDivinePowerBonus(character, monster).attack;
+    clericBonus = getClericHolyRadianceBonus(character, monster).attack;
   }
 
   return baseBonus + levelBonus + weaponBonus + fighterBonus + rangerBonus + clericBonus;
@@ -67,43 +68,61 @@ function calculateHeroAttackBonus(character, equippedWeapon = null, monster = nu
 
 /**
  * Calculates hero Armor Class:
- * 10 + effective_DEX + armor_bonus + shield_bonus
+ * 10 + effective_DEX + armor_bonus + shield_bonus + sacred_bonuses (Holy Radiance)
  * Effective DEX respects armor Max DEX limit, boosted by Fighter Armor Training.
  * Shield bonus drops to 0 when ranged weapon is active.
+ * Holy Radiance AC bonus is a sacred defense that applies vs Undead even when using a ranged weapon.
  * @param {object} character
  * @param {object|null} equippedArmor
  * @param {object|null} equippedShield
  * @param {boolean} isRangedActive
+ * @param {object|null} monster
  * @returns {number}
  */
-function calculateHeroAC(character, equippedArmor = null, equippedShield = null, isRangedActive = false) {
-  // Support both calculateHeroAC(hero, equipment, isRangedActive) and calculateHeroAC(hero, armor, shield, isRangedActive)
+function calculateHeroAC(character, equippedArmor = null, equippedShield = null, isRangedActive = false, monster = null) {
+  let armor = equippedArmor;
+  let shield = equippedShield;
+  let rangedActive = Boolean(isRangedActive);
+  let targetMonster = monster;
+
+  // Support calculateHeroAC(hero, equipmentBag, isRangedActive, monster)
   if (equippedArmor && typeof equippedArmor === 'object' && ('armor' in equippedArmor || 'shield' in equippedArmor)) {
-    isRangedActive = Boolean(equippedShield);
-    const bag = equippedArmor;
-    equippedArmor = bag.armor || null;
-    equippedShield = bag.shield || null;
+    armor = equippedArmor.armor || null;
+    shield = equippedArmor.shield || null;
+    if (typeof equippedShield === 'boolean') {
+      rangedActive = equippedShield;
+      targetMonster = (isRangedActive && typeof isRangedActive === 'object') ? isRangedActive : monster;
+    } else if (equippedShield && typeof equippedShield === 'object' && ('creature_type' in equippedShield || 'armor_class' in equippedShield || 'descriptions' in equippedShield)) {
+      targetMonster = equippedShield;
+      rangedActive = Boolean(isRangedActive);
+    }
   }
 
   const dexMod = getModifier(character.dexterity);
 
   let effectiveDex = dexMod;
-  if (equippedArmor && equippedArmor.max_dex_bonus !== null && equippedArmor.max_dex_bonus !== undefined) {
-    const armorMaxDex = Number(equippedArmor.max_dex_bonus);
+  if (armor && armor.max_dex_bonus !== null && armor.max_dex_bonus !== undefined) {
+    const armorMaxDex = Number(armor.max_dex_bonus);
     const fighterBonus = (character.class === 'FIGHTER') ? getFighterArmorTrainingMaxDexBonus(character.level || 1) : 0;
     const effectiveMax = armorMaxDex + fighterBonus;
     effectiveDex = dexMod >= 0 ? Math.min(dexMod, effectiveMax) : dexMod;
   }
 
-  const armorBonus = equippedArmor ? (Number(equippedArmor.armor_bonus || 0) + Number(equippedArmor.enhancement_bonus || 0)) : 0;
+  const armorBonus = armor ? (Number(armor.armor_bonus || 0) + Number(armor.enhancement_bonus || 0)) : 0;
 
-  // Shield bonus does NOT apply when fighting with a ranged weapon
+  // Shield bonus does NOT apply when fighting with a ranged weapon (including magical shield enhancement)
   let shieldBonus = 0;
-  if (!isRangedActive && equippedShield) {
-    shieldBonus = Number(equippedShield.shield_bonus || 0) + Number(equippedShield.enhancement_bonus || 0);
+  if (!rangedActive && shield) {
+    shieldBonus = Number(shield.shield_bonus || 0) + Number(shield.enhancement_bonus || 0);
   }
 
-  return 10 + effectiveDex + armorBonus + shieldBonus;
+  // Cleric Holy Radiance vs Undead (+2 AC L1-4, +3 AC L5-8, +4 AC L9+). Sacred defense, NOT shield bonus.
+  let holyRadianceAC = 0;
+  if (character && (character.class || '').toUpperCase() === 'CLERIC' && targetMonster) {
+    holyRadianceAC = getClericHolyRadianceBonus(character, targetMonster).ac;
+  }
+
+  return 10 + effectiveDex + armorBonus + shieldBonus + holyRadianceAC;
 }
 
 /**
@@ -136,7 +155,7 @@ function getHeroDamageFormula(character, equippedWeapon = null, monster = null) 
   }
 
   if (character.class === 'CLERIC' && monster) {
-    flatBonus += getClericDivinePowerBonus(character, monster).damage;
+    flatBonus += getClericHolyRadianceBonus(character, monster).damage;
   }
 
   if (flatBonus > 0) {

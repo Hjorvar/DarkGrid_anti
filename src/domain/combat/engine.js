@@ -5,7 +5,7 @@
  */
 
 const { withTransaction } = require('../../db/connection');
-const { getModifier, getCharacterEquipment, getCharacterPotionCount } = require('../character/rules');
+const { getModifier, getCharacterEquipment, getCharacterPotionCount, getActiveWeapon } = require('../character/rules');
 const {
   calculateHeroAttackBonus,
   calculateHeroAC,
@@ -60,7 +60,10 @@ function getConditionTextForBracket(descriptionsJson, bracket) {
  * Initializes combat session for an encounter.
  * Rolls initiative once, sets status to IN_COMBAT, establishes maximum HP, and logs initial engagement.
  */
-function startCombat(db, characterId, encounterId, options = {}) {
+function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, maybeOptions = {}) {
+  const options = (typeof optionsOrHeroClass === 'object' && optionsOrHeroClass !== null)
+    ? optionsOrHeroClass
+    : (maybeOptions || {});
   const rng = options.rng || Math.random;
 
   return withTransaction(db, (tx) => {
@@ -70,8 +73,10 @@ function startCombat(db, characterId, encounterId, options = {}) {
     }
 
     const encounter = tx.prepare(`
-      SELECT e.*, m.name as monster_name, m.symbol as monster_symbol,
+      SELECT e.*, m.name as monster_name, m.symbol as monster_symbol, m.color as monster_color,
              m.base_hp, m.initiative_bonus, m.descriptions as monster_descriptions,
+             m.armor_class as monster_ac, m.attack_bonus as monster_ab, m.damage_dice as monster_damage_dice,
+             m.xp_reward, m.creature_type, m.movement_type, m.challenge_rating,
              mi.max_hp as instance_max_hp, mi.current_hp as instance_current_hp
       FROM encounters e
       JOIN monsters m ON e.monster_id = m.id
@@ -89,7 +94,105 @@ function startCombat(db, characterId, encounterId, options = {}) {
 
     // Determine monster max HP
     const monsterMaxHp = encounter.instance_max_hp || encounter.monster_max_hp || encounter.base_hp;
-    const currentMonsterHp = encounter.instance_current_hp || encounter.current_monster_hp || monsterMaxHp;
+    let currentMonsterHp = encounter.instance_current_hp || encounter.current_monster_hp || monsterMaxHp;
+
+    const equipment = getCharacterEquipment(tx, characterId);
+    let openingShotResolved = encounter.opening_shot_resolved || 0;
+
+    // Check Ranger Ranged Opening Shot condition:
+    // 1. Character class is Ranger
+    // 2. Ranger has prepared ranged weapon
+    // 3. Ranger spotted monster first (spotted_by_hero === 1)
+    // 4. Monster did not ambush Ranger (is_ambush === 0)
+    // 5. Combat has not already started (status === 'DISCOVERED')
+    // 6. Opening shot has not already been resolved (opening_shot_resolved === 0)
+    const canOpeningShot = (
+      (character.class || '').toUpperCase() === 'RANGER' &&
+      equipment.rangedWeapon &&
+      encounter.status === 'DISCOVERED' &&
+      Number(encounter.spotted_by_hero !== undefined ? encounter.spotted_by_hero : 1) === 1 &&
+      Number(encounter.is_ambush || 0) === 0 &&
+      Number(openingShotResolved) === 0
+    );
+
+    let openingShotFired = false;
+    let openingShotHit = false;
+    let openingShotCrit = false;
+
+    if (canOpeningShot) {
+      openingShotFired = true;
+      openingShotResolved = 1;
+      const openingAB = calculateHeroAttackBonus(character, equipment.rangedWeapon, encounter);
+      const monsterAC = encounter.monster_ac || encounter.armor_class;
+      const attackRoll = resolveAttackRoll(openingAB, monsterAC, rng);
+      openingShotHit = attackRoll.isHit;
+      openingShotCrit = attackRoll.isCrit;
+      let openingDamage = 0;
+
+      if (attackRoll.isHit) {
+        const damageFormula = getHeroDamageFormula(character, equipment.rangedWeapon, encounter);
+        openingDamage = resolveDamage(damageFormula, attackRoll.isCrit, rng);
+        currentMonsterHp = Math.max(0, currentMonsterHp - openingDamage);
+      }
+
+      const openingNarrative = `[Opening Shot] ${describeHeroAttack(equipment.rangedWeapon, attackRoll)}`;
+      tx.prepare(`
+        INSERT INTO combat_events (
+          encounter_id, round_number, event_type, public_text, details
+        ) VALUES (?, 1, 'OPENING_SHOT', ?, ?)
+      `).run(
+        encounterId,
+        openingNarrative,
+        JSON.stringify({
+          isHit: attackRoll.isHit,
+          isCrit: attackRoll.isCrit,
+          damage: openingDamage,
+          isOpeningShot: true
+        })
+      );
+
+      // Check if monster died from opening shot
+      if (currentMonsterHp <= 0) {
+        tx.prepare(`
+          UPDATE encounters
+          SET status = 'VICTORY',
+              current_monster_hp = 0,
+              monster_max_hp = ?,
+              opening_shot_resolved = 1,
+              combat_round = 1,
+              last_health_bracket = 0,
+              updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `).run(monsterMaxHp, encounterId);
+
+        if (encounter.monster_instance_id) {
+          tx.prepare('UPDATE monster_instances SET current_hp = 0 WHERE id = ?').run(encounter.monster_instance_id);
+        }
+
+        const deadCondition = getConditionTextForBracket(encounter.monster_descriptions, 0);
+        if (deadCondition) {
+          tx.prepare(`
+            INSERT INTO combat_events (
+              encounter_id, round_number, event_type, public_text, details
+            ) VALUES (?, 1, 'MONSTER_CONDITION', ?, ?)
+          `).run(encounterId, deadCondition, JSON.stringify({ bracket: 0 }));
+        }
+
+        let monsterInstance = null;
+        if (encounter.monster_instance_id) {
+          monsterInstance = tx.prepare('SELECT * FROM monster_instances WHERE id = ?').get(encounter.monster_instance_id);
+        }
+
+        handleMonsterDefeat(tx, character, encounter, encounter, monsterInstance, { rng });
+        const victoryState = getCombatState(tx, characterId, encounterId);
+        return {
+          ...victoryState,
+          openingShotFired,
+          openingShotHit,
+          openingShotCrit
+        };
+      }
+    }
 
     // Roll initiative if not already rolled
     let initiativeWinner = encounter.initiative_winner;
@@ -107,6 +210,8 @@ function startCombat(db, characterId, encounterId, options = {}) {
       initiativeWinner = heroInit >= monsterInit ? 'HERO' : 'MONSTER';
     }
 
+    const initialBracket = getHealthBracket(currentMonsterHp, monsterMaxHp);
+
     tx.prepare(`
       UPDATE encounters
       SET status = 'IN_COMBAT',
@@ -116,7 +221,8 @@ function startCombat(db, characterId, encounterId, options = {}) {
           monster_max_hp = ?,
           current_monster_hp = ?,
           combat_round = CASE WHEN combat_round = 0 THEN 1 ELSE combat_round END,
-          last_health_bracket = 100,
+          last_health_bracket = ?,
+          opening_shot_resolved = ?,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(
@@ -125,12 +231,18 @@ function startCombat(db, characterId, encounterId, options = {}) {
       monsterInit,
       monsterMaxHp,
       currentMonsterHp,
+      initialBracket,
+      openingShotResolved,
       encounterId
     );
 
+    if (encounter.monster_instance_id) {
+      tx.prepare('UPDATE monster_instances SET current_hp = ? WHERE id = ?').run(currentMonsterHp, encounter.monster_instance_id);
+    }
+
     // Initial engagement description
-    const initialCondition = getConditionTextForBracket(encounter.monster_descriptions, 100);
-    const existingEventsCount = tx.prepare('SELECT COUNT(*) as c FROM combat_events WHERE encounter_id = ?').get(encounterId).c;
+    const initialCondition = getConditionTextForBracket(encounter.monster_descriptions, initialBracket);
+    const existingEventsCount = tx.prepare("SELECT COUNT(*) as c FROM combat_events WHERE encounter_id = ? AND event_type = 'CONDITION'").get(encounterId).c;
 
     if (existingEventsCount === 0 && initialCondition) {
       tx.prepare(`
@@ -140,11 +252,17 @@ function startCombat(db, characterId, encounterId, options = {}) {
       `).run(
         encounterId,
         initialCondition,
-        JSON.stringify({ bracket: 100, initiativeWinner })
+        JSON.stringify({ bracket: initialBracket, initiativeWinner })
       );
     }
 
-    return getCombatState(tx, characterId, encounterId);
+    const combatState = getCombatState(tx, characterId, encounterId);
+    return {
+      ...combatState,
+      openingShotFired,
+      openingShotHit,
+      openingShotCrit
+    };
   });
 }
 
@@ -160,7 +278,7 @@ function getCombatState(db, characterId, encounterId) {
            m.challenge_rating, m.armor_class as monster_ac, m.attack_bonus as monster_ab,
            m.damage_dice as monster_damage_dice, m.xp_reward, m.base_hp, m.creature_type,
            m.movement_type
-    FROM encounters e
+     FROM encounters e
     JOIN monsters m ON e.monster_id = m.id
     WHERE e.id = ? AND e.character_id = ?
   `).get(encounterId, characterId);
@@ -176,11 +294,8 @@ function getCombatState(db, characterId, encounterId) {
   const equipment = getCharacterEquipment(db, characterId);
   const potionCount = getCharacterPotionCount(db, characterId);
 
-  const isAirborne = (encounter.movement_type === 'FLY');
-  const activeWeapon = (isAirborne && equipment.rangedWeapon)
-    ? equipment.rangedWeapon
-    : (equipment.meleeWeapon || equipment.rangedWeapon || equipment.weapon);
-  const isRangedActive = Boolean(activeWeapon && activeWeapon.weapon_range_type === 'RANGED');
+  const { activeWeapon, isRangedActive } = getActiveWeapon(character, equipment, encounter);
+  const heroAC = calculateHeroAC(character, equipment.armor, equipment.shield, isRangedActive, encounter);
 
   const currentBracket = getHealthBracket(encounter.current_monster_hp, encounter.monster_max_hp || encounter.base_hp);
   const currentConditionText = getConditionTextForBracket(encounter.monster_descriptions, currentBracket);
@@ -192,6 +307,7 @@ function getCombatState(db, characterId, encounterId) {
     equipment,
     activeWeapon,
     isRangedActive,
+    heroAC,
     potionCount,
     currentBracket,
     currentConditionText
@@ -220,7 +336,8 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
     const encounter = tx.prepare(`
       SELECT e.*, m.name as monster_name, m.symbol as monster_symbol, m.color as monster_color,
              m.armor_class as monster_ac, m.attack_bonus as monster_ab, m.damage_dice as monster_damage_dice,
-             m.base_hp, m.xp_reward, m.creature_type, m.descriptions as monster_descriptions
+             m.base_hp, m.xp_reward, m.creature_type, m.descriptions as monster_descriptions,
+             m.movement_type
       FROM encounters e
       JOIN monsters m ON e.monster_id = m.id
       WHERE e.id = ? AND e.character_id = ?
@@ -249,29 +366,9 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
     }
 
     const equipment = getCharacterEquipment(tx, characterId);
-
-    // Determine active weapon: airborne monsters trigger prepared ranged weapon
-    const isAirborne = (encounter.movement_type === 'FLY');
-    let activeWeapon = null;
-    let isRangedActive = false;
-
-    if (isAirborne && equipment.rangedWeapon) {
-      activeWeapon = equipment.rangedWeapon;
-      isRangedActive = true;
-    } else if (equipment.meleeWeapon) {
-      activeWeapon = equipment.meleeWeapon;
-      isRangedActive = false;
-    } else if (equipment.rangedWeapon) {
-      activeWeapon = equipment.rangedWeapon;
-      isRangedActive = true;
-    } else {
-      activeWeapon = equipment.weapon; // bare hands / fallback
-      isRangedActive = false;
-    }
-
-    const heroAC = calculateHeroAC(character, equipment.armor, equipment.shield, isRangedActive);
+    const { activeWeapon, isRangedActive } = getActiveWeapon(character, equipment, encounter);
+    const heroAC = calculateHeroAC(character, equipment.armor, equipment.shield, isRangedActive, encounter);
     const heroAB = calculateHeroAttackBonus(character, activeWeapon, encounter);
-
     let currentMonsterHp = encounter.current_monster_hp;
     let monsterMaxHp = encounter.monster_max_hp || (monsterInstance ? monsterInstance.max_hp : encounter.base_hp);
     let currentHeroHp = character.current_hp;

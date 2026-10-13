@@ -23,7 +23,7 @@
 | **Phase H: Magic Resale**   | Global magic market (40% buy, 125% resale, ein færslur) | **COMPLETED** | Leikmenn selja í sameiginlegan markað, aðrir geta keypt |
 | **Phase I: Loot Tables**    | CR & Treasure classifications (None, Incidental, Standard, Double, NPC Gear) | **COMPLETED** | XP alltaf, dýr ekkert loot, CR-kvarðað gull og töfrahættur |
 | **Phase J: Permadeath Sync**| Búnaður og eignir í 50% permadeath roll, 20-item cap | **COMPLETED** | Persistent monster fær 50% gull/hluti, victor endurheimtir við sigur |
-| **Phase K: 30 New Monsters**| 30 ný viðbótarskrímsli með öllum 9 lýsingum (alls 68 skrímsli) | **COMPLETED** | Secrecy audit 100% staðfest, myndir á diski, primary terrains |
+| **Phase K: 30 New Monsters**| 30 ný viðbótarskrímsli með öllum 9 lýsingum (alls 68 skrímsli) | **COMPLETED** | Secrecy audit 100% staðfest, 30 frumlegar myndir búnar til og samþykktar (APPROVED) |
 | **Phase L: Simulation**     | 100.000 bardaga hermun, hagkerfis- og jafnvægisgreining (`docs/balance-report.md`) | **COMPLETED** | 49.4% wilderness winrate, stéttagreining og hagkerfishraði |
 | **Phase M: End-to-End Tests**| Heildarprófanir á öllu leikflæðinu, allar 67 prófanir grænar | **COMPLETED** | 10 ný heildarpróf í `tests/overnight_systems.test.js` |
 

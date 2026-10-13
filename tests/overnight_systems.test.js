@@ -252,12 +252,12 @@ test('6. Class abilities: Fighter Weapon/Armor Training, Ranger Favored Enemy, C
   assert.deepEqual(getRangerFavoredEnemyBonus(rangerHero, goblin), { attack: 2, damage: 2 });
   assert.deepEqual(getRangerFavoredEnemyBonus(rangerHero, wolf), { attack: 0, damage: 0 });
 
-  // Cleric Divine Power
-  assert.deepEqual(getClericDivinePowerBonus('CLERIC', 1, { creature_type: 'Undead' }), { attack: 2, damage: 2 });
-  assert.deepEqual(getClericDivinePowerBonus('CLERIC', 5, { creature_type: 'Undead' }), { attack: 3, damage: 3 });
-  assert.deepEqual(getClericDivinePowerBonus('CLERIC', 9, { creature_type: 'Undead' }), { attack: 4, damage: 4 });
-  assert.deepEqual(getClericDivinePowerBonus('CLERIC', 5, { creature_type: 'Animal' }), { attack: 0, damage: 0 });
-  assert.deepEqual(getClericDivinePowerBonus('FIGHTER', 5, { creature_type: 'Undead' }), { attack: 0, damage: 0 });
+  // Cleric Holy Radiance (upgraded from Divine Power)
+  assert.deepEqual(getClericDivinePowerBonus('CLERIC', 1, { creature_type: 'Undead' }), { attack: 2, damage: 3, ac: 2 });
+  assert.deepEqual(getClericDivinePowerBonus('CLERIC', 5, { creature_type: 'Undead' }), { attack: 3, damage: 4, ac: 3 });
+  assert.deepEqual(getClericDivinePowerBonus('CLERIC', 9, { creature_type: 'Undead' }), { attack: 4, damage: 5, ac: 4 });
+  assert.deepEqual(getClericDivinePowerBonus('CLERIC', 5, { creature_type: 'Animal' }), { attack: 0, damage: 0, ac: 0 });
+  assert.deepEqual(getClericDivinePowerBonus('FIGHTER', 5, { creature_type: 'Undead' }), { attack: 0, damage: 0, ac: 0 });
 });
 
 test('7. Cleric out-of-combat self-healing: rolls dice, respects caps, enforces cooldowns', async () => {

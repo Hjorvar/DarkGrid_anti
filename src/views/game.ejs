@@ -10,6 +10,8 @@
   const safeClericHealInfo = (typeof clericHealInfo !== 'undefined') ? clericHealInfo : null;
   const safeIsSafeCity = (typeof isSafeCity !== 'undefined') ? Boolean(isSafeCity) : (currentTile && currentTile.is_safe === 1 && currentTile.terrain === 'CITY');
   const safeShopStock = (typeof shopStock !== 'undefined') ? shopStock : null;
+  const safeIsRangedActive = (typeof isRangedActive !== 'undefined') ? Boolean(isRangedActive) : false;
+  const safeActiveWeapon = (typeof activeWeapon !== 'undefined') ? activeWeapon : null;
 %>
 
 <div class="game-viewport">
@@ -137,6 +139,11 @@
 
               <% if (!isRevealed) { %>
                 <!-- Stage 1 Actions: Player decides to Investigate or Ignore -->
+                <% if (encounter && encounter.isAmbush) { %>
+                  <div style="margin: 8px 0; padding: 6px 10px; background: rgba(120, 20, 20, 0.4); border-left: 3px solid var(--accent-crimson); font-size: 0.85rem; color: #ff9999; border-radius: 4px;">
+                    ⚠️ <strong>Ambush!</strong> The creature lunged from hiding before you could spot it or draw a bead!
+                  </div>
+                <% } %>
                 <div class="encounter-actions">
                   <form action="/game/encounter/investigate" method="POST">
                     <input type="hidden" name="encounterId" value="<%= encounter.id %>">
@@ -166,7 +173,8 @@
                       Battle Record (Round <%= encounter.combat_round || 1 %>)
                     </div>
                     <% safeCombatState.events.slice(-6).forEach(function(ev) { %>
-                      <div class="combat-event-row" style="font-size: 0.9rem; line-height: 1.4; color: <%= ev.event_type === 'DEATH' ? 'var(--accent-crimson)' : (ev.event_type === 'VICTORY' ? 'var(--accent-gold)' : (ev.event_type === 'HERO_ATTACK' ? '#7cc' : (ev.event_type === 'MONSTER_ATTACK' ? '#e88' : '#bbb'))) %>;">
+                      <div class="combat-event-row" style="font-size: 0.9rem; line-height: 1.4; color: <%= ev.event_type === 'DEATH' ? 'var(--accent-crimson)' : (ev.event_type === 'VICTORY' ? 'var(--accent-gold)' : (ev.event_type === 'HERO_ATTACK' || ev.event_type === 'OPENING_SHOT' ? '#7cc' : (ev.event_type === 'MONSTER_ATTACK' ? '#e88' : '#bbb'))) %>;">
+                        <% if (ev.event_type === 'OPENING_SHOT') { %>🏹 <% } %>
                         <% if (ev.event_type === 'HERO_ATTACK') { %>⚔️ <% } %>
                         <% if (ev.event_type === 'MONSTER_ATTACK') { %>🩸 <% } %>
                         <% if (ev.event_type === 'POTION_USED') { %>🧪 <% } %>
@@ -363,11 +371,38 @@
         </div>
 
         <div class="vital-box" style="margin-bottom: 12px; padding: 8px 12px;">
-          <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 4px;">Prepared Gear</div>
-          <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim);">Prepared Gear</div>
+            <div style="font-size: 0.75rem; color: var(--accent-gold);">
+              Active: <%= safeIsRangedActive ? '🏹 Ranged' : '🗡️ Melee' %>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; margin-bottom: 8px;">
             <div>🗡️ <strong>Melee:</strong> <%= (safeEquipment.meleeWeapon ? safeEquipment.meleeWeapon.name : (safeEquipment.weapon ? safeEquipment.weapon.name : 'Bare Hands')) %></div>
             <div>🏹 <strong>Ranged:</strong> <%= (safeEquipment.rangedWeapon ? safeEquipment.rangedWeapon.name : 'None') %></div>
-            <div>🛡️ <strong>Protection:</strong> <%= (safeEquipment.armor ? safeEquipment.armor.name : 'Unarmored') %> <%= safeEquipment.shield ? ('+ ' + safeEquipment.shield.name) : '' %></div>
+            <div>🛡️ <strong>Protection:</strong> <%= (safeEquipment.armor ? safeEquipment.armor.name : 'Unarmored') %> <%= safeEquipment.shield ? ('+ ' + safeEquipment.shield.name) : '' %> <%= safeIsRangedActive && safeEquipment.shield ? '<span style="color: var(--text-dim); font-size: 0.75rem;">(Shield disabled with ranged)</span>' : '' %></div>
+          </div>
+
+          <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 6px;">
+            <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px;">Primary Weapon Preference:</div>
+            <% const isInCombat = (encounter && encounter.status === 'IN_COMBAT'); %>
+            <div style="display: flex; gap: 6px;">
+              <form action="/game/character/primary-weapon" method="POST" style="flex: 1;">
+                <input type="hidden" name="primaryWeapon" value="MELEE">
+                <button type="submit" class="btn <%= (character.primary_weapon || 'MELEE') === 'MELEE' ? 'btn-primary' : 'btn-secondary' %>" style="width: 100%; font-size: 0.75rem; padding: 4px 6px;" <%= isInCombat ? 'disabled title="Cannot switch weapons in combat"' : '' %>>
+                  🗡️ Melee <%= (character.primary_weapon || 'MELEE') === 'MELEE' ? '✓' : '' %>
+                </button>
+              </form>
+              <form action="/game/character/primary-weapon" method="POST" style="flex: 1;">
+                <input type="hidden" name="primaryWeapon" value="RANGED">
+                <button type="submit" class="btn <%= character.primary_weapon === 'RANGED' ? 'btn-primary' : 'btn-secondary' %>" style="width: 100%; font-size: 0.75rem; padding: 4px 6px;" <%= isInCombat ? 'disabled title="Cannot switch weapons in combat"' : '' %>>
+                  🏹 Ranged <%= character.primary_weapon === 'RANGED' ? '✓' : '' %>
+                </button>
+              </form>
+            </div>
+            <% if (isInCombat) { %>
+              <div style="font-size: 0.7rem; color: #a88; margin-top: 3px; text-align: center;">Weapon preference locked in combat</div>
+            <% } %>
           </div>
         </div>
 
@@ -459,7 +494,7 @@
             </div>
           <% } else if (character.class === 'CLERIC') { %>
             <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;">
-              ✨ <strong>Divine Power:</strong> Sacred Smite against Undead (+2 to +4 atk/dmg).
+              ✨ <strong>Holy Radiance:</strong> Sacred aura against Undead (+2 to +4 atk, +3 to +5 dmg, +2 to +4 AC).
             </div>
           <% } %>
         </div>
@@ -469,6 +504,7 @@
           <div style="margin-bottom: 8px;">
             <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-gold); margin-bottom: 4px;">Equipped Gear</div>
             <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem;">
+              <% const isEquipLocked = (encounter && encounter.status === 'IN_COMBAT'); %>
               <% const equippedItems = [safeEquipment.meleeWeapon, safeEquipment.rangedWeapon, safeEquipment.armor, safeEquipment.shield].filter(Boolean); %>
               <% if (equippedItems.length === 0) { %>
                 <div style="color: var(--text-dim);">No gear equipped.</div>
@@ -478,7 +514,7 @@
                     <span><strong>[<%= item.equipped_slot %>]</strong> <%= item.name %> <%= item.is_magical ? '✨' : '' %></span>
                     <form action="/game/inventory/unequip" method="POST" style="margin: 0;">
                       <input type="hidden" name="itemInstanceId" value="<%= item.instance_id %>">
-                      <button type="submit" class="btn btn-subtle" style="padding: 2px 6px; font-size: 0.75rem;">Unequip</button>
+                      <button type="submit" class="btn btn-subtle" style="padding: 2px 6px; font-size: 0.75rem;" <%= isEquipLocked ? 'disabled title="Cannot change gear during combat"' : '' %>>Unequip</button>
                     </form>
                   </div>
                 <% }); %>
@@ -501,7 +537,7 @@
                     <% if (['WEAPON', 'ARMOR', 'SHIELD'].includes(item.category)) { %>
                       <form action="/game/inventory/equip" method="POST" style="margin: 0;">
                         <input type="hidden" name="itemInstanceId" value="<%= item.id %>">
-                        <button type="submit" class="btn btn-secondary" style="padding: 2px 6px; font-size: 0.75rem;">Equip</button>
+                        <button type="submit" class="btn btn-secondary" style="padding: 2px 6px; font-size: 0.75rem;" <%= isEquipLocked ? 'disabled title="Cannot change gear during combat"' : '' %>>Equip</button>
                       </form>
                     <% } %>
                   </div>

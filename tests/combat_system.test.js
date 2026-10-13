@@ -498,8 +498,8 @@ test('13. Persistent monster slays second player: kill_count=2, loot accumulates
   const hero2 = createCharacter(db, {
     userId: user2.id,
     name: 'SecondVictim',
-    classType: 'RANGER',
-    stats: { strength: 12, constitution: 10, dexterity: 16, intelligence: 10, wisdom: 13, charisma: 10 }
+    classType: 'FIGHTER',
+    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 9 }
   });
   db.prepare('UPDATE characters SET tile_id = ?, current_hp = 1, gold = 60 WHERE id = ?').run(tile.id, hero2.id);
 
@@ -623,6 +623,8 @@ test('16. Page refresh mid-combat preserves combat state, round, and initiative'
 test('17. Encounter Secrecy in Combat: rendered HTML never exposes monster HP, AC, AB, or dice', async () => {
   const db = createTestDb();
   const { hero, tile, encounter } = await setupCombatScenario(db, 'SecrecyHero');
+  // Ensure monster has enough HP to survive attack round for secrecy test under City Safety CR capping
+  db.prepare('UPDATE encounters SET current_monster_hp = 50 WHERE id = ?').run(encounter.id);
 
   // Execute one attack round to generate combat events
   executeCombatRound(db, hero.id, encounter.id, 'ATTACK', {

@@ -2,6 +2,29 @@ const fs = require('fs');
 const path = require('path');
 const config = require('../../config');
 const { withTransaction } = require('../../db/connection');
+const { getDistanceToNearestSafeCity } = require('../world/map');
+
+/**
+ * Calculates the maximum Challenge Rating (CR) allowed for random encounters
+ * based on distance (in grid steps) from the nearest safe city haven.
+ * 
+ * Rules:
+ * - 0 steps (city itself): No random combat (CR = 0)
+ * - 1 step: CR <= 1/3 (approx 0.334)
+ * - 2 steps: CR <= 1/2 (0.5)
+ * - 3 steps: CR <= 1.0
+ * - 4+ steps: null (unrestricted Gaussian distribution)
+ */
+function getMaxCrForDistance(distance) {
+  if (distance === null || distance === undefined || !isFinite(distance)) {
+    return null;
+  }
+  if (distance <= 0) return 0;
+  if (distance === 1) return (1 / 3) + 0.001; // ~0.334 to safely include 0.33
+  if (distance === 2) return 0.5;
+  if (distance === 3) return 1.0;
+  return null; // 4+ steps: normal Gaussian
+}
 
 /**
  * Calculates Gaussian weight for an available monster level L relative to hero level H.
@@ -34,13 +57,14 @@ function weightedPick(itemsWithWeights, rng = Math.random) {
 
 /**
  * Selects monster candidate using the two-step normal-weighted algorithm
- * 1. Filter candidates by terrain habitat
+ * 1. Filter candidates by terrain habitat and optional maxCr safety cap
  * 2. Group by solo_level and choose level using Gaussian normal weights
  * 3. Choose candidate within selected level by spawn_weight
  */
 function selectMonsterForTerrainAndHero(db, terrainName, heroLevel, options = {}) {
   const rng = options.rng || Math.random;
   const sigma = options.sigma || config.encounterSigma;
+  const maxCr = options.maxCr !== undefined ? options.maxCr : null;
   const normalizedTerrain = (terrainName || '').toUpperCase();
 
   let matchingMonsters = [];
@@ -79,6 +103,11 @@ function selectMonsterForTerrainAndHero(db, terrainName, heroLevel, options = {}
         matchingMonsters = [];
       }
     }
+  }
+
+  // Apply City Safety CR filter if present
+  if (maxCr !== null && maxCr !== undefined) {
+    matchingMonsters = matchingMonsters.filter(m => m.challenge_rating <= maxCr);
   }
 
   if (matchingMonsters.length === 0) {
@@ -180,7 +209,7 @@ function checkTileEncounter(db, character, targetTile, options = {}) {
     return null;
   }
 
-  // 2. Check for active persistent monster on tile
+  // 2. Check for active persistent monster on tile (NOT subject to CR restriction!)
   const persistentMonster = db.prepare(`
     SELECT mi.*, m.name, m.symbol, m.color, m.descriptions, m.base_hp
     FROM monster_instances mi
@@ -193,8 +222,8 @@ function checkTileEncounter(db, character, targetTile, options = {}) {
     const insertEncounter = db.prepare(`
       INSERT INTO encounters (
         character_id, tile_id, monster_id, monster_instance_id,
-        status, current_monster_hp, combat_round
-      ) VALUES (?, ?, ?, ?, 'DISCOVERED', ?, 0)
+        status, current_monster_hp, combat_round, spotted_by_hero, is_ambush, opening_shot_resolved
+      ) VALUES (?, ?, ?, ?, 'DISCOVERED', ?, 0, 1, 0, 0)
     `);
 
     const result = insertEncounter.run(
@@ -208,31 +237,65 @@ function checkTileEncounter(db, character, targetTile, options = {}) {
     return getEncounterById(db, Number(result.lastInsertRowid), character.class);
   }
 
-  // 3. Roll encounter chance (configurable 25%)
-  const chancePercent = config.encounterChancePercent;
+  // 3. City Safety: Calculate distance to nearest safe city
+  const distance = getDistanceToNearestSafeCity(db, targetTile);
+  if (distance <= 0) {
+    return null; // The city itself: no random combat
+  }
+  const maxCr = getMaxCrForDistance(distance);
+
+  // 4. Roll encounter chance (configurable 25%)
+  const chancePercent = options.forcedChance !== undefined ? options.forcedChance : config.encounterChancePercent;
   const roll = rng() * 100;
   if (roll >= chancePercent) {
     return null; // No encounter
   }
 
-  // 4. Select appropriate monster via terrain & level normal distribution
-  const monster = selectMonsterForTerrainAndHero(db, targetTile.terrain, character.level, { rng });
+  // 5. Select appropriate monster via terrain, level normal distribution, and City Safety CR cap
+  const monster = selectMonsterForTerrainAndHero(db, targetTile.terrain, character.level, { rng, maxCr });
   if (!monster) {
     return null;
   }
 
-  // 5. Create pending encounter record
+  // 6. Ambush vs Hero Detection Check
+  let isAmbush = 0;
+  let spottedByHero = 1;
+  if (options.isAmbush !== undefined) {
+    isAmbush = options.isAmbush ? 1 : 0;
+    spottedByHero = isAmbush ? 0 : 1;
+  } else if (options.spottedByHero !== undefined) {
+    spottedByHero = options.spottedByHero ? 1 : 0;
+    isAmbush = spottedByHero ? 0 : 1;
+  } else {
+    // Standard perception check: Hero Perception (1d20 + WIS mod + 3 if Ranger) vs Monster Stealth (10 + init bonus)
+    const ambushRng = options.ambushRng || Math.random;
+    const wisMod = Math.floor(((character.wisdom || 10) - 10) / 2);
+    const perceptionBonus = ((character.class || '').toUpperCase() === 'RANGER') ? wisMod + 3 : wisMod;
+    const d20 = Math.floor(ambushRng() * 20) + 1;
+    const perceptionRoll = d20 + perceptionBonus;
+    const monsterStealth = 10 + (monster.initiative_bonus || 0);
+
+    if (perceptionRoll < monsterStealth) {
+      isAmbush = 1;
+      spottedByHero = 0;
+    }
+  }
+
+  // 7. Create pending encounter record
   const insertEncounter = db.prepare(`
     INSERT INTO encounters (
-      character_id, tile_id, monster_id, status, current_monster_hp, combat_round
-    ) VALUES (?, ?, ?, 'DISCOVERED', ?, 0)
+      character_id, tile_id, monster_id, status, current_monster_hp, combat_round,
+      spotted_by_hero, is_ambush, opening_shot_resolved
+    ) VALUES (?, ?, ?, 'DISCOVERED', ?, 0, ?, ?, 0)
   `);
 
   const result = insertEncounter.run(
     character.id,
     targetTile.id,
     monster.id,
-    monster.base_hp
+    monster.base_hp,
+    spottedByHero,
+    isAmbush
   );
 
   return getEncounterById(db, Number(result.lastInsertRowid), character.class);
@@ -289,7 +352,10 @@ function getEncounterById(db, encounterId, heroClass) {
     descriptionType: resolved.type,
     imageUrl,
     imageSlug: slug,
-    isRevealed: encounter.status === 'IN_COMBAT'
+    isRevealed: encounter.status === 'IN_COMBAT',
+    isAmbush: Number(encounter.is_ambush || 0) === 1,
+    spottedByHero: Number(encounter.spotted_by_hero !== undefined ? encounter.spotted_by_hero : 1) === 1,
+    openingShotResolved: Number(encounter.opening_shot_resolved || 0) === 1
   };
 }
 
@@ -385,5 +451,6 @@ module.exports = {
   getActiveEncounterForCharacter,
   ignoreEncounter,
   investigateEncounter,
-  concludeEncounter
+  concludeEncounter,
+  getMaxCrForDistance
 };

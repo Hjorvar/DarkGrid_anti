@@ -1171,25 +1171,39 @@ const outputPath = path.join(__dirname, '../db/seeds/006_seed_pathfinder_30_addi
 fs.writeFileSync(outputPath, sql, 'utf8');
 console.log(`Generated ${outputPath} with ${NEW_MONSTERS.length} monsters.`);
 
-// Copy base PNG for any missing monster images
-const basePngPath = path.join(__dirname, '../images/monsters/feral_wolf.png');
-const baseBuf = fs.readFileSync(basePngPath);
-
+// Validate that authentic artwork exists for every monster - NEVER copy placeholder images
 const targetDirs = [
   path.join(__dirname, '../images/monsters'),
   path.join(__dirname, '../public/images/monsters')
 ];
 
-let createdImages = 0;
+const wolfPath = path.join(__dirname, '../images/monsters/feral_wolf.png');
+const wolfHash = fs.existsSync(wolfPath)
+  ? require('crypto').createHash('sha256').update(fs.readFileSync(wolfPath)).digest('hex')
+  : null;
+
+let missingOrInvalidImages = 0;
 for (const m of NEW_MONSTERS) {
   const fileName = `${m.image_slug}.png`;
   for (const dir of targetDirs) {
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     const fullPath = path.join(dir, fileName);
     if (!fs.existsSync(fullPath)) {
-      fs.writeFileSync(fullPath, baseBuf);
-      createdImages++;
+      console.error(`ERROR: Missing required monster artwork: ${fullPath}. Placeholders are strictly forbidden.`);
+      missingOrInvalidImages++;
+      continue;
+    }
+    if (wolfHash) {
+      const fileHash = require('crypto').createHash('sha256').update(fs.readFileSync(fullPath)).digest('hex');
+      if (fileHash === wolfHash) {
+        console.error(`ERROR: Monster artwork ${fullPath} is a duplicate copy of feral_wolf.png placeholder.`);
+        missingOrInvalidImages++;
+      }
     }
   }
 }
-console.log(`Ensured all images exist. New images written: ${createdImages}`);
+
+if (missingOrInvalidImages > 0) {
+  throw new Error(`Encountered ${missingOrInvalidImages} missing or placeholder monster image(s). Authentic artwork is strictly required.`);
+}
+
+console.log(`Verified authentic unique artwork exists for all ${NEW_MONSTERS.length} monsters in both directories.`);

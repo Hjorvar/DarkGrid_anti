@@ -113,6 +113,8 @@ test('Encounter Revelation Stage 2: Proceeding reveals exact same monster, name,
   assert.ok(initialEncounter);
   const initialMonsterId = initialEncounter.monster_id;
   const initialMonsterName = initialEncounter.monster_name.replace(/\[.*?\]/g, '').trim();
+  // Ensure monster has enough HP to survive Ranger opening shot under City Safety CR capping
+  db.prepare('UPDATE encounters SET current_monster_hp = 50 WHERE id = ?').run(initialEncounter.id);
 
   // Player decides to proceed -> investigateEncounter
   const revealedEncounter = investigateEncounter(db, hero.id, initialEncounter.id, hero.class);

@@ -62,3 +62,4 @@ All 68 monsters in the Darkgrid database were verified via automated tests to sa
 3. `3_close` & `4_ranger_close` Stage 2 text: vivid standoff descriptions upon entering combat.
 4. `5_health_100`, `6_health_75`, `7_health_50`, `8_health_25`, `9_dead`: progressive narrative health descriptions reflecting physical degradation instead of numbers.
 5. All artwork files resolve at `images/monsters/<slug>.png` and `public/images/monsters/<slug>.png`.
+6. **Artwork Audit & Approval (Post-Phase K):** All 30 monster illustrations have been created via `image-generator` in authentic 2D dark fantasy hand-painted style, inspected across 6 batches with contact sheets, verified for 100% unique SHA-256 hashes (zero Wolf placeholders), and formally **APPROVED** by the user (see `docs/monster-image-audit.md`).

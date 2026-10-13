@@ -111,6 +111,7 @@ function getFighterArmorTrainingMaxDexBonus(level) {
  * Level 1-4: +1 Atk / +1 Dmg
  * Level 5-8: +2 Atk / +2 Dmg
  * Level 9+:  +3 Atk / +3 Dmg
+ * Strictly prohibits bonus against Undead under any circumstance, even with legacy/corrupt data.
  */
 function getRangerFavoredEnemyBonus(character, monster) {
   if (!character || (character.class || '').toUpperCase() !== 'RANGER') {
@@ -121,6 +122,11 @@ function getRangerFavoredEnemyBonus(character, monster) {
   }
   const favoredType = character.favored_enemy_type.trim().toUpperCase();
   const monsterType = (monster.creature_type || '').trim().toUpperCase();
+
+  // STRICT GUARANTEE: Ranger NEVER receives Favored Enemy bonus against Undead
+  if (favoredType === 'UNDEAD' || monsterType === 'UNDEAD') {
+    return { attack: 0, damage: 0 };
+  }
 
   if (favoredType !== monsterType) {
     return { attack: 0, damage: 0 };
@@ -140,41 +146,57 @@ function getRangerFavoredEnemyBonus(character, monster) {
 }
 
 /**
- * Cleric Divine Power: passive bonus against Undead.
- * Level 1-4: +2 Atk / +2 Dmg
- * Level 5-8: +3 Atk / +3 Dmg
- * Level 9+:  +4 Atk / +4 Dmg
+ * Cleric Holy Radiance: passive class ability against Undead.
+ * Replaces previous Divine Power bonuses (do not stack).
+ * Level 1-4: +2 Atk / +3 Dmg / +2 AC
+ * Level 5-8: +3 Atk / +4 Dmg / +3 AC
+ * Level 9+:  +4 Atk / +5 Dmg / +4 AC
  */
-function getClericDivinePowerBonus(character, monster) {
+function getClericHolyRadianceBonus(character, ...rest) {
   let charClass = '';
   let charLevel = 1;
-  let targetMonster = monster;
+  let targetMonster = null;
 
   if (typeof character === 'string') {
     charClass = character;
-    if (arguments.length >= 3) {
-      charLevel = arguments[1] || 1;
-      targetMonster = arguments[2];
+    if (rest.length >= 2) {
+      charLevel = rest[0] || 1;
+      targetMonster = rest[1];
+    } else if (rest.length === 1) {
+      targetMonster = rest[0];
     }
   } else if (character && typeof character === 'object') {
     charClass = character.class || '';
     charLevel = character.level || 1;
+    targetMonster = rest[0];
   }
 
   if (charClass.toUpperCase() !== 'CLERIC') {
-    return { attack: 0, damage: 0 };
+    return { attack: 0, damage: 0, ac: 0 };
   }
   if (!targetMonster) {
-    return { attack: 0, damage: 0 };
+    return { attack: 0, damage: 0, ac: 0 };
   }
   const monsterType = (targetMonster.creature_type || '').trim().toUpperCase();
   if (monsterType !== 'UNDEAD') {
-    return { attack: 0, damage: 0 };
+    return { attack: 0, damage: 0, ac: 0 };
   }
 
   const lvl = Math.max(1, parseInt(charLevel, 10) || 1);
-  const bonus = lvl >= 9 ? 4 : (lvl >= 5 ? 3 : 2);
-  return { attack: bonus, damage: bonus };
+  if (lvl >= 9) {
+    return { attack: 4, damage: 5, ac: 4 };
+  }
+  if (lvl >= 5) {
+    return { attack: 3, damage: 4, ac: 3 };
+  }
+  return { attack: 2, damage: 3, ac: 2 };
+}
+
+/**
+ * Backwards-compatibility alias for Cleric Divine Power -> Holy Radiance
+ */
+function getClericDivinePowerBonus(...args) {
+  return getClericHolyRadianceBonus(...args);
 }
 
 /**
@@ -376,7 +398,8 @@ function createCharacter(db, {
   stats,
   startingGold,
   favoredEnemyType,
-  favoredEnemySubtype
+  favoredEnemySubtype,
+  primaryWeapon
 }) {
   const validation = validateCharacterCreation(classType, stats, name);
   if (!validation.valid) {
@@ -399,6 +422,11 @@ function createCharacter(db, {
       throw error;
     }
   }
+
+  const defaultPrimary = (validation.classType === 'RANGER') ? 'RANGED' : 'MELEE';
+  const chosenPrimary = (primaryWeapon && ['MELEE', 'RANGED'].includes(primaryWeapon.toUpperCase()))
+    ? primaryWeapon.toUpperCase()
+    : defaultPrimary;
 
   return withTransaction(db, (tx) => {
     // 1. Strict check for living character
@@ -423,12 +451,12 @@ function createCharacter(db, {
         user_id, name, class, is_alive, level, xp, gold,
         strength, constitution, dexterity, intelligence, wisdom, charisma,
         current_hp, max_hp, tile_id,
-        favored_enemy_type, favored_enemy_subtype, cleric_heal_uses
+        favored_enemy_type, favored_enemy_subtype, cleric_heal_uses, primary_weapon
       ) VALUES (
         ?, ?, ?, 1, 1, 0, ?,
         ?, ?, ?, ?, ?, ?,
         ?, ?, ?,
-        ?, ?, 0
+        ?, ?, 0, ?
       )
     `);
 
@@ -447,7 +475,8 @@ function createCharacter(db, {
       maxHp,
       startTile.id,
       favoredEnemyType || null,
-      favoredEnemySubtype || null
+      favoredEnemySubtype || null,
+      chosenPrimary
     );
 
     const characterId = Number(result.lastInsertRowid);
@@ -576,6 +605,11 @@ function equipItem(db, characterId, itemInstanceId, targetSlot) {
       throw new Error('Hero is not eligible to equip items.');
     }
 
+    const inCombat = tx.prepare("SELECT 1 FROM encounters WHERE character_id = ? AND status = 'IN_COMBAT'").get(characterId);
+    if (inCombat) {
+      throw new Error('Cannot change equipment during active combat.');
+    }
+
     const item = tx.prepare(`
       SELECT ii.*, id.name, id.category, id.weapon_range_type, id.allowed_classes
       FROM item_instances ii
@@ -639,6 +673,16 @@ function equipItem(db, characterId, itemInstanceId, targetSlot) {
  */
 function unequipItem(db, characterId, itemInstanceId) {
   return withTransaction(db, (tx) => {
+    const character = tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
+    if (!character || character.is_alive !== 1) {
+      throw new Error('Hero is not eligible to equip items.');
+    }
+
+    const inCombat = tx.prepare("SELECT 1 FROM encounters WHERE character_id = ? AND status = 'IN_COMBAT'").get(characterId);
+    if (inCombat) {
+      throw new Error('Cannot change equipment during active combat.');
+    }
+
     const item = tx.prepare(`
       SELECT * FROM item_instances
       WHERE id = ? AND owner_character_id = ? AND owner_type = 'CHARACTER'
@@ -651,6 +695,82 @@ function unequipItem(db, characterId, itemInstanceId) {
     tx.prepare('UPDATE item_instances SET equipped_slot = NULL WHERE id = ?').run(itemInstanceId);
     return getCharacterEquipment(tx, characterId);
   });
+}
+
+/**
+ * Sets hero's primary weapon preference ('MELEE' or 'RANGED').
+ * Enforces that switching is forbidden during active combat.
+ */
+function setPrimaryWeaponPreference(db, characterId, preference) {
+  const pref = (preference || '').toUpperCase().trim();
+  if (pref !== 'MELEE' && pref !== 'RANGED') {
+    throw new Error('Invalid primary weapon preference. Must be MELEE or RANGED.');
+  }
+
+  return withTransaction(db, (tx) => {
+    const character = tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
+    if (!character || character.is_alive !== 1) {
+      throw new Error('Hero is not eligible to set primary weapon preference.');
+    }
+
+    const inCombat = tx.prepare("SELECT 1 FROM encounters WHERE character_id = ? AND status = 'IN_COMBAT'").get(characterId);
+    if (inCombat) {
+      throw new Error('Cannot change primary weapon preference during active combat.');
+    }
+
+    tx.prepare('UPDATE characters SET primary_weapon = ? WHERE id = ?').run(pref, characterId);
+    return tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
+  });
+}
+
+/**
+ * Determines the hero's active weapon and whether ranged is active for combat & defense.
+ * Rules:
+ * 1. Against airborne enemies (movement_type === 'FLY'):
+ *    Forces prepared ranged weapon if available, regardless of preference.
+ * 2. Against ground enemies:
+ *    Uses preferred primary weapon (RANGED or MELEE).
+ * 3. Safe fallback:
+ *    If preferred weapon is not equipped (removed, sold), falls back to the other legally equipped weapon,
+ *    or unequipped/bare hands.
+ */
+function getActiveWeapon(character, equipment, monster = null) {
+  const isAirborne = Boolean(monster && (
+    (monster.movement_type || '').toUpperCase() === 'FLY' ||
+    Boolean(monster.is_flying)
+  ));
+  const meleeWeapon = equipment ? (equipment.meleeWeapon || null) : null;
+  const rangedWeapon = equipment ? (equipment.rangedWeapon || null) : null;
+  const genericWeapon = equipment ? (equipment.weapon || null) : null;
+
+  // 1. Airborne monster forces prepared ranged weapon if equipped
+  if (isAirborne && rangedWeapon) {
+    return { activeWeapon: rangedWeapon, isRangedActive: true };
+  }
+
+  const preference = (character && character.primary_weapon ? character.primary_weapon : 'MELEE').toUpperCase();
+
+  // 2. Primary Weapon Preference with Safe Fallback
+  if (preference === 'RANGED') {
+    if (rangedWeapon) {
+      return { activeWeapon: rangedWeapon, isRangedActive: true };
+    }
+    // Safe fallback to melee
+    if (meleeWeapon) {
+      return { activeWeapon: meleeWeapon, isRangedActive: false };
+    }
+    return { activeWeapon: genericWeapon, isRangedActive: false };
+  }
+
+  // Melee preference (default)
+  if (meleeWeapon) {
+    return { activeWeapon: meleeWeapon, isRangedActive: false };
+  }
+  // Safe fallback to ranged
+  if (rangedWeapon) {
+    return { activeWeapon: rangedWeapon, isRangedActive: true };
+  }
+  return { activeWeapon: genericWeapon, isRangedActive: false };
 }
 
 /**
@@ -691,6 +811,7 @@ module.exports = {
   getFighterWeaponTraining,
   getFighterArmorTrainingMaxDexBonus,
   getRangerFavoredEnemyBonus,
+  getClericHolyRadianceBonus,
   getClericDivinePowerBonus,
   getClericSelfHealInfo,
   getClericRemainingHealUses,
@@ -703,6 +824,8 @@ module.exports = {
   getCharacterInventory,
   equipItem,
   unequipItem,
+  setPrimaryWeaponPreference,
+  getActiveWeapon,
   getCharacterPotionCount,
   getAllCharacterItems
 };
