@@ -43,6 +43,7 @@ const {
   getCombatState,
   executeCombatRound
 } = require('../domain/combat/engine');
+const { getTerrainArtworkForTile } = require('../domain/world/artwork');
 const { withTransaction } = require('../db/connection');
 
 router.use(requireAuth);
@@ -89,6 +90,9 @@ router.get('/game', (req, res) => {
   if (!currentTile) {
     return res.status(500).send('Error: Current tile not found in the world.');
   }
+
+  // Terrain artwork resolution (location override > terrain default > fallback)
+  const terrainArtwork = getTerrainArtworkForTile(req.db, currentTile);
 
   // Active encounter check (persisted across reloads)
   const activeEncounter = getActiveEncounterForCharacter(req.db, character.id, character.class);
@@ -160,6 +164,7 @@ router.get('/game', (req, res) => {
   res.render('game', {
     character,
     currentTile,
+    terrainArtwork,
     minimap,
     directions,
     encounter: activeEncounter,

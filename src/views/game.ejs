@@ -19,6 +19,16 @@
   const safeActiveWeapon = (typeof activeWeapon !== 'undefined') ? activeWeapon : null;
   const safeActiveModal = (typeof activeModal !== 'undefined') ? activeModal : null;
   const safeJournal = (typeof journalEncounters !== 'undefined' && Array.isArray(journalEncounters)) ? journalEncounters : [];
+  const safeTerrainArtwork = (typeof terrainArtwork !== 'undefined' && terrainArtwork !== null)
+    ? terrainArtwork
+    : {
+        imageUrl: '/images/terrain/terrain_fallback.webp',
+        altText: 'Atmospheric dark fantasy wilderness vista.',
+        title: 'Darkgrid Realm',
+        description: '',
+        isOverride: false,
+        terrainType: (currentTile && currentTile.terrain) || 'UNKNOWN'
+      };
 
   const isRevealed = Boolean(encounter && encounter.status === 'IN_COMBAT');
   const cleanMonsterName = isRevealed ? (encounter.monster_name || '').replace(/\[.*?\]/g, '').trim() : '';
@@ -179,6 +189,30 @@
             <span><%= infoMessage %></span>
           </div>
         <% } %>
+
+        <!-- Environment Scene Vista -->
+        <div class="terrain-vista-banner <%= (encounter && encounter.status === 'IN_COMBAT') ? 'in-combat' : ((encounter && encounter.status === 'DISCOVERED') ? 'in-discovered' : '') %>">
+          <div class="terrain-vista-image-wrap">
+            <img src="<%= safeTerrainArtwork.imageUrl %>" 
+                 alt="<%= safeTerrainArtwork.altText %>" 
+                 class="terrain-vista-image" 
+                 loading="eager" />
+            <div class="terrain-vista-gradient"></div>
+            <% if (encounter && encounter.status === 'IN_COMBAT') { %>
+              <div class="terrain-vista-combat-tint"></div>
+            <% } else if (encounter && encounter.status === 'DISCOVERED') { %>
+              <div class="terrain-vista-tension-tint"></div>
+            <% } %>
+          </div>
+          <div class="terrain-vista-caption">
+            <span class="terrain-vista-title"><%= safeTerrainArtwork.title %></span>
+            <% if (safeTerrainArtwork.isOverride) { %>
+              <span class="terrain-vista-badge">Landmark</span>
+            <% } else { %>
+              <span class="terrain-vista-badge"><%= currentTile.terrain %></span>
+            <% } %>
+          </div>
+        </div>
 
         <!-- Dynamic Gameplay Content by State -->
         <div class="gameplay-content-area">

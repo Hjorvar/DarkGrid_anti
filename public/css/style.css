@@ -2245,3 +2245,151 @@ a:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   TERRAIN ARTWORK & ENVIRONMENT SCENE SYSTEM
+   ========================================================================== */
+.terrain-vista-banner {
+  position: relative;
+  width: 100%;
+  height: 165px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border-gold-subtle, rgba(212, 175, 55, 0.25));
+  margin-bottom: 0.55rem;
+  background-color: #0b0d10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.55);
+  flex-shrink: 0;
+  transition: opacity 250ms ease-in-out, height 250ms ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terrain-vista-banner,
+  .terrain-vista-image {
+    transition: none !important;
+  }
+}
+
+.terrain-vista-image-wrap {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.terrain-vista-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 38%;
+  display: block;
+  transition: opacity 250ms ease-in-out;
+}
+
+.terrain-vista-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(14, 16, 20, 0.05) 0%,
+    rgba(14, 16, 20, 0.35) 60%,
+    rgba(14, 16, 20, 0.9) 94%,
+    rgba(14, 16, 20, 1) 100%
+  );
+  pointer-events: none;
+}
+
+.terrain-vista-tension-tint {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(120, 20, 20, 0.15) 0%, rgba(14, 16, 20, 0.8) 100%);
+  pointer-events: none;
+}
+
+.terrain-vista-combat-tint {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(30, 10, 10, 0.35) 0%, rgba(10, 12, 16, 0.85) 100%);
+  pointer-events: none;
+}
+
+.terrain-vista-caption {
+  position: absolute;
+  bottom: 8px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.terrain-vista-title {
+  font-family: var(--font-header, 'Cinzel', serif);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  color: var(--text-gold, #d4af37);
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.95), 0 0 2px #000;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.terrain-vista-badge {
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: rgba(18, 20, 24, 0.88);
+  border: 1px solid var(--border-gold-subtle, rgba(212, 175, 55, 0.25));
+  color: var(--text-muted, #a0aec0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* Combat State: Compact, subtle, preserves full vertical space for combat controls */
+.terrain-vista-banner.in-combat {
+  height: 56px;
+  margin-bottom: 0.35rem;
+  border-color: rgba(139, 0, 0, 0.35);
+  opacity: 0.75;
+}
+
+.terrain-vista-banner.in-combat .terrain-vista-image {
+  filter: brightness(0.55) saturate(0.65);
+}
+
+.terrain-vista-banner.in-combat .terrain-vista-title {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+/* Responsive adjustments across screen heights to guarantee One-Screen dashboard */
+@media (max-height: 820px) {
+  .terrain-vista-banner {
+    height: 135px;
+    margin-bottom: 0.4rem;
+  }
+  .terrain-vista-banner.in-combat {
+    height: 48px;
+    margin-bottom: 0.3rem;
+  }
+}
+
+@media (max-height: 740px) {
+  .terrain-vista-banner {
+    height: 110px;
+    margin-bottom: 0.35rem;
+  }
+  .terrain-vista-banner.in-combat {
+    height: 42px;
+    margin-bottom: 0.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .terrain-vista-banner {
+    height: 140px;
+  }
+}
+
