@@ -1,0 +1,614 @@
+[
+  {
+    "id": 1,
+    "name": "Assassin Vine",
+    "slug": "assassin_vine",
+    "creature_type": "Plant",
+    "habitat": "[\"F\", \"J\", \"S\"]",
+    "image_path": "images/monsters/assassin_vine.png",
+    "dead_desc": "A withered pile of dead plant matter, indistinguishable from the forest floor."
+  },
+  {
+    "id": 4,
+    "name": "Wolf",
+    "slug": "wolf",
+    "creature_type": "Animal",
+    "habitat": "[\"F\", \"P\", \"H\"]",
+    "image_path": "images/monsters/wolf.png",
+    "dead_desc": "A limp grey carcass sprawled cold upon the earth."
+  },
+  {
+    "id": 5,
+    "name": "Troll",
+    "slug": "troll",
+    "creature_type": "Humanoid",
+    "habitat": "[\"S\", \"F\", \"U\"]",
+    "image_path": "images/monsters/troll.png",
+    "dead_desc": "A colossal heap of putrid green flesh, at last still and silent."
+  },
+  {
+    "id": 126,
+    "name": "Ghoul",
+    "slug": "ghoul",
+    "creature_type": "Undead",
+    "habitat": "[\"U\", \"P\", \"S\"]",
+    "image_path": "images/monsters/ghoul.png",
+    "dead_desc": "A twisted, motionless heap of decaying bones and grey flesh, its unnatural hunger finally quenched."
+  },
+  {
+    "id": 127,
+    "name": "Giant Spider",
+    "slug": "giant_spider",
+    "creature_type": "Vermin",
+    "habitat": "[\"F\", \"J\", \"S\", \"U\"]",
+    "image_path": "images/monsters/giant_spider.png",
+    "dead_desc": "A shriveled, curled cluster of bristled legs curled tight over a broken, oozing carapace."
+  },
+  {
+    "id": 128,
+    "name": "Choker",
+    "slug": "choker",
+    "creature_type": "Aberration",
+    "habitat": "[\"U\", \"H\", \"M\"]",
+    "image_path": "images/monsters/choker.png",
+    "dead_desc": "A limp, pale puddle of boneless limbs and bloated torso sprawled silent upon the cold rock."
+  },
+  {
+    "id": 129,
+    "name": "Rust Monster",
+    "slug": "rust_monster",
+    "creature_type": "Aberration",
+    "habitat": "[\"U\", \"H\", \"M\"]",
+    "image_path": "images/monsters/rust_monster.png",
+    "dead_desc": "A shattered husk of dull reddish armor plates, collapsing into inert flakes of brittle shell."
+  },
+  {
+    "id": 130,
+    "name": "Manticore",
+    "slug": "manticore",
+    "creature_type": "Magical Beast",
+    "habitat": "[\"H\", \"M\", \"P\", \"S\"]",
+    "image_path": "images/monsters/manticore.png",
+    "dead_desc": "The majestic horror lies broken upon the earth, massive wings folded in stillness, tail quills scattered and inert."
+  },
+  {
+    "id": 495,
+    "name": "Kobold",
+    "slug": "kobold",
+    "creature_type": "Humanoid",
+    "habitat": "[\"U\", \"F\", \"H\"]",
+    "image_path": "images/monsters/kobold.png",
+    "dead_desc": "A frail scaly form lies crumpled in the dirt, spear broken beneath its weight."
+  },
+  {
+    "id": 496,
+    "name": "Goblin",
+    "slug": "goblin",
+    "creature_type": "Humanoid",
+    "habitat": "[\"F\", \"P\", \"H\", \"C\"]",
+    "image_path": "images/monsters/goblin.png",
+    "dead_desc": "The oversized head falls still in the mud, dead eyes staring wide into oblivion."
+  },
+  {
+    "id": 497,
+    "name": "Human Skeleton",
+    "slug": "human_skeleton",
+    "creature_type": "Undead",
+    "habitat": "[\"U\", \"P\", \"H\", \"S\", \"F\", \"T\", \"D\", \"C\"]",
+    "image_path": "images/monsters/human_skeleton.png",
+    "dead_desc": "The animating magic snaps, collapsing the skeleton into a motionless mound of harmless bones."
+  },
+  {
+    "id": 498,
+    "name": "Hobgoblin",
+    "slug": "hobgoblin",
+    "creature_type": "Humanoid",
+    "habitat": "[\"H\", \"M\", \"U\", \"F\"]",
+    "image_path": "images/monsters/hobgoblin.png",
+    "dead_desc": "The stern warrior collapses flat upon the stone, sword clattering loosely from lifeless fingers."
+  },
+  {
+    "id": 499,
+    "name": "Human Zombie",
+    "slug": "human_zombie",
+    "creature_type": "Undead",
+    "habitat": "[\"S\", \"U\", \"P\", \"F\", \"C\"]",
+    "image_path": "images/monsters/human_zombie.png",
+    "dead_desc": "The foul animating spark extinguishes, leaving inert, rotting meat to return to the earth."
+  },
+  {
+    "id": 500,
+    "name": "Troglodyte",
+    "slug": "troglodyte",
+    "creature_type": "Humanoid",
+    "habitat": "[\"U\", \"S\"]",
+    "image_path": "images/monsters/troglodyte.png",
+    "dead_desc": "The scaly brute lies motionless in a pool of foul musk, finally robbed of its sickening stench."
+  },
+  {
+    "id": 501,
+    "name": "Darkmantle",
+    "slug": "darkmantle",
+    "creature_type": "Magical Beast",
+    "habitat": "[\"U\"]",
+    "image_path": "images/monsters/darkmantle.png",
+    "dead_desc": "A deflated, rubbery mass of torn webbing and shattered stone-like hide sprawled limp upon the floor."
+  },
+  {
+    "id": 502,
+    "name": "Lizardfolk",
+    "slug": "lizardfolk",
+    "creature_type": "Humanoid",
+    "habitat": "[\"S\", \"R\", \"C\"]",
+    "image_path": "images/monsters/lizardfolk.png",
+    "dead_desc": "The reptilian hunter drifts motionless in the marsh weeds, its warrior spirit departed."
+  },
+  {
+    "id": 503,
+    "name": "Hyena",
+    "slug": "hyena",
+    "creature_type": "Animal",
+    "habitat": "[\"P\", \"D\", \"H\"]",
+    "image_path": "images/monsters/hyena.png",
+    "dead_desc": "A spotted, mangy carcass lies limp upon the savannah earth, jaw frozen slightly agape."
+  },
+  {
+    "id": 504,
+    "name": "Gnoll",
+    "slug": "gnoll",
+    "creature_type": "Humanoid",
+    "habitat": "[\"D\", \"P\", \"H\"]",
+    "image_path": "images/monsters/gnoll.png",
+    "dead_desc": "The towering hyena-raider crashes into the sand, dead eyes reflecting the empty desert sky."
+  },
+  {
+    "id": 505,
+    "name": "Giant Frog",
+    "slug": "giant_frog",
+    "creature_type": "Animal",
+    "habitat": "[\"R\", \"S\", \"A\"]",
+    "image_path": "images/monsters/giant_frog.png",
+    "dead_desc": "A bloated, lifeless mound floats belly-up among the water lilies."
+  },
+  {
+    "id": 506,
+    "name": "Boar",
+    "slug": "boar",
+    "creature_type": "Animal",
+    "habitat": "[\"F\", \"P\", \"H\"]",
+    "image_path": "images/monsters/boar.png",
+    "dead_desc": "The heavy bristled carcass collapses onto the broken ferns, breath exhaling in a final shudder."
+  },
+  {
+    "id": 507,
+    "name": "Yellow Musk Creeper",
+    "slug": "yellow_musk_creeper",
+    "creature_type": "Plant",
+    "habitat": "[\"F\", \"U\", \"J\"]",
+    "image_path": "images/monsters/yellow_musk_creeper.png",
+    "dead_desc": "A withered, blackened mass of dead stems, its toxic fragrance vanishing into the damp earth."
+  },
+  {
+    "id": 508,
+    "name": "Bugbear",
+    "slug": "bugbear",
+    "creature_type": "Humanoid",
+    "habitat": "[\"H\", \"M\", \"F\", \"U\"]",
+    "image_path": "images/monsters/bugbear.png",
+    "dead_desc": "The giant goblinoid topples heavily into the brush, silent in death as in life."
+  },
+  {
+    "id": 509,
+    "name": "Boggard",
+    "slug": "boggard",
+    "creature_type": "Humanoid",
+    "habitat": "[\"S\", \"R\"]",
+    "image_path": "images/monsters/boggard.png",
+    "dead_desc": "The slimy humanoid lies still in the swamp water, skin rapidly drying beneath the pale sky."
+  },
+  {
+    "id": 510,
+    "name": "Death Dog",
+    "slug": "death_dog",
+    "creature_type": "Magical Beast",
+    "habitat": "[\"D\", \"P\", \"U\"]",
+    "image_path": "images/monsters/death_dog.png",
+    "dead_desc": "A grotesque two-headed corpse lies twisted upon the stones, its rotting disease silenced."
+  },
+  {
+    "id": 511,
+    "name": "Giant Crab",
+    "slug": "giant_crab",
+    "creature_type": "Vermin",
+    "habitat": "[\"C\", \"R\", \"A\"]",
+    "image_path": "images/monsters/giant_crab.png",
+    "dead_desc": "The shattered carapace lies overturned in the tide pool, legs curled tight beneath the cracked shell."
+  },
+  {
+    "id": 512,
+    "name": "Ettercap",
+    "slug": "ettercap",
+    "creature_type": "Aberration",
+    "habitat": "[\"F\", \"U\"]",
+    "image_path": "images/monsters/ettercap.png",
+    "dead_desc": "The misshapen abomination hangs tangled in its own sticky silk, finally lifeless."
+  },
+  {
+    "id": 513,
+    "name": "Cockatrice",
+    "slug": "cockatrice",
+    "creature_type": "Magical Beast",
+    "habitat": "[\"P\", \"H\"]",
+    "image_path": "images/monsters/cockatrice.png",
+    "dead_desc": "The chimera lies limp, its deadly petrifying touch extinguished forever."
+  },
+  {
+    "id": 514,
+    "name": "Ankheg",
+    "slug": "ankheg",
+    "creature_type": "Magical Beast",
+    "habitat": "[\"P\", \"F\", \"D\"]",
+    "image_path": "images/monsters/ankheg.png",
+    "dead_desc": "The giant burrower lies motionless in a crater of its own making, legs curled in rigor mortis."
+  },
+  {
+    "id": 515,
+    "name": "Ogre",
+    "slug": "ogre",
+    "creature_type": "Humanoid",
+    "habitat": "[\"H\", \"M\", \"F\"]",
+    "image_path": "images/monsters/ogre.png",
+    "dead_desc": "A colossal mountain of filthy flesh crashes to earth with a final resounding thud."
+  },
+  {
+    "id": 516,
+    "name": "Shadow",
+    "slug": "shadow",
+    "creature_type": "Undead",
+    "habitat": "[\"U\", \"F\", \"H\", \"T\"]",
+    "image_path": "images/monsters/shadow.png",
+    "dead_desc": "The silhouette completely dissolves into nothingness, leaving behind only an icy breeze."
+  },
+  {
+    "id": 517,
+    "name": "Owlbear",
+    "slug": "owlbear",
+    "creature_type": "Magical Beast",
+    "habitat": "[\"F\", \"H\"]",
+    "image_path": "images/monsters/owlbear.png",
+    "dead_desc": "The giant chimeric terror falls still among the ferns, its legendary roar silenced at last."
+  },
+  {
+    "id": 518,
+    "name": "Minotaur",
+    "slug": "minotaur",
+    "creature_type": "Monstrous Humanoid",
+    "habitat": "[\"U\", \"H\"]",
+    "image_path": "images/monsters/minotaur.png",
+    "dead_desc": "The lord of the labyrinth crashes onto the stone floor, its horn snapping against the rock."
+  },
+  {
+    "id": 519,
+    "name": "Yeti",
+    "slug": "yeti",
+    "creature_type": "Monstrous Humanoid",
+    "habitat": "[\"M\", \"H\"]",
+    "image_path": "images/monsters/yeti.png",
+    "dead_desc": "The snow beast lies still upon the icy ridge, its pale fur slowly freezing to the glacier."
+  },
+  {
+    "id": 520,
+    "name": "Gargoyle",
+    "slug": "gargoyle",
+    "creature_type": "Monstrous Humanoid",
+    "habitat": "[\"T\", \"U\", \"H\", \"M\", \"C\"]",
+    "image_path": "images/monsters/gargoyle.png",
+    "dead_desc": "The demonic statue collapses into an inert pile of shattered stone rubble."
+  },
+  {
+    "id": 521,
+    "name": "Basilisk",
+    "slug": "basilisk",
+    "creature_type": "Magical Beast",
+    "habitat": "[\"H\", \"M\", \"U\", \"D\"]",
+    "image_path": "images/monsters/basilisk.png",
+    "dead_desc": "The eight-legged horror slumps lifeless on the rocks, its deadly gaze extinguished forever."
+  },
+  {
+    "id": 522,
+    "name": "Mummy",
+    "slug": "mummy",
+    "creature_type": "Undead",
+    "habitat": "[\"D\", \"U\"]",
+    "image_path": "images/monsters/mummy.png",
+    "dead_desc": "The ancient curse breaks, and the mummy collapses into a pile of harmless, smoldering bandages and dust."
+  },
+  {
+    "id": 523,
+    "name": "Ochre Jelly",
+    "slug": "ochre_jelly",
+    "creature_type": "Ooze",
+    "habitat": "[\"U\", \"S\"]",
+    "image_path": "images/monsters/ochre_jelly.png",
+    "dead_desc": "The acidic mass dissolves into a harmless, inert pool of pungent brownish liquid."
+  },
+  {
+    "id": 524,
+    "name": "Winter Wolf",
+    "slug": "winter_wolf",
+    "creature_type": "Magical Beast",
+    "habitat": "[\"M\", \"F\", \"P\", \"H\"]",
+    "image_path": "images/monsters/winter_wolf.png",
+    "dead_desc": "The colossal white wolf lies still upon the snow, its breath of winter silenced."
+  },
+  {
+    "id": 2691,
+    "name": "Stirge",
+    "slug": "stirge",
+    "creature_type": "Magical Beast",
+    "habitat": "[\"S\", \"F\"]",
+    "image_path": "images/monsters/stirge.png",
+    "dead_desc": "The needle-nosed horror lies crushed in the mud, its swollen sac deflated and ruined."
+  },
+  {
+    "id": 2692,
+    "name": "Dire Rat",
+    "slug": "dire_rat",
+    "creature_type": "Animal",
+    "habitat": "[\"U\", \"T\", \"S\"]",
+    "image_path": "images/monsters/dire_rat.png",
+    "dead_desc": "The overgrown rodent lies still in a pool of dark blood, its rancid stench beginning to fade."
+  },
+  {
+    "id": 2693,
+    "name": "Viper",
+    "slug": "viper",
+    "creature_type": "Animal",
+    "habitat": "[\"F\", \"J\", \"S\"]",
+    "image_path": "images/monsters/viper.png",
+    "dead_desc": "The serpent stretches out limp and lifeless across the leaves, severed cleanly."
+  },
+  {
+    "id": 2694,
+    "name": "Giant Centipede",
+    "slug": "giant_centipede",
+    "creature_type": "Vermin",
+    "habitat": "[\"U\", \"F\", \"H\"]",
+    "image_path": "images/monsters/giant_centipede.png",
+    "dead_desc": "The massive segmented carcass curls into a brittle spiral, completely motionless."
+  },
+  {
+    "id": 2695,
+    "name": "Iron Cobra",
+    "slug": "iron_cobra",
+    "creature_type": "Construct",
+    "habitat": "[\"U\"]",
+    "image_path": "images/monsters/iron_cobra.png",
+    "dead_desc": "The metal construct collapses into a tangle of inert gears, springs, and dented iron bands."
+  },
+  {
+    "id": 2696,
+    "name": "Skeletal Champion",
+    "slug": "skeletal_champion",
+    "creature_type": "Undead",
+    "habitat": "[\"U\", \"M\"]",
+    "image_path": "images/monsters/skeletal_champion.png",
+    "dead_desc": "The veteran skeleton shatters into inert bleached bone and rusted scrap, the crimson soul-fire extinguishing."
+  },
+  {
+    "id": 2697,
+    "name": "Blink Dog",
+    "slug": "blink_dog",
+    "creature_type": "Magical Beast",
+    "habitat": "[\"P\", \"F\"]",
+    "image_path": "images/monsters/blink_dog.png",
+    "dead_desc": "The golden hound lies motionless upon the sod, the faint dimensional static humming to silence."
+  },
+  {
+    "id": 2698,
+    "name": "Duergar",
+    "slug": "duergar",
+    "creature_type": "Humanoid",
+    "habitat": "[\"U\", \"M\"]",
+    "image_path": "images/monsters/duergar.png",
+    "dead_desc": "The stout gray-skinned raider falls heavily against the bedrock, stone hammer slipping from limp fingers."
+  },
+  {
+    "id": 2699,
+    "name": "Drow",
+    "slug": "drow",
+    "creature_type": "Humanoid",
+    "habitat": "[\"U\"]",
+    "image_path": "images/monsters/drow.png",
+    "dead_desc": "The obsidian-skinned elf collapses gracefully onto the stone, white hair stained with dark blood."
+  },
+  {
+    "id": 2700,
+    "name": "Orc",
+    "slug": "orc",
+    "creature_type": "Humanoid",
+    "habitat": "[\"H\", \"M\", \"P\"]",
+    "image_path": "images/monsters/orc.png",
+    "dead_desc": "The heavy brute crashes facedown into the dirt, his brutal weapon clattering over the stones."
+  },
+  {
+    "id": 2701,
+    "name": "Wight",
+    "slug": "wight",
+    "creature_type": "Undead",
+    "habitat": "[\"U\", \"S\"]",
+    "image_path": "images/monsters/wight.png",
+    "dead_desc": "The necrotic soul collapses into dust and withered husk, its dark curse returning to the earth."
+  },
+  {
+    "id": 2702,
+    "name": "Harpy",
+    "slug": "harpy",
+    "creature_type": "Monstrous Humanoid",
+    "habitat": "[\"M\", \"C\", \"H\"]",
+    "image_path": "images/monsters/harpy.png",
+    "dead_desc": "The crone lies broken upon the crags, matted feathers soaked in black blood."
+  },
+  {
+    "id": 2703,
+    "name": "Doppelganger",
+    "slug": "doppelganger",
+    "creature_type": "Monstrous Humanoid",
+    "habitat": "[\"U\", \"T\"]",
+    "image_path": "images/monsters/doppelganger.png",
+    "dead_desc": "The creature lies dead in its true form, an unblemished gray corpse without identity."
+  },
+  {
+    "id": 2704,
+    "name": "Griffon",
+    "slug": "griffon",
+    "creature_type": "Magical Beast",
+    "habitat": "[\"H\", \"M\"]",
+    "image_path": "images/monsters/griffon.png",
+    "dead_desc": "The magnificent beast crashes onto the turf, regal plumage stained crimson in final defeat."
+  },
+  {
+    "id": 2705,
+    "name": "Giant Scorpion",
+    "slug": "giant_scorpion",
+    "creature_type": "Vermin",
+    "habitat": "[\"D\", \"P\", \"U\"]",
+    "image_path": "images/monsters/giant_scorpion.png",
+    "dead_desc": "The massive scorpion collapses onto the sand, heavy claws curling inward in death."
+  },
+  {
+    "id": 2706,
+    "name": "Cloaker",
+    "slug": "cloaker",
+    "creature_type": "Aberration",
+    "habitat": "[\"U\"]",
+    "image_path": "images/monsters/cloaker.png",
+    "dead_desc": "The dark leathery membrane lies spread flat and inert across the stone, dead as a discarded burial shroud."
+  },
+  {
+    "id": 2707,
+    "name": "Phase Spider",
+    "slug": "phase_spider",
+    "creature_type": "Magical Beast",
+    "habitat": "[\"U\", \"X\"]",
+    "image_path": "images/monsters/phase_spider.png",
+    "dead_desc": "The pale blue horror lies lifeless upon the floor, completely anchored to the mortal plane."
+  },
+  {
+    "id": 2708,
+    "name": "Wraith",
+    "slug": "wraith",
+    "creature_type": "Undead",
+    "habitat": "[\"U\", \"S\"]",
+    "image_path": "images/monsters/wraith.png",
+    "dead_desc": "The shadow entity dissolves into nothingness, leaving only the freezing chill of the grave behind."
+  },
+  {
+    "id": 2709,
+    "name": "Gibbering Mouther",
+    "slug": "gibbering_mouther",
+    "creature_type": "Aberration",
+    "habitat": "[\"U\", \"S\"]",
+    "image_path": "images/monsters/gibbering_mouther.png",
+    "dead_desc": "The amorphous blob melts into foul, bubbling sludge, completely quiet at last."
+  },
+  {
+    "id": 2710,
+    "name": "Peryton",
+    "slug": "peryton",
+    "creature_type": "Magical Beast",
+    "habitat": "[\"M\", \"F\"]",
+    "image_path": "images/monsters/peryton.png",
+    "dead_desc": "The dark winged predator lies still, its sinister shadow fading away with its final breath."
+  },
+  {
+    "id": 2711,
+    "name": "Giant Stag Beetle",
+    "slug": "giant_stag_beetle",
+    "creature_type": "Vermin",
+    "habitat": "[\"F\", \"J\"]",
+    "image_path": "images/monsters/giant_stag_beetle.png",
+    "dead_desc": "The giant beetle rolls onto its side with a shuddering groan, armored mandibles resting inert upon the moss."
+  },
+  {
+    "id": 2712,
+    "name": "Vegepygmy",
+    "slug": "vegepygmy",
+    "creature_type": "Plant",
+    "habitat": "[\"S\", \"U\"]",
+    "image_path": "images/monsters/vegepygmy.png",
+    "dead_desc": "The mold-born creature falls into a heap of withered stalks and inert, harmless lichen."
+  },
+  {
+    "id": 2713,
+    "name": "Ghast",
+    "slug": "ghast",
+    "creature_type": "Undead",
+    "habitat": "[\"U\", \"S\"]",
+    "image_path": "images/monsters/ghast.png",
+    "dead_desc": "The foul abomination collapses in a heap of rotten flesh, its sickening stench gradually dissipating."
+  },
+  {
+    "id": 2714,
+    "name": "Giant Bat",
+    "slug": "giant_bat",
+    "creature_type": "Animal",
+    "habitat": "[\"U\", \"F\"]",
+    "image_path": "images/monsters/giant_bat.png",
+    "dead_desc": "The massive winged mammal falls silent, tangled in its own limp, shredded wings."
+  },
+  {
+    "id": 2715,
+    "name": "Morlock",
+    "slug": "morlock",
+    "creature_type": "Monstrous Humanoid",
+    "habitat": "[\"U\"]",
+    "image_path": "images/monsters/morlock.png",
+    "dead_desc": "The degenerate white humanoid lies limp upon the cavern floor, motionless in the dark."
+  },
+  {
+    "id": 2716,
+    "name": "Violet Fungus",
+    "slug": "violet_fungus",
+    "creature_type": "Plant",
+    "habitat": "[\"U\", \"S\"]",
+    "image_path": "images/monsters/violet_fungus.png",
+    "dead_desc": "The purple mushroom collapses into a pile of rotten, harmless fungal pulp."
+  },
+  {
+    "id": 2717,
+    "name": "Grick",
+    "slug": "grick",
+    "creature_type": "Aberration",
+    "habitat": "[\"U\", \"H\"]",
+    "image_path": "images/monsters/grick.png",
+    "dead_desc": "The rubbery monstrosity lies lifeless and limp, its barbed tentacles uncurling across the rock."
+  },
+  {
+    "id": 2718,
+    "name": "Krenshar",
+    "slug": "krenshar",
+    "creature_type": "Magical Beast",
+    "habitat": "[\"F\", \"P\"]",
+    "image_path": "images/monsters/krenshar.png",
+    "dead_desc": "The tawny beast collapses onto the forest floor, its facial skin settling peacefully over its skull in death."
+  },
+  {
+    "id": 2719,
+    "name": "Bunyip",
+    "slug": "bunyip",
+    "creature_type": "Magical Beast",
+    "habitat": "[\"R\", \"S\", \"C\"]",
+    "image_path": "images/monsters/bunyip.png",
+    "dead_desc": "The shark-headed beast rolls belly-up upon the water, floating motionless among the reeds."
+  },
+  {
+    "id": 2720,
+    "name": "Sahuagin",
+    "slug": "sahuagin",
+    "creature_type": "Monstrous Humanoid",
+    "habitat": "[\"C\", \"O\", \"R\"]",
+    "image_path": "images/monsters/sahuagin.png",
+    "dead_desc": "The green-scaled sea-devil lies still upon the shoreline, the incoming tide washing over its lifeless fins."
+  }
+]

@@ -74,7 +74,7 @@
       <div class="victory-art-container">
         <div class="victory-art-frame">
           <% if (imageUrl) { %>
-            <img src="<%= imageUrl %>" alt="<%= cleanMonsterName %>" class="victory-art-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <img src="<%= imageUrl %>" alt="Defeated <%= cleanMonsterName %>" class="victory-art-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <div class="victory-placeholder" style="display: none;">
               <div class="placeholder-rune">ᚱ</div>
               <div class="placeholder-symbol" style="color: <%= monsterColor %>;"><%= monsterSymbol %></div>
@@ -88,6 +88,9 @@
               <div class="placeholder-label"><%= cleanMonsterName %></div>
               <div class="placeholder-sublabel">Vanquished Threat</div>
             </div>
+          <% } %>
+          <% if (typeof isDefeatedArt !== 'undefined' && isDefeatedArt) { %>
+            <div class="victory-defeated-badge" title="Vanquished in Combat">Vanquished</div>
           <% } %>
           <div class="victory-art-vignette"></div>
         </div>

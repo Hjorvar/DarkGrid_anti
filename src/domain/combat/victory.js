@@ -117,13 +117,21 @@ function getVictoryData(db, characterId, encounterId) {
 
   const cleanMonsterName = (encounter.monster_name || '').replace(/\[.*?\]/g, '').trim();
 
+  // Defeated artwork takes precedence for the victory screen presentation.
+  // Falls back gracefully to normal living monster imageUrl if defeated art is not yet on disk.
+  const victoryImageUrl = encounter.defeatedImageUrl || encounter.imageUrl;
+  const isDefeatedArt = Boolean(encounter.defeatedImageUrl);
+
   return {
     character,
     encounter,
     cleanMonsterName,
     monsterSymbol: encounter.monster_symbol,
     monsterColor: encounter.monster_color || 'var(--accent-gold)',
-    imageUrl: encounter.imageUrl,
+    imageUrl: victoryImageUrl,
+    defeatedImageUrl: encounter.defeatedImageUrl,
+    livingImageUrl: encounter.imageUrl,
+    isDefeatedArt,
     imageSlug: encounter.imageSlug,
     defeatDescription,
     xpAwarded,

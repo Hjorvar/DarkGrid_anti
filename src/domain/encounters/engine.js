@@ -309,6 +309,7 @@ function getEncounterById(db, encounterId, heroClass) {
     SELECT e.*, m.name as monster_name, m.symbol as monster_symbol,
            m.color as monster_color, m.solo_level as monster_level,
            m.descriptions as monster_descriptions, m.image_path as monster_image_path,
+           m.defeated_image_path as monster_defeated_image_path,
            m.movement_type, m.creature_type, m.creature_subtype,
            t.name as tile_name, t.terrain as tile_terrain
     FROM encounters e
@@ -333,17 +334,37 @@ function getEncounterById(db, encounterId, heroClass) {
     .replace(/^_+|_+$/g, '');
   const imageFilename = `${slug}.png`;
   const defaultDiskPath = path.join(__dirname, '../../../images/monsters', imageFilename);
+  const publicDiskPath = path.join(__dirname, '../../../public/images/monsters', imageFilename);
 
   let imageUrl = null;
   if (encounter.monster_image_path) {
     const relPath = encounter.monster_image_path.replace(/^\/+/, '');
     const diskPath = path.join(__dirname, '../../../', relPath);
-    if (fs.existsSync(diskPath)) {
+    const pubPath = path.join(__dirname, '../../../public/', relPath);
+    if (fs.existsSync(diskPath) || fs.existsSync(pubPath)) {
       imageUrl = '/' + relPath.replace(/\\/g, '/');
     }
   }
-  if (!imageUrl && fs.existsSync(defaultDiskPath)) {
+  if (!imageUrl && (fs.existsSync(defaultDiskPath) || fs.existsSync(publicDiskPath))) {
     imageUrl = `/images/monsters/${imageFilename}`;
+  }
+
+  // Defeated artwork resolution
+  const defeatedFilename = `${slug}_defeated.png`;
+  const defaultDefeatedDiskPath = path.join(__dirname, '../../../images/monsters', defeatedFilename);
+  const publicDefeatedDiskPath = path.join(__dirname, '../../../public/images/monsters', defeatedFilename);
+
+  let defeatedImageUrl = null;
+  if (encounter.monster_defeated_image_path) {
+    const relDefPath = encounter.monster_defeated_image_path.replace(/^\/+/, '');
+    const diskDefPath = path.join(__dirname, '../../../', relDefPath);
+    const pubDefPath = path.join(__dirname, '../../../public/', relDefPath);
+    if (fs.existsSync(diskDefPath) || fs.existsSync(pubDefPath)) {
+      defeatedImageUrl = '/' + relDefPath.replace(/\\/g, '/');
+    }
+  }
+  if (!defeatedImageUrl && (fs.existsSync(defaultDefeatedDiskPath) || fs.existsSync(publicDefeatedDiskPath))) {
+    defeatedImageUrl = `/images/monsters/${defeatedFilename}`;
   }
 
   return {
@@ -352,6 +373,8 @@ function getEncounterById(db, encounterId, heroClass) {
     isRangerSpecial: resolved.isRangerSpecial,
     descriptionType: resolved.type,
     imageUrl,
+    defeatedImageUrl,
+    hasDefeatedImage: Boolean(defeatedImageUrl),
     imageSlug: slug,
     isRevealed: encounter.status === 'IN_COMBAT',
     isAmbush: Number(encounter.is_ambush || 0) === 1,
