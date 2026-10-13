@@ -4,7 +4,13 @@ const { createTestDb } = require('./test_helpers');
 const { generateMonsterLoot, calculateMonsterGold } = require('../src/domain/combat/loot');
 const { equipItem, unequipItem, getCharacterEquipment, getCharacterInventory, useConsumable } = require('../src/domain/character/rules');
 const { calculateHeroAC } = require('../src/domain/combat/rules');
-const { handlePlayerDeath, recordMonsterKill } = require('../src/domain/monsters/persistence');
+const { handlePlayerDeath, recordMonsterKill, handleMonsterDefeat } = require('../src/domain/monsters/persistence');
+const { getCityStoreStock, buyItem, sellItem } = require('../src/domain/economy/shop');
+const { initializeDatabase } = require('../src/db/connection');
+const { runMigrations, runSeeds } = require('../src/db/migrate');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 
 describe('Item, Equipment & Loot System Test Suite', () => {
   let db;
@@ -352,6 +358,194 @@ describe('Item, Equipment & Loot System Test Suite', () => {
       for (const mItem of monsterItems) {
         assert.strictEqual(mItem.equipped_slot, null);
       }
+    });
+
+    test('Persistent monster defeat transfers 100% held gold and items without duplication', () => {
+      // Create second hero
+      db.prepare(`
+        INSERT INTO users (id, username, password_hash)
+        VALUES (103, 'tester_three', 'hash3')
+      `).run();
+      db.prepare(`
+        INSERT INTO characters (id, user_id, name, class, level, current_hp, max_hp, strength, dexterity, constitution, intelligence, wisdom, charisma, gold, tile_id, is_alive)
+        VALUES (103, 103, 'VictorHero', 'FIGHTER', 2, 25, 25, 16, 14, 14, 10, 10, 10, 10, 1, 1)
+      `).run();
+
+      // Create persistent monster with 100 gold and 2 items
+      const persRes = db.prepare(`
+        INSERT INTO monster_instances (monster_id, current_hp, max_hp, held_gold, status, tile_id, kill_count)
+        VALUES (1, 30, 30, 100, 'ACTIVE', 1, 1)
+      `).run();
+      const monsterInstanceId = Number(persRes.lastInsertRowid);
+
+      const swordDef = db.prepare("SELECT id FROM item_definitions WHERE name = 'Longsword'").get();
+      const ringDef = db.prepare("SELECT id FROM item_definitions WHERE name = 'Ring of Protection +1'").get();
+
+      db.prepare("INSERT INTO item_instances (item_definition_id, owner_type, owner_monster_id) VALUES (?, 'MONSTER', ?)").run(swordDef.id, monsterInstanceId);
+      db.prepare("INSERT INTO item_instances (item_definition_id, owner_type, owner_monster_id) VALUES (?, 'MONSTER', ?)").run(ringDef.id, monsterInstanceId);
+
+      // Create active encounter for VictorHero vs this persistent monster
+      const encRes = db.prepare(`
+        INSERT INTO encounters (character_id, tile_id, monster_id, monster_instance_id, status, current_monster_hp)
+        VALUES (103, 1, 1, ?, 'IN_COMBAT', 0)
+      `).run(monsterInstanceId);
+      const encounter = db.prepare('SELECT * FROM encounters WHERE id = ?').get(Number(encRes.lastInsertRowid));
+      const hero = db.prepare('SELECT * FROM characters WHERE id = 103').get();
+      const baseMonster = db.prepare('SELECT * FROM monsters WHERE id = 1').get();
+
+      const defeatRes = handleMonsterDefeat(db, hero, encounter, baseMonster, { id: monsterInstanceId });
+      assert.strictEqual(defeatRes.goldLooted, 100);
+      assert.strictEqual(defeatRes.itemsLooted, 2);
+
+      // Verify character received gold (10 starting + 100 looted = 110)
+      const updatedHero = db.prepare('SELECT * FROM characters WHERE id = 103').get();
+      assert.strictEqual(updatedHero.gold, 110);
+
+      // Verify character owns the 2 items
+      const heroItems = db.prepare("SELECT * FROM item_instances WHERE owner_type = 'CHARACTER' AND owner_character_id = 103").all();
+      assert.strictEqual(heroItems.length, 2);
+
+      // Verify monster instance is DEFEATED, held_gold = 0, and holds 0 items
+      const monsterAfter = db.prepare('SELECT * FROM monster_instances WHERE id = ?').get(monsterInstanceId);
+      assert.strictEqual(monsterAfter.status, 'DEFEATED');
+      assert.strictEqual(monsterAfter.held_gold, 0);
+
+      const monsterItemsAfter = db.prepare("SELECT * FROM item_instances WHERE owner_type = 'MONSTER' AND owner_monster_id = ?").all(monsterInstanceId);
+      assert.strictEqual(monsterItemsAfter.length, 0);
+    });
+
+    test('Persistent monster defeat with full backpack (50 items) transfers items, revealing inventory overflow gap', () => {
+      // Clear character 101's inventory and fill with 50 items
+      db.prepare("DELETE FROM item_instances WHERE owner_character_id = 101").run();
+      for (let i = 0; i < 50; i++) {
+        db.prepare("INSERT INTO item_instances (item_definition_id, owner_type, owner_character_id) VALUES (1, 'CHARACTER', 101)").run();
+      }
+
+      // Create persistent monster holding 2 items
+      const persRes = db.prepare(`
+        INSERT INTO monster_instances (monster_id, current_hp, max_hp, held_gold, status, tile_id, kill_count)
+        VALUES (1, 30, 30, 50, 'ACTIVE', 1, 1)
+      `).run();
+      const monsterInstanceId = Number(persRes.lastInsertRowid);
+      db.prepare("INSERT INTO item_instances (item_definition_id, owner_type, owner_monster_id) VALUES (1, 'MONSTER', ?)").run(monsterInstanceId);
+      db.prepare("INSERT INTO item_instances (item_definition_id, owner_type, owner_monster_id) VALUES (2, 'MONSTER', ?)").run(monsterInstanceId);
+
+      const hero = db.prepare('SELECT * FROM characters WHERE id = 101').get();
+      const encRes = db.prepare(`
+        INSERT INTO encounters (character_id, tile_id, monster_id, monster_instance_id, status, current_monster_hp)
+        VALUES (101, 1, 1, ?, 'IN_COMBAT', 0)
+      `).run(monsterInstanceId);
+      const encounter = db.prepare('SELECT * FROM encounters WHERE id = ?').get(Number(encRes.lastInsertRowid));
+      const baseMonster = db.prepare('SELECT * FROM monsters WHERE id = 1').get();
+
+      // Defeating persistent monster currently transfers all items even if backpack is at 50
+      handleMonsterDefeat(db, hero, encounter, baseMonster, { id: monsterInstanceId });
+
+      const finalCount = db.prepare("SELECT COUNT(*) as count FROM item_instances WHERE owner_character_id = 101").get().count;
+      assert.strictEqual(finalCount, 52, 'Persistent monster loot transfers unconditionally, resulting in 52 items (overflow)');
+    });
+
+    test('Loot and persistent monster state persist across server restart (simulated disk reconnect)', () => {
+      const tempDbPath = path.join(os.tmpdir(), `darkgrid_restart_test_${Date.now()}.sqlite`);
+      try {
+        // 1. Initial server session: create DB, run migrations & seeds
+        const diskDb = initializeDatabase(tempDbPath);
+        runMigrations(diskDb);
+        runSeeds(diskDb);
+
+        diskDb.prepare(`
+          INSERT INTO users (id, username, password_hash) VALUES (501, 'disk_user', 'hash')
+        `).run();
+        diskDb.prepare(`
+          INSERT INTO characters (id, user_id, name, class, level, current_hp, max_hp, strength, dexterity, constitution, intelligence, wisdom, charisma, gold, tile_id, is_alive)
+          VALUES (501, 501, 'DiskHero', 'FIGHTER', 1, 15, 20, 16, 12, 14, 10, 10, 10, 80, 1, 1)
+        `).run();
+
+        // Character dies to monster
+        const char = diskDb.prepare('SELECT * FROM characters WHERE id = 501').get();
+        const mon = diskDb.prepare('SELECT * FROM monsters WHERE id = 1').get();
+        const encRes = diskDb.prepare(`
+          INSERT INTO encounters (character_id, tile_id, monster_id, status, current_monster_hp)
+          VALUES (501, 1, 1, 'IN_COMBAT', 20)
+        `).run();
+        const encounter = diskDb.prepare('SELECT * FROM encounters WHERE id = ?').get(Number(encRes.lastInsertRowid));
+
+        // Insert item for character
+        const ringDef = diskDb.prepare("SELECT id FROM item_definitions WHERE name = 'Ring of Protection +1'").get();
+        diskDb.prepare("INSERT INTO item_instances (item_definition_id, owner_type, owner_character_id) VALUES (?, 'CHARACTER', 501)").run(ringDef.id);
+
+        const deathRes = handlePlayerDeath(diskDb, char, encounter, mon, null, { rng: () => 0.1 });
+        assert.ok(deathRes.instanceId > 0);
+
+        // Close DB connection (simulating server shutdown)
+        diskDb.close();
+
+        // 2. Server restart: reopen the same database file
+        const reopenedDb = initializeDatabase(tempDbPath);
+
+        const monsterRow = reopenedDb.prepare('SELECT * FROM monster_instances WHERE id = ?').get(deathRes.instanceId);
+        assert.ok(monsterRow, 'Persistent monster must exist after server restart');
+        assert.strictEqual(monsterRow.status, 'ACTIVE');
+        assert.strictEqual(monsterRow.held_gold, 40); // 50% of 80 gold
+
+        const monsterLoot = reopenedDb.prepare("SELECT * FROM item_instances WHERE owner_type = 'MONSTER' AND owner_monster_id = ?").all(deathRes.instanceId);
+        assert.strictEqual(monsterLoot.length, deathRes.itemsTransferred);
+
+        reopenedDb.close();
+      } finally {
+        try { fs.unlinkSync(tempDbPath); } catch {}
+      }
+    });
+
+    test('Shop does not sell treasures in standard stock but liquidates them for 50% value', () => {
+      const stock = getCityStoreStock(db);
+      const treasureInStock = stock.standardItems.find(i => i.subtype === 'TREASURE');
+      assert.strictEqual(treasureInStock, undefined, 'Treasures must NOT be available for unlimited purchase in city general store');
+
+      // Give character an Uncut Garnet (buy_price = 50) in a safe city
+      const garnetDef = db.prepare("SELECT id FROM item_definitions WHERE name = 'Uncut Garnet'").get();
+      assert.ok(garnetDef);
+
+      const insRes = db.prepare("INSERT INTO item_instances (item_definition_id, owner_type, owner_character_id) VALUES (?, 'CHARACTER', 101)").run(garnetDef.id);
+      const garnetInstanceId = Number(insRes.lastInsertRowid);
+
+      // Move hero to safe city tile (tile 113 is Oakhaven City, is_safe = 1)
+      db.prepare('UPDATE characters SET tile_id = 113 WHERE id = 101').run();
+      const sellRes = sellItem(db, 101, garnetInstanceId);
+      assert.strictEqual(sellRes.success, true);
+      assert.strictEqual(sellRes.goldEarned, 25, 'Uncut Garnet (50 gp) must liquidate for exactly 25 gp (50%)');
+
+      // Verify item was removed
+      const itemAfter = db.prepare('SELECT * FROM item_instances WHERE id = ?').get(garnetInstanceId);
+      assert.strictEqual(itemAfter, undefined, 'Liquidated treasure instance must be deleted');
+    });
+
+    test('Rebalanced DRAGON_HOARD yields < 1% Legendary items over 1,000 simulated encounters', () => {
+      const dragon = {
+        id: 88,
+        name: 'Young Green Dragon',
+        creature_type: 'DRAGON',
+        challenge_rating: 8.0,
+        treasure_type: 'Double'
+      };
+
+      let legendaryCount = 0;
+      let totalItems = 0;
+
+      for (let i = 0; i < 1000; i++) {
+        if (i % 20 === 0) {
+          db.prepare("DELETE FROM item_instances WHERE owner_character_id = 101").run();
+        }
+        const loot = generateMonsterLoot(db, dragon, 101);
+        for (const it of loot.itemsAwarded) {
+          totalItems++;
+          if (it.rarity === 'LEGENDARY') legendaryCount++;
+        }
+      }
+
+      assert.ok(totalItems > 800, `Expected > 800 items over 1,000 encounters, got ${totalItems}`);
+      const legendaryPct = (legendaryCount / totalItems) * 100;
+      assert.ok(legendaryPct < 1.5, `Legendary drop percentage should be < 1.5%, got ${legendaryPct.toFixed(2)}% (${legendaryCount}/${totalItems})`);
     });
   });
 });

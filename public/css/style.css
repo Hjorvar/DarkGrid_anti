@@ -2448,3 +2448,563 @@ a:focus-visible {
   }
 }
 
+
+/* ==========================================================================
+   CINEMATIC VICTORY SCREEN
+   Dark fantasy aesthetic with gold accents, matching the fallen screen layout.
+   ========================================================================== */
+
+.victory-viewport {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.victory-card {
+  max-width: 680px;
+  width: 100%;
+  margin: 20px auto;
+  text-align: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-gold-solid);
+  border-radius: 8px;
+  padding: 32px 28px;
+  box-shadow: 0 0 35px rgba(197, 160, 89, 0.28);
+  position: relative;
+  animation: victoryCardEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.victory-card.is-avenged-victory {
+  border-color: var(--accent-gold-bright);
+  box-shadow: 0 0 45px rgba(197, 160, 89, 0.38), 0 0 15px rgba(197, 160, 89, 0.2);
+}
+
+.victory-card.is-persistent-victory {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 35px rgba(197, 160, 89, 0.32);
+}
+
+/* Header & Sigil */
+.victory-header {
+  margin-bottom: 24px;
+}
+
+.victory-sigil {
+  font-size: 3rem;
+  margin-bottom: 8px;
+  display: inline-block;
+  animation: victorySigilPulse 2s ease-in-out infinite alternate;
+}
+
+.sigil-icon.standard-sigil {
+  filter: drop-shadow(0 0 12px rgba(197, 160, 89, 0.6));
+}
+
+.sigil-icon.avenged-sigil {
+  filter: drop-shadow(0 0 16px rgba(230, 190, 110, 0.8));
+}
+
+.sigil-icon.persistent-sigil {
+  filter: drop-shadow(0 0 12px rgba(197, 160, 89, 0.5));
+}
+
+.victory-title {
+  font-family: var(--font-display);
+  letter-spacing: 3px;
+  margin-bottom: 8px;
+  font-size: 2.2rem;
+  text-transform: uppercase;
+}
+
+.victory-title.standard-title {
+  color: var(--accent-gold-bright);
+  text-shadow: 0 0 20px rgba(197, 160, 89, 0.5);
+}
+
+.victory-title.avenged-title {
+  color: var(--accent-gold-bright);
+  text-shadow: 0 0 24px rgba(230, 190, 110, 0.6);
+}
+
+.victory-title.persistent-title {
+  color: var(--accent-gold);
+  text-shadow: 0 0 20px rgba(197, 160, 89, 0.4);
+}
+
+.victory-subtitle {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+/* Avenged Memorial Panel */
+.victory-avenged-panel {
+  background: rgba(197, 160, 89, 0.08);
+  border: 1px solid var(--border-gold);
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  text-align: left;
+  animation: victorySectionFade 0.6s ease-out backwards;
+  animation-delay: 0.15s;
+}
+
+.avenged-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-gold);
+  padding-bottom: 8px;
+}
+
+.avenged-badge-icon {
+  font-size: 1.2rem;
+}
+
+.avenged-badge-label {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--accent-gold-bright);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.avenged-hero-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.avenged-hero-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+.avenged-hero-name {
+  color: var(--text-heading);
+}
+
+.avenged-hero-meta {
+  color: var(--accent-gold);
+}
+
+.avenged-hero-date {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.avenged-reclamation-text {
+  margin: 12px 0 0 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-style: italic;
+  border-top: 1px solid rgba(197, 160, 89, 0.15);
+  padding-top: 8px;
+}
+
+/* Monster Showcase */
+.victory-monster-section {
+  margin-bottom: 24px;
+}
+
+.victory-monster-headline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.victory-monster-name {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  color: var(--text-heading);
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.victory-art-container {
+  max-width: 320px;
+  margin: 0 auto 16px auto;
+}
+
+.victory-art-frame {
+  position: relative;
+  background: #000;
+  border: 1px solid var(--border-medium);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.victory-art-img {
+  width: 100%;
+  height: auto;
+  max-height: 260px;
+  object-fit: contain;
+  display: block;
+}
+
+.victory-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+}
+
+.victory-art-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.8);
+}
+
+.victory-defeat-narrative {
+  background: rgba(0, 0, 0, 0.45);
+  border-left: 3px solid var(--accent-gold);
+  border-top: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 12px 18px;
+  text-align: left;
+  position: relative;
+  margin: 0 auto;
+}
+
+.narrative-quote-glyph {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  color: var(--accent-gold-dim);
+  line-height: 1;
+}
+
+.narrative-quote-body {
+  color: var(--text-main);
+  font-style: italic;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  margin: 4px 0;
+  display: inline;
+}
+
+/* Level Up Banner */
+.victory-levelup-banner {
+  background: linear-gradient(135deg, rgba(197, 160, 89, 0.25) 0%, rgba(230, 190, 110, 0.12) 100%);
+  border: 1px solid var(--accent-gold-bright);
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 0 25px rgba(197, 160, 89, 0.3);
+  animation: victoryLevelUpEntrance 0.6s ease-out backwards;
+  animation-delay: 0.2s;
+}
+
+.levelup-crown {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--accent-gold-bright);
+  margin-bottom: 4px;
+}
+
+.levelup-heading {
+  font-size: 1.25rem;
+  color: var(--text-heading);
+  margin-bottom: 4px;
+}
+
+.levelup-details {
+  color: var(--accent-moss-bright);
+  font-size: 0.95rem;
+}
+
+/* Rewards Panel */
+.victory-rewards-panel {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 24px;
+  animation: victorySectionFade 0.6s ease-out backwards;
+  animation-delay: 0.25s;
+}
+
+.rewards-panel-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--accent-gold);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 8px;
+  text-align: left;
+}
+
+.rewards-stats-grid {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.reward-card {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 12px 14px;
+}
+
+.reward-icon {
+  font-size: 1.5rem;
+}
+
+.reward-text-group {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.reward-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.reward-value {
+  font-size: 1.25rem;
+}
+
+.xp-value {
+  color: var(--accent-gold-bright);
+}
+
+.gold-value {
+  color: #fbbf24;
+}
+
+.resolved-by-other-notice {
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 12px;
+}
+
+/* Loot Section */
+.victory-loot-section {
+  margin-top: 14px;
+  text-align: left;
+}
+
+.loot-section-header {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.loot-header-icon {
+  font-size: 1rem;
+}
+
+.victory-loot-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.victory-loot-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(197, 160, 89, 0.12);
+  border: 1px solid var(--border-gold);
+  border-radius: 4px;
+  padding: 6px 14px;
+  color: var(--text-heading);
+  font-size: 0.92rem;
+}
+
+.loot-badge-glyph {
+  font-size: 0.9rem;
+}
+
+.loot-badge-name {
+  font-weight: 500;
+}
+
+.victory-loot-empty {
+  padding: 10px 0 4px 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* Hero Status Summary */
+.victory-hero-summary {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-bottom: 28px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.hero-summary-row {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Action Button */
+.victory-actions {
+  margin-top: 8px;
+}
+
+.victory-continue-btn {
+  padding: 14px 44px;
+  font-size: 1.15rem;
+  font-family: var(--font-display);
+  letter-spacing: 1.5px;
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 4px 18px rgba(197, 160, 89, 0.32);
+  transition: all 0.2s ease;
+}
+
+.victory-continue-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(197, 160, 89, 0.48);
+}
+
+/* Animations */
+@keyframes victoryCardEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes victorySigilPulse {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes victorySectionFade {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes victoryLevelUpEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  .victory-card,
+  .victory-sigil,
+  .victory-avenged-panel,
+  .victory-levelup-banner,
+  .victory-rewards-panel,
+  .victory-continue-btn {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Mobile & Small Screens */
+@media (max-width: 600px) {
+  .victory-card {
+    padding: 24px 16px;
+    margin: 12px auto;
+  }
+
+  .victory-title {
+    font-size: 1.7rem;
+    letter-spacing: 2px;
+  }
+
+  .victory-sigil {
+    font-size: 2.4rem;
+  }
+
+  .victory-monster-name {
+    font-size: 1.3rem;
+  }
+
+  .victory-art-container {
+    max-width: 240px;
+  }
+
+  .rewards-stats-grid {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .hero-summary-row {
+    flex-direction: column;
+    text-align: left;
+    gap: 4px;
+  }
+
+  .victory-continue-btn {
+    width: 100%;
+    padding: 14px 20px;
+    box-sizing: border-box;
+  }
+}

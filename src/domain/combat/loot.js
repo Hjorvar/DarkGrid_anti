@@ -7,6 +7,21 @@
 
 const { withTransaction } = require('../../db/connection');
 
+const INACTIVE_ITEM_NAMES = [
+  'Potion of Barkskin',
+  "Potion of Bull's Strength",
+  "Potion of Cat's Grace",
+  'Potion of Shield of Faith',
+  'Potion of Heroism',
+  "Elixir of Dragon's Breath",
+  'Antitoxin',
+  'Boots of Elvenkind',
+  'Cloak of Resistance +1',
+  'Bracers of Armor +1'
+];
+
+const INACTIVE_ITEMS_SQL = INACTIVE_ITEM_NAMES.map(n => `'${n.replace(/'/g, "''")}'`).join(', ');
+
 const TREASURE_CHANCES = {
   None:       { goldChance: 0.00, itemChance: 0.00 },
   Incidental: { goldChance: 0.15, itemChance: 0.05 },
@@ -174,7 +189,7 @@ function generateMonsterLoot(db, monster, characterId, options = {}) {
           SELECT lte.weight, id.*
           FROM loot_table_entries lte
           JOIN item_definitions id ON lte.item_definition_id = id.id
-          WHERE lte.loot_table_id = ? AND id.is_magical = 0
+          WHERE lte.loot_table_id = ? AND id.is_magical = 0 AND id.name NOT IN (${INACTIVE_ITEMS_SQL})
         `).all(lootTable.id);
 
         if (tableEntries.length > 0) {
@@ -187,6 +202,7 @@ function generateMonsterLoot(db, monster, characterId, options = {}) {
         const fallbackCandidates = tx.prepare(`
           SELECT * FROM item_definitions
           WHERE is_magical = 0 AND buy_price > 0 AND category IN ('WEAPON', 'ARMOR', 'SHIELD', 'POTION', 'OTHER')
+            AND name NOT IN (${INACTIVE_ITEMS_SQL})
           ORDER BY id ASC
         `).all();
 
@@ -231,7 +247,7 @@ function generateMonsterLoot(db, monster, characterId, options = {}) {
           SELECT lte.weight, id.*
           FROM loot_table_entries lte
           JOIN item_definitions id ON lte.item_definition_id = id.id
-          WHERE lte.loot_table_id = ? AND id.is_magical = 1 AND id.min_cr <= ?
+          WHERE lte.loot_table_id = ? AND id.is_magical = 1 AND id.min_cr <= ? AND id.name NOT IN (${INACTIVE_ITEMS_SQL})
         `).all(lootTable.id, cr);
 
         if (magicTableEntries.length > 0) {
@@ -248,6 +264,7 @@ function generateMonsterLoot(db, monster, characterId, options = {}) {
           magicCandidates = tx.prepare(`
             SELECT * FROM item_definitions
             WHERE is_magical = 1 AND (enhancement_bonus >= 2 OR rarity IN ('RARE', 'EPIC', 'LEGENDARY')) AND min_cr <= ?
+              AND name NOT IN (${INACTIVE_ITEMS_SQL})
             ORDER BY id ASC
           `).all(cr);
         }
@@ -256,6 +273,7 @@ function generateMonsterLoot(db, monster, characterId, options = {}) {
           magicCandidates = tx.prepare(`
             SELECT * FROM item_definitions
             WHERE is_magical = 1 AND (enhancement_bonus = 1 OR category = 'POTION' OR rarity IN ('UNCOMMON', 'RARE')) AND min_cr <= ?
+              AND name NOT IN (${INACTIVE_ITEMS_SQL})
             ORDER BY id ASC
           `).all(cr);
         }
@@ -292,6 +310,7 @@ function generateMonsterLoot(db, monster, characterId, options = {}) {
 }
 
 module.exports = {
+  INACTIVE_ITEM_NAMES,
   TREASURE_CHANCES,
   GOLD_RANGES_STANDARD,
   MAGIC_DROP_CHANCES,

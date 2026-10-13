@@ -11,20 +11,28 @@ const {
   getFighterArmorTrainingMaxDexBonus,
   getRangerFavoredEnemyBonus,
   getClericHolyRadianceBonus,
-  getClericDivinePowerBonus
+  getClericDivinePowerBonus,
+  getEffectiveStats
 } = require('../character/rules');
 const { rollD20, rollDice } = require('./dice');
 
 /**
  * Calculates hero Attack Bonus according to DARKGRID_GAME_SPEC.md §8.1:
  * floor((STR_modifier + DEX_modifier) / 2) + level_progression + weapon_enhancement + class_bonuses
+ * Supports Belt of Giant Strength +2 via effective stats without double counting.
  * @param {object} character
  * @param {object|null} equippedWeapon
  * @param {object|null} monster
+ * @param {object|null} equipment
  * @returns {number}
  */
-function calculateHeroAttackBonus(character, equippedWeapon = null, monster = null) {
-  const strMod = getModifier(character.strength);
+function calculateHeroAttackBonus(character, equippedWeapon = null, monster = null, equipment = null) {
+  let strVal = character.strength;
+  if (equipment && equipment.belt && character.is_str_boosted === undefined) {
+    const eff = getEffectiveStats(character, equipment);
+    strVal = eff.strength;
+  }
+  const strMod = getModifier(strVal);
   const dexMod = getModifier(character.dexterity);
   const baseBonus = Math.floor((strMod + dexMod) / 2);
 
@@ -126,7 +134,17 @@ function calculateHeroAC(character, equippedArmor = null, equippedShield = null,
     effectiveDex = dexMod >= 0 ? Math.min(dexMod, effectiveMax) : dexMod;
   }
 
-  const armorBonus = armor ? (Number(armor.armor_bonus || 0) + Number(armor.enhancement_bonus || 0)) : 0;
+  let armorBonus = 0;
+  if (armor) {
+    if (armor.base_armor_bonus !== undefined) {
+      armorBonus = Number(armor.base_armor_bonus) + Number(armor.enhancement_bonus || 0);
+    } else if (armor.armor_bonus_includes_enhancement === false) {
+      armorBonus = Number(armor.armor_bonus || 0) + Number(armor.enhancement_bonus || 0);
+    } else {
+      // In Darkgrid DB, item_definitions.armor_bonus already includes enhancement_bonus
+      armorBonus = Number(armor.armor_bonus || 0);
+    }
+  }
 
   // Two-handed melee weapon check:
   // When hero wields a two-handed weapon (is_two_handed = 1), shield AC bonus is 0.
@@ -137,7 +155,14 @@ function calculateHeroAC(character, equippedArmor = null, equippedShield = null,
   // Shield bonus does NOT apply when fighting with a ranged weapon OR when wielding a two-handed melee weapon
   let shieldBonus = 0;
   if (!rangedActive && !isTwoHandedMelee && shield) {
-    shieldBonus = Number(shield.shield_bonus || 0) + Number(shield.enhancement_bonus || 0);
+    if (shield.base_shield_bonus !== undefined) {
+      shieldBonus = Number(shield.base_shield_bonus) + Number(shield.enhancement_bonus || 0);
+    } else if (shield.shield_bonus_includes_enhancement === false) {
+      shieldBonus = Number(shield.shield_bonus || 0) + Number(shield.enhancement_bonus || 0);
+    } else {
+      // In Darkgrid DB, item_definitions.shield_bonus already includes enhancement_bonus
+      shieldBonus = Number(shield.shield_bonus || 0);
+    }
   }
 
   // Cleric Holy Radiance vs Undead (+2 AC L1-4, +3 AC L5-8, +4 AC L9+). Sacred defense, NOT shield bonus.
@@ -163,13 +188,20 @@ function calculateHeroAC(character, equippedArmor = null, equippedShield = null,
 /**
  * Determines damage formula for hero based on equipped weapon, STR modifier,
  * enhancement bonuses, and class ability bonuses.
+ * Supports Belt of Giant Strength +2 via effective stats without double counting.
  * @param {object} character
  * @param {object|null} equippedWeapon
  * @param {object|null} monster
+ * @param {object|null} equipment
  * @returns {string} e.g. '1d8+2' or '1d6+1'
  */
-function getHeroDamageFormula(character, equippedWeapon = null, monster = null) {
-  const strMod = getModifier(character.strength);
+function getHeroDamageFormula(character, equippedWeapon = null, monster = null, equipment = null) {
+  let strVal = character.strength;
+  if (equipment && equipment.belt && character.is_str_boosted === undefined) {
+    const eff = getEffectiveStats(character, equipment);
+    strVal = eff.strength;
+  }
+  const strMod = getModifier(strVal);
   let baseDice = '1d4';
 
   if (equippedWeapon && equippedWeapon.damage_dice) {

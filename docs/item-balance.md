@@ -18,12 +18,12 @@ In addition, targeted constraint verifications tested the **Ordinary Animal Rule
 | Metric | Low CR (0.33–1.0) | Mid CR (2.0–4.0) | High CR (5.0–8.0) | Target Benchmark |
 |---|---|---|---|---|
 | **Total Encounters** | 10,000 | 10,000 | 10,000 | 30,000 total |
-| **Gold Drop Frequency** | 54.9% (5,492) | 54.7% (5,468) | 80.0% (7,996) | 50%–55% standard, 80% dragon |
-| **Avg Gold When Dropped** | 3.0 gp | 12.0 gp | 406.1 gp | Scales gracefully with CR |
-| **Avg Gold Per Encounter** | 1.6 gp | 6.5 gp | 324.7 gp | Smooth economic ramp |
-| **Item Drop Frequency** | 28.7% (2,871) | 28.0% (2,796) | 95.6% (9,560) | ~25%–30% standard, 90%+ hoard |
-| **Total Items Awarded** | 2,878 | 2,826 | 10,424 | Controlled item flow |
-| **Magical Items Dropped** | 44 (1.5% of items) | 109 (3.8% of items) | 910 (8.7% of items) | < 5% low/mid, controlled high |
+| **Gold Drop Frequency** | 55.7% (5,566) | 54.8% (5,483) | 80.0% (8,000) | 50%–55% standard, 80% dragon |
+| **Avg Gold When Dropped** | 3.0 gp | 12.0 gp | 406.5 gp | Scales gracefully with CR |
+| **Avg Gold Per Encounter** | 1.7 gp | 6.6 gp | 325.2 gp | Smooth economic ramp |
+| **Item Drop Frequency** | 28.3% (2,829) | 29.5% (2,954) | 95.6% (9,557) | ~25%–30% standard, 90%+ hoard |
+| **Total Items Awarded** | 2,845 | 2,985 | 10,406 | Controlled item flow |
+| **Magical Items Dropped** | 47 (1.65% of items) | 126 (4.22% of items) | 890 (8.55% of items) | < 5% low/mid, controlled high |
 
 ---
 
@@ -31,17 +31,17 @@ In addition, targeted constraint verifications tested the **Ordinary Animal Rule
 
 | Rarity Tier | Low CR (10k Rolls) | Mid CR (10k Rolls) | High CR (10k Rolls) | Total Items Dropped | Global % |
 |---|---|---|---|---|---|
-| **COMMON** | 2,534 (88.0%) | 2,506 (88.7%) | 0 (0.0%) | 5,040 | 31.2% |
-| **UNCOMMON** | 344 (12.0%) | 320 (11.3%) | 0 (0.0%) | 664 | 4.1% |
-| **RARE** | 0 (0.0%) | 0 (0.0%) | 6,294 (60.4%) | 6,294 | 39.0% |
-| **EPIC** | 0 (0.0%) | 0 (0.0%) | 2,009 (19.3%) | 2,009 | 12.5% |
-| **LEGENDARY** | 0 (0.0%) | 0 (0.0%) | 2,121 (20.3%) | 2,121 | 13.2% |
-| **Total Items** | **2,878** | **2,826** | **10,424** | **16,128** | **100.0%** |
+| **COMMON** | 2,499 (87.8%) | 2,648 (88.7%) | 2,406 (23.1%) | 7,553 | 46.5% |
+| **UNCOMMON** | 346 (12.2%) | 337 (11.3%) | 5,078 (48.8%) | 5,761 | 35.5% |
+| **RARE** | 0 (0.0%) | 0 (0.0%) | 2,694 (25.9%) | 2,694 | 16.6% |
+| **EPIC** | 0 (0.0%) | 0 (0.0%) | 161 (1.55%) | 161 | 1.0% |
+| **LEGENDARY** | 0 (0.0%) | 0 (0.0%) | 67 (0.64%) | 67 | 0.4% |
+| **Total Items** | **2,845** | **2,985** | **10,406** | **16,236** | **100.0%** |
 
 ### Key Observations:
 1. **Low and Mid CR Tiers:** Strictly bounded to `COMMON` (~88%) and `UNCOMMON` (~12%). Players will never obtain balance-distorting high-tier artifacts from early wilderness wandering.
-2. **High CR Dragon Hoard:** The Young Green Dragon (CR 8, Double Treasure) correctly queries `DRAGON_HOARD`, rewarding victorious high-level heroes with rare gemstones (`Rough Emerald`, `Flawless Sapphire`), ancient valuables, and masterwork arms without flooding low-level gameplay.
-3. **Legendary Scarcity:** Across mundane and standard encounters, legendary drop frequency is effectively 0.0%, preserving legendary status as an apex achievement.
+2. **High CR Dragon Hoard:** The Young Green Dragon (CR 8, Double Treasure) queries the rebalanced `DRAGON_HOARD` loot table, generating an authentic pyramid: ~23% Common coins/gems, ~49% Uncommon jewelry/valuables, ~26% Rare gems and enchantments, ~1.5% Epic gemstones, and a truly scarce 0.6% Legendary relics.
+3. **Legendary Scarcity:** Across mundane and standard encounters, legendary drop frequency is strictly 0.0%, and even in apex dragon hoards it is restricted to ~0.6% (approx. 1 in 155 dragon kills), preserving legendary status as an apex achievement.
 
 ---
 
@@ -49,11 +49,11 @@ In addition, targeted constraint verifications tested the **Ordinary Animal Rule
 
 | Category | Low CR | Mid CR | High CR (Dragon) | Total Items |
 |---|---|---|---|---|
-| **WEAPON** | 1,252 (43.5%) | 1,245 (44.1%) | 293 (2.8%) | 2,790 |
-| **ARMOR** | 643 (22.3%) | 574 (20.3%) | 152 (1.5%) | 1,369 |
-| **SHIELD** | 313 (10.9%) | 316 (11.2%) | 0 (0.0%) | 629 |
-| **POTION** | 267 (9.3%) | 297 (10.5%) | 297 (2.9%) | 861 |
-| **OTHER / TREASURE** | 403 (14.0%) | 394 (13.9%) | 9,682 (92.8%) | 10,479 |
+| **WEAPON** | 1,303 (45.8%) | 1,293 (43.3%) | 134 (1.3%) | 2,730 |
+| **ARMOR** | 592 (20.8%) | 675 (22.6%) | 238 (2.3%) | 1,505 |
+| **SHIELD** | 333 (11.7%) | 307 (10.3%) | 104 (1.0%) | 744 |
+| **POTION** | 242 (8.5%) | 319 (10.7%) | 294 (2.8%) | 855 |
+| **OTHER / TREASURE** | 375 (13.2%) | 391 (13.1%) | 9,636 (92.6%) | 10,402 |
 
 ### Key Observations:
 1. **Humanoid Loot Authenticity:** Low and Mid CR Humanoids drop predominantly military gear (Weapons ~44%, Armor ~21%, Shields ~11%) and occasional traveler potions (~10%), creating a grounded adventuring experience.

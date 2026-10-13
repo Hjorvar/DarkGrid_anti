@@ -802,8 +802,10 @@ function setPrimaryWeaponPreference(db, characterId, preference) {
  *    or unequipped/bare hands.
  */
 function getActiveWeapon(character, equipment, monster = null) {
+  const mType = (monster && monster.movement_type ? monster.movement_type : '').toUpperCase();
   const isAirborne = Boolean(monster && (
-    (monster.movement_type || '').toUpperCase() === 'FLY' ||
+    mType === 'FLY' ||
+    mType === 'FLYING' ||
     Boolean(monster.is_flying)
   ));
   const meleeWeapon = equipment ? (equipment.meleeWeapon || null) : null;
@@ -853,33 +855,92 @@ function getCharacterPotionCount(db, characterId) {
   return row ? row.count : 0;
 }
 
+const INACTIVE_CONSUMABLE_NAMES = [
+  'Potion of Barkskin',
+  "Potion of Bull's Strength",
+  "Potion of Cat's Grace",
+  'Potion of Shield of Faith',
+  'Potion of Heroism',
+  "Elixir of Dragon's Breath",
+  'Antitoxin'
+];
+
 /**
- * Fetches all healing potions owned by the hero, ordered by price ASC (cheapest first).
- * Includes display name and heal effect for combat selection.
+ * Calculates effective character attributes taking equipped accessories into account.
+ * Specifically, Belt of Giant Strength +2 adds +2 to Strength when equipped in the BELT slot.
+ * Ensures no double-counting and bonus disappears when unequipped.
+ * Does not add synthetic dexterity to Boots of Elvenkind.
  */
-function getCharacterPotions(db, characterId) {
+function getEffectiveStats(character, equipment = null) {
+  if (!character) return character;
+  const baseStr = Number(character.base_strength !== undefined ? character.base_strength : character.strength);
+  let strBonus = 0;
+
+  if (equipment && equipment.belt) {
+    const belt = equipment.belt;
+    if (belt.name === 'Belt of Giant Strength +2') {
+      strBonus += 2;
+    } else if (belt.attributes) {
+      let attrs = belt.attributes;
+      if (typeof attrs === 'string') {
+        try { attrs = JSON.parse(attrs); } catch { attrs = {}; }
+      }
+      if (attrs.strength_bonus) {
+        strBonus += Number(attrs.strength_bonus);
+      } else if (attrs.stat_bonus && attrs.stat_bonus.strength) {
+        strBonus += Number(attrs.stat_bonus.strength);
+      }
+    }
+  }
+
+  const effectiveStr = baseStr + strBonus;
+
+  return {
+    ...character,
+    base_strength: baseStr,
+    strength: effectiveStr,
+    strength_bonus: strBonus,
+    is_str_boosted: strBonus > 0
+  };
+}
+
+/**
+ * Fetches potions owned by the hero, ordered by price ASC (cheapest first).
+ * In combat (options.combatOnly = true), returns strictly active healing potions.
+ * In inventory display, returns all potions, flagging inactive ones with is_inactive = true.
+ */
+function getCharacterPotions(db, characterId, options = {}) {
+  const combatOnly = Boolean(options && options.combatOnly);
   const rows = db.prepare(`
-    SELECT ii.id, ii.item_definition_id, id.name, id.buy_price, id.attributes, id.description
+    SELECT ii.id, ii.item_definition_id, id.name, id.buy_price, id.attributes, id.description,
+           id.category, id.subtype, id.rarity, id.is_magical
     FROM item_instances ii
     JOIN item_definitions id ON ii.item_definition_id = id.id
     WHERE ii.owner_type = 'CHARACTER' AND ii.owner_character_id = ? AND id.category = 'POTION'
     ORDER BY id.buy_price ASC, ii.id ASC
   `).all(characterId);
 
-  return rows.map((r) => {
+  const mapped = rows.map((r) => {
     let attrs = {};
     if (typeof r.attributes === 'string') {
       try { attrs = JSON.parse(r.attributes); } catch { attrs = {}; }
     } else if (r.attributes && typeof r.attributes === 'object') {
       attrs = r.attributes;
     }
-    const healEffect = attrs.heal_dice || '1d8+1';
+    const isInactive = INACTIVE_CONSUMABLE_NAMES.includes(r.name) || r.subtype === 'BUFF_POTION' || r.subtype === 'OFFENSIVE';
+    const healEffect = isInactive ? null : (attrs.heal_dice || '1d8+1');
     return {
       ...r,
       healEffect,
-      displayName: `${r.name} (${healEffect})`
+      is_inactive: isInactive,
+      displayName: isInactive ? `${r.name} (Inactive)` : `${r.name} (${healEffect})`
     };
   });
+
+  if (combatOnly) {
+    return mapped.filter(p => !p.is_inactive);
+  }
+  return mapped;
 }
 
 /**
@@ -898,6 +959,7 @@ function getAllCharacterItems(db, characterId) {
 /**
  * Uses a consumable item (e.g. potion, elixir) from the player's inventory outside of combat.
  * Thread-safe, atomic, validates ownership, prevents dead hero usage and race conditions.
+ * Prevents consuming inactive items without effect; existing items are preserved.
  */
 function useConsumable(db, characterId, itemInstanceId, options = {}) {
   const rng = typeof options === 'function' ? options : (options && options.rng ? options.rng : Math.random);
@@ -929,6 +991,10 @@ function useConsumable(db, characterId, itemInstanceId, options = {}) {
 
     if (item.category !== 'POTION') {
       throw new Error(`The ${item.name} is not a consumable item.`);
+    }
+
+    if (INACTIVE_CONSUMABLE_NAMES.includes(item.name) || item.subtype === 'BUFF_POTION' || item.subtype === 'OFFENSIVE') {
+      throw new Error(`${item.name} cannot be consumed: its effect is not yet active in this version.`);
     }
 
     let attrs = {};
@@ -967,18 +1033,8 @@ function useConsumable(db, characterId, itemInstanceId, options = {}) {
       };
     }
 
-    // Buff or other potion consumed out of combat
-    tx.prepare('DELETE FROM item_instances WHERE id = ?').run(item.id);
-    const desc = attrs.description || `Consumed ${item.name}.`;
-
-    return {
-      success: true,
-      item: { id: item.id, name: item.name },
-      healed: 0,
-      currentHp: character.current_hp,
-      maxHp: character.max_hp,
-      message: `You consumed ${item.name}. ${desc}`
-    };
+    // Unimplemented or inactive consumable: reject consumption, do NOT delete item
+    throw new Error(`${item.name} cannot be consumed: its effect is not yet active in this version.`);
   });
 }
 
@@ -1012,5 +1068,7 @@ module.exports = {
   getCharacterPotionCount,
   getCharacterPotions,
   getAllCharacterItems,
-  useConsumable
+  useConsumable,
+  getEffectiveStats,
+  INACTIVE_CONSUMABLE_NAMES
 };

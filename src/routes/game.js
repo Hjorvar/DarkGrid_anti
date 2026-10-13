@@ -17,7 +17,8 @@ const {
   performCityRest,
   getClericSelfHealInfo,
   getClericRemainingHealUses,
-  useConsumable
+  useConsumable,
+  getEffectiveStats
 } = require('../domain/character/rules');
 const {
   calculateHeroAC,
@@ -44,6 +45,7 @@ const {
   getCombatState,
   executeCombatRound
 } = require('../domain/combat/engine');
+const { getVictoryData } = require('../domain/combat/victory');
 const { getTerrainArtworkForTile } = require('../domain/world/artwork');
 const { withTransaction } = require('../db/connection');
 
@@ -106,15 +108,16 @@ router.get('/game', (req, res) => {
 
   // Equipment & Inventory
   const equipment = getCharacterEquipment(req.db, character.id);
+  const effectiveHero = getEffectiveStats(character, equipment);
   const inventory = getCharacterInventory(req.db, character.id);
   const potions = getCharacterPotions(req.db, character.id);
   const potionCount = potions.length;
 
   // Computed Combat stats (M1)
-  const { activeWeapon, isRangedActive } = combatState ? combatState : getActiveWeapon(character, equipment, activeEncounter);
-  const meleeAttackBonus = calculateHeroAttackBonus(character, equipment.meleeWeapon, activeEncounter);
-  const rangedAttackBonus = calculateHeroAttackBonus(character, equipment.rangedWeapon, activeEncounter);
-  const heroAC = combatState ? combatState.heroAC : calculateHeroAC(character, equipment.armor, equipment.shield, isRangedActive, activeEncounter, activeWeapon);
+  const { activeWeapon, isRangedActive } = combatState ? combatState : getActiveWeapon(effectiveHero, equipment, activeEncounter);
+  const meleeAttackBonus = calculateHeroAttackBonus(effectiveHero, equipment.meleeWeapon, activeEncounter);
+  const rangedAttackBonus = calculateHeroAttackBonus(effectiveHero, equipment.rangedWeapon, activeEncounter);
+  const heroAC = combatState ? combatState.heroAC : calculateHeroAC(effectiveHero, equipment.armor, equipment.shield, isRangedActive, activeEncounter, activeWeapon);
 
   // Cleric healing info
   let clericHealInfo = null;
@@ -137,12 +140,12 @@ router.get('/game', (req, res) => {
 
   // Computed stat modifiers
   const modifiers = {
-    strength: formatModifier(character.strength),
-    constitution: formatModifier(character.constitution),
-    dexterity: formatModifier(character.dexterity),
-    intelligence: formatModifier(character.intelligence),
-    wisdom: formatModifier(character.wisdom),
-    charisma: formatModifier(character.charisma)
+    strength: formatModifier(effectiveHero.strength),
+    constitution: formatModifier(effectiveHero.constitution),
+    dexterity: formatModifier(effectiveHero.dexterity),
+    intelligence: formatModifier(effectiveHero.intelligence),
+    wisdom: formatModifier(effectiveHero.wisdom),
+    charisma: formatModifier(effectiveHero.charisma)
   };
 
   const errorMessage = req.query.error || null;
@@ -163,7 +166,7 @@ router.get('/game', (req, res) => {
   `).all(character.id);
 
   res.render('game', {
-    character,
+    character: effectiveHero,
     currentTile,
     terrainArtwork,
     minimap,
@@ -214,6 +217,48 @@ router.get('/game/fallen', (req, res) => {
   }
 
   res.render('fallen', { fallen });
+});
+
+/**
+ * Victory Screen
+ * Displays confirmed combat results, rewards, monster artwork, and avenger tribute.
+ * Pure presentation layer; strictly read-only and idempotent.
+ */
+router.get('/game/victory', (req, res) => {
+  const character = getLivingCharacterByUserId(req.db, req.user.id);
+  if (!character) {
+    const fallen = req.db.prepare(`
+      SELECT id FROM characters
+      WHERE user_id = ? AND is_alive = 0
+      ORDER BY id DESC LIMIT 1
+    `).get(req.user.id);
+
+    if (fallen) {
+      return res.redirect('/game/fallen');
+    }
+    return res.redirect('/character/create');
+  }
+
+  let encounterId = req.query.encounterId ? parseInt(req.query.encounterId, 10) : null;
+  if (!encounterId || isNaN(encounterId)) {
+    const latestVictory = req.db.prepare(`
+      SELECT id FROM encounters
+      WHERE character_id = ? AND status = 'VICTORY'
+      ORDER BY id DESC LIMIT 1
+    `).get(character.id);
+
+    if (!latestVictory) {
+      return res.redirect('/game');
+    }
+    encounterId = latestVictory.id;
+  }
+
+  const victoryData = getVictoryData(req.db, character.id, encounterId);
+  if (!victoryData) {
+    return res.redirect('/game');
+  }
+
+  res.render('victory', { ...victoryData });
 });
 
 /**
@@ -274,14 +319,8 @@ router.post('/game/encounter/investigate', (req, res) => {
   const encounterId = parseInt(req.body.encounterId, 10);
   try {
     const result = investigateEncounter(req.db, character.id, encounterId, character.class);
-    if (result && result.monsterDied) {
-      const victoryEvent = (result.events || []).find(e => e.event_type === 'VICTORY' || e.type === 'VICTORY');
-      const levelUpEvent = (result.events || []).find(e => e.event_type === 'LEVEL_UP' || e.type === 'LEVEL_UP');
-      let msg = victoryEvent ? (victoryEvent.public_text || victoryEvent.text) : 'Opening Shot: The creature fell to your deadly arrow!';
-      if (levelUpEvent) {
-        msg += ' ' + (levelUpEvent.public_text || levelUpEvent.text);
-      }
-      return res.redirect('/game?info=' + encodeURIComponent(msg));
+    if (result && (result.status === 'VICTORY' || result.monsterDied)) {
+      return res.redirect(`/game/victory?encounterId=${encounterId}`);
     }
     res.redirect('/game');
   } catch (err) {
@@ -307,13 +346,7 @@ router.post('/game/combat/attack', (req, res) => {
       return res.redirect('/game/fallen');
     }
     if (state.encounter.status === 'VICTORY') {
-      const victoryEvent = (state.events || []).find(e => e.event_type === 'VICTORY' || e.type === 'VICTORY');
-      const levelUpEvent = (state.events || []).find(e => e.event_type === 'LEVEL_UP' || e.type === 'LEVEL_UP');
-      let msg = victoryEvent ? (victoryEvent.public_text || victoryEvent.text) : 'The battle is won!';
-      if (levelUpEvent) {
-        msg += ' ' + (levelUpEvent.public_text || levelUpEvent.text);
-      }
-      return res.redirect('/game?info=' + encodeURIComponent(msg));
+      return res.redirect(`/game/victory?encounterId=${encounterId}`);
     }
     res.redirect('/game');
   } catch (err) {
@@ -343,13 +376,7 @@ router.post('/game/combat/potion', (req, res) => {
       return res.redirect('/game/fallen');
     }
     if (state.encounter.status === 'VICTORY') {
-      const victoryEvent = (state.events || []).find(e => e.event_type === 'VICTORY' || e.type === 'VICTORY');
-      const levelUpEvent = (state.events || []).find(e => e.event_type === 'LEVEL_UP' || e.type === 'LEVEL_UP');
-      let msg = victoryEvent ? (victoryEvent.public_text || victoryEvent.text) : 'The battle is won!';
-      if (levelUpEvent) {
-        msg += ' ' + (levelUpEvent.public_text || levelUpEvent.text);
-      }
-      return res.redirect('/game?info=' + encodeURIComponent(msg));
+      return res.redirect(`/game/victory?encounterId=${encounterId}`);
     }
     res.redirect('/game');
   } catch (err) {

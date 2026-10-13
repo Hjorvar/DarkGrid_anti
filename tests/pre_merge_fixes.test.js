@@ -282,7 +282,7 @@ test('4. Two-Handed Weapons & Shields: Suppresses shield AC bonus for two-handed
   assert.equal(active.activeWeapon.is_two_handed, 0);
 
   const longswordMagAC = calculateHeroAC(hero, equipment.armor, equipment.shield, false, null, active.activeWeapon);
-  assert.equal(longswordMagAC, 20, 'Longsword restores magical shield bonus (16 + 3 shield + 1 enh = 20)');
+  assert.equal(longswordMagAC, 19, 'Longsword restores magical shield bonus (16 + 3 total shield bonus = 19)');
 
   // 4d. Ranged weapon active -> shield bonus is 0
   const rangedAC = calculateHeroAC(hero, equipment.armor, equipment.shield, true, null, equipment.rangedWeapon);

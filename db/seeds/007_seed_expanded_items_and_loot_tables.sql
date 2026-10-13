@@ -173,7 +173,7 @@ INSERT INTO item_definitions (
     NULL, 0, 0, NULL, '["FIGHTER","RANGER","CLERIC"]',
     NULL, 0, NULL, 0,
     'Pathfinder 1e Core Rulebook pg. 159', 0, 'COMMON', 'ALCHEMICAL',
-    '{"potion_type":"cure","cure_type":"poison","heal_dice":"1d4","min_heal":1,"max_heal":4,"description":"Neutralizes venom and restores 1d4 vitality."}'
+    '{"potion_type":"alchemical","cure_type":"poison","heal_dice":"0","description":"Neutralizes venom and purges toxins. Poison mechanism pending future release."}'
 ),
 (
     'Draught of Troll''s Blood',
@@ -427,9 +427,9 @@ INSERT INTO item_definitions (
     'Supple calfskin boots dyed the color of autumn leaves, muffling all footfalls and enabling uncanny stealth across harsh terrain.',
     2500, 1000, 1,
     NULL, 0, 0, 'FEET', '["FIGHTER","RANGER","CLERIC"]',
-    NULL, 1, NULL, 0,
+    NULL, 0, NULL, 0,
     'Pathfinder 1e Core Rulebook pg. 501', 2, 'UNCOMMON', 'ACCESSORY',
-    '{"equip_slot":"FEET","dexterity_bonus":1,"description":"Supple calfskin boots muffling all footfalls across harsh terrain."}'
+    '{"equip_slot":"FEET","description":"Supple calfskin boots muffling all footfalls across harsh terrain. Stealth system pending future release."}'
 ),
 (
     'Holy Avenger +3',
@@ -557,6 +557,22 @@ ON CONFLICT(code) DO UPDATE SET
 -- 5. LOOT TABLE ENTRIES (Linking Tables to Items with Weights)
 -- ============================================================================
 
+-- Clean up any entries for items that are temporarily inactive (buff potions, dragon breath, antitoxin, boots, cloak, bracers)
+DELETE FROM loot_table_entries WHERE item_definition_id IN (
+    SELECT id FROM item_definitions WHERE name IN (
+        'Potion of Barkskin',
+        'Potion of Bull''s Strength',
+        'Potion of Cat''s Grace',
+        'Potion of Shield of Faith',
+        'Potion of Heroism',
+        'Elixir of Dragon''s Breath',
+        'Antitoxin',
+        'Boots of Elvenkind',
+        'Cloak of Resistance +1',
+        'Bracers of Armor +1'
+    )
+);
+
 -- Helper block using correlated subqueries
 -- 5a. HUMANOID_MUNDANE Entries
 INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
@@ -565,7 +581,7 @@ WHERE lt.code = 'HUMANOID_MUNDANE' AND id.name IN ('Dagger', 'Shortsword', 'Hand
 
 INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
 SELECT lt.id, id.id, 15, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
-WHERE lt.code = 'HUMANOID_MUNDANE' AND id.name IN ('Minor Healing Potion', 'Antitoxin', 'Uncut Garnet', 'Polished Bloodstone');
+WHERE lt.code = 'HUMANOID_MUNDANE' AND id.name IN ('Minor Healing Potion', 'Uncut Garnet', 'Polished Bloodstone');
 
 -- 5b. HUMANOID_ELITE Entries
 INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
@@ -574,7 +590,7 @@ WHERE lt.code = 'HUMANOID_ELITE' AND id.name IN ('Longsword', 'Battleaxe', 'Heav
 
 INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
 SELECT lt.id, id.id, 15, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
-WHERE lt.code = 'HUMANOID_ELITE' AND id.name IN ('Longsword +1', 'Chain Shirt +1', 'Potion of Cure Moderate Wounds', 'Potion of Barkskin', 'Rough Emerald', 'Royal Signet Ring');
+WHERE lt.code = 'HUMANOID_ELITE' AND id.name IN ('Longsword +1', 'Chain Shirt +1', 'Potion of Cure Moderate Wounds', 'Rough Emerald', 'Royal Signet Ring');
 
 -- 5c. UNDEAD_HAUNT Entries
 INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
@@ -588,11 +604,19 @@ WHERE lt.code = 'UNDEAD_HAUNT' AND id.name IN ('Potion of Cure Light Wounds', 'U
 -- 5d. UNDEAD_ANCIENT Entries
 INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
 SELECT lt.id, id.id, 20, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
-WHERE lt.code = 'UNDEAD_ANCIENT' AND id.name IN ('Greatsword +1', 'Heavy Mace +1', 'Full Plate +1', 'Gilded Reliquary', 'Star Ruby');
+WHERE lt.code = 'UNDEAD_ANCIENT' AND id.name IN ('Ancient Silver Chalice', 'Obsidian Runestone', 'Polished Bloodstone');
 
 INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
 SELECT lt.id, id.id, 15, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
-WHERE lt.code = 'UNDEAD_ANCIENT' AND id.name IN ('Ring of Protection +1', 'Cloak of Resistance +1', 'Potion of Cure Serious Wounds', 'Potion of Heroism');
+WHERE lt.code = 'UNDEAD_ANCIENT' AND id.name IN ('Gilded Reliquary', 'Greatsword +1', 'Heavy Mace +1', 'Full Plate +1');
+
+INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
+SELECT lt.id, id.id, 3, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
+WHERE lt.code = 'UNDEAD_ANCIENT' AND id.name = 'Star Ruby';
+
+INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
+SELECT lt.id, id.id, 15, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
+WHERE lt.code = 'UNDEAD_ANCIENT' AND id.name IN ('Ring of Protection +1', 'Potion of Cure Serious Wounds');
 
 -- 5e. MAGICAL_BEAST_LAIR Entries
 INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
@@ -601,16 +625,49 @@ WHERE lt.code = 'MAGICAL_BEAST_LAIR' AND id.name IN ('Carved Mammoth Tusk', 'Amb
 
 INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
 SELECT lt.id, id.id, 15, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
-WHERE lt.code = 'MAGICAL_BEAST_LAIR' AND id.name IN ('Amulet of Natural Armor +1', 'Potion of Bull''s Strength', 'Potion of Cat''s Grace', 'Belt of Giant Strength +2');
+WHERE lt.code = 'MAGICAL_BEAST_LAIR' AND id.name IN ('Amulet of Natural Armor +1', 'Belt of Giant Strength +2', 'Potion of Cure Serious Wounds');
 
 -- 5f. DRAGON_HOARD Entries
+-- Common and Uncommon treasures: the foundation of draconic hoards
+INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
+SELECT lt.id, id.id, 25, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
+WHERE lt.code = 'DRAGON_HOARD' AND id.name IN ('Uncut Garnet', 'Polished Bloodstone');
+
 INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
 SELECT lt.id, id.id, 20, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
-WHERE lt.code = 'DRAGON_HOARD' AND id.name IN ('Star Ruby', 'Flawless Sapphire', 'Crown of the Sunken King', 'Silk Brocade Tapestry', 'Amber Dragon Tear');
+WHERE lt.code = 'DRAGON_HOARD' AND id.name IN ('Ancient Silver Chalice', 'Royal Signet Ring', 'Rough Emerald', 'Carved Mammoth Tusk', 'Obsidian Runestone');
+
+-- Rare treasures and valuables
+INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
+SELECT lt.id, id.id, 10, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
+WHERE lt.code = 'DRAGON_HOARD' AND id.name IN ('Flawless Sapphire', 'Silk Brocade Tapestry', 'Gilded Reliquary', 'Amber Dragon Tear', 'Jeweled Ceremonial Dagger');
+
+-- Epic gemstones: genuinely scarce
+INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
+SELECT lt.id, id.id, 3, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
+WHERE lt.code = 'DRAGON_HOARD' AND id.name = 'Star Ruby';
+
+-- Legendary relics: apex rarity
+INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
+SELECT lt.id, id.id, 1, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
+WHERE lt.code = 'DRAGON_HOARD' AND id.name = 'Crown of the Sunken King';
+
+-- Magical Hoard Spoils
+INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
+SELECT lt.id, id.id, 20, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
+WHERE lt.code = 'DRAGON_HOARD' AND id.name IN ('Potion of Cure Moderate Wounds', 'Longsword +1', 'Chain Shirt +1', 'Heavy Steel Shield +1');
 
 INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
 SELECT lt.id, id.id, 10, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
-WHERE lt.code = 'DRAGON_HOARD' AND id.name IN ('Holy Avenger +3', 'Oathbow +3', 'Full Plate +2', 'Draught of Troll''s Blood', 'Elixir of Dragon''s Breath', 'Belt of Giant Strength +2');
+WHERE lt.code = 'DRAGON_HOARD' AND id.name IN ('Potion of Cure Serious Wounds', 'Potion of Cure Critical Wounds', 'Full Plate +1', 'Full Plate +2', 'Belt of Giant Strength +2', 'Ring of Protection +1');
+
+INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
+SELECT lt.id, id.id, 3, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
+WHERE lt.code = 'DRAGON_HOARD' AND id.name = 'Draught of Troll''s Blood';
+
+INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
+SELECT lt.id, id.id, 1, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
+WHERE lt.code = 'DRAGON_HOARD' AND id.name IN ('Holy Avenger +3', 'Oathbow +3');
 
 -- 5g. ABERRATION_CACHE Entries
 INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
@@ -619,7 +676,7 @@ WHERE lt.code = 'ABERRATION_CACHE' AND id.name IN ('Obsidian Runestone', 'Amber 
 
 INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
 SELECT lt.id, id.id, 15, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
-WHERE lt.code = 'ABERRATION_CACHE' AND id.name IN ('Elixir of Dragon''s Breath', 'Potion of Heroism', 'Boots of Elvenkind');
+WHERE lt.code = 'ABERRATION_CACHE' AND id.name IN ('Amulet of Natural Armor +1', 'Belt of Giant Strength +2', 'Potion of Cure Serious Wounds');
 
 -- 5h. GENERIC_WILDERNESS (Fallback) Entries
 INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
@@ -628,4 +685,4 @@ WHERE lt.code = 'GENERIC_WILDERNESS' AND id.name IN ('Shortsword', 'Dagger', 'Sh
 
 INSERT OR IGNORE INTO loot_table_entries (loot_table_id, item_definition_id, weight, min_quantity, max_quantity, rarity)
 SELECT lt.id, id.id, 10, 1, 1, id.rarity FROM loot_tables lt, item_definitions id
-WHERE lt.code = 'GENERIC_WILDERNESS' AND id.name IN ('Potion of Cure Light Wounds', 'Longsword +1', 'Rough Emerald', 'Antitoxin');
+WHERE lt.code = 'GENERIC_WILDERNESS' AND id.name IN ('Potion of Cure Light Wounds', 'Longsword +1', 'Rough Emerald');

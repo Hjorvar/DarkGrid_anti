@@ -189,6 +189,12 @@
             <span><%= infoMessage %></span>
           </div>
         <% } %>
+        <% if (safeInventory.length > 50) { %>
+          <div class="alert alert-warning" role="alert" style="border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.15); color: #fca5a5; padding: 10px 14px; margin-bottom: 12px; border-radius: 4px; display: flex; align-items: center; gap: 10px;">
+            <span class="alert-icon" style="font-size: 1.2rem;">⚠️</span>
+            <span><strong>Backpack Overflow (<%= safeInventory.length %>/50 items):</strong> You are carrying spoils beyond your backpack's standard capacity. Sell items in town to restore regular monster drops and shop purchases.</span>
+          </div>
+        <% } %>
 
         <!-- Environment Scene Vista -->
         <div class="terrain-vista-banner <%= (encounter && encounter.status === 'IN_COMBAT') ? 'in-combat' : ((encounter && encounter.status === 'DISCOVERED') ? 'in-discovered' : '') %>">
@@ -589,9 +595,9 @@
             <span class="menu-btn-icon">👤</span>
             <span class="menu-btn-label">Character</span>
           </button>
-          <button type="button" class="dashboard-menu-btn" onclick="openGameModal('backpack')" id="btn-open-backpack" aria-haspopup="dialog">
+          <button type="button" class="dashboard-menu-btn <%= safeInventory.length > 50 ? 'is-warning' : '' %>" onclick="openGameModal('backpack')" id="btn-open-backpack" aria-haspopup="dialog" style="<%= safeInventory.length > 50 ? 'border-color: #ef4444; color: #fca5a5;' : '' %>">
             <span class="menu-btn-icon">🎒</span>
-            <span class="menu-btn-label">Backpack (<%= backpackGear.length %>)</span>
+            <span class="menu-btn-label">Backpack (<%= safeInventory.length %>/50)<%= safeInventory.length > 50 ? ' ⚠️' : '' %></span>
           </button>
           <button type="button" class="dashboard-menu-btn <%= !safeIsSafeCity ? 'is-disabled' : '' %>" onclick="openGameModal('market')" id="btn-open-market" aria-haspopup="dialog" title="<%= safeIsSafeCity ? 'Open Town Market' : 'Available in Safe Haven cities' %>">
             <span class="menu-btn-icon">🛒</span>
@@ -646,7 +652,12 @@
           <tbody>
             <tr>
               <td class="stat-lbl">STR (Strength)</td>
-              <td class="stat-num"><%= character.strength %></td>
+              <td class="stat-num">
+                <%= character.strength %>
+                <% if (character.is_str_boosted) { %>
+                  <span style="color: var(--accent-gold); font-size: 0.75rem; font-weight: normal;">(+2 Belt)</span>
+                <% } %>
+              </td>
               <td class="stat-mod <%= modifiers.strength.startsWith('+') && modifiers.strength !== '+0' ? 'positive' : (modifiers.strength.startsWith('-') ? 'negative' : 'neutral') %>"><%= modifiers.strength %></td>
             </tr>
             <tr>
@@ -826,6 +837,12 @@
       <button type="button" class="game-modal-close" onclick="closeGameModal()" aria-label="Close dialog">✕</button>
     </div>
     <div class="game-modal-body">
+      <% if (safeInventory.length > 50) { %>
+        <div class="modal-notice-box" style="border: 1px solid #ef4444; background: rgba(239, 68, 68, 0.15); color: #fca5a5; margin-bottom: 16px;">
+          <div class="notice-title" style="color: #ef4444;">⚠️ BACKPACK OVERFLOW (<%= safeInventory.length %>/50 items)</div>
+          <p>Your pack holds spoils from a defeated champion's slayer that exceeded standard capacity. All items have been safely preserved. However, you cannot receive new regular monster drops or purchase items in town until your inventory is reduced to 50 or fewer items.</p>
+        </div>
+      <% } %>
       <!-- Equipped Gear -->
       <div class="modal-section-group">
         <h3 class="modal-subheading">Equipped Armaments & Protection</h3>
@@ -955,21 +972,31 @@
                     <% } %>
                   </div>
                   <div class="gear-item-meta">
-                    <%= pot.combat_effect_desc || ('Restores ' + (pot.healEffect || 'vitality') + ' HP upon consumption') %>
+                    <% if (pot.is_inactive) { %>
+                      <span style="color: #f59e0b;">Pending implementation — effect not yet active</span>
+                    <% } else { %>
+                      <%= pot.combat_effect_desc || ('Restores ' + (pot.healEffect || 'vitality') + ' HP upon consumption') %>
+                    <% } %>
                   </div>
                   <% if (pot.description) { %>
                     <div class="item-desc-text"><%= pot.description %></div>
                   <% } %>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                  <form action="/game/inventory/use" method="POST" style="margin: 0;">
-                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                    <input type="hidden" name="itemInstanceId" value="<%= pot.id %>">
-                    <input type="hidden" name="returnModal" value="backpack">
-                    <button type="submit" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" <%= (isEquipLocked || character.current_hp >= character.max_hp) ? ('disabled title="' + (isEquipLocked ? 'Cannot use in combat' : 'HP already full') + '"') : '' %>>
-                      🧪 Drink
+                  <% if (pot.is_inactive) { %>
+                    <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem; opacity: 0.5; cursor: not-allowed;" disabled title="Effect pending future update">
+                      Inactive
                     </button>
-                  </form>
+                  <% } else { %>
+                    <form action="/game/inventory/use" method="POST" style="margin: 0;">
+                      <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                      <input type="hidden" name="itemInstanceId" value="<%= pot.id %>">
+                      <input type="hidden" name="returnModal" value="backpack">
+                      <button type="submit" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" <%= (isEquipLocked || character.current_hp >= character.max_hp) ? ('disabled title="' + (isEquipLocked ? 'Cannot use in combat' : 'HP already full') + '"') : '' %>>
+                        🧪 Drink
+                      </button>
+                    </form>
+                  <% } %>
                 </div>
               </div>
             <% }); %>
@@ -999,6 +1026,13 @@
           <span style="font-family: var(--font-serif); font-size: 1.1rem; color: var(--accent-gold); font-weight: bold;"><%= character.gold %> gp</span>
         </div>
 
+        <% if (safeInventory.length >= 50) { %>
+          <div class="modal-notice-box" style="border: 1px solid #ef4444; background: rgba(239, 68, 68, 0.15); color: #fca5a5; margin-bottom: 12px;">
+            <div class="notice-title" style="color: #ef4444;">⚠️ Backpack Full (<%= safeInventory.length %>/50)</div>
+            <p>Your backpack is at or above capacity. Sell items to the merchant below before purchasing new gear.</p>
+          </div>
+        <% } %>
+
         <!-- Global Resale Market -->
         <% if (safeShopStock.resaleListings && safeShopStock.resaleListings.length > 0) { %>
           <div class="modal-section-group">
@@ -1022,7 +1056,7 @@
                     <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                     <input type="hidden" name="listingId" value="<%= item.listing_id %>">
                     <input type="hidden" name="returnModal" value="market">
-                    <button type="submit" class="btn btn-primary" style="padding: 4px 10px; font-size: 0.8rem;" <%= character.gold < item.resale_price ? 'disabled' : '' %>>Buy</button>
+                    <button type="submit" class="btn btn-primary" style="padding: 4px 10px; font-size: 0.8rem;" <%= (character.gold < item.resale_price || safeInventory.length >= 50) ? ('disabled title="' + (safeInventory.length >= 50 ? 'Backpack full' : 'Insufficient gold') + '"') : '' %>>Buy</button>
                   </form>
                 </div>
               <% }); %>
@@ -1052,7 +1086,7 @@
                   <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                   <input type="hidden" name="itemDefinitionId" value="<%= item.id %>">
                   <input type="hidden" name="returnModal" value="market">
-                  <button type="submit" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" <%= character.gold < item.buy_price ? 'disabled' : '' %>>Buy</button>
+                  <button type="submit" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" <%= (character.gold < item.buy_price || safeInventory.length >= 50) ? ('disabled title="' + (safeInventory.length >= 50 ? 'Backpack full' : 'Insufficient gold') + '"') : '' %>>Buy</button>
                 </form>
               </div>
             <% }); %>

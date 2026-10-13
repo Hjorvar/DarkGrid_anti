@@ -5,6 +5,9 @@
  */
 
 const { withTransaction } = require('../../db/connection');
+const { INACTIVE_ITEM_NAMES } = require('../combat/loot');
+
+const INACTIVE_ITEMS_SQL = INACTIVE_ITEM_NAMES.map(n => `'${n.replace(/'/g, "''")}'`).join(', ');
 
 /**
  * Validates that character is alive and located in a safe city haven.
@@ -30,7 +33,7 @@ function assertInSafeCity(tx, characterId) {
 
 /**
  * Returns available store inventory in the city:
- * 1. Standard unlimited stock (all non-magical equipment + Minor Healing Potion)
+ * 1. Standard unlimited stock (all non-magical equipment + Minor Healing Potion, excluding inactive items)
  * 2. Active global magical resale listings
  */
 function getCityStoreStock(db) {
@@ -41,7 +44,8 @@ function getCityStoreStock(db) {
            weapon_range_type, is_two_handed, allowed_classes,
            rarity, subtype
     FROM item_definitions
-    WHERE is_magical = 0 OR name = 'Minor Healing Potion'
+    WHERE ((is_magical = 0 AND (subtype IS NULL OR subtype != 'TREASURE')) OR name = 'Minor Healing Potion')
+      AND name NOT IN (${INACTIVE_ITEMS_SQL})
     ORDER BY category ASC, buy_price ASC
   `).all();
 
@@ -57,6 +61,7 @@ function getCityStoreStock(db) {
     JOIN item_instances ii ON ml.item_instance_id = ii.id
     JOIN item_definitions id ON ii.item_definition_id = id.id
     WHERE ml.status = 'ACTIVE' AND ii.owner_type = 'MARKET'
+      AND id.name NOT IN (${INACTIVE_ITEMS_SQL})
     ORDER BY ml.id DESC
   `).all();
 
@@ -98,6 +103,10 @@ function buyItem(db, characterId, { itemDefinitionId, listingId }) {
         throw new Error('This magical artifact has already been acquired by another hero or withdrawn.');
       }
 
+      if (INACTIVE_ITEM_NAMES.includes(listing.name)) {
+        throw new Error('This item is currently unavailable for purchase.');
+      }
+
       if (character.gold < listing.price) {
         throw new Error(`Insufficient gold. Price is ${listing.price} gp, but you only carry ${character.gold} gp.`);
       }
@@ -135,7 +144,8 @@ function buyItem(db, characterId, { itemDefinitionId, listingId }) {
     // Purchasing from Standard General Store Stock
     const itemDef = tx.prepare(`
       SELECT * FROM item_definitions
-      WHERE id = ? AND (is_magical = 0 OR name = 'Minor Healing Potion')
+      WHERE id = ? AND ((is_magical = 0 AND (subtype IS NULL OR subtype != 'TREASURE')) OR name = 'Minor Healing Potion')
+        AND name NOT IN (${INACTIVE_ITEMS_SQL})
     `).get(itemDefinitionId);
 
     if (!itemDef) {
@@ -209,7 +219,7 @@ function sellItem(db, characterId, itemInstanceId) {
     // Minor Healing Potion exception: consumable potion sold back as standard goods
     const isPotion = (item.category === 'POTION');
 
-    if (item.is_magical === 1 && !isPotion) {
+    if (item.is_magical === 1 && !isPotion && !INACTIVE_ITEM_NAMES.includes(item.name)) {
       // Magical Item: 40% payout to hero, moves to Global Resale Market at 125%
       const payPrice = Math.floor(item.buy_price * 0.40);
       const resalePrice = Math.ceil(item.buy_price * 1.25);

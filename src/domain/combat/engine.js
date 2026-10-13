@@ -5,7 +5,15 @@
  */
 
 const { withTransaction } = require('../../db/connection');
-const { getModifier, getCharacterEquipment, getCharacterPotionCount, getCharacterPotions, getActiveWeapon } = require('../character/rules');
+const {
+  getModifier,
+  getCharacterEquipment,
+  getCharacterPotionCount,
+  getCharacterPotions,
+  getActiveWeapon,
+  getEffectiveStats,
+  INACTIVE_CONSUMABLE_NAMES
+} = require('../character/rules');
 const {
   calculateHeroAttackBonus,
   calculateHeroAC,
@@ -100,6 +108,7 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
       : (encounter.current_monster_hp || monsterMaxHp);
 
     const equipment = getCharacterEquipment(tx, characterId);
+    const effectiveCharacter = getEffectiveStats(character, equipment);
     let openingShotResolved = encounter.opening_shot_resolved || 0;
 
     // Check Ranger Ranged Opening Shot condition:
@@ -113,7 +122,7 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
       (character.class || '').toUpperCase() === 'RANGER' &&
       equipment.rangedWeapon &&
       encounter.status === 'DISCOVERED' &&
-      Number(encounter.spotted_by_hero !== undefined ? encounter.spotted_by_hero : 1) === 1 &&
+      Number(encounter.spotted_by_hero) === 1 &&
       Number(encounter.is_ambush || 0) === 0 &&
       Number(openingShotResolved) === 0
     );
@@ -125,7 +134,7 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
     if (canOpeningShot) {
       openingShotFired = true;
       openingShotResolved = 1;
-      const openingAB = calculateHeroAttackBonus(character, equipment.rangedWeapon, encounter);
+      const openingAB = calculateHeroAttackBonus(effectiveCharacter, equipment.rangedWeapon, encounter);
       const monsterAC = encounter.monster_ac || encounter.armor_class;
       const attackRoll = resolveAttackRoll(openingAB, monsterAC, rng);
       openingShotHit = attackRoll.isHit;
@@ -133,7 +142,7 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
       let openingDamage = 0;
 
       if (attackRoll.isHit) {
-        const damageFormula = getHeroDamageFormula(character, equipment.rangedWeapon, encounter);
+        const damageFormula = getHeroDamageFormula(effectiveCharacter, equipment.rangedWeapon, encounter);
         openingDamage = resolveDamage(damageFormula, attackRoll.isCrit, rng);
         currentMonsterHp = Math.max(0, currentMonsterHp - openingDamage);
       }
@@ -292,17 +301,18 @@ function getCombatState(db, characterId, encounterId) {
   `).all(encounterId);
 
   const equipment = getCharacterEquipment(db, characterId);
-  const potions = getCharacterPotions(db, characterId);
+  const effectiveCharacter = getEffectiveStats(character, equipment);
+  const potions = getCharacterPotions(db, characterId, { combatOnly: true });
   const potionCount = potions.length;
 
-  const { activeWeapon, isRangedActive } = getActiveWeapon(character, equipment, encounter);
-  const heroAC = calculateHeroAC(character, equipment.armor, equipment.shield, isRangedActive, encounter, activeWeapon);
+  const { activeWeapon, isRangedActive } = getActiveWeapon(effectiveCharacter, equipment, encounter);
+  const heroAC = calculateHeroAC(effectiveCharacter, equipment.armor, equipment.shield, isRangedActive, encounter, activeWeapon);
 
   const currentBracket = getHealthBracket(encounter.current_monster_hp, encounter.monster_max_hp || encounter.base_hp);
   const currentConditionText = getConditionTextForBracket(encounter.monster_descriptions, currentBracket);
 
   return {
-    character,
+    character: effectiveCharacter,
     encounter,
     events,
     equipment,
@@ -391,9 +401,10 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
     }
 
     const equipment = getCharacterEquipment(tx, characterId);
-    const { activeWeapon, isRangedActive } = getActiveWeapon(character, equipment, encounter);
-    const heroAC = calculateHeroAC(character, equipment.armor, equipment.shield, isRangedActive, encounter, activeWeapon);
-    const heroAB = calculateHeroAttackBonus(character, activeWeapon, encounter);
+    const effectiveHero = getEffectiveStats(character, equipment);
+    const { activeWeapon, isRangedActive } = getActiveWeapon(effectiveHero, equipment, encounter);
+    const heroAC = calculateHeroAC(effectiveHero, equipment.armor, equipment.shield, isRangedActive, encounter, activeWeapon);
+    const heroAB = calculateHeroAttackBonus(effectiveHero, activeWeapon, encounter);
     let currentMonsterHp = encounter.current_monster_hp;
     let monsterMaxHp = encounter.monster_max_hp || (monsterInstance ? monsterInstance.max_hp : encounter.base_hp);
     let currentHeroHp = character.current_hp;
@@ -475,7 +486,7 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
 
       if (options.potionInstanceId) {
         potion = tx.prepare(`
-          SELECT ii.id, id.name, id.buy_price, id.attributes
+          SELECT ii.id, id.name, id.buy_price, id.attributes, id.subtype
           FROM item_instances ii
           JOIN item_definitions id ON ii.item_definition_id = id.id
           WHERE ii.id = ? AND ii.owner_type = 'CHARACTER' AND ii.owner_character_id = ? AND id.category = 'POTION'
@@ -484,13 +495,19 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
         if (!potion) {
           throw new Error('You do not possess the selected healing potion.');
         }
+
+        if (INACTIVE_CONSUMABLE_NAMES.includes(potion.name) || potion.subtype === 'BUFF_POTION' || potion.subtype === 'OFFENSIVE') {
+          throw new Error(`${potion.name} cannot be consumed in combat: its effect is not yet active.`);
+        }
       } else {
         // Default to the cheapest available healing potion (ordered by buy_price ASC, ii.id ASC)
+        const inactiveSql = INACTIVE_CONSUMABLE_NAMES.map(n => `'${n.replace(/'/g, "''")}'`).join(', ');
         potion = tx.prepare(`
-          SELECT ii.id, id.name, id.buy_price, id.attributes
+          SELECT ii.id, id.name, id.buy_price, id.attributes, id.subtype
           FROM item_instances ii
           JOIN item_definitions id ON ii.item_definition_id = id.id
           WHERE ii.owner_type = 'CHARACTER' AND ii.owner_character_id = ? AND id.category = 'POTION'
+            AND id.name NOT IN (${inactiveSql})
           ORDER BY id.buy_price ASC, ii.id ASC
           LIMIT 1
         `).get(character.id);
@@ -558,7 +575,7 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       let heroDamage = 0;
 
       if (heroAttackRoll.isHit) {
-        const damageFormula = getHeroDamageFormula(character, activeWeapon, encounter);
+        const damageFormula = getHeroDamageFormula(effectiveHero, activeWeapon, encounter);
         heroDamage = resolveDamage(damageFormula, heroAttackRoll.isCrit, rng);
         currentMonsterHp = Math.max(0, currentMonsterHp - heroDamage);
       }

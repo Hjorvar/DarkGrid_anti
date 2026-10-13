@@ -1,0 +1,190 @@
+<%- include('partials/header') %>
+<%
+  const isAvenged = Boolean(persistentInfo && persistentInfo.isPersistent && persistentInfo.avengedHeroes && persistentInfo.avengedHeroes.length > 0);
+  const isPersistent = Boolean(persistentInfo && persistentInfo.isPersistent);
+%>
+
+<div class="victory-viewport">
+  <div class="victory-card <%= isAvenged ? 'is-avenged-victory' : (isPersistent ? 'is-persistent-victory' : '') %>">
+    
+    <!-- Top Sigil & Main Title -->
+    <div class="victory-header">
+      <div class="victory-sigil">
+        <% if (isAvenged) { %>
+          <span class="sigil-icon avenged-sigil">⚖️</span>
+        <% } else if (isPersistent) { %>
+          <span class="sigil-icon persistent-sigil">💀</span>
+        <% } else { %>
+          <span class="sigil-icon standard-sigil">⚔️</span>
+        <% } %>
+      </div>
+
+      <% if (isAvenged) { %>
+        <h1 class="victory-title avenged-title">A Fallen Hero Avenged</h1>
+        <p class="victory-subtitle">
+          “The darkness took their life, but today justice was extracted in cold steel.”
+        </p>
+      <% } else if (isPersistent) { %>
+        <h1 class="victory-title persistent-title">Persistent Threat Vanquished</h1>
+        <p class="victory-subtitle">
+          “An enduring terror that haunted these wilderness trails has at last been eradicated.”
+        </p>
+      <% } else { %>
+        <h1 class="victory-title standard-title">VICTORY</h1>
+        <p class="victory-subtitle">
+          “The shadows recede before your blade. Another horror returns to the dust.”
+        </p>
+      <% } %>
+    </div>
+
+    <!-- Avenged Heroes Memorial (When persistent monster killed previous hero) -->
+    <% if (isAvenged) { %>
+      <div class="victory-avenged-panel">
+        <div class="avenged-panel-header">
+          <span class="avenged-badge-icon">🛡️</span>
+          <span class="avenged-badge-label">Honored Fallen of Darkgrid</span>
+        </div>
+        <div class="avenged-hero-list">
+          <% persistentInfo.avengedHeroes.forEach(hero => { %>
+            <div class="avenged-hero-item">
+              <span class="avenged-hero-name"><strong><%= hero.name %></strong></span>
+              <span class="avenged-hero-meta"><%= hero.class %> • Level <%= hero.level %></span>
+              <% if (hero.died_at) { %>
+                <span class="avenged-hero-date">Fell in battle: <%= hero.died_at %></span>
+              <% } %>
+            </div>
+          <% }); %>
+        </div>
+        <p class="avenged-reclamation-text">
+          Their stolen gold and preserved belongings have been reclaimed from the creature's lair.
+        </p>
+      </div>
+    <% } %>
+
+    <!-- Defeated Monster Showcase -->
+    <div class="victory-monster-section">
+      <div class="victory-monster-headline">
+        <span class="monster-symbol-badge" style="color: <%= monsterColor %>;">
+          [<%= monsterSymbol %>]
+        </span>
+        <h2 class="victory-monster-name"><%= cleanMonsterName %></h2>
+      </div>
+
+      <!-- Monster Artwork Frame -->
+      <div class="victory-art-container">
+        <div class="victory-art-frame">
+          <% if (imageUrl) { %>
+            <img src="<%= imageUrl %>" alt="<%= cleanMonsterName %>" class="victory-art-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="victory-placeholder" style="display: none;">
+              <div class="placeholder-rune">ᚱ</div>
+              <div class="placeholder-symbol" style="color: <%= monsterColor %>;"><%= monsterSymbol %></div>
+              <div class="placeholder-label"><%= cleanMonsterName %></div>
+              <div class="placeholder-sublabel">Vanquished Threat</div>
+            </div>
+          <% } else { %>
+            <div class="victory-placeholder">
+              <div class="placeholder-rune">ᚱ</div>
+              <div class="placeholder-symbol" style="color: <%= monsterColor %>;"><%= monsterSymbol %></div>
+              <div class="placeholder-label"><%= cleanMonsterName %></div>
+              <div class="placeholder-sublabel">Vanquished Threat</div>
+            </div>
+          <% } %>
+          <div class="victory-art-vignette"></div>
+        </div>
+      </div>
+
+      <!-- Defeat Narrative Description (descriptions['9_dead']) -->
+      <div class="victory-defeat-narrative">
+        <span class="narrative-quote-glyph">“</span>
+        <p class="narrative-quote-body"><%= defeatDescription %></p>
+        <span class="narrative-quote-glyph">”</span>
+      </div>
+    </div>
+
+    <!-- Level Up Banner (If hero leveled up from this fight) -->
+    <% if (leveledUp) { %>
+      <div class="victory-levelup-banner" role="status">
+        <div class="levelup-crown">⚜️ LEVEL UP! ⚜️</div>
+        <div class="levelup-heading">You have ascended to <strong>Level <%= newLevel %></strong>!</div>
+        <div class="levelup-details">
+          Maximum Vitality permanently increased by <strong>+<%= hpGain %> HP</strong>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- Spoils of Victory (Rewards Panel) -->
+    <div class="victory-rewards-panel">
+      <div class="rewards-panel-title">
+        <span><%= isAvenged ? 'Reclaimed Spoils & Rewards' : 'Spoils of Victory' %></span>
+      </div>
+
+      <% if (resolvedByOther) { %>
+        <div class="resolved-by-other-notice">
+          Another champion struck the killing blow before you. The creature was already vanquished.
+        </div>
+      <% } else { %>
+        <div class="rewards-stats-grid">
+          <!-- Experience Card -->
+          <div class="reward-card xp-card">
+            <span class="reward-icon">✨</span>
+            <div class="reward-text-group">
+              <span class="reward-label">Experience Gained</span>
+              <strong class="reward-value xp-value">+<%= xpAwarded %> XP</strong>
+            </div>
+          </div>
+
+          <!-- Gold Card -->
+          <div class="reward-card gold-card">
+            <span class="reward-icon">🪙</span>
+            <div class="reward-text-group">
+              <span class="reward-label"><%= isAvenged ? 'Gold Recovered' : 'Gold Recovered' %></span>
+              <strong class="reward-value gold-value">+<%= goldLooted %> gp</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Items Recovered Section -->
+        <% if (lootedItems && lootedItems.length > 0) { %>
+          <div class="victory-loot-section">
+            <div class="loot-section-header">
+              <span class="loot-header-icon">📦</span>
+              <span><%= isAvenged ? 'Relics & Gear Recovered' : 'Items Recovered' %> (<%= lootedItems.length %>)</span>
+            </div>
+            <div class="victory-loot-grid">
+              <% lootedItems.forEach(item => { %>
+                <div class="victory-loot-badge">
+                  <span class="loot-badge-glyph">🗡️</span>
+                  <span class="loot-badge-name"><%= item %></span>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+        <% } else { %>
+          <div class="victory-loot-empty">
+            <span class="loot-empty-icon">🍃</span>
+            <span class="loot-empty-text">No items were found amongst the remains.</span>
+          </div>
+        <% } %>
+      <% } %>
+    </div>
+
+    <!-- Character Vitality Summary -->
+    <div class="victory-hero-summary">
+      <div class="hero-summary-row">
+        <span>Hero: <strong style="color: var(--text-heading);"><%= character.name %></strong> (<%= character.class %> • Level <%= character.level %>)</span>
+        <span>Vitality: <strong style="color: var(--accent-moss-bright);"><%= character.current_hp %> / <%= character.max_hp %> HP</strong></span>
+        <span>Current Purse: <strong style="color: var(--accent-gold);"><%= character.gold %> gp</strong></span>
+      </div>
+    </div>
+
+    <!-- Action Button (Continue Exploring) -->
+    <div class="victory-actions">
+      <a href="/game" class="btn btn-primary victory-continue-btn" id="btn-continue-exploring">
+        Continue Exploring ➔
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<%- include('partials/footer') %>
