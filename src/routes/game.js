@@ -113,11 +113,12 @@ router.get('/game', (req, res) => {
   const potions = getCharacterPotions(req.db, character.id);
   const potionCount = potions.length;
 
-  // Computed Combat stats (M1)
-  const { activeWeapon, isRangedActive } = combatState ? combatState : getActiveWeapon(effectiveHero, equipment, activeEncounter);
-  const meleeAttackBonus = calculateHeroAttackBonus(effectiveHero, equipment.meleeWeapon, activeEncounter);
-  const rangedAttackBonus = calculateHeroAttackBonus(effectiveHero, equipment.rangedWeapon, activeEncounter);
-  const heroAC = combatState ? combatState.heroAC : calculateHeroAC(effectiveHero, equipment.armor, equipment.shield, isRangedActive, activeEncounter, activeWeapon);
+  // Computed Combat stats (M1) — strictly do not leak unrevealed monster traits while DISCOVERED
+  const revealedMonster = (activeEncounter && activeEncounter.status === 'IN_COMBAT') ? activeEncounter : null;
+  const { activeWeapon, isRangedActive } = combatState ? combatState : getActiveWeapon(effectiveHero, equipment, revealedMonster);
+  const meleeAttackBonus = calculateHeroAttackBonus(effectiveHero, equipment.meleeWeapon, revealedMonster, equipment);
+  const rangedAttackBonus = calculateHeroAttackBonus(effectiveHero, equipment.rangedWeapon, revealedMonster, equipment);
+  const heroAC = combatState ? combatState.heroAC : calculateHeroAC(effectiveHero, equipment, isRangedActive, revealedMonster, activeWeapon);
 
   // Cleric healing info
   let clericHealInfo = null;
@@ -423,10 +424,10 @@ router.post('/game/rest', (req, res) => {
     return res.redirect('/game');
   }
 
-  // Ensure not in combat
+  // Ensure not in combat or unresolved encounter
   const activeEncounter = getActiveEncounterForCharacter(req.db, character.id, character.class);
-  if (activeEncounter && activeEncounter.status === 'IN_COMBAT') {
-    return res.redirect('/game?error=' + encodeURIComponent('Cannot rest while engaged in active combat!'));
+  if (activeEncounter && (activeEncounter.status === 'IN_COMBAT' || activeEncounter.status === 'DISCOVERED')) {
+    return res.redirect('/game?error=' + encodeURIComponent('Cannot rest while engaged in active combat or an unresolved encounter!'));
   }
 
   try {
@@ -446,10 +447,10 @@ router.post('/game/cleric/heal', (req, res) => {
     return res.redirect('/game');
   }
 
-  // Ensure not in combat
+  // Ensure not in combat or unresolved encounter
   const activeEncounter = getActiveEncounterForCharacter(req.db, character.id, character.class);
-  if (activeEncounter && activeEncounter.status === 'IN_COMBAT') {
-    return res.redirect('/game?error=' + encodeURIComponent('Cannot use meditative self-healing during active combat!'));
+  if (activeEncounter && (activeEncounter.status === 'IN_COMBAT' || activeEncounter.status === 'DISCOVERED')) {
+    return res.redirect('/game?error=' + encodeURIComponent('Cannot use meditative self-healing during active combat or an unresolved encounter!'));
   }
 
   try {

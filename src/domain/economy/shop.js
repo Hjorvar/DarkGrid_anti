@@ -202,7 +202,7 @@ function sellItem(db, characterId, itemInstanceId) {
     const character = assertInSafeCity(tx, characterId);
 
     const item = tx.prepare(`
-      SELECT ii.*, id.name, id.category, id.buy_price, id.is_magical
+      SELECT ii.*, id.name, id.category, id.subtype, id.buy_price, id.sell_price, id.is_magical, id.attributes
       FROM item_instances ii
       JOIN item_definitions id ON ii.item_definition_id = id.id
       WHERE ii.id = ? AND ii.owner_type = 'CHARACTER' AND ii.owner_character_id = ?
@@ -251,8 +251,10 @@ function sellItem(db, characterId, itemInstanceId) {
       };
     }
 
-    // Normal Item: 50% payout to hero, liquidated
-    const payPrice = Math.floor(item.buy_price * 0.50);
+    // Normal Item / Treasure: use explicit sell_price if defined, otherwise 50% of buy_price (floor), liquidated
+    const payPrice = (item.sell_price !== null && item.sell_price !== undefined)
+      ? Number(item.sell_price)
+      : Math.floor((item.buy_price || 0) * 0.50);
 
     // Pay player
     tx.prepare('UPDATE characters SET gold = gold + ? WHERE id = ?').run(payPrice, characterId);

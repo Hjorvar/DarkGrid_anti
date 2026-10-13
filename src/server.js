@@ -11,13 +11,10 @@ try {
   if (migrations.length > 0) {
     console.log(`Applied migrations: ${migrations.join(', ')}`);
   }
-  // Only execute seeds if database is unseeded/empty (L11)
-  const tileCount = db.prepare('SELECT COUNT(*) as count FROM map_tiles').get()?.count || 0;
-  if (tileCount === 0) {
-    const seeds = runSeeds(db);
-    if (seeds.length > 0) {
-      console.log(`Executed seeds: ${seeds.join(', ')}`);
-    }
+  // Execute any pending seeds tracked via schema_seeds (safe on both empty and populated DBs)
+  const seeds = runSeeds(db);
+  if (seeds.length > 0) {
+    console.log(`Executed seeds: ${seeds.join(', ')}`);
   }
 } catch (err) {
   console.error('Fatal: Could not initialize database schema/seeds:', err);

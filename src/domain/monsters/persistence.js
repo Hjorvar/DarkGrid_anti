@@ -314,15 +314,52 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
         WHERE owner_type = 'MONSTER' AND owner_monster_id = ?
       `).run(character.id, instanceId);
     } else {
+      // Ensure monster record carries challenge_rating, treasure_type, creature_type, creature_subtype, and xp_reward
+      let resolvedMonster = monster || encounter || {};
+      const targetMonsterId =
+        (encounter && encounter.monster_id) ||
+        (monster && (monster.monster_id || monster.id)) ||
+        null;
+      if (
+        targetMonsterId &&
+        (resolvedMonster.challenge_rating === undefined ||
+          resolvedMonster.challenge_rating === null ||
+          !resolvedMonster.treasure_type ||
+          !resolvedMonster.creature_type)
+      ) {
+        const dbMonster = tx.prepare(`
+          SELECT id, name, challenge_rating, treasure_type, creature_type, creature_subtype, xp_reward
+          FROM monsters
+          WHERE id = ?
+        `).get(targetMonsterId);
+        if (dbMonster) {
+          resolvedMonster = {
+            ...dbMonster,
+            ...resolvedMonster,
+            challenge_rating:
+              resolvedMonster.challenge_rating !== undefined && resolvedMonster.challenge_rating !== null
+                ? resolvedMonster.challenge_rating
+                : dbMonster.challenge_rating,
+            treasure_type: resolvedMonster.treasure_type || dbMonster.treasure_type,
+            creature_type: resolvedMonster.creature_type || dbMonster.creature_type,
+            creature_subtype: resolvedMonster.creature_subtype || dbMonster.creature_subtype,
+            xp_reward:
+              resolvedMonster.xp_reward !== undefined && resolvedMonster.xp_reward !== null
+                ? resolvedMonster.xp_reward
+                : dbMonster.xp_reward
+          };
+        }
+      }
       // Random encounter defeated: generate Pathfinder-inspired loot drop
-      const lootResult = generateMonsterLoot(tx, monster, character.id, options);
+      const lootResult = generateMonsterLoot(tx, resolvedMonster, character.id, options);
       goldLooted = lootResult.goldAwarded;
       itemsLooted = lootResult.itemsAwarded.length;
       lootedItemNames = (lootResult.itemsAwarded || []).map(i => i.name);
+      monster = resolvedMonster;
     }
 
     // Award standard XP reward and check for level-up
-    const xpAwarded = monster.xp_reward || 0;
+    const xpAwarded = (monster && monster.xp_reward) || (encounter && encounter.xp_reward) || 0;
     const charRow = tx.prepare('SELECT * FROM characters WHERE id = ?').get(character.id) || character;
     const newXp = (charRow.xp || 0) + xpAwarded;
     const oldLevel = charRow.level || 1;

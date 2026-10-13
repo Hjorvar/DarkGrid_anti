@@ -113,6 +113,12 @@ function getFighterArmorTrainingMaxDexBonus(level) {
  * Level 9+:  +3 Atk / +3 Dmg
  * Strictly prohibits bonus against Undead under any circumstance, even with legacy/corrupt data.
  */
+function normalizeCreatureCategory(rawType) {
+  const norm = (rawType || '').replace(/_/g, ' ').trim().toUpperCase();
+  if (norm === 'BEAST') return 'ANIMAL';
+  return norm;
+}
+
 function getRangerFavoredEnemyBonus(character, monster) {
   if (!character || (character.class || '').toUpperCase() !== 'RANGER') {
     return { attack: 0, damage: 0 };
@@ -120,21 +126,32 @@ function getRangerFavoredEnemyBonus(character, monster) {
   if (!character.favored_enemy_type || !monster) {
     return { attack: 0, damage: 0 };
   }
-  const favoredType = character.favored_enemy_type.trim().toUpperCase();
-  const monsterType = (monster.creature_type || '').trim().toUpperCase();
+
+  let rawFavoredType = String(character.favored_enemy_type || '').trim();
+  let rawFavoredSub = String(character.favored_enemy_subtype || '').trim();
+  if (rawFavoredType.includes(':')) {
+    const parts = rawFavoredType.split(':');
+    rawFavoredType = parts[0] || '';
+    if (!rawFavoredSub && parts[1]) {
+      rawFavoredSub = parts[1];
+    }
+  }
+
+  const favoredType = normalizeCreatureCategory(rawFavoredType);
+  const monsterType = normalizeCreatureCategory(monster.creature_type);
 
   // STRICT GUARANTEE: Ranger NEVER receives Favored Enemy bonus against Undead
   if (favoredType === 'UNDEAD' || monsterType === 'UNDEAD') {
     return { attack: 0, damage: 0 };
   }
 
-  if (favoredType !== monsterType) {
+  if (!favoredType || favoredType !== monsterType) {
     return { attack: 0, damage: 0 };
   }
 
   if (favoredType === 'HUMANOID') {
-    const favoredSub = (character.favored_enemy_subtype || '').trim().toLowerCase();
-    const monsterSub = (monster.creature_subtype || '').trim().toLowerCase();
+    const favoredSub = rawFavoredSub.trim().toLowerCase();
+    const monsterSub = String(monster.creature_subtype || monster.subtype || '').trim().toLowerCase();
     if (!favoredSub || favoredSub !== monsterSub) {
       return { attack: 0, damage: 0 };
     }
@@ -249,9 +266,9 @@ function performClericSelfHeal(db, characterId, options = {}) {
       throw new Error('Only Clerics possess the divine gift of Self-Healing.');
     }
 
-    const inCombat = tx.prepare("SELECT 1 FROM encounters WHERE character_id = ? AND status = 'IN_COMBAT'").get(characterId);
-    if (inCombat) {
-      throw new Error('Cleric Self-Healing can only be performed outside of combat.');
+    const activeThreat = tx.prepare("SELECT status FROM encounters WHERE character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT') LIMIT 1").get(characterId);
+    if (activeThreat) {
+      throw new Error('Cleric Self-Healing can only be performed outside of combat and when no unresolved encounter is active.');
     }
 
     if (character.current_hp >= character.max_hp) {
@@ -301,9 +318,9 @@ function performCityRest(db, characterId) {
       throw new Error('Rest and free healing is only granted within peaceful sanctuary cities.');
     }
 
-    const inCombat = tx.prepare("SELECT 1 FROM encounters WHERE character_id = ? AND status = 'IN_COMBAT'").get(characterId);
-    if (inCombat) {
-      throw new Error('Cannot rest or receive city healing while engaged in combat.');
+    const activeThreat = tx.prepare("SELECT status FROM encounters WHERE character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT') LIMIT 1").get(characterId);
+    if (activeThreat) {
+      throw new Error('Cannot rest or receive city healing while engaged in combat or an unresolved encounter.');
     }
 
     tx.prepare(`
@@ -425,8 +442,18 @@ function createCharacter(db, {
     'OUTSIDER', 'CONSTRUCT', 'OOZE', 'FEY', 'HUMANOID'
   ];
 
-  if (validation.classType === 'RANGER' && favoredEnemyType) {
-    const normType = favoredEnemyType.toUpperCase().trim();
+  let rawFavoredType = favoredEnemyType ? String(favoredEnemyType).trim() : '';
+  let rawFavoredSub = favoredEnemySubtype ? String(favoredEnemySubtype).trim() : '';
+  if (rawFavoredType.includes(':')) {
+    const parts = rawFavoredType.split(':');
+    rawFavoredType = (parts[0] || '').trim();
+    if (!rawFavoredSub && parts[1]) {
+      rawFavoredSub = parts[1].trim();
+    }
+  }
+
+  if (validation.classType === 'RANGER' && rawFavoredType) {
+    const normType = rawFavoredType.toUpperCase().trim();
     if (normType === 'UNDEAD') {
       const error = new Error('Undead is not permitted as a Favored Enemy.');
       error.status = 400;
@@ -437,15 +464,15 @@ function createCharacter(db, {
       error.status = 400;
       throw error;
     }
-    if (normType === 'HUMANOID' && !favoredEnemySubtype) {
+    if (normType === 'HUMANOID' && !rawFavoredSub) {
       const error = new Error('Humanoid Favored Enemy requires a subtype (e.g. reptilian, goblinoid, giant).');
       error.status = 400;
       throw error;
     }
   }
 
-  const finalFavoredEnemyType = validation.classType === 'RANGER' ? (favoredEnemyType ? favoredEnemyType.toUpperCase().trim() : null) : null;
-  const finalFavoredEnemySubtype = validation.classType === 'RANGER' ? (favoredEnemySubtype ? favoredEnemySubtype.trim() : null) : null;
+  const finalFavoredEnemyType = validation.classType === 'RANGER' ? (rawFavoredType ? rawFavoredType.toUpperCase().trim() : null) : null;
+  const finalFavoredEnemySubtype = validation.classType === 'RANGER' ? (rawFavoredSub ? rawFavoredSub.trim().toLowerCase() : null) : null;
 
   const defaultPrimary = (validation.classType === 'RANGER') ? 'RANGED' : 'MELEE';
   const chosenPrimary = (primaryWeapon && ['MELEE', 'RANGED'].includes(primaryWeapon.toUpperCase()))
@@ -552,6 +579,13 @@ function createCharacter(db, {
   });
 }
 
+const lastEquipmentByCharacterId = new Map();
+
+function getLastEquipmentForCharacter(characterId) {
+  if (!characterId) return null;
+  return lastEquipmentByCharacterId.get(Number(characterId)) || null;
+}
+
 /**
  * Fetches equipped weapon, armor, and shield for a character.
  * Provides backwards-compatible 'weapon' property along with distinct 'meleeWeapon' and 'rangedWeapon'.
@@ -608,7 +642,7 @@ function getCharacterEquipment(db, characterId) {
 
   const weapon = meleeWeapon || rangedWeapon;
 
-  return {
+  const equipment = {
     weapon,
     meleeWeapon,
     rangedWeapon,
@@ -621,6 +655,18 @@ function getCharacterEquipment(db, characterId) {
     feet,
     items
   };
+
+  if (armor && typeof armor === 'object') {
+    Object.defineProperty(armor, '_equipment', { value: equipment, enumerable: false, configurable: true, writable: true });
+  }
+  if (shield && typeof shield === 'object') {
+    Object.defineProperty(shield, '_equipment', { value: equipment, enumerable: false, configurable: true, writable: true });
+  }
+  if (characterId) {
+    lastEquipmentByCharacterId.set(Number(characterId), equipment);
+  }
+
+  return equipment;
 }
 
 /**
@@ -642,7 +688,7 @@ function getCharacterInventory(db, characterId) {
 }
 
 /**
- * Equips an item into a designated slot (MELEE, RANGED, ARMOR, SHIELD).
+ * Equips an item into a designated slot (MELEE, RANGED, ARMOR, SHIELD, RING, CLOAK, NECK, BELT, FEET).
  */
 function equipItem(db, characterId, itemInstanceId, targetSlot) {
   return withTransaction(db, (tx) => {
@@ -651,13 +697,13 @@ function equipItem(db, characterId, itemInstanceId, targetSlot) {
       throw new Error('Hero is not eligible to equip items.');
     }
 
-    const inCombat = tx.prepare("SELECT 1 FROM encounters WHERE character_id = ? AND status = 'IN_COMBAT'").get(characterId);
-    if (inCombat) {
-      throw new Error('Cannot change equipment during active combat.');
+    const activeThreat = tx.prepare("SELECT status FROM encounters WHERE character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT') LIMIT 1").get(characterId);
+    if (activeThreat) {
+      throw new Error('Cannot change equipment during active combat or an unresolved encounter.');
     }
 
     const item = tx.prepare(`
-      SELECT ii.*, id.name, id.category, id.weapon_range_type, id.allowed_classes
+      SELECT ii.*, id.name, id.category, id.subtype, id.equip_slot as def_equip_slot, id.equip_slot, id.weapon_range_type, id.allowed_classes
       FROM item_instances ii
       JOIN item_definitions id ON ii.item_definition_id = id.id
       WHERE ii.id = ? AND ii.owner_type = 'CHARACTER' AND ii.owner_character_id = ?
@@ -709,8 +755,11 @@ function equipItem(db, characterId, itemInstanceId, targetSlot) {
       }
     } else if (['RING', 'CLOAK', 'NECK', 'BELT', 'FEET'].includes(slot)) {
       const itemDefSlot = (item.def_equip_slot || item.equip_slot || '').toUpperCase().trim();
-      if (itemDefSlot && itemDefSlot !== slot) {
-        throw new Error(`The ${item.name} must be equipped in the ${itemDefSlot} slot.`);
+      if (!itemDefSlot || itemDefSlot !== slot) {
+        if (itemDefSlot) {
+          throw new Error(`The ${item.name} must be equipped in the ${itemDefSlot} slot.`);
+        }
+        throw new Error(`The ${item.name} cannot be equipped in the ${slot} slot.`);
       }
       if (item.category !== 'OTHER' && item.category !== 'ARMOR') {
         throw new Error(`The ${item.name} cannot be equipped in the ${slot} slot.`);
@@ -745,9 +794,9 @@ function unequipItem(db, characterId, itemInstanceId) {
       throw new Error('Hero is not eligible to equip items.');
     }
 
-    const inCombat = tx.prepare("SELECT 1 FROM encounters WHERE character_id = ? AND status = 'IN_COMBAT'").get(characterId);
-    if (inCombat) {
-      throw new Error('Cannot change equipment during active combat.');
+    const activeThreat = tx.prepare("SELECT status FROM encounters WHERE character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT') LIMIT 1").get(characterId);
+    if (activeThreat) {
+      throw new Error('Cannot change equipment during active combat or an unresolved encounter.');
     }
 
     const item = tx.prepare(`
@@ -766,7 +815,7 @@ function unequipItem(db, characterId, itemInstanceId) {
 
 /**
  * Sets hero's primary weapon preference ('MELEE' or 'RANGED').
- * Enforces that switching is forbidden during active combat.
+ * Enforces that switching is forbidden during active combat or unresolved encounters.
  */
 function setPrimaryWeaponPreference(db, characterId, preference) {
   const pref = (preference || '').toUpperCase().trim();
@@ -780,9 +829,9 @@ function setPrimaryWeaponPreference(db, characterId, preference) {
       throw new Error('Hero is not eligible to set primary weapon preference.');
     }
 
-    const inCombat = tx.prepare("SELECT 1 FROM encounters WHERE character_id = ? AND status = 'IN_COMBAT'").get(characterId);
-    if (inCombat) {
-      throw new Error('Cannot change primary weapon preference during active combat.');
+    const activeThreat = tx.prepare("SELECT status FROM encounters WHERE character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT') LIMIT 1").get(characterId);
+    if (activeThreat) {
+      throw new Error('Cannot change primary weapon preference during active combat or an unresolved encounter.');
     }
 
     tx.prepare('UPDATE characters SET primary_weapon = ? WHERE id = ?').run(pref, characterId);
@@ -895,13 +944,22 @@ function getEffectiveStats(character, equipment = null) {
 
   const effectiveStr = baseStr + strBonus;
 
-  return {
+  const result = {
     ...character,
     base_strength: baseStr,
     strength: effectiveStr,
     strength_bonus: strBonus,
     is_str_boosted: strBonus > 0
   };
+
+  if (equipment && typeof equipment === 'object') {
+    Object.defineProperty(result, '_equipment', { value: equipment, enumerable: false, configurable: true, writable: true });
+    if (character.id) {
+      lastEquipmentByCharacterId.set(Number(character.id), equipment);
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -971,10 +1029,10 @@ function useConsumable(db, characterId, itemInstanceId, options = {}) {
       throw new Error('Dead characters cannot use consumables.');
     }
 
-    // 2. Validate out-of-combat
-    const inCombat = tx.prepare("SELECT 1 FROM encounters WHERE character_id = ? AND status = 'IN_COMBAT'").get(characterId);
-    if (inCombat) {
-      throw new Error('Cannot use items from your backpack during active combat. Use the combat action menu.');
+    // 2. Validate out-of-combat and no unresolved encounter
+    const activeThreat = tx.prepare("SELECT status FROM encounters WHERE character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT') LIMIT 1").get(characterId);
+    if (activeThreat) {
+      throw new Error('Cannot use items from your backpack during active combat or an unresolved encounter. Use the combat action menu.');
     }
 
     // 3. Fetch item instance
@@ -1070,5 +1128,6 @@ module.exports = {
   getAllCharacterItems,
   useConsumable,
   getEffectiveStats,
+  getLastEquipmentForCharacter,
   INACTIVE_CONSUMABLE_NAMES
 };

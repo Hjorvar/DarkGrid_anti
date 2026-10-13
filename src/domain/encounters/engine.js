@@ -198,6 +198,48 @@ function resolveMonsterDescription(descriptionsJson, heroClass, state = 'DISCOVE
 }
 
 /**
+ * Resolves hero detection (spottedByHero) and ambush status (isAmbush).
+ * Enforces the rule: Level 1 characters can NEVER be ambushed (isAmbush is always 0 at Level 1),
+ * while preserving spottedByHero = 0 when perception fails so Ranger Opening Shot does not fire on unspotted threats.
+ */
+function resolveDetectionAndAmbush(character, monster, options = {}, defaults = {}) {
+  const heroLevel = Number((character && character.level) || 1);
+  let isAmbush = 0;
+  let spottedByHero = 1;
+
+  if (options.isAmbush !== undefined) {
+    isAmbush = options.isAmbush ? 1 : 0;
+    spottedByHero = options.spottedByHero !== undefined ? (options.spottedByHero ? 1 : 0) : (isAmbush ? 0 : 1);
+  } else if (options.spottedByHero !== undefined) {
+    spottedByHero = options.spottedByHero ? 1 : 0;
+    isAmbush = spottedByHero ? 0 : 1;
+  } else if (defaults.isPersistent && !options.ambushRng) {
+    spottedByHero = 1;
+    isAmbush = 0;
+  } else {
+    // Standard perception check: Hero Perception (1d20 + WIS mod + 3 if Ranger) vs Monster Stealth (10 + init bonus)
+    const ambushRng = options.ambushRng || Math.random;
+    const wisMod = Math.floor(((character.wisdom || 10) - 10) / 2);
+    const perceptionBonus = ((character.class || '').toUpperCase() === 'RANGER') ? wisMod + 3 : wisMod;
+    const d20 = Math.floor(ambushRng() * 20) + 1;
+    const perceptionRoll = d20 + perceptionBonus;
+    const monsterStealth = 10 + ((monster && monster.initiative_bonus) || 0);
+
+    if (perceptionRoll < monsterStealth) {
+      isAmbush = 1;
+      spottedByHero = 0;
+    }
+  }
+
+  // Approved Rule: No Ambush at Level 1
+  if (heroLevel <= 1) {
+    isAmbush = 0;
+  }
+
+  return { isAmbush, spottedByHero };
+}
+
+/**
  * Checks and rolls for an encounter upon moving onto targetTile
  * Strictly called ONLY during valid move step, not on page refresh
  */
@@ -211,19 +253,25 @@ function checkTileEncounter(db, character, targetTile, options = {}) {
 
   // 2. Check for active persistent monster on tile (NOT subject to CR restriction!)
   const persistentMonster = db.prepare(`
-    SELECT mi.*, m.name, m.symbol, m.color, m.descriptions, m.base_hp
+    SELECT mi.*, m.name, m.symbol, m.color, m.descriptions, m.base_hp, m.initiative_bonus
     FROM monster_instances mi
     JOIN monsters m ON mi.monster_id = m.id
     WHERE mi.tile_id = ? AND mi.status = 'ACTIVE'
   `).get(targetTile.id);
 
   if (persistentMonster) {
+    const { isAmbush, spottedByHero } = resolveDetectionAndAmbush(
+      character,
+      persistentMonster,
+      options,
+      { isPersistent: true }
+    );
     // Persistent monster discovered
     const insertEncounter = db.prepare(`
       INSERT INTO encounters (
         character_id, tile_id, monster_id, monster_instance_id,
         status, current_monster_hp, combat_round, spotted_by_hero, is_ambush, opening_shot_resolved
-      ) VALUES (?, ?, ?, ?, 'DISCOVERED', ?, 0, 1, 0, 0)
+      ) VALUES (?, ?, ?, ?, 'DISCOVERED', ?, 0, ?, ?, 0)
     `);
 
     const result = insertEncounter.run(
@@ -231,7 +279,9 @@ function checkTileEncounter(db, character, targetTile, options = {}) {
       targetTile.id,
       persistentMonster.monster_id,
       persistentMonster.id,
-      persistentMonster.max_hp
+      persistentMonster.max_hp,
+      spottedByHero,
+      isAmbush
     );
 
     return getEncounterById(db, Number(result.lastInsertRowid), character.class);
@@ -257,29 +307,8 @@ function checkTileEncounter(db, character, targetTile, options = {}) {
     return null;
   }
 
-  // 6. Ambush vs Hero Detection Check
-  let isAmbush = 0;
-  let spottedByHero = 1;
-  if (options.isAmbush !== undefined) {
-    isAmbush = options.isAmbush ? 1 : 0;
-    spottedByHero = isAmbush ? 0 : 1;
-  } else if (options.spottedByHero !== undefined) {
-    spottedByHero = options.spottedByHero ? 1 : 0;
-    isAmbush = spottedByHero ? 0 : 1;
-  } else {
-    // Standard perception check: Hero Perception (1d20 + WIS mod + 3 if Ranger) vs Monster Stealth (10 + init bonus)
-    const ambushRng = options.ambushRng || Math.random;
-    const wisMod = Math.floor(((character.wisdom || 10) - 10) / 2);
-    const perceptionBonus = ((character.class || '').toUpperCase() === 'RANGER') ? wisMod + 3 : wisMod;
-    const d20 = Math.floor(ambushRng() * 20) + 1;
-    const perceptionRoll = d20 + perceptionBonus;
-    const monsterStealth = 10 + (monster.initiative_bonus || 0);
-
-    if (perceptionRoll < monsterStealth) {
-      isAmbush = 1;
-      spottedByHero = 0;
-    }
-  }
+  // 6. Ambush vs Hero Detection Check (with Level 1 ambush immunity)
+  const { isAmbush, spottedByHero } = resolveDetectionAndAmbush(character, monster, options);
 
   // 7. Create pending encounter record
   const insertEncounter = db.prepare(`
@@ -311,15 +340,31 @@ function getEncounterById(db, encounterId, heroClass) {
            m.descriptions as monster_descriptions, m.image_path as monster_image_path,
            m.defeated_image_path as monster_defeated_image_path,
            m.movement_type, m.creature_type, m.creature_subtype,
+           m.challenge_rating, m.treasure_type, m.xp_reward, m.base_hp,
+           m.armor_class as monster_ac, m.attack_bonus as monster_ab,
+           m.damage_dice as monster_damage_dice, m.initiative_bonus,
+           c.level as character_level,
            t.name as tile_name, t.terrain as tile_terrain
     FROM encounters e
     JOIN monsters m ON e.monster_id = m.id
     JOIN map_tiles t ON e.tile_id = t.id
+    LEFT JOIN characters c ON e.character_id = c.id
     WHERE e.id = ?
   `);
 
   const encounter = stmt.get(encounterId);
   if (!encounter) return null;
+
+  // Enforce No Ambush at Level 1 even if a legacy encounter row had is_ambush = 1
+  if (Number(encounter.character_level || 1) <= 1 && Number(encounter.is_ambush) === 1) {
+    db.prepare(`
+      UPDATE encounters
+      SET is_ambush = 0, spotted_by_hero = 0
+      WHERE id = ?
+    `).run(encounter.id);
+    encounter.is_ambush = 0;
+    encounter.spotted_by_hero = 0;
+  }
 
   const resolved = resolveMonsterDescription(
     encounter.monster_descriptions,
@@ -403,8 +448,10 @@ function getActiveEncounterForCharacter(db, characterId, heroClass) {
 function ignoreEncounter(db, characterId, encounterId) {
   return withTransaction(db, (tx) => {
     const enc = tx.prepare(`
-      SELECT * FROM encounters
-      WHERE id = ? AND character_id = ?
+      SELECT e.*, c.level as character_level
+      FROM encounters e
+      LEFT JOIN characters c ON e.character_id = c.id
+      WHERE e.id = ? AND e.character_id = ?
     `).get(encounterId, characterId);
 
     if (!enc) {
@@ -421,9 +468,11 @@ function ignoreEncounter(db, characterId, encounterId) {
 
     tx.prepare(`
       UPDATE encounters
-      SET status = 'IGNORED', updated_at = CURRENT_TIMESTAMP
+      SET status = 'IGNORED',
+          is_ambush = CASE WHEN ? <= 1 THEN 0 ELSE is_ambush END,
+          updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(encounterId);
+    `).run(Number(enc.character_level || 1), encounterId);
 
     if (enc.monster_instance_id) {
       tx.prepare('UPDATE monster_instances SET current_hp = max_hp WHERE id = ?').run(enc.monster_instance_id);
@@ -440,12 +489,18 @@ function investigateEncounter(db, characterId, encounterId, heroClass) {
   const { startCombat } = require('../combat/engine');
   return withTransaction(db, (txDb) => {
     const enc = txDb.prepare(`
-      SELECT * FROM encounters
-      WHERE id = ? AND character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT')
+      SELECT e.*, c.level as character_level
+      FROM encounters e
+      LEFT JOIN characters c ON e.character_id = c.id
+      WHERE e.id = ? AND e.character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT')
     `).get(encounterId, characterId);
 
     if (!enc) {
       throw new Error('No active encounter found to investigate.');
+    }
+
+    if (Number(enc.character_level || 1) <= 1 && Number(enc.is_ambush) === 1) {
+      txDb.prepare('UPDATE encounters SET is_ambush = 0, spotted_by_hero = 0 WHERE id = ?').run(encounterId);
     }
 
     startCombat(txDb, characterId, encounterId);

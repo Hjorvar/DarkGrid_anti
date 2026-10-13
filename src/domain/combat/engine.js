@@ -65,6 +65,55 @@ function getConditionTextForBracket(descriptionsJson, bracket) {
 }
 
 /**
+ * Shared query helper that fetches the encounter joined with all monster combat, CR, treasure,
+ * and subtype metadata, plus any persistent monster instance HP fields.
+ */
+function fetchEncounterWithMonster(db, encounterId, characterId) {
+  return db.prepare(`
+    SELECT e.*,
+           m.name as monster_name,
+           m.symbol as monster_symbol,
+           m.color as monster_color,
+           m.solo_level as monster_level,
+           m.base_hp,
+           m.initiative_bonus,
+           m.descriptions as monster_descriptions,
+           m.image_path as monster_image_path,
+           m.defeated_image_path as monster_defeated_image_path,
+           m.armor_class as monster_ac,
+           m.attack_bonus as monster_ab,
+           m.damage_dice as monster_damage_dice,
+           m.xp_reward,
+           m.creature_type,
+           m.creature_subtype,
+           m.movement_type,
+           m.challenge_rating,
+           m.treasure_type,
+           mi.max_hp as instance_max_hp,
+           mi.current_hp as instance_current_hp
+    FROM encounters e
+    JOIN monsters m ON e.monster_id = m.id
+    LEFT JOIN monster_instances mi ON e.monster_instance_id = mi.id
+    WHERE e.id = ? AND e.character_id = ?
+  `).get(encounterId, characterId);
+}
+
+/**
+ * Ensures Level 1 characters can never be in an Ambush state (even for pre-existing DB rows).
+ */
+function enforceNoAmbushAtLevel1(db, character, encounter) {
+  if (character && Number(character.level || 1) <= 1 && encounter && Number(encounter.is_ambush) === 1) {
+    db.prepare(`
+      UPDATE encounters
+      SET is_ambush = 0, spotted_by_hero = 0
+      WHERE id = ?
+    `).run(encounter.id);
+    encounter.is_ambush = 0;
+    encounter.spotted_by_hero = 0;
+  }
+}
+
+/**
  * Initializes combat session for an encounter.
  * Rolls initiative once, sets status to IN_COMBAT, establishes maximum HP, and logs initial engagement.
  */
@@ -80,21 +129,13 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
       throw new Error('Hero is not eligible for combat.');
     }
 
-    const encounter = tx.prepare(`
-      SELECT e.*, m.name as monster_name, m.symbol as monster_symbol, m.color as monster_color,
-             m.base_hp, m.initiative_bonus, m.descriptions as monster_descriptions,
-             m.armor_class as monster_ac, m.attack_bonus as monster_ab, m.damage_dice as monster_damage_dice,
-             m.xp_reward, m.creature_type, m.movement_type, m.challenge_rating,
-             mi.max_hp as instance_max_hp, mi.current_hp as instance_current_hp
-      FROM encounters e
-      JOIN monsters m ON e.monster_id = m.id
-      LEFT JOIN monster_instances mi ON e.monster_instance_id = mi.id
-      WHERE e.id = ? AND e.character_id = ?
-    `).get(encounterId, characterId);
+    const encounter = fetchEncounterWithMonster(tx, encounterId, characterId);
 
     if (!encounter) {
       throw new Error('Encounter not found.');
     }
+
+    enforceNoAmbushAtLevel1(tx, character, encounter);
 
     if (encounter.status === 'VICTORY' || encounter.status === 'DEFEAT' || encounter.status === 'ESCAPED' || encounter.status === 'IGNORED') {
       throw new Error(`Encounter is already resolved (${encounter.status}).`);
@@ -281,18 +322,11 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
  */
 function getCombatState(db, characterId, encounterId) {
   const character = db.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
-  const encounter = db.prepare(`
-    SELECT e.*, m.name as monster_name, m.symbol as monster_symbol, m.color as monster_color,
-           m.descriptions as monster_descriptions, m.image_path as monster_image_path,
-           m.challenge_rating, m.armor_class as monster_ac, m.attack_bonus as monster_ab,
-           m.damage_dice as monster_damage_dice, m.xp_reward, m.base_hp, m.creature_type,
-           m.movement_type
-     FROM encounters e
-    JOIN monsters m ON e.monster_id = m.id
-    WHERE e.id = ? AND e.character_id = ?
-  `).get(encounterId, characterId);
+  const encounter = fetchEncounterWithMonster(db, encounterId, characterId);
 
   if (!encounter) return null;
+
+  enforceNoAmbushAtLevel1(db, character, encounter);
 
   const events = db.prepare(`
     SELECT * FROM combat_events
@@ -306,7 +340,7 @@ function getCombatState(db, characterId, encounterId) {
   const potionCount = potions.length;
 
   const { activeWeapon, isRangedActive } = getActiveWeapon(effectiveCharacter, equipment, encounter);
-  const heroAC = calculateHeroAC(effectiveCharacter, equipment.armor, equipment.shield, isRangedActive, encounter, activeWeapon);
+  const heroAC = calculateHeroAC(effectiveCharacter, equipment, isRangedActive, encounter, activeWeapon);
 
   const currentBracket = getHealthBracket(encounter.current_monster_hp, encounter.monster_max_hp || encounter.base_hp);
   const currentConditionText = getConditionTextForBracket(encounter.monster_descriptions, currentBracket);
@@ -345,19 +379,13 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       throw new Error('Dead characters cannot perform combat actions.');
     }
 
-    const encounter = tx.prepare(`
-      SELECT e.*, m.name as monster_name, m.symbol as monster_symbol, m.color as monster_color,
-             m.armor_class as monster_ac, m.attack_bonus as monster_ab, m.damage_dice as monster_damage_dice,
-             m.base_hp, m.xp_reward, m.creature_type, m.descriptions as monster_descriptions,
-             m.movement_type
-      FROM encounters e
-      JOIN monsters m ON e.monster_id = m.id
-      WHERE e.id = ? AND e.character_id = ?
-    `).get(encounterId, characterId);
+    const encounter = fetchEncounterWithMonster(tx, encounterId, characterId);
 
     if (!encounter) {
       throw new Error('Encounter not found.');
     }
+
+    enforceNoAmbushAtLevel1(tx, character, encounter);
 
     if (encounter.status !== 'IN_COMBAT') {
       throw new Error(`Cannot perform combat action; encounter status is ${encounter.status}.`);
@@ -403,7 +431,7 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
     const equipment = getCharacterEquipment(tx, characterId);
     const effectiveHero = getEffectiveStats(character, equipment);
     const { activeWeapon, isRangedActive } = getActiveWeapon(effectiveHero, equipment, encounter);
-    const heroAC = calculateHeroAC(effectiveHero, equipment.armor, equipment.shield, isRangedActive, encounter, activeWeapon);
+    const heroAC = calculateHeroAC(effectiveHero, equipment, isRangedActive, encounter, activeWeapon);
     const heroAB = calculateHeroAttackBonus(effectiveHero, activeWeapon, encounter);
     let currentMonsterHp = encounter.current_monster_hp;
     let monsterMaxHp = encounter.monster_max_hp || (monsterInstance ? monsterInstance.max_hp : encounter.base_hp);

@@ -17,7 +17,7 @@
   const safeShopStock = (typeof shopStock !== 'undefined') ? shopStock : null;
   const safeIsRangedActive = (typeof isRangedActive !== 'undefined') ? Boolean(isRangedActive) : false;
   const safeActiveWeapon = (typeof activeWeapon !== 'undefined') ? activeWeapon : null;
-  const safeActiveModal = (typeof activeModal !== 'undefined') ? activeModal : null;
+  const safeActiveModal = (typeof activeModal !== 'undefined' && ['character', 'backpack', 'market', 'journal'].includes(activeModal)) ? activeModal : null;
   const safeJournal = (typeof journalEncounters !== 'undefined' && Array.isArray(journalEncounters)) ? journalEncounters : [];
   const safeTerrainArtwork = (typeof terrainArtwork !== 'undefined' && terrainArtwork !== null)
     ? terrainArtwork
@@ -39,7 +39,7 @@
   const hpPercent = Math.min(100, Math.max(0, Math.round((character.current_hp / character.max_hp) * 100)));
   const backpackGear = safeInventory.filter(item => !item.equipped_slot && item.category !== 'POTION');
   const backpackItems = backpackGear;
-  const isEquipLocked = Boolean(encounter && encounter.status === 'IN_COMBAT');
+  const isEquipLocked = Boolean(encounter && (encounter.status === 'IN_COMBAT' || encounter.status === 'DISCOVERED'));
 %>
 
 <div class="game-viewport dashboard-viewport">
@@ -618,7 +618,14 @@
           <div class="gear-summary-lines">
             <div>🗡️ <strong>Melee:</strong> <%= (safeEquipment.meleeWeapon ? safeEquipment.meleeWeapon.name : (safeEquipment.weapon ? safeEquipment.weapon.name : 'Bare Hands')) %></div>
             <div>🏹 <strong>Ranged:</strong> <%= (safeEquipment.rangedWeapon ? safeEquipment.rangedWeapon.name : 'None') %></div>
-            <div>🛡️ <strong>Protection:</strong> <%= (safeEquipment.armor ? safeEquipment.armor.name : 'Unarmored') %> <%= safeEquipment.shield ? ('+ ' + safeEquipment.shield.name) : '' %> <%= safeIsRangedActive && safeEquipment.shield ? '<span style="color: var(--text-dim); font-size: 0.75rem;">(Shield disabled with ranged)</span>' : (isTwoHandedMeleeActive && safeEquipment.shield ? '<span style="color: var(--text-dim); font-size: 0.75rem;">(Shield disabled with two-handed weapon)</span>' : '') %></div>
+            <div>
+              🛡️ <strong>Protection:</strong> <%= (safeEquipment.armor ? safeEquipment.armor.name : 'Unarmored') %> <%= safeEquipment.shield ? ('+ ' + safeEquipment.shield.name) : '' %>
+              <% if (safeIsRangedActive && safeEquipment.shield) { %>
+                <span style="color: var(--text-dim); font-size: 0.75rem;">(Shield disabled with ranged)</span>
+              <% } else if (isTwoHandedMeleeActive && safeEquipment.shield) { %>
+                <span style="color: var(--text-dim); font-size: 0.75rem;">(Shield disabled with two-handed weapon)</span>
+              <% } %>
+            </div>
           </div>
         </div>
       </div>
@@ -629,7 +636,7 @@
 <!-- =====================================================================
      MODAL / DRAWER SYSTEM
      ===================================================================== -->
-<div class="game-modal-backdrop" id="game-modal-backdrop" <%= (safeActiveModal && ['character', 'backpack', 'market', 'journal'].includes(safeActiveModal)) ? '' : 'hidden' %> onclick="handleBackdropClick(event)">
+<div class="game-modal-backdrop <%= safeActiveModal ? 'is-active' : '' %>" id="game-modal-backdrop" <%= safeActiveModal ? '' : 'hidden' %> onclick="handleBackdropClick(event)">
   <!-- -------------------------------------------------------------------
        1. CHARACTER MODAL
        ------------------------------------------------------------------- -->
@@ -808,7 +815,7 @@
             <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
             <input type="hidden" name="primaryWeapon" value="MELEE">
             <input type="hidden" name="returnModal" value="character">
-            <button type="submit" class="btn <%= (character.primary_weapon || 'MELEE') === 'MELEE' ? 'btn-primary' : 'btn-secondary' %>" style="width: 100%;" <%= isEquipLocked ? 'disabled title="Cannot switch in combat"' : '' %>>
+            <button type="submit" class="btn <%= (character.primary_weapon || 'MELEE') === 'MELEE' ? 'btn-primary' : 'btn-secondary' %>" style="width: 100%;" <% if (isEquipLocked) { %>disabled title="Cannot switch during combat or unresolved encounter"<% } %>>
               🗡️ Melee <%= (character.primary_weapon || 'MELEE') === 'MELEE' ? '✓' : '' %>
             </button>
           </form>
@@ -816,13 +823,13 @@
             <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
             <input type="hidden" name="primaryWeapon" value="RANGED">
             <input type="hidden" name="returnModal" value="character">
-            <button type="submit" class="btn <%= character.primary_weapon === 'RANGED' ? 'btn-primary' : 'btn-secondary' %>" style="width: 100%;" <%= isEquipLocked ? 'disabled title="Cannot switch in combat"' : '' %>>
+            <button type="submit" class="btn <%= character.primary_weapon === 'RANGED' ? 'btn-primary' : 'btn-secondary' %>" style="width: 100%;" <% if (isEquipLocked) { %>disabled title="Cannot switch during combat or unresolved encounter"<% } %>>
               🏹 Ranged <%= character.primary_weapon === 'RANGED' ? '✓' : '' %>
             </button>
           </form>
         </div>
         <% if (isEquipLocked) { %>
-          <div style="font-size: 0.75rem; color: #fca5a5; margin-top: 6px; text-align: center;">Weapon preference is locked while engaged in active combat.</div>
+          <div style="font-size: 0.75rem; color: #fca5a5; margin-top: 6px; text-align: center;">Weapon preference is locked during active combat or an unresolved encounter.</div>
         <% } %>
       </div>
     </div>
@@ -848,7 +855,7 @@
         <h3 class="modal-subheading">Equipped Armaments & Protection</h3>
         <% if (isEquipLocked) { %>
           <div class="modal-combat-lock-note">
-            ⚠️ Armaments cannot be equipped or unequipped while in active combat.
+            ⚠️ Armaments cannot be equipped or unequipped during active combat or an unresolved encounter.
           </div>
         <% } %>
         <% const equippedItems = [
@@ -889,7 +896,7 @@
                   <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                   <input type="hidden" name="itemInstanceId" value="<%= item.id || item.instance_id %>">
                   <input type="hidden" name="returnModal" value="backpack">
-                  <button type="submit" class="btn btn-subtle" <%= isEquipLocked ? 'disabled title="Cannot change gear during combat"' : '' %>>Unequip</button>
+                  <button type="submit" class="btn btn-subtle" <% if (isEquipLocked) { %>disabled title="Cannot change gear during combat or unresolved encounter"<% } %>>Unequip</button>
                 </form>
               </div>
             <% }); %>
@@ -932,8 +939,9 @@
                     <%= item.combat_effect_desc ? ('• ' + item.combat_effect_desc) : '' %>
                   </div>
                   <% if (item.subtype === 'TREASURE') { %>
+                    <% const treasureSellValue = (item.sell_price !== null && item.sell_price !== undefined) ? Number(item.sell_price) : Math.floor((item.buy_price || 0) * 0.5); %>
                     <div style="font-size: 0.8rem; color: var(--accent-gold); font-weight: bold; margin-top: 2px;">
-                      Appraised value: <%= Math.floor(item.buy_price * 0.5) %> gp
+                      Appraised value: <%= treasureSellValue %> gp
                     </div>
                   <% } %>
                   <% if (item.description) { %>
@@ -946,7 +954,7 @@
                     <input type="hidden" name="itemInstanceId" value="<%= item.id %>">
                     <input type="hidden" name="targetSlot" value="<%= derivedSlot %>">
                     <input type="hidden" name="returnModal" value="backpack">
-                    <button type="submit" class="btn btn-secondary" <%= isEquipLocked ? 'disabled title="Cannot change gear during combat"' : '' %>>Equip</button>
+                    <button type="submit" class="btn btn-secondary" <% if (isEquipLocked) { %>disabled title="Cannot change gear during combat or unresolved encounter"<% } %>>Equip</button>
                   </form>
                 <% } %>
               </div>
@@ -992,7 +1000,7 @@
                       <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                       <input type="hidden" name="itemInstanceId" value="<%= pot.id %>">
                       <input type="hidden" name="returnModal" value="backpack">
-                      <button type="submit" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" <%= (isEquipLocked || character.current_hp >= character.max_hp) ? ('disabled title="' + (isEquipLocked ? 'Cannot use in combat' : 'HP already full') + '"') : '' %>>
+                      <button type="submit" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" <% if (isEquipLocked || character.current_hp >= character.max_hp) { %>disabled title="<%= isEquipLocked ? 'Cannot use in combat or unresolved encounter' : 'HP already full' %>"<% } %>>
                         🧪 Drink
                       </button>
                     </form>
@@ -1056,7 +1064,7 @@
                     <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                     <input type="hidden" name="listingId" value="<%= item.listing_id %>">
                     <input type="hidden" name="returnModal" value="market">
-                    <button type="submit" class="btn btn-primary" style="padding: 4px 10px; font-size: 0.8rem;" <%= (character.gold < item.resale_price || safeInventory.length >= 50) ? ('disabled title="' + (safeInventory.length >= 50 ? 'Backpack full' : 'Insufficient gold') + '"') : '' %>>Buy</button>
+                    <button type="submit" class="btn btn-primary" style="padding: 4px 10px; font-size: 0.8rem;" <% if (character.gold < item.resale_price || safeInventory.length >= 50) { %>disabled title="<%= safeInventory.length >= 50 ? 'Backpack full' : 'Insufficient gold' %>"<% } %>>Buy</button>
                   </form>
                 </div>
               <% }); %>
@@ -1086,7 +1094,7 @@
                   <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                   <input type="hidden" name="itemDefinitionId" value="<%= item.id %>">
                   <input type="hidden" name="returnModal" value="market">
-                  <button type="submit" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" <%= (character.gold < item.buy_price || safeInventory.length >= 50) ? ('disabled title="' + (safeInventory.length >= 50 ? 'Backpack full' : 'Insufficient gold') + '"') : '' %>>Buy</button>
+                  <button type="submit" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" <% if (character.gold < item.buy_price || safeInventory.length >= 50) { %>disabled title="<%= safeInventory.length >= 50 ? 'Backpack full' : 'Insufficient gold' %>"<% } %>>Buy</button>
                 </form>
               </div>
             <% }); %>
@@ -1100,7 +1108,9 @@
             <h3 class="modal-subheading">Sell Goods from Backpack</h3>
             <div class="gear-list-container">
               <% sellableItems.forEach(item => { %>
-                <% const payout = (item.is_magical && item.category !== 'POTION') ? Math.floor(item.buy_price * 0.4) : Math.floor(item.buy_price * 0.5); %>
+                <% const payout = (item.is_magical && item.category !== 'POTION')
+                  ? Math.floor((item.buy_price || 0) * 0.4)
+                  : ((item.sell_price !== null && item.sell_price !== undefined) ? Number(item.sell_price) : Math.floor((item.buy_price || 0) * 0.5)); %>
                 <div class="gear-row-item">
                   <div class="gear-item-info">
                     <div class="gear-item-name">
@@ -1257,7 +1267,7 @@
   });
 
   document.addEventListener('DOMContentLoaded', function() {
-    var initialModal = <%= JSON.stringify(safeActiveModal) %>;
+    var initialModal = <%- JSON.stringify(safeActiveModal) %>;
     var hash = window.location.hash ? window.location.hash.substring(1) : null;
     var toOpen = initialModal || hash;
     if (toOpen && ['character', 'backpack', 'market', 'journal'].indexOf(toOpen) !== -1) {

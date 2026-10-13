@@ -12,7 +12,8 @@ const {
   getRangerFavoredEnemyBonus,
   getClericHolyRadianceBonus,
   getClericDivinePowerBonus,
-  getEffectiveStats
+  getEffectiveStats,
+  getLastEquipmentForCharacter
 } = require('../character/rules');
 const { rollD20, rollDice } = require('./dice');
 
@@ -76,16 +77,14 @@ function calculateHeroAttackBonus(character, equippedWeapon = null, monster = nu
 
 /**
  * Calculates hero Armor Class:
- * 10 + effective_DEX + armor_bonus + shield_bonus + sacred_bonuses (Holy Radiance)
+ * 10 + effective_DEX + armor_bonus + shield_bonus + sacred_bonuses (Holy Radiance) + accessoryAC
  * Effective DEX respects armor Max DEX limit, boosted by Fighter Armor Training.
- * Shield bonus drops to 0 when ranged weapon is active.
+ * Shield bonus drops to 0 when ranged weapon or two-handed melee weapon is active.
  * Holy Radiance AC bonus is a sacred defense that applies vs Undead even when using a ranged weapon.
- * @param {object} character
- * @param {object|null} equippedArmor
- * @param {object|null} equippedShield
- * @param {boolean} isRangedActive
- * @param {object|null} monster
- * @returns {number}
+ * Supports both:
+ *   calculateHeroAC(hero, equipment, isRangedActive, monster, activeWeapon)
+ * and:
+ *   calculateHeroAC(hero, armor, shield, isRangedActive, monster, activeWeapon)
  */
 function calculateHeroAC(character, equippedArmor = null, equippedShield = null, isRangedActive = false, monster = null, activeWeapon = null) {
   let armor = equippedArmor;
@@ -93,14 +92,26 @@ function calculateHeroAC(character, equippedArmor = null, equippedShield = null,
   let rangedActive = Boolean(isRangedActive);
   let targetMonster = monster;
   let activeWep = activeWeapon;
+  let equipmentBag = null;
 
-  // Support calculateHeroAC(hero, equipmentBag, isRangedActive, monster)
-  if (equippedArmor && typeof equippedArmor === 'object' && ('armor' in equippedArmor || 'shield' in equippedArmor)) {
+  const isEquipmentBag = Boolean(
+    equippedArmor &&
+    typeof equippedArmor === 'object' &&
+    ('armor' in equippedArmor || 'shield' in equippedArmor || 'ring' in equippedArmor || 'neck' in equippedArmor || 'meleeWeapon' in equippedArmor)
+  );
+
+  // Support calculateHeroAC(hero, equipmentBag, isRangedActive, monster, activeWeapon)
+  if (isEquipmentBag) {
+    equipmentBag = equippedArmor;
     armor = equippedArmor.armor || null;
     shield = equippedArmor.shield || null;
     if (typeof equippedShield === 'boolean') {
       rangedActive = equippedShield;
       targetMonster = (isRangedActive && typeof isRangedActive === 'object') ? isRangedActive : monster;
+      if (monster && typeof monster === 'object' && !activeWep && (monster.category === 'WEAPON' || monster.damage_dice !== undefined || monster.is_two_handed !== undefined)) {
+        activeWep = monster;
+        if (targetMonster === monster) targetMonster = null;
+      }
     } else if (equippedShield && typeof equippedShield === 'object' && ('creature_type' in equippedShield || 'armor_class' in equippedShield || 'descriptions' in equippedShield)) {
       targetMonster = equippedShield;
       rangedActive = Boolean(isRangedActive);
@@ -109,6 +120,19 @@ function calculateHeroAC(character, equippedArmor = null, equippedShield = null,
       activeWep = rangedActive ? (equippedArmor.rangedWeapon || null) : (equippedArmor.meleeWeapon || equippedArmor.weapon || null);
     }
   } else {
+    equipmentBag =
+      (character && character._equipment) ||
+      (equippedArmor && equippedArmor._equipment) ||
+      (equippedShield && equippedShield._equipment) ||
+      null;
+
+    if (!equipmentBag && character && character.id) {
+      const cached = getLastEquipmentForCharacter(character.id);
+      if (cached && ((armor && cached.armor === armor) || (shield && cached.shield === shield) || (!armor && !cached.armor && !shield && !cached.shield))) {
+        equipmentBag = cached;
+      }
+    }
+
     // If monster parameter was passed as a weapon object rather than a monster
     if (targetMonster && typeof targetMonster === 'object' && !activeWep) {
       const isWeaponLike = (
@@ -173,13 +197,13 @@ function calculateHeroAC(character, equippedArmor = null, equippedShield = null,
 
   // Wondrous Accessories AC bonus (e.g. Ring of Protection deflection, Amulet of Natural Armor)
   let accessoryAC = 0;
-  if (equippedArmor && typeof equippedArmor === 'object') {
-    if (equippedArmor.ring && equippedArmor.ring.armor_bonus) {
-      accessoryAC += Number(equippedArmor.ring.armor_bonus || 0);
-    }
-    if (equippedArmor.neck && equippedArmor.neck.armor_bonus) {
-      accessoryAC += Number(equippedArmor.neck.armor_bonus || 0);
-    }
+  const ringItem = (equipmentBag && equipmentBag.ring) || null;
+  const neckItem = (equipmentBag && equipmentBag.neck) || null;
+  if (ringItem && ringItem.armor_bonus) {
+    accessoryAC += Number(ringItem.armor_bonus || 0);
+  }
+  if (neckItem && neckItem.armor_bonus) {
+    accessoryAC += Number(neckItem.armor_bonus || 0);
   }
 
   return 10 + effectiveDex + armorBonus + shieldBonus + holyRadianceAC + accessoryAC;

@@ -135,14 +135,44 @@ function pickWeightedItem(entries, rng = Math.random) {
 function generateMonsterLoot(db, monster, characterId, options = {}) {
   const rng = options.rng || Math.random;
 
+  let resolvedMonster = monster || {};
+  const monsterId = resolvedMonster.monster_id || resolvedMonster.id;
+  if (
+    monsterId &&
+    (resolvedMonster.challenge_rating === undefined ||
+      resolvedMonster.challenge_rating === null ||
+      !resolvedMonster.treasure_type ||
+      !resolvedMonster.creature_type)
+  ) {
+    const dbMonster = db.prepare(`
+      SELECT id, name, challenge_rating, treasure_type, creature_type, creature_subtype, xp_reward
+      FROM monsters
+      WHERE id = ?
+    `).get(monsterId);
+    if (dbMonster) {
+      resolvedMonster = {
+        ...dbMonster,
+        ...resolvedMonster,
+        challenge_rating:
+          resolvedMonster.challenge_rating !== undefined && resolvedMonster.challenge_rating !== null
+            ? resolvedMonster.challenge_rating
+            : dbMonster.challenge_rating,
+        treasure_type: resolvedMonster.treasure_type || dbMonster.treasure_type,
+        creature_type: resolvedMonster.creature_type || dbMonster.creature_type,
+        creature_subtype: resolvedMonster.creature_subtype || dbMonster.creature_subtype
+      };
+    }
+  }
+
   // Rule: Ordinary animals NEVER drop random gold or equipment
-  const creatureType = (monster.creature_type || '').toUpperCase().trim();
+  const creatureType = (resolvedMonster.creature_type || '').toUpperCase().trim();
   if (creatureType === 'ANIMAL') {
     return { goldAwarded: 0, itemsAwarded: [], backpackFull: false };
   }
 
-  const cr = monster.challenge_rating || 1;
-  const treasureType = monster.treasure_type || 'Standard';
+  const parsedCr = Number(resolvedMonster.challenge_rating);
+  const cr = Number.isFinite(parsedCr) && parsedCr > 0 ? parsedCr : 1;
+  const treasureType = resolvedMonster.treasure_type || 'Standard';
   const chances = TREASURE_CHANCES[treasureType] || TREASURE_CHANCES.Standard;
 
   let goldAwarded = 0;

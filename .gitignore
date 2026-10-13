@@ -5,13 +5,12 @@ node_modules/
 .env
 
 # Data files / SQLite databases
-data/*.sqlite
-data/*.sqlite-wal
-data/*.sqlite-shm
-data/*.db
-*.sqlite
-*.sqlite-wal
-*.sqlite-shm
+data/*.sqlite*
+data/*.db*
+*.sqlite*
+*.db
+*.db-wal
+*.db-shm
 
 # Logs
 npm-debug.log*

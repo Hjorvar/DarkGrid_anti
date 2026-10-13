@@ -69,19 +69,20 @@ function closeDb() {
   }
 }
 
-let transactionDepth = 0;
+const transactionDepthByDb = new WeakMap();
 
 /**
- * Execute callback within a database transaction (supports nested calls via SAVEPOINTS)
+ * Execute callback within a database transaction (supports nested calls via per-connection SAVEPOINTS)
  */
 function withTransaction(db, callback) {
-  transactionDepth++;
-  const sp = `tx_${transactionDepth}`;
+  const nextDepth = (transactionDepthByDb.get(db) || 0) + 1;
+  transactionDepthByDb.set(db, nextDepth);
+  const sp = `tx_${nextDepth}`;
   db.exec(`SAVEPOINT ${sp}`);
   try {
     const result = callback(db);
     db.exec(`RELEASE SAVEPOINT ${sp}`);
-    transactionDepth--;
+    transactionDepthByDb.set(db, nextDepth - 1);
     return result;
   } catch (error) {
     try {
@@ -90,7 +91,7 @@ function withTransaction(db, callback) {
     } catch {
       // Ignore if rollback cannot be released
     }
-    transactionDepth--;
+    transactionDepthByDb.set(db, nextDepth - 1);
     throw error;
   }
 }

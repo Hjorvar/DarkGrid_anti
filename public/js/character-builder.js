@@ -96,6 +96,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (favoredSelect) {
+    if (favoredTypeInput && favoredTypeInput.value) {
+      const existingCombo = `${favoredTypeInput.value}:${favoredSubtypeInput ? (favoredSubtypeInput.value || '') : ''}`;
+      const matchingOption = Array.from(favoredSelect.options || []).find(opt => opt.value === existingCombo);
+      if (matchingOption) {
+        favoredSelect.value = existingCombo;
+      }
+    }
     favoredSelect.addEventListener('change', syncFavoredEnemy);
     syncFavoredEnemy();
   }

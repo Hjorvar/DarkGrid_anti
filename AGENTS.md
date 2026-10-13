@@ -57,11 +57,11 @@ npm run dev
   - `monsters/` — Varanleg skrímsli (persistence): permadeath, loot-tilfærslur, +10% HP boost.
 - `src/routes/` — Express routing fyrir vefviðmót (`/game/combat/*`, `/game/fallen`, o.fl.).
 - `src/views/` — EJS templates með dökkum stíl (`game.ejs`, `fallen.ejs`).
-- `db/` — SQLite migrations og seeds (`better-sqlite3`).
+- `db/` — SQLite migrations og seeds (innbyggt `node:sqlite` / `DatabaseSync`, Node.js >= 22.5 / v24).
 - `tests/` — Node.js innbyggt test runner (`node --test`).
 
 ---
 
 ## 📌 Núverandi staða
-- **Phase 1, Phase 2 (Combat System) og Phase 3 (Persistent Monsters & Permadeath) eru fullkláruð og staðfest með 57 sjálfvirkum prófum (100% pass).**
-- **Session 3 & 4 hönnun og framkvæmd liggja fyrir í [`docs/combat-system-plan.md`](docs/combat-system-plan.md).**
+- **Phase 1, Phase 2 (Combat System), Phase 3 (Persistent Monsters & Permadeath) og Core Stabilization eru fullkláruð og staðfest með sjálfvirkum eininga-, integration- og E2E-prófum.**
+- **Session 3 & 4 hönnun og framkvæmd liggja fyrir í [`docs/combat-system-plan.md`](docs/combat-system-plan.md) og [`docs/core-stabilization-report.md`](docs/core-stabilization-report.md).**

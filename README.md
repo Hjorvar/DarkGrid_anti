@@ -9,7 +9,7 @@ Darkgrid er vefleikur í dark fantasy stíl sem sameinar textamiðaða könnun, 
 ## ⚡ Fljótleg ræsing (Quick Start)
 
 ### 1. Kröfur
-- **Node.js**: v20+ eða v24+ (verkefnið nýtir innbyggða `node:sqlite` með WAL og foreign keys).
+- **Node.js**: v22.5+ eða v24+ (verkefnið nýtir innbyggða `node:sqlite` `DatabaseSync` með WAL og foreign keys).
 - **Vafri**: Hvaða nútímalegur vafri sem er (Chrome, Firefox, Safari, Edge).
 
 ### 2. Uppsetning og prófanir
