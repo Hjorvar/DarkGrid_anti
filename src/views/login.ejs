@@ -19,6 +19,7 @@
     <% } %>
 
     <form action="/login" method="POST" class="auth-form">
+      <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
       <div class="form-group">
         <label for="username" class="form-label">Username</label>
         <input type="text" id="username" name="username" class="form-input" value="<%= typeof username !== 'undefined' ? username : '' %>" required autofocus placeholder="Player name">

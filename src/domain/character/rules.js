@@ -297,6 +297,11 @@ function performCityRest(db, characterId) {
       throw new Error('Rest and free healing is only granted within peaceful sanctuary cities.');
     }
 
+    const inCombat = tx.prepare("SELECT 1 FROM encounters WHERE character_id = ? AND status = 'IN_COMBAT'").get(characterId);
+    if (inCombat) {
+      throw new Error('Cannot rest or receive city healing while engaged in combat.');
+    }
+
     tx.prepare(`
       UPDATE characters
       SET current_hp = max_hp, cleric_heal_uses = 0
@@ -787,6 +792,35 @@ function getCharacterPotionCount(db, characterId) {
 }
 
 /**
+ * Fetches all healing potions owned by the hero, ordered by price ASC (cheapest first).
+ * Includes display name and heal effect for combat selection.
+ */
+function getCharacterPotions(db, characterId) {
+  const rows = db.prepare(`
+    SELECT ii.id, ii.item_definition_id, id.name, id.buy_price, id.attributes, id.description
+    FROM item_instances ii
+    JOIN item_definitions id ON ii.item_definition_id = id.id
+    WHERE ii.owner_type = 'CHARACTER' AND ii.owner_character_id = ? AND id.category = 'POTION'
+    ORDER BY id.buy_price ASC, ii.id ASC
+  `).all(characterId);
+
+  return rows.map((r) => {
+    let attrs = {};
+    if (typeof r.attributes === 'string') {
+      try { attrs = JSON.parse(r.attributes); } catch { attrs = {}; }
+    } else if (r.attributes && typeof r.attributes === 'object') {
+      attrs = r.attributes;
+    }
+    const healEffect = attrs.heal_dice || '1d8+1';
+    return {
+      ...r,
+      healEffect,
+      displayName: `${r.name} (${healEffect})`
+    };
+  });
+}
+
+/**
  * Fetches ALL items owned by the character (equipped + backpack) for looting upon death.
  */
 function getAllCharacterItems(db, characterId) {
@@ -827,5 +861,6 @@ module.exports = {
   setPrimaryWeaponPreference,
   getActiveWeapon,
   getCharacterPotionCount,
+  getCharacterPotions,
   getAllCharacterItems
 };

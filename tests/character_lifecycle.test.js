@@ -31,7 +31,7 @@ test('Account can create a living character and spawns in safe town', async () =
   assert.equal(hero.level, 1);
   assert.equal(hero.current_hp, 8); // Ranger 8 HP/level
   assert.equal(hero.max_hp, 8);
-  assert.equal(hero.gold, 50);
+  assert.equal(hero.gold, 10);
 
   // Spawn tile check
   const startTile = db.prepare('SELECT * FROM map_tiles WHERE id = ?').get(hero.tile_id);

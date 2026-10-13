@@ -28,6 +28,7 @@
     <% } %>
 
     <form id="character-creation-form" action="/character/create" method="POST">
+      <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
       <!-- Hero Name -->
       <div class="form-group">
         <label for="char-name" class="form-label">Hero Name</label>

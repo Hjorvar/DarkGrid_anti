@@ -1,7 +1,12 @@
 <%- include('partials/header') %>
 <%
-  const safePotionCount = (typeof potionCount !== 'undefined' && potionCount !== null) ? potionCount : 0;
   const safeCombatState = (typeof combatState !== 'undefined' && combatState !== null) ? combatState : null;
+  const safePotions = (typeof potions !== 'undefined' && Array.isArray(potions))
+    ? potions
+    : ((safeCombatState && Array.isArray(safeCombatState.potions)) ? safeCombatState.potions : []);
+  const safePotionCount = (typeof potionCount !== 'undefined' && potionCount !== null)
+    ? potionCount
+    : safePotions.length;
   const safeEquipment = (typeof equipment !== 'undefined' && equipment !== null) ? equipment : {};
   const safeInventory = (typeof inventory !== 'undefined' && Array.isArray(inventory)) ? inventory : [];
   const safeHeroAC = (typeof heroAC !== 'undefined' && heroAC !== null) ? heroAC : 10;
@@ -146,6 +151,7 @@
                 <% } %>
                 <div class="encounter-actions">
                   <form action="/game/encounter/investigate" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                     <input type="hidden" name="encounterId" value="<%= encounter.id %>">
                     <button type="submit" class="btn btn-primary">
                       Advance & Investigate
@@ -153,6 +159,7 @@
                   </form>
 
                   <form action="/game/encounter/ignore" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                     <input type="hidden" name="encounterId" value="<%= encounter.id %>">
                     <button type="submit" class="btn btn-secondary">
                       Bypass & Ignore
@@ -189,6 +196,7 @@
                 <div class="encounter-actions combat-actions-grid" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px;">
                   <!-- Action 1: Attack -->
                   <form action="/game/combat/attack" method="POST" style="flex: 1; min-width: 130px;">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                     <input type="hidden" name="encounterId" value="<%= encounter.id %>">
                     <input type="hidden" name="round" value="<%= encounter.combat_round || 1 %>">
                     <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; font-weight: bold; background: #881a1a; border-color: #a82020;">
@@ -197,16 +205,38 @@
                   </form>
 
                   <!-- Action 2: Drink Potion -->
-                  <form action="/game/combat/potion" method="POST" style="flex: 1; min-width: 130px;">
+                  <form action="/game/combat/potion" method="POST" style="flex: 1.3; min-width: 220px;">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                     <input type="hidden" name="encounterId" value="<%= encounter.id %>">
                     <input type="hidden" name="round" value="<%= encounter.combat_round || 1 %>">
-                    <button type="submit" class="btn btn-secondary" <%= (!safePotionCount || safePotionCount <= 0) ? 'disabled' : '' %> style="width: 100%; justify-content: center;">
-                      🧪 Drink Potion (<%= safePotionCount %>)
-                    </button>
+                    <% if (safePotions && safePotions.length > 0) { %>
+                      <div style="display: flex; gap: 6px; width: 100%;">
+                        <select name="potionInstanceId" class="form-control" style="flex: 1; min-width: 140px; padding: 6px 8px; font-size: 0.82rem; background: #16181f; color: #ddd; border: 1px solid var(--border-dark); border-radius: 4px;">
+                          <% safePotions.forEach((p, idx) => { %>
+                            <option value="<%= p.id %>" <%= idx === 0 ? 'selected' : '' %>>
+                              <%= p.displayName || (p.name + ' (' + (p.healEffect || '1d8+1') + ')') %>
+                            </option>
+                          <% }); %>
+                        </select>
+                        <button type="submit" class="btn btn-secondary" style="white-space: nowrap; justify-content: center; padding: 6px 12px;">
+                          🧪 Drink Potion (<%= safePotionCount %>)
+                        </button>
+                      </div>
+                    <% } else { %>
+                      <div style="display: flex; gap: 6px; width: 100%;">
+                        <select disabled class="form-control" style="flex: 1; min-width: 140px; padding: 6px 8px; font-size: 0.82rem; background: #121318; color: #666; border: 1px solid var(--border-dark); border-radius: 4px;">
+                          <option>No Potions Available</option>
+                        </select>
+                        <button type="submit" class="btn btn-secondary" disabled style="white-space: nowrap; justify-content: center; padding: 6px 12px; opacity: 0.5;">
+                          🧪 Drink Potion (0)
+                        </button>
+                      </div>
+                    <% } %>
                   </form>
 
                   <!-- Action 3: Flee -->
                   <form action="/game/combat/flee" method="POST" style="flex: 1; min-width: 110px;" onsubmit="return confirm('Fleeing triggers a free Attack of Opportunity from the monster. Are you certain you wish to flee?');">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                     <input type="hidden" name="encounterId" value="<%= encounter.id %>">
                     <button type="submit" class="btn btn-secondary" style="width: 100%; justify-content: center; border-color: #555;">
                       🏃 Flee
@@ -215,6 +245,7 @@
 
                   <!-- Hidden fallback for Phase 1 conclude standoff compatibility -->
                   <form action="/game/encounter/conclude" method="POST" style="display: none;" aria-hidden="true">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                     <input type="hidden" name="encounterId" value="<%= encounter.id %>">
                     <button type="submit">Withdraw Carefully</button>
                   </form>
@@ -243,6 +274,7 @@
           <div class="compass-grid">
             <!-- North -->
             <form action="/game/move" method="POST" class="compass-north">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
               <input type="hidden" name="direction" value="NORTH">
               <button type="submit" class="compass-btn" 
                 <%= (!directions.NORTH.available || encounter) ? 'disabled' : '' %>
@@ -254,6 +286,7 @@
 
             <!-- West -->
             <form action="/game/move" method="POST" class="compass-west">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
               <input type="hidden" name="direction" value="WEST">
               <button type="submit" class="compass-btn" 
                 <%= (!directions.WEST.available || encounter) ? 'disabled' : '' %>
@@ -270,6 +303,7 @@
 
             <!-- East -->
             <form action="/game/move" method="POST" class="compass-east">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
               <input type="hidden" name="direction" value="EAST">
               <button type="submit" class="compass-btn" 
                 <%= (!directions.EAST.available || encounter) ? 'disabled' : '' %>
@@ -281,6 +315,7 @@
 
             <!-- South -->
             <form action="/game/move" method="POST" class="compass-south">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
               <input type="hidden" name="direction" value="SOUTH">
               <button type="submit" class="compass-btn" 
                 <%= (!directions.SOUTH.available || encounter) ? 'disabled' : '' %>
@@ -388,12 +423,14 @@
             <% const isInCombat = (encounter && encounter.status === 'IN_COMBAT'); %>
             <div style="display: flex; gap: 6px;">
               <form action="/game/character/primary-weapon" method="POST" style="flex: 1;">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                 <input type="hidden" name="primaryWeapon" value="MELEE">
                 <button type="submit" class="btn <%= (character.primary_weapon || 'MELEE') === 'MELEE' ? 'btn-primary' : 'btn-secondary' %>" style="width: 100%; font-size: 0.75rem; padding: 4px 6px;" <%= isInCombat ? 'disabled title="Cannot switch weapons in combat"' : '' %>>
                   🗡️ Melee <%= (character.primary_weapon || 'MELEE') === 'MELEE' ? '✓' : '' %>
                 </button>
               </form>
               <form action="/game/character/primary-weapon" method="POST" style="flex: 1;">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                 <input type="hidden" name="primaryWeapon" value="RANGED">
                 <button type="submit" class="btn <%= character.primary_weapon === 'RANGED' ? 'btn-primary' : 'btn-secondary' %>" style="width: 100%; font-size: 0.75rem; padding: 4px 6px;" <%= isInCombat ? 'disabled title="Cannot switch weapons in combat"' : '' %>>
                   🏹 Ranged <%= character.primary_weapon === 'RANGED' ? '✓' : '' %>
@@ -409,6 +446,7 @@
         <% if (safeClericHealInfo && (!encounter || encounter.status !== 'IN_COMBAT')) { %>
           <div style="margin-bottom: 10px;">
             <form action="/game/cleric/heal" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
               <button type="submit" class="btn btn-secondary" style="width: 100%; border: 1px solid var(--accent-gold); font-size: 0.85rem;" <%= (safeClericHealInfo.remainingUses <= 0 || character.current_hp >= character.max_hp) ? 'disabled' : '' %>>
                 ✨ Channel Divine Healing (<%= safeClericHealInfo.remainingUses %>/<%= safeClericHealInfo.maxUses %> uses • <%= safeClericHealInfo.diceCount %>d6+WIS)
               </button>
@@ -419,6 +457,7 @@
         <% if (safeIsSafeCity && (!encounter || encounter.status !== 'IN_COMBAT')) { %>
           <div style="margin-bottom: 10px;">
             <form action="/game/rest" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
               <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 0.85rem;">
                 🛌 Rest at Sanctuary (Full Heal & Ability Recharge)
               </button>
@@ -513,6 +552,7 @@
                   <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 4px 6px; border-radius: 4px;">
                     <span><strong>[<%= item.equipped_slot %>]</strong> <%= item.name %> <%= item.is_magical ? '✨' : '' %></span>
                     <form action="/game/inventory/unequip" method="POST" style="margin: 0;">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                       <input type="hidden" name="itemInstanceId" value="<%= item.instance_id %>">
                       <button type="submit" class="btn btn-subtle" style="padding: 2px 6px; font-size: 0.75rem;" <%= isEquipLocked ? 'disabled title="Cannot change gear during combat"' : '' %>>Unequip</button>
                     </form>
@@ -536,6 +576,7 @@
                     </div>
                     <% if (['WEAPON', 'ARMOR', 'SHIELD'].includes(item.category)) { %>
                       <form action="/game/inventory/equip" method="POST" style="margin: 0;">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                         <input type="hidden" name="itemInstanceId" value="<%= item.id %>">
                         <button type="submit" class="btn btn-secondary" style="padding: 2px 6px; font-size: 0.75rem;" <%= isEquipLocked ? 'disabled title="Cannot change gear during combat"' : '' %>>Equip</button>
                       </form>
@@ -563,6 +604,7 @@
                         <div style="font-size: 0.7rem; color: var(--accent-gold);"><%= item.resale_price %> gp</div>
                       </div>
                       <form action="/game/shop/buy" method="POST" style="margin: 0;">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                         <input type="hidden" name="listingId" value="<%= item.listing_id %>">
                         <button type="submit" class="btn btn-primary" style="padding: 2px 6px; font-size: 0.75rem;" <%= character.gold < item.resale_price ? 'disabled' : '' %>>Buy</button>
                       </form>
@@ -582,6 +624,7 @@
                       <div style="font-size: 0.7rem; color: var(--accent-gold);"><%= item.buy_price %> gp</div>
                     </div>
                     <form action="/game/shop/buy" method="POST" style="margin: 0;">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                       <input type="hidden" name="itemDefinitionId" value="<%= item.id %>">
                       <button type="submit" class="btn btn-secondary" style="padding: 2px 6px; font-size: 0.75rem;" <%= character.gold < item.buy_price ? 'disabled' : '' %>>Buy</button>
                     </form>
@@ -602,6 +645,7 @@
                         <div style="font-size: 0.7rem; color: #68d391;">Payout: <%= payout %> gp</div>
                       </div>
                       <form action="/game/shop/sell" method="POST" style="margin: 0;">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                         <input type="hidden" name="itemInstanceId" value="<%= item.id %>">
                         <button type="submit" class="btn btn-subtle" style="padding: 2px 6px; font-size: 0.75rem;">Sell</button>
                       </form>

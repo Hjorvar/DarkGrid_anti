@@ -5,7 +5,7 @@
  */
 
 const { withTransaction } = require('../../db/connection');
-const { getModifier, getCharacterEquipment, getCharacterPotionCount, getActiveWeapon } = require('../character/rules');
+const { getModifier, getCharacterEquipment, getCharacterPotionCount, getCharacterPotions, getActiveWeapon } = require('../character/rules');
 const {
   calculateHeroAttackBonus,
   calculateHeroAC,
@@ -292,10 +292,11 @@ function getCombatState(db, characterId, encounterId) {
   `).all(encounterId);
 
   const equipment = getCharacterEquipment(db, characterId);
-  const potionCount = getCharacterPotionCount(db, characterId);
+  const potions = getCharacterPotions(db, characterId);
+  const potionCount = potions.length;
 
   const { activeWeapon, isRangedActive } = getActiveWeapon(character, equipment, encounter);
-  const heroAC = calculateHeroAC(character, equipment.armor, equipment.shield, isRangedActive, encounter);
+  const heroAC = calculateHeroAC(character, equipment.armor, equipment.shield, isRangedActive, encounter, activeWeapon);
 
   const currentBracket = getHealthBracket(encounter.current_monster_hp, encounter.monster_max_hp || encounter.base_hp);
   const currentConditionText = getConditionTextForBracket(encounter.monster_descriptions, currentBracket);
@@ -309,6 +310,7 @@ function getCombatState(db, characterId, encounterId) {
     isRangedActive,
     heroAC,
     potionCount,
+    potions,
     currentBracket,
     currentConditionText
   };
@@ -367,7 +369,7 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
 
     const equipment = getCharacterEquipment(tx, characterId);
     const { activeWeapon, isRangedActive } = getActiveWeapon(character, equipment, encounter);
-    const heroAC = calculateHeroAC(character, equipment.armor, equipment.shield, isRangedActive, encounter);
+    const heroAC = calculateHeroAC(character, equipment.armor, equipment.shield, isRangedActive, encounter, activeWeapon);
     const heroAB = calculateHeroAttackBonus(character, activeWeapon, encounter);
     let currentMonsterHp = encounter.current_monster_hp;
     let monsterMaxHp = encounter.monster_max_hp || (monsterInstance ? monsterInstance.max_hp : encounter.base_hp);
@@ -441,16 +443,33 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
     // Hetja drekkur lækningadrykk. Skrímslið fær venjulega umferðarárás.
     // =========================================================================
     if (normalizedAction === 'DRINK_POTION') {
-      const potion = tx.prepare(`
-        SELECT ii.id, id.attributes
-        FROM item_instances ii
-        JOIN item_definitions id ON ii.item_definition_id = id.id
-        WHERE ii.owner_type = 'CHARACTER' AND ii.owner_character_id = ? AND id.category = 'POTION'
-        LIMIT 1
-      `).get(character.id);
+      let potion = null;
 
-      if (!potion) {
-        throw new Error('You do not possess any healing potions.');
+      if (options.potionInstanceId) {
+        potion = tx.prepare(`
+          SELECT ii.id, id.name, id.buy_price, id.attributes
+          FROM item_instances ii
+          JOIN item_definitions id ON ii.item_definition_id = id.id
+          WHERE ii.id = ? AND ii.owner_type = 'CHARACTER' AND ii.owner_character_id = ? AND id.category = 'POTION'
+        `).get(options.potionInstanceId, character.id);
+
+        if (!potion) {
+          throw new Error('You do not possess the selected healing potion.');
+        }
+      } else {
+        // Default to the cheapest available healing potion (ordered by buy_price ASC, ii.id ASC)
+        potion = tx.prepare(`
+          SELECT ii.id, id.name, id.buy_price, id.attributes
+          FROM item_instances ii
+          JOIN item_definitions id ON ii.item_definition_id = id.id
+          WHERE ii.owner_type = 'CHARACTER' AND ii.owner_character_id = ? AND id.category = 'POTION'
+          ORDER BY id.buy_price ASC, ii.id ASC
+          LIMIT 1
+        `).get(character.id);
+
+        if (!potion) {
+          throw new Error('You do not possess any healing potions.');
+        }
       }
 
       // Consume potion
@@ -458,7 +477,10 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       const healAmount = resolvePotionHealing(potion, rng);
       currentHeroHp = Math.min(character.max_hp, currentHeroHp + healAmount);
 
-      logEvent('POTION_USED', describePotionDrink(), { healed: healAmount });
+      logEvent('POTION_USED', describePotionDrink(), {
+        potionName: potion.name,
+        healed: healAmount
+      });
 
       // Monster makes its standard round attack against the hero
       const monsterAttackRoll = resolveAttackRoll(encounter.monster_ab, heroAC, rng);

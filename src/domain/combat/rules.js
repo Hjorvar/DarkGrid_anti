@@ -79,11 +79,12 @@ function calculateHeroAttackBonus(character, equippedWeapon = null, monster = nu
  * @param {object|null} monster
  * @returns {number}
  */
-function calculateHeroAC(character, equippedArmor = null, equippedShield = null, isRangedActive = false, monster = null) {
+function calculateHeroAC(character, equippedArmor = null, equippedShield = null, isRangedActive = false, monster = null, activeWeapon = null) {
   let armor = equippedArmor;
   let shield = equippedShield;
   let rangedActive = Boolean(isRangedActive);
   let targetMonster = monster;
+  let activeWep = activeWeapon;
 
   // Support calculateHeroAC(hero, equipmentBag, isRangedActive, monster)
   if (equippedArmor && typeof equippedArmor === 'object' && ('armor' in equippedArmor || 'shield' in equippedArmor)) {
@@ -95,6 +96,23 @@ function calculateHeroAC(character, equippedArmor = null, equippedShield = null,
     } else if (equippedShield && typeof equippedShield === 'object' && ('creature_type' in equippedShield || 'armor_class' in equippedShield || 'descriptions' in equippedShield)) {
       targetMonster = equippedShield;
       rangedActive = Boolean(isRangedActive);
+    }
+    if (!activeWep) {
+      activeWep = rangedActive ? (equippedArmor.rangedWeapon || null) : (equippedArmor.meleeWeapon || equippedArmor.weapon || null);
+    }
+  } else {
+    // If monster parameter was passed as a weapon object rather than a monster
+    if (targetMonster && typeof targetMonster === 'object' && !activeWep) {
+      const isWeaponLike = (
+        targetMonster.category === 'WEAPON' ||
+        targetMonster.damage_dice !== undefined ||
+        targetMonster.weapon_range_type !== undefined ||
+        (targetMonster.is_two_handed !== undefined && !targetMonster.creature_type && !targetMonster.challenge_rating)
+      );
+      if (isWeaponLike) {
+        activeWep = targetMonster;
+        targetMonster = null;
+      }
     }
   }
 
@@ -110,9 +128,15 @@ function calculateHeroAC(character, equippedArmor = null, equippedShield = null,
 
   const armorBonus = armor ? (Number(armor.armor_bonus || 0) + Number(armor.enhancement_bonus || 0)) : 0;
 
-  // Shield bonus does NOT apply when fighting with a ranged weapon (including magical shield enhancement)
+  // Two-handed melee weapon check:
+  // When hero wields a two-handed weapon (is_two_handed = 1), shield AC bonus is 0.
+  // Applies to all weapons with is_two_handed = 1, both normal and magical shields.
+  const isTwoHanded = Boolean(activeWep && (Number(activeWep.is_two_handed) === 1 || activeWep.is_two_handed === true));
+  const isTwoHandedMelee = !rangedActive && isTwoHanded;
+
+  // Shield bonus does NOT apply when fighting with a ranged weapon OR when wielding a two-handed melee weapon
   let shieldBonus = 0;
-  if (!rangedActive && shield) {
+  if (!rangedActive && !isTwoHandedMelee && shield) {
     shieldBonus = Number(shield.shield_bonus || 0) + Number(shield.enhancement_bonus || 0);
   }
 

@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const config = require('./config');
 const { attachDb } = require('./middleware/auth');
+const { csrfProtection } = require('./middleware/csrf');
 
 const authRoutes = require('./routes/auth');
 const characterRoutes = require('./routes/character');
@@ -32,6 +33,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
+      sameSite: 'lax',
+      secure: config.nodeEnv === 'production',
       maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
     }
   })
@@ -48,6 +51,9 @@ app.use((req, res, next) => {
   } : null;
   next();
 });
+
+// Enforce CSRF protection across all state-changing requests
+app.use(csrfProtection);
 
 // Mount routes
 app.use('/', authRoutes);

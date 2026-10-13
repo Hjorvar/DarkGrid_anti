@@ -8,6 +8,7 @@ const {
   getCharacterEquipment,
   getCharacterInventory,
   getCharacterPotionCount,
+  getCharacterPotions,
   equipItem,
   unequipItem,
   setPrimaryWeaponPreference,
@@ -102,13 +103,14 @@ router.get('/game', (req, res) => {
   // Equipment & Inventory
   const equipment = getCharacterEquipment(req.db, character.id);
   const inventory = getCharacterInventory(req.db, character.id);
-  const potionCount = getCharacterPotionCount(req.db, character.id);
+  const potions = getCharacterPotions(req.db, character.id);
+  const potionCount = potions.length;
 
   // Computed Combat stats
   const { activeWeapon, isRangedActive } = getActiveWeapon(character, equipment, activeEncounter);
   const meleeAttackBonus = calculateHeroAttackBonus(character, equipment.meleeWeapon, activeEncounter);
   const rangedAttackBonus = calculateHeroAttackBonus(character, equipment.rangedWeapon, activeEncounter);
-  const heroAC = calculateHeroAC(character, equipment.armor, equipment.shield, isRangedActive, activeEncounter);
+  const heroAC = calculateHeroAC(character, equipment.armor, equipment.shield, isRangedActive, activeEncounter, activeWeapon);
 
   // Cleric healing info
   let clericHealInfo = null;
@@ -151,6 +153,7 @@ router.get('/game', (req, res) => {
     combatState,
     equipment,
     inventory,
+    potions,
     potionCount,
     activeWeapon,
     isRangedActive,
@@ -308,9 +311,13 @@ router.post('/game/combat/potion', (req, res) => {
 
   const encounterId = parseInt(req.body.encounterId, 10);
   const round = req.body.round ? parseInt(req.body.round, 10) : undefined;
+  const potionInstanceId = req.body.potionInstanceId ? parseInt(req.body.potionInstanceId, 10) : undefined;
 
   try {
-    const state = executeCombatRound(req.db, character.id, encounterId, 'DRINK_POTION', { expectedRound: round });
+    const state = executeCombatRound(req.db, character.id, encounterId, 'DRINK_POTION', {
+      expectedRound: round,
+      potionInstanceId
+    });
     if (state.character.is_alive === 0) {
       return res.redirect('/game/fallen');
     }
@@ -352,6 +359,12 @@ router.post('/game/rest', (req, res) => {
   const character = getLivingCharacterByUserId(req.db, req.user.id);
   if (!character) {
     return res.redirect('/game');
+  }
+
+  // Ensure not in combat
+  const activeEncounter = getActiveEncounterForCharacter(req.db, character.id, character.class);
+  if (activeEncounter && activeEncounter.status === 'IN_COMBAT') {
+    return res.redirect('/game?error=' + encodeURIComponent('Cannot rest while engaged in active combat!'));
   }
 
   try {

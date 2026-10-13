@@ -9,7 +9,7 @@ const config = {
   // Configurable game mechanics (Phase 1)
   encounterChancePercent: parseInt(process.env.ENCOUNTER_CHANCE_PERCENT, 10) || 25,
   encounterSigma: parseFloat(process.env.ENCOUNTER_SIGMA) || 1.5,
-  startingGold: 50,
+  startingGold: 10,
 
   // Mapping from map_tiles.terrain to monsters.habitat codes
   // FOREST -> F, JUNGLE -> J, SWAMP -> S, etc.
