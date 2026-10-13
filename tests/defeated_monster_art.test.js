@@ -250,32 +250,24 @@ test('6. Assets integrity: goblin_defeated.png exists in both project root and p
   assert.ok(fs.statSync(pubPath).size > 1000, 'Public image must have non-zero size');
 });
 
-test('7. Comprehensive catalog audit: 58 monsters have defeated artwork, 10 pending use safe living fallback', () => {
+test('7. Comprehensive catalog audit: all 68 active monsters have defeated artwork on disk in both directories', () => {
   const monsters = db.prepare("SELECT id, name, image_path, defeated_image_path FROM monsters WHERE name != 'Shadow Spectre Mock' ORDER BY name ASC").all();
   assert.equal(monsters.length, 68, 'There must be exactly 68 active monsters in the game');
 
   let defeatedCount = 0;
-  let fallbackCount = 0;
 
   for (const m of monsters) {
     assert.ok(m.defeated_image_path, `Monster ${m.name} must have defeated_image_path column`);
     const rootPath = path.join(__dirname, '..', m.defeated_image_path);
     const pubPath = path.join(__dirname, '../public', m.defeated_image_path);
 
-    if (fs.existsSync(rootPath)) {
-      defeatedCount++;
-      assert.ok(fs.existsSync(pubPath), `Public file must also exist for ${m.name}`);
-      assert.ok(fs.statSync(rootPath).size > 1000, `Root file must be valid size for ${m.name}`);
-      assert.ok(fs.statSync(pubPath).size > 1000, `Public file must be valid size for ${m.name}`);
-    } else {
-      fallbackCount++;
-      // Verify that living image exists as safe fallback
-      const livingRoot = path.join(__dirname, '..', m.image_path);
-      assert.ok(fs.existsSync(livingRoot), `Living image fallback must exist on disk for ${m.name}`);
-    }
+    assert.ok(fs.existsSync(rootPath), `Root file must exist on disk for ${m.name}: ${m.defeated_image_path}`);
+    assert.ok(fs.existsSync(pubPath), `Public file must exist on disk for ${m.name}: ${m.defeated_image_path}`);
+    assert.ok(fs.statSync(rootPath).size > 1000, `Root file must be valid size for ${m.name}`);
+    assert.ok(fs.statSync(pubPath).size > 1000, `Public file must be valid size for ${m.name}`);
+    defeatedCount++;
   }
 
-  assert.equal(defeatedCount, 58, 'Exactly 58 monsters must have high-fidelity defeated artwork on disk');
-  assert.equal(fallbackCount, 10, 'Exactly 10 monsters are temporarily pending with living image fallback');
+  assert.equal(defeatedCount, 68, 'All 68 monsters must have high-fidelity defeated artwork on disk');
 });
 

@@ -50,8 +50,7 @@ Sjálfvirkt vinnsluforrit: `scripts/process_defeated_image.py` sér um að umbre
 ## 3. Heildarstaða Skrímsla í Darkgrid (68 Skrímsli)
 
 Alls eru **68 virk skrímsli** í Darkgrid.
-- **Lokið (Ready):** 58 skrímsli (85.3%) hafa fullbúna handmálaða defeated mynd á diski.
-- **Tímabundið fallback (Pending Quota):** 10 skrímsli (14.7%) nota lifandi mynd sem öruggt fallback á meðan beðið er eftir endurstillingu á API líkanakvóta (`gemini-3.1-flash-image`).
+- **Lokið (Ready):** Öll **68 skrímsli (100%)** hafa fullbúna handmálaða defeated mynd á diski í bæði `images/monsters/` og `public/images/monsters/`.
 
 | # | Monster Name | Slug | Creature Type | Living Artwork | Defeated Artwork | Staða | Athugasemdir |
 |---|---|---|---|---|---|---|---|
@@ -113,16 +112,16 @@ Alls eru **68 virk skrímsli** í Darkgrid.
 | 56 | **Wraith** | `wraith` | Undead | `images/monsters/wraith.png` | `images/monsters/wraith_defeated.png` | Lokið | Fullbúin defeated mynd |
 | 57 | **Gibbering Mouther** | `gibbering_mouther` | Aberration | `images/monsters/gibbering_mouther.png` | `images/monsters/gibbering_mouther_defeated.png` | Lokið | Fullbúin defeated mynd |
 | 58 | **Peryton** | `peryton` | Magical Beast | `images/monsters/peryton.png` | `images/monsters/peryton_defeated.png` | Lokið | Fullbúin defeated mynd |
-| 59 | **Giant Stag Beetle** | `giant_stag_beetle` | Vermin | `images/monsters/giant_stag_beetle.png` | `images/monsters/giant_stag_beetle_defeated.png` | Biðstaða (Quota) | Fallback í gildi; bíður quota endursetningar |
-| 60 | **Vegepygmy** | `vegepygmy` | Plant | `images/monsters/vegepygmy.png` | `images/monsters/vegepygmy_defeated.png` | Biðstaða (Quota) | Fallback í gildi; bíður quota endursetningar |
-| 61 | **Ghast** | `ghast` | Undead | `images/monsters/ghast.png` | `images/monsters/ghast_defeated.png` | Biðstaða (Quota) | Fallback í gildi; bíður quota endursetningar |
-| 62 | **Giant Bat** | `giant_bat` | Animal | `images/monsters/giant_bat.png` | `images/monsters/giant_bat_defeated.png` | Biðstaða (Quota) | Fallback í gildi; bíður quota endursetningar |
-| 63 | **Morlock** | `morlock` | Monstrous Humanoid | `images/monsters/morlock.png` | `images/monsters/morlock_defeated.png` | Biðstaða (Quota) | Fallback í gildi; bíður quota endursetningar |
-| 64 | **Violet Fungus** | `violet_fungus` | Plant | `images/monsters/violet_fungus.png` | `images/monsters/violet_fungus_defeated.png` | Biðstaða (Quota) | Fallback í gildi; bíður quota endursetningar |
-| 65 | **Grick** | `grick` | Aberration | `images/monsters/grick.png` | `images/monsters/grick_defeated.png` | Biðstaða (Quota) | Fallback í gildi; bíður quota endursetningar |
-| 66 | **Krenshar** | `krenshar` | Magical Beast | `images/monsters/krenshar.png` | `images/monsters/krenshar_defeated.png` | Biðstaða (Quota) | Fallback í gildi; bíður quota endursetningar |
-| 67 | **Bunyip** | `bunyip` | Magical Beast | `images/monsters/bunyip.png` | `images/monsters/bunyip_defeated.png` | Biðstaða (Quota) | Fallback í gildi; bíður quota endursetningar |
-| 68 | **Sahuagin** | `sahuagin` | Monstrous Humanoid | `images/monsters/sahuagin.png` | `images/monsters/sahuagin_defeated.png` | Biðstaða (Quota) | Fallback í gildi; bíður quota endursetningar |
+| 59 | **Giant Stag Beetle** | `giant_stag_beetle` | Vermin | `images/monsters/giant_stag_beetle.png` | `images/monsters/giant_stag_beetle_defeated.png` | Lokið | Fullbúin defeated mynd |
+| 60 | **Vegepygmy** | `vegepygmy` | Plant | `images/monsters/vegepygmy.png` | `images/monsters/vegepygmy_defeated.png` | Lokið | Fullbúin defeated mynd |
+| 61 | **Ghast** | `ghast` | Undead | `images/monsters/ghast.png` | `images/monsters/ghast_defeated.png` | Lokið | Fullbúin defeated mynd |
+| 62 | **Giant Bat** | `giant_bat` | Animal | `images/monsters/giant_bat.png` | `images/monsters/giant_bat_defeated.png` | Lokið | Fullbúin defeated mynd |
+| 63 | **Morlock** | `morlock` | Monstrous Humanoid | `images/monsters/morlock.png` | `images/monsters/morlock_defeated.png` | Lokið | Fullbúin defeated mynd |
+| 64 | **Violet Fungus** | `violet_fungus` | Plant | `images/monsters/violet_fungus.png` | `images/monsters/violet_fungus_defeated.png` | Lokið | Fullbúin defeated mynd |
+| 65 | **Grick** | `grick` | Aberration | `images/monsters/grick.png` | `images/monsters/grick_defeated.png` | Lokið | Fullbúin defeated mynd |
+| 66 | **Krenshar** | `krenshar` | Magical Beast | `images/monsters/krenshar.png` | `images/monsters/krenshar_defeated.png` | Lokið | Fullbúin defeated mynd |
+| 67 | **Bunyip** | `bunyip` | Magical Beast | `images/monsters/bunyip.png` | `images/monsters/bunyip_defeated.png` | Lokið | Fullbúin defeated mynd |
+| 68 | **Sahuagin** | `sahuagin` | Monstrous Humanoid | `images/monsters/sahuagin.png` | `images/monsters/sahuagin_defeated.png` | Lokið | Fullbúin defeated mynd |
 
 ---
 
@@ -133,27 +132,5 @@ Allar breytingar og fallback virkni eru prófaðar með `node --test tests/defea
 - **Upplausn mynda:** Living mynd birtist í bardaga, en defeated mynd er valin sjálfkrafa í sigri.
 - **Fallback hegðun:** Ef defeated mynd vantar á diski fellur kerfið sjálfkrafa yfir á `imageUrl` lifandi skrímslis án villu.
 - **HTTP viðmótspróf:** `/game/victory` skilar réttri defeated mynd og `victory-defeated-badge` (*"Vanquished"*).
-- **Skráarheilleiki:** 58 skrímsli hafa fullgildar myndir (> 1000 bytes) í bæði `images/` og `public/images/`.
-- **Heildarprófanir:** 191 af 191 prófum í Darkgrid líða prófun (100% pass).
-
----
-
-## 5. Áframhaldandi vinna (Remaining 10 Monsters)
-
-Þegar líkanakvóti endurnýjast (eftir ~1 klst 50 mín) er hægt að keyra síðustu 10 skrímslin:
-1. `giant_stag_beetle`
-2. `vegepygmy`
-3. `ghast`
-4. `giant_bat`
-5. `morlock`
-6. `violet_fungus`
-7. `grick`
-8. `krenshar`
-9. `bunyip`
-10. `sahuagin`
-
-Nota skal sömu skipun og áður með `image-generator` subagent eða samsvarandi skriftu, og vista niðurstöður með:
-```bash
-python scripts/process_defeated_image.py "<generated_path>" <slug>
-```
-Kerfið mun sjálfkrafa og samstundis byrja að birta nýju myndirnar í victory glugganum án þess að breyta þurfi einni einustu línu af kóða.
+- **Skráarheilleiki:** Öll 68 skrímsli hafa fullgildar myndir (> 1000 bytes) í bæði `images/` og `public/images/`.
+- **Heildarprófanir:** 198 af 198 prófum í Darkgrid standast prófun (100% pass).
