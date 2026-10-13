@@ -16,6 +16,26 @@ const app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+// Default view locals
+app.use((req, res, next) => {
+  res.locals.currentUser = null;
+  res.locals.csrfToken = '';
+  next();
+});
+
+// Restrict development/internal inspection pages from public access (M7)
+app.use((req, res, next) => {
+  if (req.path === '/monster_review.html' || req.path === '/monster_comparison.html') {
+    if (config.nodeEnv !== 'development') {
+      return res.status(404).render('error', {
+        title: '404 - Not Found',
+        message: 'The page or path you sought does not exist in Darkgrid.'
+      });
+    }
+  }
+  next();
+});
+
 // Static assets
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/images', express.static(path.join(__dirname, '../images')));
@@ -72,9 +92,16 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('[Error]', err);
   const status = err.status || 500;
+  
+  // Sanitize internal database / engine errors so SQL/internal stack details are not leaked (M3)
+  let userFacingMessage = err.message || 'An unexpected error occurred in the darkness.';
+  if (status >= 500 || err.name === 'SqliteError' || (err.message && (err.message.includes('SqliteError') || err.message.includes('UNIQUE constraint')))) {
+    userFacingMessage = 'An unexpected internal error occurred. Please try again.';
+  }
+
   res.status(status).render('error', {
     title: `Error (${status})`,
-    message: err.message || 'An unexpected error occurred in the darkness.'
+    message: userFacingMessage
   });
 });
 

@@ -94,7 +94,10 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
 
     // Determine monster max HP
     const monsterMaxHp = encounter.instance_max_hp || encounter.monster_max_hp || encounter.base_hp;
-    let currentMonsterHp = encounter.instance_current_hp || encounter.current_monster_hp || monsterMaxHp;
+    // Persistent monsters start each new combat engagement at full boosted max HP (H2)
+    let currentMonsterHp = encounter.monster_instance_id
+      ? monsterMaxHp
+      : (encounter.current_monster_hp || monsterMaxHp);
 
     const equipment = getCharacterEquipment(tx, characterId);
     let openingShotResolved = encounter.opening_shot_resolved || 0;
@@ -203,9 +206,6 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
       const heroDexMod = getModifier(character.dexterity);
       heroInit = rollInitiative(heroDexMod, rng);
       monsterInit = rollInitiative(encounter.initiative_bonus || 0, rng);
-      if (!options.rng && heroDexMod >= (encounter.initiative_bonus || 0) && heroInit < monsterInit) {
-        heroInit = monsterInit;
-      }
       // Ties go to the hero
       initiativeWinner = heroInit >= monsterInit ? 'HERO' : 'MONSTER';
     }
@@ -367,6 +367,29 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       monsterInstance = tx.prepare('SELECT * FROM monster_instances WHERE id = ?').get(encounter.monster_instance_id);
     }
 
+    // Concurrent Persistent Monster check (H1): If another player has slain the monster instance,
+    // conclude this encounter peacefully with 0 duplicate gold, 0 duplicate items, and 0 XP.
+    if (monsterInstance && monsterInstance.status !== 'ACTIVE') {
+      tx.prepare(`
+        UPDATE encounters
+        SET status = 'VICTORY', updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(encounter.id);
+
+      tx.prepare(`
+        INSERT INTO combat_events (
+          encounter_id, round_number, event_type, public_text, details
+        ) VALUES (?, ?, 'VICTORY', ?, ?)
+      `).run(
+        encounter.id,
+        roundNumber,
+        'Another champion has already slain this creature! The battlefield is quiet.',
+        JSON.stringify({ goldAwarded: 0, itemsAwarded: [], xpAwarded: 0, resolvedByOther: true })
+      );
+
+      return getCombatState(tx, characterId, encounterId);
+    }
+
     const equipment = getCharacterEquipment(tx, characterId);
     const { activeWeapon, isRangedActive } = getActiveWeapon(character, equipment, encounter);
     const heroAC = calculateHeroAC(character, equipment.armor, equipment.shield, isRangedActive, encounter, activeWeapon);
@@ -435,6 +458,11 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
 
       tx.prepare('UPDATE characters SET current_hp = ? WHERE id = ?').run(currentHeroHp, character.id);
 
+      // Persistent monster fully recovers to max HP upon hero retreat (H2)
+      if (monsterInstance) {
+        tx.prepare('UPDATE monster_instances SET current_hp = max_hp WHERE id = ?').run(monsterInstance.id);
+      }
+
       return getCombatState(tx, characterId, encounterId);
     }
 
@@ -474,12 +502,16 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
 
       // Consume potion
       tx.prepare('DELETE FROM item_instances WHERE id = ?').run(potion.id);
-      const healAmount = resolvePotionHealing(potion, rng);
-      currentHeroHp = Math.min(character.max_hp, currentHeroHp + healAmount);
+      const rollAmount = resolvePotionHealing(potion, rng);
+      const newHeroHp = Math.min(character.max_hp, currentHeroHp + rollAmount);
+      const actualHealed = newHeroHp - currentHeroHp;
+      currentHeroHp = newHeroHp;
 
       logEvent('POTION_USED', describePotionDrink(), {
         potionName: potion.name,
-        healed: healAmount
+        rollAmount,
+        healed: actualHealed,
+        actualHealed
       });
 
       // Monster makes its standard round attack against the hero

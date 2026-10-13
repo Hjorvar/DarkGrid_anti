@@ -34,10 +34,10 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
     let instanceId = encounter.monster_instance_id || (monsterInstance ? monsterInstance.id : null);
 
     if (instanceId) {
-      // Monster was already persistent — increment kill count, no secondary HP boost
+      // Monster was already persistent — increment kill count, reset HP to full (H2)
       tx.prepare(`
         UPDATE monster_instances
-        SET kill_count = kill_count + 1
+        SET kill_count = kill_count + 1, current_hp = max_hp
         WHERE id = ?
       `).run(instanceId);
     } else {
@@ -47,17 +47,20 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
         WHERE tile_id = ? AND status = 'ACTIVE'
       `).get(encounter.tile_id);
 
-      if (existingOnTile) {
-        // Tile collision edge case: absorb kill into existing persistent monster
+      const actualMonsterId = encounter.monster_id || (monster ? (monster.monster_id || monster.id) : null);
+      const baseMonsterHp = (monster && monster.base_hp) || encounter.base_hp || 10;
+
+      if (existingOnTile && existingOnTile.monster_id === actualMonsterId) {
+        // Tile collision edge case: absorb kill into existing persistent monster of the SAME species
         instanceId = existingOnTile.id;
         tx.prepare(`
           UPDATE monster_instances
-          SET kill_count = kill_count + 1
+          SET kill_count = kill_count + 1, current_hp = max_hp
           WHERE id = ?
         `).run(instanceId);
-      } else {
+      } else if (!existingOnTile) {
         // Create new persistent monster instance with +10% HP boost (granted once)
-        const boostedMaxHp = Math.ceil(monster.base_hp * 1.10);
+        const boostedMaxHp = Math.ceil(baseMonsterHp * 1.10);
         const insertStmt = tx.prepare(`
           INSERT INTO monster_instances (
             monster_id, tile_id, current_hp, max_hp, held_gold, kill_count, status
@@ -65,8 +68,33 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
         `);
 
         const res = insertStmt.run(
-          monster.id,
+          actualMonsterId,
           encounter.tile_id,
+          boostedMaxHp,
+          boostedMaxHp
+        );
+        instanceId = Number(res.lastInsertRowid);
+      } else {
+        // Tile collision with DIFFERENT species: find nearest open wilderness tile (L10)
+        const openTile = tx.prepare(`
+          SELECT mt.id FROM map_tiles mt
+          LEFT JOIN monster_instances mi ON mt.id = mi.tile_id AND mi.status = 'ACTIVE'
+          WHERE mt.is_safe = 0 AND mt.is_passable = 1 AND mi.id IS NULL
+          ORDER BY ABS(mt.x - (SELECT x FROM map_tiles WHERE id = ?)) + ABS(mt.y - (SELECT y FROM map_tiles WHERE id = ?)) ASC
+          LIMIT 1
+        `).get(encounter.tile_id, encounter.tile_id);
+
+        const targetTileId = openTile ? openTile.id : encounter.tile_id;
+        const boostedMaxHp = Math.ceil(baseMonsterHp * 1.10);
+        const insertStmt = tx.prepare(`
+          INSERT INTO monster_instances (
+            monster_id, tile_id, current_hp, max_hp, held_gold, kill_count, status
+          ) VALUES (?, ?, ?, ?, 0, 1, 'ACTIVE')
+        `);
+
+        const res = insertStmt.run(
+          actualMonsterId,
+          targetTileId,
           boostedMaxHp,
           boostedMaxHp
         );
@@ -214,18 +242,49 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
 
     const instanceId = encounter.monster_instance_id || (monsterInstance ? monsterInstance.id : null);
 
+    let lootedItemNames = [];
+
     if (instanceId) {
-      // Persistent monster defeated: mark DEFEATED and transfer all held loot to the victor
+      // Persistent monster defeated: atomically mark DEFEATED and zero held_gold where status = 'ACTIVE' (H1)
       const instRow = tx.prepare('SELECT * FROM monster_instances WHERE id = ?').get(instanceId);
-      if (instRow) {
+      if (instRow && instRow.status === 'ACTIVE') {
         goldLooted = instRow.held_gold || 0;
       }
 
-      tx.prepare(`
+      const updateRes = tx.prepare(`
         UPDATE monster_instances
-        SET status = 'DEFEATED', defeated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
+        SET status = 'DEFEATED', held_gold = 0, defeated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND status = 'ACTIVE'
       `).run(instanceId);
+
+      if (updateRes.changes === 0) {
+        // Monster was already defeated by another champion!
+        // Player receives 0 gold, 0 loot, 0 XP, and no duplication occurs.
+        tx.prepare(`
+          UPDATE encounters
+          SET status = 'VICTORY', updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `).run(encounter.id);
+
+        const victoryText = 'Another champion has already slain this creature! The battlefield is quiet.';
+        tx.prepare(`
+          INSERT INTO combat_events (
+            encounter_id, round_number, event_type, public_text, details
+          ) VALUES (?, ?, 'VICTORY', ?, ?)
+        `).run(
+          encounter.id,
+          encounter.combat_round || 1,
+          victoryText,
+          JSON.stringify({
+            xp_awarded: 0,
+            gold_looted: 0,
+            items_looted: 0,
+            resolved_by_other: true
+          })
+        );
+
+        return { xpAwarded: 0, goldLooted: 0, itemsLooted: 0, resolvedByOther: true };
+      }
 
       // Transfer held gold
       if (goldLooted > 0) {
@@ -238,11 +297,13 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
 
       // Transfer all preserved items from monster to winner's inventory
       const lootItems = tx.prepare(`
-        SELECT id FROM item_instances
-        WHERE owner_type = 'MONSTER' AND owner_monster_id = ?
+        SELECT ii.id, id.name FROM item_instances ii
+        JOIN item_definitions id ON ii.item_definition_id = id.id
+        WHERE ii.owner_type = 'MONSTER' AND ii.owner_monster_id = ?
       `).all(instanceId);
 
       itemsLooted = lootItems.length;
+      lootedItemNames = lootItems.map(i => i.name);
 
       tx.prepare(`
         UPDATE item_instances
@@ -257,6 +318,7 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
       const lootResult = generateMonsterLoot(tx, monster, character.id, options);
       goldLooted = lootResult.goldAwarded;
       itemsLooted = lootResult.itemsAwarded.length;
+      lootedItemNames = (lootResult.itemsAwarded || []).map(i => i.name);
     }
 
     // Award standard XP reward and check for level-up
@@ -295,7 +357,11 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
     `).run(encounter.id);
 
     // Log victory event in combat log
-    const victoryText = `The abominable beast collapses to the earth with a final shudder. The battle is won!`;
+    let victoryText = `The abominable beast collapses to the earth with a final shudder. The battle is won! (+${xpAwarded} XP`;
+    if (goldLooted > 0) victoryText += `, +${goldLooted} gp`;
+    if (lootedItemNames.length > 0) victoryText += `, Looted: ${lootedItemNames.join(', ')}`;
+    victoryText += `)`;
+
     tx.prepare(`
       INSERT INTO combat_events (
         encounter_id, round_number, event_type, public_text, details
@@ -308,6 +374,7 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
         xp_awarded: xpAwarded,
         gold_looted: goldLooted,
         items_looted: itemsLooted,
+        looted_items: lootedItemNames,
         leveled_up: newLevel > oldLevel,
         new_level: newLevel,
         hp_gain: totalHpGain

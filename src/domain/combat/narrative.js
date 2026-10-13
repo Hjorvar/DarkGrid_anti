@@ -7,17 +7,29 @@
 /**
  * Returns flavor descriptors for the hero's weapon.
  */
+/**
+ * Returns flavor descriptors for the hero's weapon.
+ */
 function getWeaponDescriptor(equippedWeapon) {
   if (!equippedWeapon) {
     return { name: 'fist', type: 'unarmed', verb: 'strike', hitVerb: 'strikes' };
   }
 
-  const name = equippedWeapon.name.toLowerCase();
+  const name = (equippedWeapon.name || '').toLowerCase();
+  if (name.includes('sling')) {
+    return { name: 'bullet', type: 'sling', verb: 'hurl a stone bullet', hitVerb: 'hammers into' };
+  }
+  if (name.includes('crossbow')) {
+    return { name: 'bolt', type: 'crossbow', verb: 'release a heavy bolt', hitVerb: 'punches into' };
+  }
   if (name.includes('bow')) {
     return { name: 'arrow', type: 'ranged', verb: 'release an arrow', hitVerb: 'pierces' };
   }
-  if (name.includes('mace') || name.includes('hammer') || name.includes('flail')) {
-    return { name: 'mace', type: 'bludgeoning', verb: 'swing your mace', hitVerb: 'crushes into' };
+  if (name.includes('mace') || name.includes('hammer') || name.includes('flail') || name.includes('club') || name.includes('staff')) {
+    return { name: 'bludgeon', type: 'bludgeoning', verb: 'swing your weapon', hitVerb: 'crushes into' };
+  }
+  if (name.includes('spear')) {
+    return { name: 'spear', type: 'piercing', verb: 'thrust your spear', hitVerb: 'impales' };
   }
   return { name: 'blade', type: 'slashing', verb: 'slash with your blade', hitVerb: 'cleaves into' };
 }
@@ -26,7 +38,7 @@ function getWeaponDescriptor(equippedWeapon) {
  * Returns natural attack descriptors for a monster.
  */
 function getMonsterAttackDescriptor(monster) {
-  const name = (monster.name || '').toLowerCase();
+  const name = (monster.monster_name || monster.name || '').toLowerCase();
   const type = (monster.creature_type || '').toLowerCase();
 
   if (type === 'plant' || name.includes('vine') || name.includes('creeper')) {
@@ -57,8 +69,17 @@ function describeHeroAttack(equippedWeapon, attackResult) {
     if (w.type === 'ranged') {
       return `CRITICAL HIT! Your arrow finds an exposed seam, striking a vital organ with devastating force!`;
     }
+    if (w.type === 'crossbow') {
+      return `CRITICAL HIT! Your heavy bolt punches through armor with thunderous force!`;
+    }
+    if (w.type === 'sling') {
+      return `CRITICAL HIT! Your hurled bullet strikes with crushing precision directly into a vital spot!`;
+    }
     if (w.type === 'bludgeoning') {
-      return `CRITICAL HIT! Your heavy mace connects with thunderous impact, splintering bone and crushing armor!`;
+      return `CRITICAL HIT! Your heavy weapon connects with thunderous impact, splintering bone!`;
+    }
+    if (w.type === 'piercing') {
+      return `CRITICAL HIT! Your spear pierces cleanly through the monster's vital defenses!`;
     }
     return `CRITICAL HIT! You find a lethal opening and drive your blade deep into a vital weak point!`;
   }
@@ -67,6 +88,12 @@ function describeHeroAttack(equippedWeapon, attackResult) {
     if (w.type === 'ranged') {
       return `FUMBLE! The bowstring slips against your fingers as your shot goes wildly astray.`;
     }
+    if (w.type === 'crossbow') {
+      return `FUMBLE! The crossbow mechanism jams slightly as your bolt fires wide.`;
+    }
+    if (w.type === 'sling') {
+      return `FUMBLE! The sling leather tangles around your wrist, sending your stone wide!`;
+    }
     return `FUMBLE! Your footing betrays you as your swing misses completely, leaving you off-balance.`;
   }
 
@@ -74,8 +101,17 @@ function describeHeroAttack(equippedWeapon, attackResult) {
     if (w.type === 'ranged') {
       return `Your arrow strikes home, embedding itself deep into the creature's flank.`;
     }
+    if (w.type === 'crossbow') {
+      return `Your crossbow bolt hits with a sharp crack, penetrating the creature's outer guard.`;
+    }
+    if (w.type === 'sling') {
+      return `Your sling bullet strikes home, staggering the beast with a dull impact.`;
+    }
     if (w.type === 'bludgeoning') {
-      return `Your mace crashes heavily into the monster, staggering it with a dull thud.`;
+      return `Your weapon crashes heavily into the monster, staggering it with a dull thud.`;
+    }
+    if (w.type === 'piercing') {
+      return `Your spear drives forward into the creature, inflicting a deep puncture.`;
     }
     return `Your blade bites deep into the creature's guard, leaving a bloody wound.`;
   }
@@ -83,6 +119,12 @@ function describeHeroAttack(equippedWeapon, attackResult) {
   // Miss
   if (w.type === 'ranged') {
     return `You let loose a shaft, but the creature dodges aside as the arrow clatters against stone.`;
+  }
+  if (w.type === 'crossbow') {
+    return `Your bolt whistles past the creature as it shifts its stance.`;
+  }
+  if (w.type === 'sling') {
+    return `You loose a stone bullet, but it skips harmlessly off the uneven ground.`;
   }
   return `You lunge forward with your ${w.name}, but the creature parries the blow into empty air.`;
 }
@@ -102,11 +144,14 @@ function describeMonsterAttack(monster, attackResult) {
   }
 
   if (attackResult.isHit) {
+    if (m.hitVerb.includes('flesh') || m.hitVerb.includes('against') || m.hitVerb.includes('into') || m.hitVerb.includes('force')) {
+      return `The monster ${m.verb}; its ${m.weapon} ${m.hitVerb}!`;
+    }
     return `The monster ${m.verb}; its ${m.weapon} ${m.hitVerb} you painfully!`;
   }
 
   // Miss
-  return `The creature strikes toward you, but your armor holds firm and turns the attack aside.`;
+  return `The creature strikes toward you, but your defenses turn the attack aside.`;
 }
 
 /**

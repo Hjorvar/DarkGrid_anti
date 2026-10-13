@@ -238,6 +238,7 @@
                   <form action="/game/combat/flee" method="POST" style="flex: 1; min-width: 110px;" onsubmit="return confirm('Fleeing triggers a free Attack of Opportunity from the monster. Are you certain you wish to flee?');">
                     <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                     <input type="hidden" name="encounterId" value="<%= encounter.id %>">
+                    <input type="hidden" name="round" value="<%= encounter.combat_round || 1 %>">
                     <button type="submit" class="btn btn-secondary" style="width: 100%; justify-content: center; border-color: #555;">
                       🏃 Flee
                     </button>
@@ -387,7 +388,7 @@
               <div class="vital-label">Healing Potions</div>
               <div class="vital-value" style="color: #7ce;"><%= safePotionCount %></div>
             </div>
-            <div class="vital-gold-decor">🧪 Minor Elixir (1d8+1 HP)</div>
+            <div class="vital-gold-decor">🧪 <%= safePotions.length > 0 ? (safePotions[0].name + (safePotions.length > 1 ? ' (+' + (safePotions.length - 1) + ' more)' : '')) : 'None in pack' %></div>
           </div>
           <div class="vital-box">
             <div class="vital-header-row">
@@ -647,7 +648,7 @@
                 <div style="font-size: 0.75rem; color: var(--accent-gold); margin-bottom: 2px;">Sell from Backpack:</div>
                 <div style="display: flex; flex-direction: column; gap: 4px; max-height: 100px; overflow-y: auto; font-size: 0.8rem;">
                   <% sellableItems.forEach(item => { %>
-                    <% const payout = item.is_magical ? Math.floor(item.buy_price * 0.4) : Math.floor(item.buy_price * 0.5); %>
+                    <% const payout = (item.is_magical && item.category !== 'POTION') ? Math.floor(item.buy_price * 0.4) : Math.floor(item.buy_price * 0.5); %>
                     <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 4px;">
                       <div>
                         <div><%= item.name %> <%= item.is_magical ? '✨' : '' %></div>

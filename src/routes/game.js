@@ -105,11 +105,11 @@ router.get('/game', (req, res) => {
   const potions = getCharacterPotions(req.db, character.id);
   const potionCount = potions.length;
 
-  // Computed Combat stats
-  const { activeWeapon, isRangedActive } = getActiveWeapon(character, equipment, activeEncounter);
+  // Computed Combat stats (M1)
+  const { activeWeapon, isRangedActive } = combatState ? combatState : getActiveWeapon(character, equipment, activeEncounter);
   const meleeAttackBonus = calculateHeroAttackBonus(character, equipment.meleeWeapon, activeEncounter);
   const rangedAttackBonus = calculateHeroAttackBonus(character, equipment.rangedWeapon, activeEncounter);
-  const heroAC = calculateHeroAC(character, equipment.armor, equipment.shield, isRangedActive, activeEncounter, activeWeapon);
+  const heroAC = combatState ? combatState.heroAC : calculateHeroAC(character, equipment.armor, equipment.shield, isRangedActive, activeEncounter, activeWeapon);
 
   // Cleric healing info
   let clericHealInfo = null;
@@ -251,7 +251,16 @@ router.post('/game/encounter/investigate', (req, res) => {
 
   const encounterId = parseInt(req.body.encounterId, 10);
   try {
-    investigateEncounter(req.db, character.id, encounterId, character.class);
+    const result = investigateEncounter(req.db, character.id, encounterId, character.class);
+    if (result && result.monsterDied) {
+      const victoryEvent = (result.events || []).find(e => e.event_type === 'VICTORY' || e.type === 'VICTORY');
+      const levelUpEvent = (result.events || []).find(e => e.event_type === 'LEVEL_UP' || e.type === 'LEVEL_UP');
+      let msg = victoryEvent ? (victoryEvent.public_text || victoryEvent.text) : 'Opening Shot: The creature fell to your deadly arrow!';
+      if (levelUpEvent) {
+        msg += ' ' + (levelUpEvent.public_text || levelUpEvent.text);
+      }
+      return res.redirect('/game?info=' + encodeURIComponent(msg));
+    }
     res.redirect('/game');
   } catch (err) {
     res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
@@ -274,6 +283,15 @@ router.post('/game/combat/attack', (req, res) => {
     const state = executeCombatRound(req.db, character.id, encounterId, 'ATTACK', { expectedRound: round });
     if (state.character.is_alive === 0) {
       return res.redirect('/game/fallen');
+    }
+    if (state.encounter.status === 'VICTORY') {
+      const victoryEvent = (state.events || []).find(e => e.event_type === 'VICTORY' || e.type === 'VICTORY');
+      const levelUpEvent = (state.events || []).find(e => e.event_type === 'LEVEL_UP' || e.type === 'LEVEL_UP');
+      let msg = victoryEvent ? (victoryEvent.public_text || victoryEvent.text) : 'The battle is won!';
+      if (levelUpEvent) {
+        msg += ' ' + (levelUpEvent.public_text || levelUpEvent.text);
+      }
+      return res.redirect('/game?info=' + encodeURIComponent(msg));
     }
     res.redirect('/game');
   } catch (err) {
@@ -302,6 +320,15 @@ router.post('/game/combat/potion', (req, res) => {
     if (state.character.is_alive === 0) {
       return res.redirect('/game/fallen');
     }
+    if (state.encounter.status === 'VICTORY') {
+      const victoryEvent = (state.events || []).find(e => e.event_type === 'VICTORY' || e.type === 'VICTORY');
+      const levelUpEvent = (state.events || []).find(e => e.event_type === 'LEVEL_UP' || e.type === 'LEVEL_UP');
+      let msg = victoryEvent ? (victoryEvent.public_text || victoryEvent.text) : 'The battle is won!';
+      if (levelUpEvent) {
+        msg += ' ' + (levelUpEvent.public_text || levelUpEvent.text);
+      }
+      return res.redirect('/game?info=' + encodeURIComponent(msg));
+    }
     res.redirect('/game');
   } catch (err) {
     res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
@@ -318,9 +345,10 @@ router.post('/game/combat/flee', (req, res) => {
   }
 
   const encounterId = parseInt(req.body.encounterId, 10);
+  const round = req.body.round ? parseInt(req.body.round, 10) : undefined;
 
   try {
-    const state = executeCombatRound(req.db, character.id, encounterId, 'FLEE');
+    const state = executeCombatRound(req.db, character.id, encounterId, 'FLEE', { expectedRound: round });
     if (state.character.is_alive === 0) {
       return res.redirect('/game/fallen');
     }
@@ -329,6 +357,10 @@ router.post('/game/combat/flee', (req, res) => {
     }
     res.redirect('/game');
   } catch (err) {
+    // Graceful double-submit handling (L5)
+    if (err.message && err.message.includes('ESCAPED')) {
+      return res.redirect('/game?info=' + encodeURIComponent('You broke away from the creature and escaped!'));
+    }
     res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
   }
 });

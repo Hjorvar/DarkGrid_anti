@@ -2,7 +2,7 @@
 
 > **Skjal:** `docs/combat-system-plan.md`  
 > **Áfangi:** Phase 2 (Bardagakerfi) & Phase 3 (Varanleg skrímsli & Permadeath)  
-> **Staða:** **Samþykkt af leikhönnuði (Approved) — Innleiðing hefst í Session 4**  
+> **Staða:** **Fullútfært og hert í Sessions 1–3 (Verified & Hardened)**  
 > **Tungumálaregla:** Hönnun og rökstuðningur á íslensku; allur texti sem spilarinn sér í leiknum er á **ensku**.
 
 ---
@@ -29,20 +29,21 @@ Eftirfarandi reglur eru formlega staðfestar sem grundvöllur útfærslunnar:
 
 ### B. Upphafsbúnaður og drykkir (Starter Gear & Potions)
 - Nýjar hetjur fá raunveruleg vopn og brynjur í `item_instances` við stofnun, miðað við class:
-  - **Fighter:** Longsword (vopn, `1d8` skaði, buy_price 15, `equip_slot: 'MAIN_HAND'`) og Chain Shirt (brynja, armor bonus +4, buy_price 100, `equip_slot: 'CHEST'`).
-  - **Ranger:** Shortbow (vopn, `1d6` skaði, buy_price 30, `equip_slot: 'MAIN_HAND'`) og Leather Armor (brynja, armor bonus +2, buy_price 10, `equip_slot: 'CHEST'`).
-  - **Cleric:** Heavy Mace (vopn, `1d8` skaði, buy_price 12, `equip_slot: 'MAIN_HAND'`) og Scale Mail (brynja, armor bonus +5, buy_price 50, `equip_slot: 'CHEST'`).
+  - **Fighter:** Longsword (vopn, `1d8` skaði, buy_price 15, `slot: 'MELEE'`), Shortbow (vopn, `1d6` skaði, buy_price 30, `slot: 'RANGED'`), Chain Shirt (brynja, armor bonus +4, buy_price 100, `slot: 'ARMOR'`) og Light Steel Shield (skjöldur, shield bonus +1, buy_price 9, `slot: 'SHIELD'`).
+  - **Ranger:** Shortsword (vopn, `1d6` skaði, buy_price 10, `slot: 'MELEE'`), Longbow (vopn, `1d8` skaði, buy_price 75, `slot: 'RANGED'`) og Leather Armor (brynja, armor bonus +2, buy_price 10, `slot: 'ARMOR'`).
+  - **Cleric:** Heavy Mace (vopn, `1d8` skaði, buy_price 12, `slot: 'MELEE'`), Scale Mail (brynja, armor bonus +5, buy_price 50, `slot: 'ARMOR'`) og Heavy Wooden Shield (skjöldur, shield bonus +2, buy_price 7, `slot: 'SHIELD'`).
+- **Starting Gold:** Ný hetja fær 10 gp í byrjunargull.
 - **Healing Potions:** Ný hetja byrjar með **2 Minor Healing Potions** í bakpoka (læknar `1d8+1` HP).
 
 ### C. Teningaköst og bardagareglur
 - **Attack Roll:** `d20 + attack_bonus >= armor_class`.
 - **Natural 20:** Critical Hit. Árás hittir sjálfkrafa og veldur tvöföldum venjulegum skaða (`damage * 2`).
 - **Natural 1:** Automatic Miss. Árás brennur sjálfkrafa af óháð bónusum.
-- **Initiative (Frumkvæði):** Kastað er `1d20 + initiative_bonus` við upphaf bardaga til að ákveða hvor hefur frumkvæði í umferðum. Jafntefli fellur hetjunni í hag.
+- **Initiative (Frumkvæði):** Kastað er `1d20 + initiative_bonus` við upphaf bardaga til að ákveða hvor hefur frumkvæði í umferðum. Jafntefli fellur hetjunni í hag. Enginn dulinn framleiðslubónus er til staðar.
 - **Formúla fyrir Attack Bonus hetju:**  
-  `hero_attack_bonus = floor((STR_modifier + DEX_modifier) / 2)` (með vopnabónus ef við á).
+  `hero_attack_bonus = base_attack_bonus + ability_mod + weapon_training / favored_enemy / divine_power`.
 - **Armor Class hetju:**  
-  `hero_ac = 10 + DEX_modifier + equipped_armor_bonus + equipped_shield_bonus`.
+  `hero_ac = 10 + min(DEX_mod, max_dex_bonus) + armor_bonus + (is_two_handed ? 0 : shield_bonus)`.
 
 ### D. Faldar tölur og upplýsingaleynd
 - **Spilarinn sér:**

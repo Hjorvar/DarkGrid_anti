@@ -1,15 +1,15 @@
-# DARKGRID — Textamiðaður Dark Fantasy RPG (Phase 1)
+# DARKGRID — Textamiðaður Dark Fantasy RPG (Phase 1–3)
 
 Darkgrid er vefleikur í dark fantasy stíl sem sameinar textamiðaða könnun, d20 bardagahefð og samnýttan, viðvarandi heim með varanlegum dauða (*permadeath*).
 
-Þessi útgáfa inniheldur **Phase 1: Fyrstu sýnilegu og keyranlegu útgáfuna** samkvæmt `.agents/specs/AGENT_START_HERE.md` og `.agents/specs/DARKGRID_IMPLEMENTATION_PLAN.md`. Fyrirmæli fyrir agents eru í `AGENTS.md`.
+Þessi útgáfa inniheldur **Phase 1 (Könnun & Heimskort), Phase 2 (d20 Bardagakerfi) og Phase 3 (Persistent Monsters & Permadeath)** ásamt öryggis- og gæðaframkvæmdum úr óháðri kóðaúttekt (Sessions 1–3). Fyrirmæli fyrir agents eru í `AGENTS.md`.
 
 ---
 
 ## ⚡ Fljótleg ræsing (Quick Start)
 
 ### 1. Kröfur
-- **Node.js**: v20+ eða v22+ (verkefnið nýtir innbyggða `node:sqlite` með WAL og foreign keys).
+- **Node.js**: v20+ eða v24+ (verkefnið nýtir innbyggða `node:sqlite` með WAL og foreign keys).
 - **Vafri**: Hvaða nútímalegur vafri sem er (Chrome, Firefox, Safari, Edge).
 
 ### 2. Uppsetning og prófanir
@@ -17,10 +17,10 @@ Darkgrid er vefleikur í dark fantasy stíl sem sameinar textamiðaða könnun, 
 # Sækja dependencies
 npm install
 
-# Búa til gagnagrunn og keyra migrations og seed (15x15 kort og skrímsli)
-npm run db:setup
+# Búa til gagnagrunn og keyra migrations og seed (15x15 kort og 38 skrímsli)
+npm run setup:db
 
-# Keyra sjálfvirk próf
+# Keyra sjálfvirk próf (einangrað í-minni SQLite)
 npm test
 ```
 

@@ -505,6 +505,7 @@ test('13. Persistent monster slays second player: kill_count=2, loot accumulates
 
   const enc2 = checkTileEncounter(db, hero2, tile, { rng: () => 0.01 });
   investigateEncounter(db, hero2.id, enc2.id, hero2.class);
+  db.prepare("UPDATE encounters SET initiative_winner = 'HERO' WHERE id = ?").run(enc2.id);
 
   // Slay Hero 2
   executeCombatRound(db, hero2.id, enc2.id, 'ATTACK', { rng: createRngSequence([0.05, 0.95, 0.9]) });

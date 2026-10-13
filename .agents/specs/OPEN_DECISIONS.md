@@ -24,20 +24,34 @@ Sjá nákvæma heildarúttekt og hönnun í [`docs/combat-system-plan.md`](../..
 
 ---
 
-## 2. Efnahagur og búnaður (fyrir Phase 4)
+## 2. Efnahagur og búnaður
 
 1. **Byrjunargull og byrjunarverslun:**
-   - Hversu mikið gull fær ný hetja (nú sett sem 50 gp í config)?
-   - Hvaða vopn og brynjur eru í boði í byrjun og hvaða takmarkanir gilda um Ranger og Cleric?
+   - Staðfest regla: Ný hetja fær **10 gp** í byrjunargull (samkvæmt `config.startingGold` og prófum).
+   - Upphafsbúnaður er veittur samkvæmt stétt (Class Starting Equipment).
 2. **Shared marketplace reglur:**
-   - Þegar magical item er selt og fer á sameiginlegan markað: hvernig er verðlagning reiknuð (t.d. 50% af kaupverði, eða frjálst verð)?
-   - Fyrnist varan ef enginn kaupir hana?
+   - Þegar magical item er selt og fer á sameiginlegan markað: seljandi fær 50% af kaupverði strax, og varan er skráð á sama 50% verði í `market_listings`.
+   - Fyrnist varan ef enginn kaupir hana? [Bíður ákvörðunar].
 
 ---
 
-## 3. Kort og heimur
+## 3. Leikjajafnvægi til ákvörðunar (Session 3 úttekt)
 
-3. **Anti-farming regla:**
+1. **M4 — Dauðahætta nýrra hetja við borgarjaðar:**
+   - Tillaga: Lækka `maxCr` í 0.25 á reitabilinu `distance = 1` svo skrímsli eins og Orc (CR 1/3, 2d4+4 greataxe skaði) spawni ekki strax á reit (7,8) við hlið Eikahafnar.
+2. **M5 — Loot Economy (Veik skrímsli og dýr búnaður):**
+   - Tillaga: CR-skipt loot töflur og útilokun á herklæðum/vopnum hjá dýrum/óvættum (Vermin/Animal/Beast) svo Goblin/Dire Rat geti ekki droppað Full Plate eða Greatsword.
+3. **M8 — Ambush (Vélræn áhrif og texti):**
+   - Tillaga: Láta skrímsli sjálfkrafa vinna frumkvæði í Round 1 þegar um ambush er að ræða (`initiative_winner = 'MONSTER'`), í samræmi við viðmótstextann „A shadowy shape lunges from the darkness without warning!“.
+4. **L14 — Monster Level 6–10:**
+   - Staða: Núverandi skrímslasafn er 38 skrímsli á level 1–5, en hetjur geta farið í level 10.
+   - Tillaga: Skilgreina Phase 4 stækkunarpakka með 20 nýjum skrímslum á level 6–10 með sérsniðnum myndum og 9-lýsinga secrecy kubbum.
+
+---
+
+## 4. Kort og heimur
+
+1. **Anti-farming regla:**
    - Hvernig á að hindra að spilari labbi fram og til baka milli tveggja reita í öruggum jaðri til að farma random encounters án þess að eyðileggja upplifunina á nýjum heimsóknum?
-4. **Heimsstærð og framtíðarkort:**
+2. **Heimsstærð og framtíðarkort:**
    - Nú er notað 15×15 seed-kort (225 reitir). Á heimurinn að stækka í áföngum eða vera fastur fyrirframgerður heimur?

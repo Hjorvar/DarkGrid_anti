@@ -50,7 +50,7 @@ function parseDiceFormula(diceFormula) {
   // Match NdM, NdM+K, NdM-K, dM+K
   const match = str.match(/^(\d*)d(\d+)(?:([+-])(\d+))?$/i);
   if (!match) {
-    return { count: 1, sides: 4, modifier: 0 };
+    throw new Error(`Invalid dice formula: "${str}". Expected format like "1d8", "2d6+3", "1d4-1", or a flat number.`);
   }
 
   const count = match[1] === '' ? 1 : parseInt(match[1], 10);

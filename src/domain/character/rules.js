@@ -254,6 +254,10 @@ function performClericSelfHeal(db, characterId, options = {}) {
       throw new Error('Cleric Self-Healing can only be performed outside of combat.');
     }
 
+    if (character.current_hp >= character.max_hp) {
+      throw new Error('Hero is already at maximum health.');
+    }
+
     const remaining = getClericRemainingHealUses(character);
     if (remaining <= 0) {
       throw new Error('You have exhausted your Self-Healing uses for this expedition. Rest in a safe city to restore them.');
@@ -414,19 +418,34 @@ function createCharacter(db, {
     throw error;
   }
 
-  // Favored Enemy validation for Ranger
+  // Favored Enemy validation for Ranger (L6)
+  const ALLOWED_FAVORED_ENEMIES = [
+    'ANIMAL', 'BEAST', 'MAGICAL BEAST', 'MAGICAL_BEAST', 'MONSTROUS HUMANOID', 'MONSTROUS_HUMANOID',
+    'DRAGON', 'ABERRATION', 'GIANT', 'PLANT', 'VERMIN',
+    'OUTSIDER', 'CONSTRUCT', 'OOZE', 'FEY', 'HUMANOID'
+  ];
+
   if (validation.classType === 'RANGER' && favoredEnemyType) {
-    if (favoredEnemyType.toUpperCase() === 'UNDEAD') {
+    const normType = favoredEnemyType.toUpperCase().trim();
+    if (normType === 'UNDEAD') {
       const error = new Error('Undead is not permitted as a Favored Enemy.');
       error.status = 400;
       throw error;
     }
-    if (favoredEnemyType.toUpperCase() === 'HUMANOID' && !favoredEnemySubtype) {
+    if (!ALLOWED_FAVORED_ENEMIES.includes(normType)) {
+      const error = new Error(`Invalid Favored Enemy type: ${favoredEnemyType}.`);
+      error.status = 400;
+      throw error;
+    }
+    if (normType === 'HUMANOID' && !favoredEnemySubtype) {
       const error = new Error('Humanoid Favored Enemy requires a subtype (e.g. reptilian, goblinoid, giant).');
       error.status = 400;
       throw error;
     }
   }
+
+  const finalFavoredEnemyType = validation.classType === 'RANGER' ? (favoredEnemyType ? favoredEnemyType.toUpperCase().trim() : null) : null;
+  const finalFavoredEnemySubtype = validation.classType === 'RANGER' ? (favoredEnemySubtype ? favoredEnemySubtype.trim() : null) : null;
 
   const defaultPrimary = (validation.classType === 'RANGER') ? 'RANGED' : 'MELEE';
   const chosenPrimary = (primaryWeapon && ['MELEE', 'RANGED'].includes(primaryWeapon.toUpperCase()))
@@ -479,8 +498,8 @@ function createCharacter(db, {
       maxHp,
       maxHp,
       startTile.id,
-      favoredEnemyType || null,
-      favoredEnemySubtype || null,
+      finalFavoredEnemyType,
+      finalFavoredEnemySubtype,
       chosenPrimary
     );
 

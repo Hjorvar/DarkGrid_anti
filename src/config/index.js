@@ -1,4 +1,17 @@
 const path = require('path');
+const fs = require('fs');
+
+// Attempt to load .env file if available (Node 20+)
+if (typeof process.loadEnvFile === 'function') {
+  try {
+    const envPath = path.join(__dirname, '../../.env');
+    if (fs.existsSync(envPath)) {
+      process.loadEnvFile(envPath);
+    }
+  } catch (err) {
+    // Silently continue if .env does not exist
+  }
+}
 
 const isTestEnv =
   process.env.NODE_ENV === 'test' ||
@@ -9,14 +22,27 @@ const defaultDbPath = isTestEnv
   ? ':memory:'
   : path.join(__dirname, '../../data/darkgrid.sqlite');
 
+const nodeEnv = process.env.NODE_ENV || (isTestEnv ? 'test' : 'development');
+const sessionSecret = process.env.SESSION_SECRET || 'darkgrid-dev-secret-key-change-in-production';
+
+// Production security guard: reject insecure default session secret (M3)
+if (nodeEnv === 'production' && sessionSecret === 'darkgrid-dev-secret-key-change-in-production') {
+  throw new Error('[SECURITY ERROR] Insecure SESSION_SECRET: In production, SESSION_SECRET must be explicitly set via environment variable.');
+}
+
+const parsedEncounterChance = process.env.ENCOUNTER_CHANCE_PERCENT !== undefined
+  ? parseInt(process.env.ENCOUNTER_CHANCE_PERCENT, 10)
+  : NaN;
+const encounterChancePercent = Number.isFinite(parsedEncounterChance) ? parsedEncounterChance : 25;
+
 const config = {
   port: parseInt(process.env.PORT, 10) || 3000,
-  nodeEnv: process.env.NODE_ENV || (isTestEnv ? 'test' : 'development'),
-  sessionSecret: process.env.SESSION_SECRET || 'darkgrid-dev-secret-key-change-in-production',
+  nodeEnv,
+  sessionSecret,
   dbPath: process.env.DB_PATH || defaultDbPath,
 
   // Configurable game mechanics (Phase 1)
-  encounterChancePercent: parseInt(process.env.ENCOUNTER_CHANCE_PERCENT, 10) || 25,
+  encounterChancePercent,
   encounterSigma: parseFloat(process.env.ENCOUNTER_SIGMA) || 1.5,
   startingGold: 10,
 

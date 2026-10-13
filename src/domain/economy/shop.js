@@ -71,6 +71,16 @@ function buyItem(db, characterId, { itemDefinitionId, listingId }) {
   return withTransaction(db, (tx) => {
     const character = assertInSafeCity(tx, characterId);
 
+    // Inventory capacity check (M6)
+    const totalInventoryCount = tx.prepare(`
+      SELECT COUNT(*) as count FROM item_instances
+      WHERE owner_type = 'CHARACTER' AND owner_character_id = ?
+    `).get(characterId).count;
+
+    if (totalInventoryCount >= 50) {
+      throw new Error('Your backpack is full. You cannot carry more than 50 items.');
+    }
+
     if (listingId) {
       // Purchasing from the Shared Global Magical Resale Market
       const listing = tx.prepare(`
@@ -133,6 +143,18 @@ function buyItem(db, characterId, { itemDefinitionId, listingId }) {
     const price = itemDef.buy_price;
     if (character.gold < price) {
       throw new Error(`Insufficient gold. Price is ${price} gp, but you only possess ${character.gold} gp.`);
+    }
+
+    // Free item abuse prevention (M6): limit zero-cost items (e.g. Club) to 2 per character
+    if (price === 0) {
+      const freeItemCount = tx.prepare(`
+        SELECT COUNT(*) as count FROM item_instances
+        WHERE owner_type = 'CHARACTER' AND owner_character_id = ? AND item_definition_id = ?
+      `).get(characterId, itemDef.id).count;
+
+      if (freeItemCount >= 2) {
+        throw new Error(`You already possess the maximum permitted amount of ${itemDef.name}.`);
+      }
     }
 
     // Deduct gold

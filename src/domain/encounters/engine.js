@@ -231,7 +231,7 @@ function checkTileEncounter(db, character, targetTile, options = {}) {
       targetTile.id,
       persistentMonster.monster_id,
       persistentMonster.id,
-      persistentMonster.current_hp
+      persistentMonster.max_hp
     );
 
     return getEncounterById(db, Number(result.lastInsertRowid), character.class);
@@ -309,6 +309,7 @@ function getEncounterById(db, encounterId, heroClass) {
     SELECT e.*, m.name as monster_name, m.symbol as monster_symbol,
            m.color as monster_color, m.solo_level as monster_level,
            m.descriptions as monster_descriptions, m.image_path as monster_image_path,
+           m.movement_type, m.creature_type, m.creature_subtype,
            t.name as tile_name, t.terrain as tile_terrain
     FROM encounters e
     JOIN monsters m ON e.monster_id = m.id
@@ -400,6 +401,10 @@ function ignoreEncounter(db, characterId, encounterId) {
       SET status = 'IGNORED', updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(encounterId);
+
+    if (enc.monster_instance_id) {
+      tx.prepare('UPDATE monster_instances SET current_hp = max_hp WHERE id = ?').run(enc.monster_instance_id);
+    }
 
     return { success: true };
   });
