@@ -9,6 +9,8 @@ const { buyItem } = require('../src/domain/economy/shop');
 const { startCombat, executeCombatRound, getCombatState } = require('../src/domain/combat/engine');
 const { parseDiceFormula, rollDice } = require('../src/domain/combat/dice');
 const { describeHeroAttack, describeMonsterAttack, describePotionDrink, describeFleeAttempt } = require('../src/domain/combat/narrative');
+const { handleMonsterDefeat } = require('../src/domain/monsters/persistence');
+const { checkTileEncounter } = require('../src/domain/encounters/engine');
 const config = require('../src/config');
 
 function ensureUser(db, userId, username = 'testuser') {
@@ -131,6 +133,69 @@ test('H1 & H2: Two heroes vs same persistent monster & full max HP reset', (t) =
   const swordDef = db.prepare("SELECT id FROM item_definitions WHERE name = 'Longsword'").get();
   const heroBLongswords = heroBItems.filter(i => i.item_definition_id === swordDef.id);
   assert.equal(heroBLongswords.length, 1, 'H1: Hero B must not receive duplicate transferred item');
+
+  // Verify Hero B's combat state: receives clear English message, does not take damage/die, status VICTORY
+  const postStateB = getCombatState(db, heroB.id, encBId);
+  assert.equal(postStateB.encounter.status, 'VICTORY', 'H1: Hero B encounter must be resolved as VICTORY');
+  assert.equal(postStateB.character.is_alive, 1, 'H1: Hero B must not die from an attack by an already defeated monster');
+  const victoryEventB = postStateB.events.find(e => e.event_type === 'VICTORY');
+  assert.ok(victoryEventB, 'VICTORY event must be logged for Hero B');
+  assert.equal(
+    victoryEventB.public_text,
+    'Another champion has already slain this creature! The battlefield is quiet.',
+    'H1: Hero B must receive clear English message that monster was already slain'
+  );
+
+  // Simultaneous killing blow race condition test:
+  // If two combatants invoke handleMonsterDefeat concurrently on the same ACTIVE persistent monster instance:
+  db.prepare("UPDATE monster_instances SET status = 'ACTIVE', held_gold = 50 WHERE id = ?").run(pmId);
+  const resA = handleMonsterDefeat(db, heroA, { id: encAId, monster_instance_id: pmId }, orc, { id: pmId });
+  const resB = handleMonsterDefeat(db, heroB, { id: encBId, monster_instance_id: pmId }, orc, { id: pmId });
+  assert.equal(resA.resolvedByOther, undefined, 'First victor claims rewards');
+  assert.equal(resA.goldLooted, 50, 'First victor receives the 50 gold');
+  assert.equal(resB.resolvedByOther, true, 'Second victor is safely short-circuited as resolvedByOther');
+  assert.equal(resB.goldLooted, 0, 'Second victor receives 0 duplicate gold');
+  assert.equal(resB.xpAwarded, 0, 'Second victor receives 0 duplicate XP');
+
+  // H2: Full boosted max HP reset after damage and flee
+  // 1. Persistent monster starts at 22/22 HP
+  db.prepare("UPDATE monster_instances SET status = 'ACTIVE', current_hp = 22, max_hp = 22 WHERE id = ?").run(pmId);
+  const encFleeRes = db.prepare(`
+    INSERT INTO encounters (
+      character_id, monster_id, monster_instance_id, tile_id, status,
+      current_monster_hp, monster_max_hp, combat_round
+    ) VALUES (?, ?, ?, ?, 'DISCOVERED', 22, 22, 0)
+  `).run(heroA.id, orc.id, pmId, tile.id);
+  const encFleeId = Number(encFleeRes.lastInsertRowid);
+  startCombat(db, heroA.id, encFleeId);
+
+  // 2. Hero A deals damage (reducing monster HP)
+  executeCombatRound(db, heroA.id, encFleeId, 'ATTACK', {
+    rng: () => 0.5 // partial hit
+  });
+  const midCombat = db.prepare('SELECT current_monster_hp FROM encounters WHERE id = ?').get(encFleeId);
+  assert.ok(midCombat.current_monster_hp < 22, 'Monster took damage in combat');
+
+  // 3. Hero A flees and escapes
+  executeCombatRound(db, heroA.id, encFleeId, 'FLEE', {
+    rng: () => 0.01 // monster misses free attack
+  });
+  const fleeState = db.prepare('SELECT status FROM encounters WHERE id = ?').get(encFleeId);
+  assert.equal(fleeState.status, 'ESCAPED');
+
+  // Persistent monster in DB must recover to full boosted max HP (22)
+  const pmAfterFlee = db.prepare('SELECT current_hp, max_hp FROM monster_instances WHERE id = ?').get(pmId);
+  assert.equal(pmAfterFlee.current_hp, 22, 'H2: Persistent monster resets to full 22 HP after hero flees');
+  assert.equal(pmAfterFlee.max_hp, 22, 'H2: +10% max HP boost is preserved');
+
+  // 4. Hero B enters the tile and discovers the monster -> starts at full 22/22 HP
+  const newEncForB = checkTileEncounter(db, heroB, tile, { rng: () => 0.01 });
+  assert.ok(newEncForB, 'Hero B discovers persistent monster');
+  assert.equal(newEncForB.current_monster_hp, 22, 'H2: Hero B encounter starts at full 22 HP');
+  startCombat(db, heroB.id, newEncForB.id);
+  const combatB = getCombatState(db, heroB.id, newEncForB.id);
+  assert.equal(combatB.encounter.current_monster_hp, 22, 'H2: Hero B combat starts at full 22 HP');
+  assert.equal(combatB.encounter.monster_max_hp, 22, 'H2: Monster max HP is 22');
 });
 
 test('H4: Initiative has no hidden production bias', (t) => {
@@ -378,6 +443,134 @@ test('M7 & M3: Dev pages disabled in non-development and auth security', async (
     // M3: GET /logout redirects safely without error
     const logoutRes = await fetch(`${baseUrl}/logout`, { redirect: 'manual' });
     assert.equal(logoutRes.status, 302, 'M3: GET /logout safely redirects');
+  } finally {
+    server.close();
+  }
+});
+
+function updateCookies(existingCookie, res) {
+  const cookieMap = {};
+  if (existingCookie) {
+    existingCookie.split(';').forEach((c) => {
+      const parts = c.trim().split('=');
+      if (parts[0]) cookieMap[parts[0]] = parts.slice(1).join('=');
+    });
+  }
+  const rawHeaders = typeof res.headers.getSetCookie === 'function'
+    ? res.headers.getSetCookie()
+    : (res.headers.get('set-cookie') ? res.headers.get('set-cookie').split(/,(?=[a-zA-Z0-9_.-]+=)/) : []);
+
+  for (const str of rawHeaders) {
+    if (!str) continue;
+    const firstPart = str.split(';')[0].trim();
+    const parts = firstPart.split('=');
+    if (parts[0]) cookieMap[parts[0]] = parts.slice(1).join('=');
+  }
+
+  return Object.entries(cookieMap)
+    .map(([k, v]) => `${k}=${v}`)
+    .join('; ');
+}
+
+test('M1 HTTP Integration: UI renders identical AC and active weapon as combatState (flying monster, shield suppression, Cleric Holy Radiance)', async (t) => {
+  const db = createTestDb();
+  setDb(db);
+
+  const server = http.createServer(app);
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const port = server.address().port;
+  const baseUrl = `http://127.0.0.1:${port}`;
+
+  try {
+    let cookie = '';
+    // Register user
+    const regPage = await fetch(`${baseUrl}/register`);
+    cookie = updateCookies(cookie, regPage);
+    const regHtml = await regPage.text();
+    const regCsrf = regHtml.match(/name="_csrf"\s+value="([^"]+)"/)[1];
+
+    await fetch(`${baseUrl}/register`, {
+      method: 'POST',
+      body: new URLSearchParams({
+        username: 'M1HeroUser',
+        password: 'password123',
+        confirmPassword: 'password123',
+        _csrf: regCsrf
+      }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookie },
+      redirect: 'manual'
+    }).then(r => { cookie = updateCookies(cookie, r); });
+
+    // Create Cleric hero with Melee (Heavy Mace), Shield, and Ranged (Sling)
+    const createPage = await fetch(`${baseUrl}/character/create`, { headers: { Cookie: cookie } });
+    cookie = updateCookies(cookie, createPage);
+    const createHtml = await createPage.text();
+    const createCsrf = createHtml.match(/name="_csrf"\s+value="([^"]+)"/)[1];
+
+    await fetch(`${baseUrl}/character/create`, {
+      method: 'POST',
+      body: new URLSearchParams({
+        name: 'M1ClericHero',
+        classType: 'CLERIC',
+        strength: '12',
+        dexterity: '10',
+        constitution: '12',
+        intelligence: '10',
+        wisdom: '15',
+        charisma: '12',
+        _csrf: createCsrf
+      }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookie },
+      redirect: 'manual'
+    }).then(r => { cookie = updateCookies(cookie, r); });
+
+    const hero = db.prepare('SELECT * FROM characters WHERE name = ?').get('M1ClericHero');
+    const tile = db.prepare("SELECT * FROM map_tiles WHERE is_safe = 0 AND is_passable = 1 LIMIT 1").get();
+    db.prepare('UPDATE characters SET tile_id = ? WHERE id = ?').run(tile.id, hero.id);
+
+    // Equip a ranged weapon as well as melee and shield
+    const slingDef = db.prepare("SELECT id FROM item_definitions WHERE name = 'Sling'").get();
+    db.prepare(`
+      INSERT INTO item_instances (item_definition_id, owner_type, owner_character_id, equipped_slot)
+      VALUES (?, 'CHARACTER', ?, 'RANGED')
+    `).run(slingDef.id, hero.id);
+
+    // Case 1: Flying monster forces ranged weapon and suppresses shield AC
+    const batMonster = db.prepare("SELECT * FROM monsters WHERE movement_type = 'FLY' LIMIT 1").get();
+    const encBatRes = db.prepare(`
+      INSERT INTO encounters (
+        character_id, monster_id, tile_id, status, current_monster_hp, monster_max_hp, combat_round
+      ) VALUES (?, ?, ?, 'IN_COMBAT', ?, ?, 1)
+    `).run(hero.id, batMonster.id, tile.id, batMonster.base_hp, batMonster.base_hp);
+    const encBatId = Number(encBatRes.lastInsertRowid);
+
+    const combatStateBat = getCombatState(db, hero.id, encBatId);
+    assert.equal(combatStateBat.isRangedActive, true, 'Flying monster must activate ranged');
+
+    const gamePageBat = await fetch(`${baseUrl}/game`, { headers: { Cookie: cookie } });
+    const htmlBat = await gamePageBat.text();
+
+    assert.ok(htmlBat.includes('Active: 🏹 Ranged'), 'UI must show Active: Ranged for flying monster');
+    assert.ok(htmlBat.includes('Shield disabled with ranged'), 'UI must note shield suppression');
+    assert.ok(htmlBat.includes(`<div class="vital-value" style="color: var(--accent-gold);">${combatStateBat.heroAC}</div>`), 'UI AC must match combatState.heroAC exactly');
+
+    // Case 2: Cleric vs Undead monster (Holy Radiance bonus)
+    // Conclude previous encounter
+    db.prepare("UPDATE encounters SET status = 'VICTORY' WHERE id = ?").run(encBatId);
+
+    const skeletonMonster = db.prepare("SELECT * FROM monsters WHERE UPPER(creature_type) = 'UNDEAD' LIMIT 1").get();
+    const encSkelRes = db.prepare(`
+      INSERT INTO encounters (
+        character_id, monster_id, tile_id, status, current_monster_hp, monster_max_hp, combat_round
+      ) VALUES (?, ?, ?, 'IN_COMBAT', ?, ?, 1)
+    `).run(hero.id, skeletonMonster.id, tile.id, skeletonMonster.base_hp, skeletonMonster.base_hp);
+    const encSkelId = Number(encSkelRes.lastInsertRowid);
+
+    const combatStateSkel = getCombatState(db, hero.id, encSkelId);
+    const gamePageSkel = await fetch(`${baseUrl}/game`, { headers: { Cookie: cookie } });
+    const htmlSkel = await gamePageSkel.text();
+
+    assert.ok(htmlSkel.includes(`<div class="vital-value" style="color: var(--accent-gold);">${combatStateSkel.heroAC}</div>`), 'UI AC must match combatState.heroAC including Holy Radiance sacred defense');
   } finally {
     server.close();
   }

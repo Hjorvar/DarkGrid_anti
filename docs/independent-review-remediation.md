@@ -5,7 +5,7 @@
 > **Auditor Reference:** `docs/independent-code-review.md`  
 > **Overall Assessment:** **READY FOR PLAYTESTING** (with design balance proposals documented for M4, M5, M8, L14)  
 > **Database Integrity (SHA-256):** `2DD5FFF6118982BAD9DA45DBDC1F231FBD2AB10926F8A118C883223CEC494C4F` (100% Bit-for-Bit Identical)  
-> **Automated Test Suite:** 117 tests passing (100%), 0 failing, verified across 5 consecutive full runs on isolated database.
+> **Automated Test Suite:** 118 tests passing (100%), 0 failing, verified across 5 consecutive full runs on isolated database.
 
 ---
 
@@ -48,7 +48,7 @@ Following the comprehensive independent code review documented in `docs/independ
 | **H3** | Post-Combat Victory & Level-Up UI | UI/UX | **FIXED & VERIFIED** | `src/routes/game.js`, `src/views/game.ejs` |
 | **H4** | Pure Initiative without Production Bias | Combat | **FIXED & VERIFIED** | `tests/session_hardening_and_fixes.test.js` |
 | **H5** | Flaky Test Suite Stabilization | Testing | **FIXED & VERIFIED** | 5 consecutive runs of full test suite |
-| **M1** | Flying Monster AC in UI | UI/Combat | **FIXED & VERIFIED** | `src/routes/game.js`, `src/views/game.ejs` |
+| **M1** | Flying Monster AC in UI | UI/Combat | **FIXED & VERIFIED** | `tests/session_hardening_and_fixes.test.js`, `src/routes/game.js`, `src/views/game.ejs` |
 | **M2** | Narrative Text Distinctions & Grammar | Combat/Text | **FIXED & VERIFIED** | `tests/session_hardening_and_fixes.test.js` |
 | **M3** | Session & Auth Hardening | Security | **FIXED & VERIFIED** | `src/routes/auth.js`, `src/config/index.js`, `src/app.js` |
 | **M4** | New Hero Lethality Near Cities | Balance | **REQUIRES DESIGN DECISION** | Proposal detailed in Section 4 |
@@ -137,19 +137,19 @@ In accordance with strict project guidelines, no balancing logic was changed wit
 
 ## 5. Automated Test Suite & Reliability
 
-All 117 automated tests were executed consecutively 5 times on an isolated in-memory database:
+All 118 automated tests were executed consecutively 5 times on an isolated in-memory database:
 
 ```text
 === RUN 1/5 ===
-Run 1: PASS = 117, FAIL = 0
+Run 1: PASS = 118, FAIL = 0
 === RUN 2/5 ===
-Run 2: PASS = 117, FAIL = 0
+Run 2: PASS = 118, FAIL = 0
 === RUN 3/5 ===
-Run 3: PASS = 117, FAIL = 0
+Run 3: PASS = 118, FAIL = 0
 === RUN 4/5 ===
-Run 4: PASS = 117, FAIL = 0
+Run 4: PASS = 118, FAIL = 0
 === RUN 5/5 ===
-Run 5: PASS = 117, FAIL = 0
+Run 5: PASS = 118, FAIL = 0
 ALL 5 RUNS COMPLETED SUCCESSFULLY WITH 100% PASS RATE!
 ```
 
@@ -161,9 +161,10 @@ ALL 5 RUNS COMPLETED SUCCESSFULLY WITH 100% PASS RATE!
    - Verifies 50% loot item survival and transfer without item duplication or orphans.
    - Verifies `/game/fallen` memorial screen renders authentic fallen details.
 2. `tests/session_hardening_and_fixes.test.js`:
-   - H1: Concurrent persistent monster combat resolution without duplication.
-   - H2: Persistent monster full boosted max HP reset on new encounter.
+   - H1: Concurrent persistent monster combat resolution without duplication, explicit message to second hero, and simultaneous killing blow race conditions.
+   - H2: Persistent monster full boosted max HP reset on new encounter after flee/damage.
    - H4: Pure d20 initiative without hidden bias.
+   - M1: HTTP integration test verifying UI Armor Class and active weapon match `combatState` across flying monsters, shield suppression, and Cleric Holy Radiance.
    - M2: Weapon-specific narrative descriptions and grammar checks.
    - M6: Backpack 50-item cap and 2-Club free limit.
    - M7: Blocked access to dev inspection pages in non-development mode.
