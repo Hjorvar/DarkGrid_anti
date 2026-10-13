@@ -17,452 +17,590 @@
   const safeShopStock = (typeof shopStock !== 'undefined') ? shopStock : null;
   const safeIsRangedActive = (typeof isRangedActive !== 'undefined') ? Boolean(isRangedActive) : false;
   const safeActiveWeapon = (typeof activeWeapon !== 'undefined') ? activeWeapon : null;
+  const safeActiveModal = (typeof activeModal !== 'undefined') ? activeModal : null;
+  const safeJournal = (typeof journalEncounters !== 'undefined' && Array.isArray(journalEncounters)) ? journalEncounters : [];
+
+  const isRevealed = Boolean(encounter && encounter.status === 'IN_COMBAT');
+  const cleanMonsterName = isRevealed ? (encounter.monster_name || '').replace(/\[.*?\]/g, '').trim() : '';
+  const cleanSlug = isRevealed ? (encounter.imageSlug || cleanMonsterName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')) : '';
+  const monsterImgUrl = isRevealed ? (encounter.imageUrl || ('/images/monsters/' + cleanSlug + '.png')) : null;
+
+  const isTwoHandedMeleeActive = !safeIsRangedActive && Boolean(safeEquipment.meleeWeapon && (Number(safeEquipment.meleeWeapon.is_two_handed) === 1 || safeEquipment.meleeWeapon.is_two_handed === true));
+  const hpPercent = Math.min(100, Math.max(0, Math.round((character.current_hp / character.max_hp) * 100)));
+  const backpackGear = safeInventory.filter(item => !item.equipped_slot && item.category !== 'POTION');
+  const backpackItems = backpackGear;
+  const isEquipLocked = Boolean(encounter && encounter.status === 'IN_COMBAT');
 %>
 
-<div class="game-viewport">
-  <!-- Feedback alerts -->
-  <% if (errorMessage) { %>
-    <div class="alert alert-error">
-      <span class="alert-icon">⚠️</span>
-      <span><%= errorMessage %></span>
-    </div>
-  <% } %>
-  <% if (infoMessage) { %>
-    <div class="alert alert-info">
-      <span class="alert-icon">🕯️</span>
-      <span><%= infoMessage %></span>
-    </div>
-  <% } %>
+<div class="game-viewport dashboard-viewport">
+  <div class="game-dashboard">
+    <!-- ===================================================================
+         LEFT COLUMN — World & Navigation
+         =================================================================== -->
+    <div class="dashboard-col col-left">
+      <div class="dashboard-card world-nav-card">
+        <div class="panel-header">
+          <span class="panel-title">Minimap (5×5)</span>
+          <span class="panel-coords">Coordinates: [X: <%= currentTile.x %>, Y: <%= currentTile.y %>]</span>
+        </div>
 
-  <!-- Top Area Header -->
-  <div class="area-header-card">
-    <div class="area-title-group">
-      <h1><%= currentTile.name %></h1>
-      <div class="area-meta-badges">
-        <span class="badge badge-terrain"><%= currentTile.terrain %></span>
-        <% if (currentTile.is_safe === 1) { %>
-          <span class="badge badge-safe">Safe Haven (Peaceful)</span>
-        <% } else { %>
-          <span class="badge badge-danger">Unexplored Wilderness</span>
-        <% } %>
-        <% if (currentTile.feature) { %>
-          <span class="badge badge-feature"><%= currentTile.feature %></span>
-        <% } %>
-      </div>
-    </div>
-    <div class="area-coords">
-      Coordinates: [X: <%= currentTile.x %>, Y: <%= currentTile.y %>]
-    </div>
-  </div>
-
-  <!-- Main Game Layout -->
-  <div class="game-grid">
-    <!-- Left Column: Story, Encounter, Actions -->
-    <div class="story-panel">
-      <!-- Tile Narrative -->
-      <div class="tile-narrative">
-        <div class="narrative-quote-icon">“</div>
-        <div class="narrative-body"><%= currentTile.description %></div>
-      </div>
-
-      <!-- Active Encounter Section (if any) -->
-      <% if (encounter) { %>
-        <% 
-          const isRevealed = (encounter.status === 'IN_COMBAT');
-          const cleanMonsterName = isRevealed ? (encounter.monster_name || '').replace(/\[.*?\]/g, '').trim() : '';
-          const cleanSlug = isRevealed ? (encounter.imageSlug || cleanMonsterName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')) : '';
-          const monsterImgUrl = isRevealed ? (encounter.imageUrl || ('/images/monsters/' + cleanSlug + '.png')) : null;
-        %>
-        <div class="encounter-card <%= isRevealed ? 'in-combat' : 'is-hidden-threat' %>">
-          <div class="encounter-content-layout">
-            <!-- Monster Artwork Frame -->
-            <div class="monster-art-container">
-              <div class="monster-art-frame <%= !isRevealed ? 'mystery-art-frame' : '' %>">
-                <% if (!isRevealed) { %>
-                  <!-- Stage 1: Unknown Threat (All identifying details hidden) -->
-                  <div class="mystery-placeholder">
-                    <div class="mystery-fog-overlay"></div>
-                    <div class="placeholder-rune mystery-rune">ᚦ</div>
-                    <div class="mystery-symbol">?</div>
-                    <div class="placeholder-label">Unknown Threat</div>
-                    <div class="placeholder-sublabel">Shadows and rustling in the dark</div>
+        <!-- 5x5 Minimap Grid -->
+        <div class="minimap-container">
+          <div class="minimap-grid">
+            <% minimap.rows.forEach(function(row) { %>
+              <div class="minimap-row">
+                <% row.forEach(function(cell) { %>
+                  <div class="minimap-cell <%= cell.isPlayer ? 'is-player' : '' %> <%= !cell.isPassable ? 'impassable' : '' %>"
+                       style="color: <%= cell.color %>;"
+                       title="<%= cell.label %> [<%= cell.x %>, <%= cell.y %>]">
+                    <%= cell.symbol %>
                   </div>
-                <% } else { %>
-                  <!-- Stage 2: Revealed Monster -->
-                  <% if (monsterImgUrl) { %>
-                    <img src="<%= monsterImgUrl %>" alt="<%= cleanMonsterName %>" class="monster-art-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="monster-placeholder" style="display: none;">
-                      <div class="placeholder-rune">ᚱ</div>
-                      <div class="placeholder-symbol" style="color: <%= encounter.monster_color || 'var(--accent-gold)' %>;">
-                        <%= encounter.monster_symbol %>
+                <% }); %>
+              </div>
+            <% }); %>
+          </div>
+
+          <div class="minimap-legend">
+            <span><strong>@</strong> Hero</span>
+            <span><strong>🏰</strong> City</span>
+            <span><strong>🌲</strong> Forest</span>
+            <span><strong>🌫️</strong> Swamp</span>
+            <span><strong>🌴</strong> Jungle</span>
+            <span><strong>🌾</strong> Plains</span>
+          </div>
+        </div>
+
+        <!-- Movement Compass -->
+        <div class="compass-section">
+          <div class="compass-title-bar">Navigation (Movement)</div>
+          <% if (encounter && encounter.status === 'DISCOVERED') { %>
+            <div class="encounter-lock-banner">
+              ⚠️ Path blocked: Investigate or bypass
+            </div>
+          <% } else if (encounter && encounter.status === 'IN_COMBAT') { %>
+            <div class="encounter-lock-banner">
+              ⚠️ Combat active: Fight or flee
+            </div>
+          <% } %>
+
+          <div class="compass-rose-container">
+            <div class="compass-grid">
+              <!-- North -->
+              <form action="/game/move" method="POST" class="compass-north">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                <input type="hidden" name="direction" value="NORTH">
+                <button type="submit" class="compass-btn" 
+                  <%= (!directions.NORTH.available || encounter) ? 'disabled' : '' %>
+                  title="<%= directions.NORTH.available ? directions.NORTH.tileName : directions.NORTH.reason %>">
+                  <span class="compass-arrow">▲</span>
+                  <span class="compass-dir-name">North</span>
+                </button>
+              </form>
+
+              <!-- West -->
+              <form action="/game/move" method="POST" class="compass-west">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                <input type="hidden" name="direction" value="WEST">
+                <button type="submit" class="compass-btn" 
+                  <%= (!directions.WEST.available || encounter) ? 'disabled' : '' %>
+                  title="<%= directions.WEST.available ? directions.WEST.tileName : directions.WEST.reason %>">
+                  <span class="compass-arrow">◀</span>
+                  <span class="compass-dir-name">West</span>
+                </button>
+              </form>
+
+              <!-- Center marker -->
+              <div class="compass-center" title="Current Location: <%= currentTile.name %>">
+                <span class="compass-rose-glyph">✦</span>
+              </div>
+
+              <!-- East -->
+              <form action="/game/move" method="POST" class="compass-east">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                <input type="hidden" name="direction" value="EAST">
+                <button type="submit" class="compass-btn" 
+                  <%= (!directions.EAST.available || encounter) ? 'disabled' : '' %>
+                  title="<%= directions.EAST.available ? directions.EAST.tileName : directions.EAST.reason %>">
+                  <span class="compass-arrow">▶</span>
+                  <span class="compass-dir-name">East</span>
+                </button>
+              </form>
+
+              <!-- South -->
+              <form action="/game/move" method="POST" class="compass-south">
+                <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                <input type="hidden" name="direction" value="SOUTH">
+                <button type="submit" class="compass-btn" 
+                  <%= (!directions.SOUTH.available || encounter) ? 'disabled' : '' %>
+                  title="<%= directions.SOUTH.available ? directions.SOUTH.tileName : directions.SOUTH.reason %>">
+                  <span class="compass-arrow">▼</span>
+                  <span class="compass-dir-name">South</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================================
+         CENTER COLUMN — Main Gameplay
+         =================================================================== -->
+    <div class="dashboard-col col-center">
+      <div class="dashboard-card gameplay-card">
+        <!-- Area Header Banner -->
+        <div class="area-header-strip">
+          <div class="area-name-group">
+            <h1 class="area-title"><%= currentTile.name %></h1>
+            <div class="area-badges">
+              <span class="badge badge-terrain"><%= currentTile.terrain %></span>
+              <% if (currentTile.is_safe === 1) { %>
+                <span class="badge badge-safe">Safe Haven (Peaceful)</span>
+              <% } else { %>
+                <span class="badge badge-danger">Unexplored Wilderness</span>
+              <% } %>
+              <% if (currentTile.feature) { %>
+                <span class="badge badge-feature"><%= currentTile.feature %></span>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feedback Alerts -->
+        <% if (errorMessage) { %>
+          <div class="alert alert-error" role="alert">
+            <span class="alert-icon">⚠️</span>
+            <span><%= errorMessage %></span>
+          </div>
+        <% } %>
+        <% if (infoMessage) { %>
+          <div class="alert alert-info" role="status">
+            <span class="alert-icon">🕯️</span>
+            <span><%= infoMessage %></span>
+          </div>
+        <% } %>
+
+        <!-- Dynamic Gameplay Content by State -->
+        <div class="gameplay-content-area">
+          <% if (encounter && encounter.status === 'IN_COMBAT') { %>
+            <!-- -------------------------------------------------------------
+                 STATE 1: ACTIVE COMBAT (Stage 2: Revealed Threat)
+                 ------------------------------------------------------------- -->
+            <div class="encounter-panel in-combat">
+              <div class="encounter-header">
+                <div class="encounter-title">
+                  <span class="encounter-symbol-badge" style="color: <%= encounter.monster_color || 'var(--accent-crimson)' %>;">
+                    [<%= encounter.monster_symbol %>]
+                  </span>
+                  <span>Revealed Threat: <strong><%= cleanMonsterName %></strong></span>
+                </div>
+                <% if (encounter.isRangerSpecial) { %>
+                  <span class="ranger-badge">🏹 Ranger at close quarters</span>
+                <% } %>
+              </div>
+
+              <div class="combat-middle-layout">
+                <!-- Monster Artwork -->
+                <div class="monster-art-container">
+                  <div class="monster-art-frame">
+                    <% if (monsterImgUrl) { %>
+                      <img src="<%= monsterImgUrl %>" alt="<%= cleanMonsterName %>" class="monster-art-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                      <div class="monster-placeholder" style="display: none;">
+                        <div class="placeholder-rune">ᚱ</div>
+                        <div class="placeholder-symbol" style="color: <%= encounter.monster_color || 'var(--accent-gold)' %>;">
+                          <%= encounter.monster_symbol %>
+                        </div>
+                        <div class="placeholder-label"><%= cleanMonsterName %></div>
+                        <div class="placeholder-sublabel">Revealed Threat</div>
                       </div>
-                      <div class="placeholder-label"><%= cleanMonsterName %></div>
-                      <div class="placeholder-sublabel">Revealed Threat</div>
-                    </div>
-                  <% } else { %>
-                    <div class="monster-placeholder">
-                      <div class="placeholder-rune">ᚱ</div>
-                      <div class="placeholder-symbol" style="color: <%= encounter.monster_color || 'var(--accent-gold)' %>;">
-                        <%= encounter.monster_symbol %>
+                    <% } else { %>
+                      <div class="monster-placeholder">
+                        <div class="placeholder-rune">ᚱ</div>
+                        <div class="placeholder-symbol" style="color: <%= encounter.monster_color || 'var(--accent-gold)' %>;">
+                          <%= encounter.monster_symbol %>
+                        </div>
+                        <div class="placeholder-label"><%= cleanMonsterName %></div>
+                        <div class="placeholder-sublabel">Revealed Threat</div>
                       </div>
-                      <div class="placeholder-label"><%= cleanMonsterName %></div>
-                      <div class="placeholder-sublabel">Revealed Threat</div>
+                    <% } %>
+                    <div class="monster-art-vignette"></div>
+                  </div>
+                </div>
+
+                <!-- Monster Condition & Combat Log -->
+                <div class="combat-intel-column">
+                  <% if (safeCombatState && safeCombatState.currentConditionText) { %>
+                    <div class="monster-condition-box">
+                      “<%= safeCombatState.currentConditionText %>”
                     </div>
                   <% } %>
-                <% } %>
-                <div class="monster-art-vignette"></div>
+
+                  <div class="combat-log-container">
+                    <div class="combat-log-header">
+                      Battle Record (Round <%= encounter.combat_round || 1 %>)
+                    </div>
+                    <div class="combat-log-scroll">
+                      <%
+                        // Filter out CONDITION events to prevent repeating the condition quote directly below itself
+                        const actionEvents = (safeCombatState && safeCombatState.events)
+                          ? safeCombatState.events.filter(ev => ev.event_type !== 'CONDITION')
+                          : [];
+                      %>
+                      <% if (actionEvents.length > 0) { %>
+                        <% actionEvents.slice(-6).forEach(function(ev) { %>
+                          <div class="combat-event-row <%= (ev.event_type || '').toLowerCase() %>">
+                            <% if (ev.event_type === 'OPENING_SHOT') { %>🏹 <% } %>
+                            <% if (ev.event_type === 'HERO_ATTACK') { %>⚔️ <% } %>
+                            <% if (ev.event_type === 'MONSTER_ATTACK') { %>🩸 <% } %>
+                            <% if (ev.event_type === 'POTION_USED') { %>🧪 <% } %>
+                            <% if (ev.event_type === 'FLEE') { %>🏃 <% } %>
+                            <% if (ev.event_type === 'MONSTER_CONDITION') { %>⚠️ <% } %>
+                            <span><%= ev.public_text %></span>
+                          </div>
+                        <% }); %>
+                      <% } else { %>
+                        <div class="combat-event-row empty-log">Battle joined. Select your combat action below.</div>
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Bar (Never requires scrolling) -->
+              <div class="combat-actions-bar">
+                <!-- Attack -->
+                <form action="/game/combat/attack" method="POST" class="combat-action-form form-attack">
+                  <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                  <input type="hidden" name="encounterId" value="<%= encounter.id %>">
+                  <input type="hidden" name="round" value="<%= encounter.combat_round || 1 %>">
+                  <button type="submit" class="btn btn-attack">
+                    ⚔️ Attack
+                  </button>
+                </form>
+
+                <!-- Drink Potion -->
+                <form action="/game/combat/potion" method="POST" class="combat-action-form form-potion">
+                  <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                  <input type="hidden" name="encounterId" value="<%= encounter.id %>">
+                  <input type="hidden" name="round" value="<%= encounter.combat_round || 1 %>">
+                  <% if (safePotions && safePotions.length > 0) { %>
+                    <div class="potion-input-group">
+                      <select name="potionInstanceId" class="form-control potion-select" aria-label="Select healing potion">
+                        <% safePotions.forEach((p, idx) => { %>
+                          <option value="<%= p.id %>" <%= idx === 0 ? 'selected' : '' %>>
+                            <%= p.displayName || (p.name + ' (' + (p.healEffect || '1d8+1') + ')') %>
+                          </option>
+                        <% }); %>
+                      </select>
+                      <button type="submit" class="btn btn-secondary potion-btn">
+                        🧪 Drink Potion (<%= safePotionCount %>)
+                      </button>
+                    </div>
+                  <% } else { %>
+                    <div class="potion-input-group">
+                      <select disabled class="form-control potion-select" aria-label="No potions available">
+                        <option>No Potions Available</option>
+                      </select>
+                      <button type="submit" class="btn btn-secondary potion-btn" disabled>
+                        🧪 Drink Potion (0)
+                      </button>
+                    </div>
+                  <% } %>
+                </form>
+
+                <!-- Flee -->
+                <form action="/game/combat/flee" method="POST" class="combat-action-form form-flee" onsubmit="return confirm('Fleeing triggers a free Attack of Opportunity from the monster. Are you certain you wish to flee?');">
+                  <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                  <input type="hidden" name="encounterId" value="<%= encounter.id %>">
+                  <input type="hidden" name="round" value="<%= encounter.combat_round || 1 %>">
+                  <button type="submit" class="btn btn-secondary flee-btn">
+                    🏃 Flee
+                  </button>
+                </form>
               </div>
             </div>
 
-            <!-- Monster Lore & Actions -->
-            <div class="encounter-details">
+          <% } else if (encounter && encounter.status === 'DISCOVERED') { %>
+            <!-- -------------------------------------------------------------
+                 STATE 2: DISCOVERED ENCOUNTER (Stage 1: Unknown Threat)
+                 ------------------------------------------------------------- -->
+            <div class="encounter-panel is-hidden-threat">
               <div class="encounter-header">
                 <div class="encounter-title">
-                  <% if (!isRevealed) { %>
-                    <span class="encounter-symbol-badge mystery-badge">[?]</span>
-                    <span>Unknown Threat: <em>Obscure shape in the shadows</em></span>
-                  <% } else { %>
-                    <span class="encounter-symbol-badge" style="color: <%= encounter.monster_color || 'var(--accent-crimson)' %>;">
-                      [<%= encounter.monster_symbol %>]
-                    </span>
-                    <span>Revealed Threat: <strong><%= cleanMonsterName %></strong></span>
-                  <% } %>
+                  <span class="encounter-symbol-badge mystery-badge">[?]</span>
+                  <span>Unknown Threat: <em>Obscure shape in the shadows</em></span>
                 </div>
-
                 <% if (encounter.isRangerSpecial) { %>
-                  <% if (!isRevealed) { %>
-                    <span class="ranger-badge">🏹 Ranger perceives a clue</span>
-                  <% } else { %>
-                    <span class="ranger-badge">🏹 Ranger at close quarters</span>
-                  <% } %>
+                  <span class="ranger-badge">🏹 Ranger perceives a clue</span>
                 <% } %>
               </div>
 
-              <p class="encounter-text">
-                <%= encounter.resolvedDescription %>
-              </p>
-
-              <% if (!isRevealed) { %>
-                <!-- Stage 1 Actions: Player decides to Investigate or Ignore -->
-                <% if (encounter && encounter.isAmbush) { %>
-                  <div style="margin: 8px 0; padding: 6px 10px; background: rgba(120, 20, 20, 0.4); border-left: 3px solid var(--accent-crimson); font-size: 0.85rem; color: #ff9999; border-radius: 4px;">
-                    ⚠️ <strong>Ambush!</strong> The creature lunged from hiding before you could spot it or draw a bead!
-                  </div>
-                <% } %>
-                <div class="encounter-actions">
-                  <form action="/game/encounter/investigate" method="POST">
-                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                    <input type="hidden" name="encounterId" value="<%= encounter.id %>">
-                    <button type="submit" class="btn btn-primary">
-                      Advance & Investigate
-                    </button>
-                  </form>
-
-                  <form action="/game/encounter/ignore" method="POST">
-                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                    <input type="hidden" name="encounterId" value="<%= encounter.id %>">
-                    <button type="submit" class="btn btn-secondary">
-                      Bypass & Ignore
-                    </button>
-                  </form>
-                </div>
-              <% } else { %>
-                <!-- Stage 2 Combat Interface: Turn-Based Actions & Combat Log -->
-                <% if (safeCombatState && safeCombatState.currentConditionText) { %>
-                  <div class="monster-condition-box" style="margin: 12px 0; padding: 10px 14px; background: rgba(35, 20, 20, 0.7); border-left: 3px solid var(--accent-gold); font-style: italic; color: #ddd; font-size: 0.95rem; border-radius: 4px;">
-                    “<%= safeCombatState.currentConditionText %>”
-                  </div>
-                <% } %>
-
-                <% if (safeCombatState && safeCombatState.events && safeCombatState.events.length > 0) { %>
-                  <div class="combat-log-container" style="margin: 14px 0; padding: 12px; background: rgba(10, 10, 15, 0.85); border: 1px solid var(--border-dark); border-radius: 6px; max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
-                    <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-gold); border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 4px;">
-                      Battle Record (Round <%= encounter.combat_round || 1 %>)
+              <div class="encounter-content-layout">
+                <div class="monster-art-container">
+                  <div class="monster-art-frame mystery-art-frame">
+                    <div class="mystery-placeholder">
+                      <div class="mystery-fog-overlay"></div>
+                      <div class="placeholder-rune mystery-rune">ᚦ</div>
+                      <div class="mystery-symbol">?</div>
+                      <div class="placeholder-label">Unknown Threat</div>
+                      <div class="placeholder-sublabel">Shadows and rustling in the dark</div>
                     </div>
-                    <% safeCombatState.events.slice(-6).forEach(function(ev) { %>
-                      <div class="combat-event-row" style="font-size: 0.9rem; line-height: 1.4; color: <%= ev.event_type === 'DEATH' ? 'var(--accent-crimson)' : (ev.event_type === 'VICTORY' ? 'var(--accent-gold)' : (ev.event_type === 'HERO_ATTACK' || ev.event_type === 'OPENING_SHOT' ? '#7cc' : (ev.event_type === 'MONSTER_ATTACK' ? '#e88' : '#bbb'))) %>;">
-                        <% if (ev.event_type === 'OPENING_SHOT') { %>🏹 <% } %>
-                        <% if (ev.event_type === 'HERO_ATTACK') { %>⚔️ <% } %>
-                        <% if (ev.event_type === 'MONSTER_ATTACK') { %>🩸 <% } %>
-                        <% if (ev.event_type === 'POTION_USED') { %>🧪 <% } %>
-                        <% if (ev.event_type === 'FLEE') { %>🏃 <% } %>
-                        <% if (ev.event_type === 'MONSTER_CONDITION') { %>⚠️ <% } %>
-                        <span><%= ev.public_text %></span>
-                      </div>
-                    <% }); %>
+                    <div class="monster-art-vignette"></div>
                   </div>
+                </div>
+
+                <div class="encounter-details-column">
+                  <% if (encounter.isAmbush) { %>
+                    <div class="ambush-banner">
+                      ⚠️ <strong>Ambush!</strong> The creature lunged from hiding before you could spot it or draw a bead!
+                    </div>
+                  <% } %>
+
+                  <p class="encounter-text">
+                    <%= encounter.resolvedDescription %>
+                  </p>
+
+                  <div class="encounter-actions-bar">
+                    <form action="/game/encounter/investigate" method="POST">
+                      <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                      <input type="hidden" name="encounterId" value="<%= encounter.id %>">
+                      <button type="submit" class="btn btn-primary">
+                        Advance & Investigate
+                      </button>
+                    </form>
+
+                    <form action="/game/encounter/ignore" method="POST">
+                      <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                      <input type="hidden" name="encounterId" value="<%= encounter.id %>">
+                      <button type="submit" class="btn btn-secondary">
+                        Bypass & Ignore
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          <% } else if (safeIsSafeCity) { %>
+            <!-- -------------------------------------------------------------
+                 STATE 3: CITY (Safe Haven)
+                 ------------------------------------------------------------- -->
+            <div class="peaceful-panel city-panel">
+              <div class="tile-narrative">
+                <div class="narrative-quote-icon">“</div>
+                <div class="narrative-body"><%= currentTile.description %></div>
+              </div>
+
+              <div class="peaceful-status-card city-card">
+                <div class="peaceful-card-title">🛡️ Safe Haven Sanctuary</div>
+                <p class="peaceful-card-text">
+                  The gates of <%= currentTile.name %> stand shut against the horrors of the wild. You may rest safely in the sanctuary or trade equipment with the town merchants.
+                </p>
+              </div>
+
+              <div class="peaceful-actions-grid">
+                <form action="/game/rest" method="POST" style="flex: 1; min-width: 200px;">
+                  <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                  <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    🛌 Rest at Sanctuary (Full Heal & Ability Recharge)
+                  </button>
+                </form>
+
+                <% if (safeShopStock) { %>
+                  <button type="button" class="btn btn-secondary" onclick="openGameModal('market')" style="flex: 1; min-width: 180px;">
+                    🛒 Town Market & Supplies
+                  </button>
                 <% } %>
 
-                <div class="encounter-actions combat-actions-grid" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px;">
-                  <!-- Action 1: Attack -->
-                  <form action="/game/combat/attack" method="POST" style="flex: 1; min-width: 130px;">
+                <% if (safeClericHealInfo) { %>
+                  <form action="/game/cleric/heal" method="POST" style="flex: 1; min-width: 180px;">
                     <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                    <input type="hidden" name="encounterId" value="<%= encounter.id %>">
-                    <input type="hidden" name="round" value="<%= encounter.combat_round || 1 %>">
-                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; font-weight: bold; background: #881a1a; border-color: #a82020;">
-                      ⚔️ Attack
+                    <button type="submit" class="btn btn-secondary" style="width: 100%; border-color: var(--accent-gold);" <%= (safeClericHealInfo.remainingUses <= 0 || character.current_hp >= character.max_hp) ? 'disabled' : '' %>>
+                      ✨ Channel Divine Healing (<%= safeClericHealInfo.remainingUses %>/<%= safeClericHealInfo.maxUses %> uses)
                     </button>
                   </form>
+                <% } %>
+              </div>
+            </div>
 
-                  <!-- Action 2: Drink Potion -->
-                  <form action="/game/combat/potion" method="POST" style="flex: 1.3; min-width: 220px;">
-                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                    <input type="hidden" name="encounterId" value="<%= encounter.id %>">
-                    <input type="hidden" name="round" value="<%= encounter.combat_round || 1 %>">
-                    <% if (safePotions && safePotions.length > 0) { %>
-                      <div style="display: flex; gap: 6px; width: 100%;">
-                        <select name="potionInstanceId" class="form-control" style="flex: 1; min-width: 140px; padding: 6px 8px; font-size: 0.82rem; background: #16181f; color: #ddd; border: 1px solid var(--border-dark); border-radius: 4px;">
-                          <% safePotions.forEach((p, idx) => { %>
-                            <option value="<%= p.id %>" <%= idx === 0 ? 'selected' : '' %>>
-                              <%= p.displayName || (p.name + ' (' + (p.healEffect || '1d8+1') + ')') %>
-                            </option>
-                          <% }); %>
-                        </select>
-                        <button type="submit" class="btn btn-secondary" style="white-space: nowrap; justify-content: center; padding: 6px 12px;">
-                          🧪 Drink Potion (<%= safePotionCount %>)
-                        </button>
-                      </div>
-                    <% } else { %>
-                      <div style="display: flex; gap: 6px; width: 100%;">
-                        <select disabled class="form-control" style="flex: 1; min-width: 140px; padding: 6px 8px; font-size: 0.82rem; background: #121318; color: #666; border: 1px solid var(--border-dark); border-radius: 4px;">
-                          <option>No Potions Available</option>
-                        </select>
-                        <button type="submit" class="btn btn-secondary" disabled style="white-space: nowrap; justify-content: center; padding: 6px 12px; opacity: 0.5;">
-                          🧪 Drink Potion (0)
-                        </button>
-                      </div>
-                    <% } %>
-                  </form>
+          <% } else if (currentTile.is_safe === 1) { %>
+            <!-- -------------------------------------------------------------
+                 STATE 3b: SAFE HAVEN PERIMETER / TOWN GATES
+                 ------------------------------------------------------------- -->
+            <div class="peaceful-panel gate-panel">
+              <div class="tile-narrative">
+                <div class="narrative-quote-icon">“</div>
+                <div class="narrative-body"><%= currentTile.description %></div>
+              </div>
 
-                  <!-- Action 3: Flee -->
-                  <form action="/game/combat/flee" method="POST" style="flex: 1; min-width: 110px;" onsubmit="return confirm('Fleeing triggers a free Attack of Opportunity from the monster. Are you certain you wish to flee?');">
+              <div class="peaceful-status-card gate-card">
+                <div class="peaceful-card-title">🛡️ Guarded Town Perimeter</div>
+                <p class="peaceful-card-text">
+                  You stand within the fortified perimeter of <%= currentTile.name %>. Watchmen patrol the palisades, keeping predatory beasts at bay. Travel into the city to trade and rest, or venture beyond the gates to explore the wild realm.
+                </p>
+              </div>
+
+              <% if (safeClericHealInfo) { %>
+                <div class="peaceful-actions-grid" style="margin-top: 10px;">
+                  <form action="/game/cleric/heal" method="POST" style="flex: 1;">
                     <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                    <input type="hidden" name="encounterId" value="<%= encounter.id %>">
-                    <input type="hidden" name="round" value="<%= encounter.combat_round || 1 %>">
-                    <button type="submit" class="btn btn-secondary" style="width: 100%; justify-content: center; border-color: #555;">
-                      🏃 Flee
+                    <button type="submit" class="btn btn-secondary" style="width: 100%; border-color: var(--accent-gold);" <%= (safeClericHealInfo.remainingUses <= 0 || character.current_hp >= character.max_hp) ? 'disabled' : '' %>>
+                      ✨ Channel Divine Healing (<%= safeClericHealInfo.remainingUses %>/<%= safeClericHealInfo.maxUses %> uses • <%= safeClericHealInfo.diceCount %>d6+WIS)
                     </button>
                   </form>
                 </div>
               <% } %>
             </div>
-          </div>
-        </div>
-      <% } %>
 
-      <!-- Movement Compass Controls -->
-      <div class="movement-section">
-        <h2 class="section-title">Navigation (Movement)</h2>
+          <% } else { %>
+            <!-- -------------------------------------------------------------
+                 STATE 4: EXPLORATION (Wilderness Peaceful)
+                 ------------------------------------------------------------- -->
+            <div class="peaceful-panel wilderness-panel">
+              <div class="tile-narrative">
+                <div class="narrative-quote-icon">“</div>
+                <div class="narrative-body"><%= currentTile.description %></div>
+              </div>
 
-        <% if (encounter && encounter.status === 'DISCOVERED') { %>
-          <div class="encounter-lock-banner">
-            ⚠️ You cannot move until you address the encounter (Investigate or Ignore).
-          </div>
-        <% } else if (encounter && encounter.status === 'IN_COMBAT') { %>
-          <div class="encounter-lock-banner">
-            ⚠️ You are in close quarters with the threat. Conclude combat or withdraw carefully.
-          </div>
-        <% } %>
+              <div class="peaceful-status-card wilderness-card">
+                <div class="peaceful-card-title">🌲 Unexplored Wilderness</div>
+                <p class="peaceful-card-text">
+                  The surrounding land lies quiet for now. Mist creeps through the undergrowth, yet no immediate threats have provoked battle. Choose a cardinal direction on the navigation compass to explore further into the realm.
+                </p>
+              </div>
 
-        <div class="compass-rose-container">
-          <div class="compass-grid">
-            <!-- North -->
-            <form action="/game/move" method="POST" class="compass-north">
+              <% if (safeClericHealInfo) { %>
+                <div class="peaceful-actions-grid" style="margin-top: 10px;">
+                  <form action="/game/cleric/heal" method="POST" style="flex: 1;">
                     <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-              <input type="hidden" name="direction" value="NORTH">
-              <button type="submit" class="compass-btn" 
-                <%= (!directions.NORTH.available || encounter) ? 'disabled' : '' %>
-                title="<%= directions.NORTH.available ? directions.NORTH.tileName : directions.NORTH.reason %>">
-              <span class="compass-arrow">▲</span>
-              <span class="compass-dir-name">North</span>
-              </button>
-            </form>
-
-            <!-- West -->
-            <form action="/game/move" method="POST" class="compass-west">
-                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-              <input type="hidden" name="direction" value="WEST">
-              <button type="submit" class="compass-btn" 
-                <%= (!directions.WEST.available || encounter) ? 'disabled' : '' %>
-                title="<%= directions.WEST.available ? directions.WEST.tileName : directions.WEST.reason %>">
-              <span class="compass-arrow">◀</span>
-              <span class="compass-dir-name">West</span>
-              </button>
-            </form>
-
-            <!-- Center marker -->
-            <div class="compass-center" title="Current Location">
-              <span class="compass-rose-glyph">✦</span>
+                    <button type="submit" class="btn btn-secondary" style="width: 100%; border-color: var(--accent-gold);" <%= (safeClericHealInfo.remainingUses <= 0 || character.current_hp >= character.max_hp) ? 'disabled' : '' %>>
+                      ✨ Channel Divine Healing (<%= safeClericHealInfo.remainingUses %>/<%= safeClericHealInfo.maxUses %> uses • <%= safeClericHealInfo.diceCount %>d6+WIS)
+                    </button>
+                  </form>
+                </div>
+              <% } %>
             </div>
-
-            <!-- East -->
-            <form action="/game/move" method="POST" class="compass-east">
-                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-              <input type="hidden" name="direction" value="EAST">
-              <button type="submit" class="compass-btn" 
-                <%= (!directions.EAST.available || encounter) ? 'disabled' : '' %>
-                title="<%= directions.EAST.available ? directions.EAST.tileName : directions.EAST.reason %>">
-              <span class="compass-arrow">▶</span>
-              <span class="compass-dir-name">East</span>
-              </button>
-            </form>
-
-            <!-- South -->
-            <form action="/game/move" method="POST" class="compass-south">
-                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-              <input type="hidden" name="direction" value="SOUTH">
-              <button type="submit" class="compass-btn" 
-                <%= (!directions.SOUTH.available || encounter) ? 'disabled' : '' %>
-                title="<%= directions.SOUTH.available ? directions.SOUTH.tileName : directions.SOUTH.reason %>">
-              <span class="compass-arrow">▼</span>
-              <span class="compass-dir-name">South</span>
-              </button>
-            </form>
-          </div>
+          <% } %>
         </div>
       </div>
     </div>
 
-    <!-- Right Column: Minimap & Hero Sheet -->
-    <div class="sidebar-panel">
-      <!-- 5x5 Minimap -->
-      <div class="minimap-card">
-        <h3 class="section-title">Minimap (5×5)</h3>
-        
-        <div class="minimap-grid">
-          <% minimap.rows.forEach(function(row) { %>
-            <div class="minimap-row">
-              <% row.forEach(function(cell) { %>
-                <div class="minimap-cell <%= cell.isPlayer ? 'is-player' : '' %> <%= !cell.isPassable ? 'impassable' : '' %>"
-                     style="color: <%= cell.color %>;"
-                     title="<%= cell.label %> [<%= cell.x %>, <%= cell.y %>]">
-                  <%= cell.symbol %>
-                </div>
-              <% }); %>
-            </div>
-          <% }); %>
-        </div>
-
-        <div class="minimap-legend">
-          <span><strong>@</strong> Hero</span>
-          <span><strong>🏰</strong> City</span>
-          <span><strong>🌲</strong> Forest</span>
-          <span><strong>🌫️</strong> Swamp</span>
-          <span><strong>🌴</strong> Jungle</span>
-          <span><strong>🌾</strong> Plains</span>
-        </div>
-      </div>
-
-      <!-- Character Status Sheet -->
-      <div class="character-sheet-card">
-        <div class="character-card-header">
+    <!-- ===================================================================
+         RIGHT COLUMN — Compact Hero Panel
+         =================================================================== -->
+    <div class="dashboard-col col-right">
+      <div class="dashboard-card hero-panel">
+        <div class="panel-header hero-header">
           <div>
             <div class="char-hero-name"><%= character.name %></div>
             <div class="char-hero-class"><%= character.class %> • Level <%= character.level %></div>
           </div>
         </div>
 
-        <div class="vitals-grid">
-          <div class="vital-box">
+        <div class="hero-vitals-section">
+          <!-- HP Gauge Bar -->
+          <div class="vital-box hp-box">
             <div class="vital-header-row">
               <div class="vital-label">Vitality (HP)</div>
               <div class="vital-value hp"><%= character.current_hp %> / <%= character.max_hp %></div>
             </div>
-            <% const hpPercent = Math.min(100, Math.max(0, Math.round((character.current_hp / character.max_hp) * 100))); %>
             <div class="vital-gauge-track" title="HP: <%= hpPercent %>%">
               <div class="vital-gauge-bar hp-fill <%= hpPercent <= 25 ? 'critical' : (hpPercent <= 50 ? 'wounded' : 'healthy') %>" style="width: <%= hpPercent %>%;"></div>
             </div>
           </div>
-          <div class="vital-box">
-            <div class="vital-header-row">
-              <div class="vital-label">Gold</div>
-              <div class="vital-value gold"><%= character.gold %> <span class="gold-unit">gp</span></div>
+
+          <!-- 2x2 Stats Grid -->
+          <div class="vitals-grid">
+            <!-- Armor Class -->
+            <div class="vital-box">
+              <div class="vital-header-row">
+                <div class="vital-label">Armor Class (AC)</div>
+                <div class="vital-value" style="color: var(--accent-gold);"><%= safeHeroAC %></div>
+              </div>
+              <div class="vital-gold-decor">⚔️ <%= safeMeleeAtk %> • 🏹 <%= safeRangedAtk %></div>
             </div>
-            <div class="vital-gold-decor">✦ Ancient coin in purse</div>
+
+            <!-- Gold -->
+            <div class="vital-box">
+              <div class="vital-header-row">
+                <div class="vital-label">Gold</div>
+                <div class="vital-value gold"><%= character.gold %> <span class="gold-unit">gp</span></div>
+              </div>
+              <div class="vital-gold-decor">✦ In purse</div>
+            </div>
+
+            <!-- Healing Potions -->
+            <div class="vital-box">
+              <div class="vital-header-row">
+                <div class="vital-label">Healing Potions</div>
+                <div class="vital-value" style="color: #7ce;"><%= safePotionCount %></div>
+              </div>
+              <div class="vital-gold-decor">🧪 In pack</div>
+            </div>
+
+            <!-- Progression (XP) -->
+            <div class="vital-box">
+              <div class="vital-header-row">
+                <div class="vital-label">Experience</div>
+                <div class="vital-value" style="color: var(--text-heading);"><%= character.xp %> <span class="gold-unit">xp</span></div>
+              </div>
+              <div class="vital-gold-decor"><span class="status-alive-badge">● Alive</span></div>
+            </div>
           </div>
         </div>
 
-        <div class="vitals-grid" style="margin-top: 8px; margin-bottom: 8px;">
-          <div class="vital-box">
-            <div class="vital-header-row">
-              <div class="vital-label">Healing Potions</div>
-              <div class="vital-value" style="color: #7ce;"><%= safePotionCount %></div>
-            </div>
-            <div class="vital-gold-decor">🧪 <%= safePotions.length > 0 ? (safePotions[0].name + (safePotions.length > 1 ? ' (+' + (safePotions.length - 1) + ' more)' : '')) : 'None in pack' %></div>
-          </div>
-          <div class="vital-box">
-            <div class="vital-header-row">
-              <div class="vital-label">Armor Class (AC)</div>
-              <div class="vital-value" style="color: var(--accent-gold);"><%= safeHeroAC %></div>
-            </div>
-            <div class="vital-gold-decor">⚔️ Melee <%= safeMeleeAtk %> • 🏹 Ranged <%= safeRangedAtk %></div>
-          </div>
+        <!-- Navigation Action Buttons (Modals) — Placed immediately below vitals for high accessibility -->
+        <div class="dashboard-menu-grid">
+          <button type="button" class="dashboard-menu-btn" onclick="openGameModal('character')" id="btn-open-character" aria-haspopup="dialog">
+            <span class="menu-btn-icon">👤</span>
+            <span class="menu-btn-label">Character</span>
+          </button>
+          <button type="button" class="dashboard-menu-btn" onclick="openGameModal('backpack')" id="btn-open-backpack" aria-haspopup="dialog">
+            <span class="menu-btn-icon">🎒</span>
+            <span class="menu-btn-label">Backpack (<%= backpackGear.length %>)</span>
+          </button>
+          <button type="button" class="dashboard-menu-btn <%= !safeIsSafeCity ? 'is-disabled' : '' %>" onclick="openGameModal('market')" id="btn-open-market" aria-haspopup="dialog" title="<%= safeIsSafeCity ? 'Open Town Market' : 'Available in Safe Haven cities' %>">
+            <span class="menu-btn-icon">🛒</span>
+            <span class="menu-btn-label">Market</span>
+          </button>
+          <button type="button" class="dashboard-menu-btn" onclick="openGameModal('journal')" id="btn-open-journal" aria-haspopup="dialog">
+            <span class="menu-btn-icon">📜</span>
+            <span class="menu-btn-label">Journal</span>
+          </button>
         </div>
 
-        <div class="vital-box" style="margin-bottom: 12px; padding: 8px 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim);">Prepared Gear</div>
-            <div style="font-size: 0.75rem; color: var(--accent-gold);">
-              Active: <%= safeIsRangedActive ? '🏹 Ranged' : '🗡️ Melee' %>
-            </div>
+        <!-- Active Weapon & Prepared Gear -->
+        <div class="prepared-gear-card">
+          <div class="gear-card-header">
+            <span class="gear-header-lbl">Prepared Gear</span>
+            <span class="gear-active-stance">Active: <%= safeIsRangedActive ? '🏹 Ranged' : '🗡️ Melee' %></span>
           </div>
-          <%
-            const isTwoHandedMeleeActive = !safeIsRangedActive && Boolean(safeEquipment.meleeWeapon && (Number(safeEquipment.meleeWeapon.is_two_handed) === 1 || safeEquipment.meleeWeapon.is_two_handed === true));
-          %>
-          <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; margin-bottom: 8px;">
+          <div class="gear-summary-lines">
             <div>🗡️ <strong>Melee:</strong> <%= (safeEquipment.meleeWeapon ? safeEquipment.meleeWeapon.name : (safeEquipment.weapon ? safeEquipment.weapon.name : 'Bare Hands')) %></div>
             <div>🏹 <strong>Ranged:</strong> <%= (safeEquipment.rangedWeapon ? safeEquipment.rangedWeapon.name : 'None') %></div>
             <div>🛡️ <strong>Protection:</strong> <%= (safeEquipment.armor ? safeEquipment.armor.name : 'Unarmored') %> <%= safeEquipment.shield ? ('+ ' + safeEquipment.shield.name) : '' %> <%= safeIsRangedActive && safeEquipment.shield ? '<span style="color: var(--text-dim); font-size: 0.75rem;">(Shield disabled with ranged)</span>' : (isTwoHandedMeleeActive && safeEquipment.shield ? '<span style="color: var(--text-dim); font-size: 0.75rem;">(Shield disabled with two-handed weapon)</span>' : '') %></div>
           </div>
-
-          <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 6px;">
-            <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px;">Primary Weapon Preference:</div>
-            <% const isInCombat = (encounter && encounter.status === 'IN_COMBAT'); %>
-            <div style="display: flex; gap: 6px;">
-              <form action="/game/character/primary-weapon" method="POST" style="flex: 1;">
-                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                <input type="hidden" name="primaryWeapon" value="MELEE">
-                <button type="submit" class="btn <%= (character.primary_weapon || 'MELEE') === 'MELEE' ? 'btn-primary' : 'btn-secondary' %>" style="width: 100%; font-size: 0.75rem; padding: 4px 6px;" <%= isInCombat ? 'disabled title="Cannot switch weapons in combat"' : '' %>>
-                  🗡️ Melee <%= (character.primary_weapon || 'MELEE') === 'MELEE' ? '✓' : '' %>
-                </button>
-              </form>
-              <form action="/game/character/primary-weapon" method="POST" style="flex: 1;">
-                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                <input type="hidden" name="primaryWeapon" value="RANGED">
-                <button type="submit" class="btn <%= character.primary_weapon === 'RANGED' ? 'btn-primary' : 'btn-secondary' %>" style="width: 100%; font-size: 0.75rem; padding: 4px 6px;" <%= isInCombat ? 'disabled title="Cannot switch weapons in combat"' : '' %>>
-                  🏹 Ranged <%= character.primary_weapon === 'RANGED' ? '✓' : '' %>
-                </button>
-              </form>
-            </div>
-            <% if (isInCombat) { %>
-              <div style="font-size: 0.7rem; color: #a88; margin-top: 3px; text-align: center;">Weapon preference locked in combat</div>
-            <% } %>
-          </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-        <% if (safeClericHealInfo && (!encounter || encounter.status !== 'IN_COMBAT')) { %>
-          <div style="margin-bottom: 10px;">
-            <form action="/game/cleric/heal" method="POST">
-                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-              <button type="submit" class="btn btn-secondary" style="width: 100%; border: 1px solid var(--accent-gold); font-size: 0.85rem;" <%= (safeClericHealInfo.remainingUses <= 0 || character.current_hp >= character.max_hp) ? 'disabled' : '' %>>
-                ✨ Channel Divine Healing (<%= safeClericHealInfo.remainingUses %>/<%= safeClericHealInfo.maxUses %> uses • <%= safeClericHealInfo.diceCount %>d6+WIS)
-              </button>
-            </form>
-          </div>
-        <% } %>
-
-        <% if (safeIsSafeCity && (!encounter || encounter.status !== 'IN_COMBAT')) { %>
-          <div style="margin-bottom: 10px;">
-            <form action="/game/rest" method="POST">
-                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-              <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 0.85rem;">
-                🛌 Rest at Sanctuary (Full Heal & Ability Recharge)
-              </button>
-            </form>
-          </div>
-        <% } %>
-
-        <!-- Ability Scores Table -->
+<!-- =====================================================================
+     MODAL / DRAWER SYSTEM
+     ===================================================================== -->
+<div class="game-modal-backdrop" id="game-modal-backdrop" <%= (safeActiveModal && ['character', 'backpack', 'market', 'journal'].includes(safeActiveModal)) ? '' : 'hidden' %> onclick="handleBackdropClick(event)">
+  <!-- -------------------------------------------------------------------
+       1. CHARACTER MODAL
+       ------------------------------------------------------------------- -->
+  <div class="game-modal-dialog" id="modal-character" role="dialog" aria-modal="true" aria-labelledby="modal-character-title" <%= safeActiveModal === 'character' ? '' : 'hidden' %>>
+    <div class="game-modal-header">
+      <h2 class="game-modal-title" id="modal-character-title">👤 Hero Record — <%= character.name %></h2>
+      <button type="button" class="game-modal-close" onclick="closeGameModal()" aria-label="Close dialog">✕</button>
+    </div>
+    <div class="game-modal-body">
+      <div class="modal-section-group">
+        <h3 class="modal-subheading">Attributes & d20 Modifiers</h3>
         <table class="stats-table">
           <thead>
             <tr>
@@ -504,186 +642,472 @@
             </tr>
           </tbody>
         </table>
+      </div>
 
-        <!-- Navigation Tabs for Inventory / Equipment / Shop -->
-        <div class="tabs-container">
-          <button type="button" class="tab-btn active" id="tab-btn-status" onclick="switchGameTab('status')">Status</button>
-          <% const backpackItems = safeInventory.filter(item => !item.equipped_slot); %>
-          <button type="button" class="tab-btn" id="tab-btn-inventory" onclick="switchGameTab('inventory')">Backpack (<%= backpackItems.length %>)</button>
-          <% if (safeIsSafeCity && safeShopStock) { %>
-            <button type="button" class="tab-btn" id="tab-btn-shop" onclick="switchGameTab('shop')">Town Market</button>
-          <% } %>
-        </div>
-
-        <!-- Tab Panel: Status -->
-        <div class="tab-content" id="tab-panel-status">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-            <span>XP: <strong><%= character.xp %></strong></span>
-            <span class="status-alive-badge">● Alive</span>
-          </div>
-          <% if (character.class === 'FIGHTER') { %>
-            <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;">
-              ⚔️ <strong>Fighter Disciplines:</strong> Weapon Training (all weapons) & Armor Training (higher DEX mobility).
-            </div>
-          <% } else if (character.class === 'RANGER') { %>
-            <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;">
-              🏹 <strong>Favored Enemy:</strong> <%= character.favored_enemy_type %><%= character.favored_enemy_subtype ? (' (' + character.favored_enemy_subtype + ')') : '' %> (+1 to +3 atk/dmg).
-            </div>
-          <% } else if (character.class === 'CLERIC') { %>
-            <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;">
-              ✨ <strong>Holy Radiance:</strong> Sacred aura against Undead (+2 to +4 atk, +3 to +5 dmg, +2 to +4 AC).
-            </div>
-          <% } %>
-        </div>
-
-        <!-- Tab Panel: Inventory & Equipment -->
-        <div class="tab-content" id="tab-panel-inventory" style="display: none;">
-          <div style="margin-bottom: 8px;">
-            <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-gold); margin-bottom: 4px;">Equipped Gear</div>
-            <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem;">
-              <% const isEquipLocked = (encounter && encounter.status === 'IN_COMBAT'); %>
-              <% const equippedItems = [safeEquipment.meleeWeapon, safeEquipment.rangedWeapon, safeEquipment.armor, safeEquipment.shield].filter(Boolean); %>
-              <% if (equippedItems.length === 0) { %>
-                <div style="color: var(--text-dim);">No gear equipped.</div>
-              <% } else { %>
-                <% equippedItems.forEach(item => { %>
-                  <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 4px 6px; border-radius: 4px;">
-                    <span><strong>[<%= item.equipped_slot %>]</strong> <%= item.name %> <%= item.is_magical ? '✨' : '' %></span>
-                    <form action="/game/inventory/unequip" method="POST" style="margin: 0;">
-                      <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                      <input type="hidden" name="itemInstanceId" value="<%= item.id || item.instance_id %>">
-                      <button type="submit" class="btn btn-subtle" style="padding: 2px 6px; font-size: 0.75rem;" <%= isEquipLocked ? 'disabled title="Cannot change gear during combat"' : '' %>>Unequip</button>
-                    </form>
-                  </div>
-                <% }); %>
-              <% } %>
-            </div>
-          </div>
-
-          <div style="margin-top: 8px;">
-            <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-gold); margin-bottom: 4px;">Backpack Items</div>
-            <% if (backpackItems.length === 0) { %>
-              <div style="color: var(--text-dim); font-size: 0.8rem;">Your backpack is empty.</div>
-            <% } else { %>
-              <div style="display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; font-size: 0.8rem;">
-                <% backpackItems.forEach(item => { %>
-                  <%
-                    let derivedSlot = '';
-                    if (item.category === 'WEAPON') {
-                      derivedSlot = item.weapon_range_type === 'RANGED' ? 'RANGED' : 'MELEE';
-                    } else if (item.category === 'ARMOR') {
-                      derivedSlot = 'ARMOR';
-                    } else if (item.category === 'SHIELD') {
-                      derivedSlot = 'SHIELD';
-                    }
-                  %>
-                  <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 4px;">
-                    <div>
-                      <div><%= item.name %> <%= item.is_magical ? '✨' : '' %></div>
-                      <div style="font-size: 0.7rem; color: var(--text-dim);"><%= item.category %> <%= item.damage_dice || '' %> <%= item.armor_bonus ? ('AC+' + item.armor_bonus) : '' %></div>
-                    </div>
-                    <% if (['WEAPON', 'ARMOR', 'SHIELD'].includes(item.category)) { %>
-                      <form action="/game/inventory/equip" method="POST" style="margin: 0;">
-                        <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                        <input type="hidden" name="itemInstanceId" value="<%= item.id %>">
-                        <input type="hidden" name="targetSlot" value="<%= derivedSlot %>">
-                        <button type="submit" class="btn btn-secondary" style="padding: 2px 6px; font-size: 0.75rem;" <%= isEquipLocked ? 'disabled title="Cannot change gear during combat"' : '' %>>Equip</button>
-                      </form>
-                    <% } %>
-                  </div>
-                <% }); %>
+      <div class="modal-section-group">
+        <h3 class="modal-subheading">Class Abilities & Specializations</h3>
+        <% if (character.class === 'FIGHTER') { %>
+          <div class="ability-card">
+            <div class="ability-title">⚔️ Fighter Disciplines</div>
+            <div class="ability-tier-row">
+              <span class="ability-badge-active">Active</span>
+              <div>
+                <strong>Martial Weapon Training:</strong> Mastery of all arms. Base combat progression (+<%= Math.max(0, character.level - 1) %> Attack).
               </div>
-            <% } %>
+            </div>
+            <div class="ability-tier-row">
+              <span class="ability-badge-active">Active</span>
+              <div>
+                <strong>Armor Proficiency:</strong> Trained in heavy plate and shields, sustaining defensive maneuverability.
+              </div>
+            </div>
+            <div class="ability-tier-row <%= character.level >= 3 ? '' : 'is-locked' %>">
+              <span class="<%= character.level >= 3 ? 'ability-badge-active' : 'ability-badge-locked' %>">
+                <%= character.level >= 3 ? 'Active' : 'Unlocks Lvl 3' %>
+              </span>
+              <div>
+                <strong>Armor Training I:</strong> +1 Maximum Dexterity bonus allowed by armor.
+              </div>
+            </div>
+            <div class="ability-tier-row <%= character.level >= 5 ? '' : 'is-locked' %>">
+              <span class="<%= character.level >= 5 ? 'ability-badge-active' : 'ability-badge-locked' %>">
+                <%= character.level >= 5 ? 'Active' : 'Unlocks Lvl 5' %>
+              </span>
+              <div>
+                <strong>Weapon Training I:</strong> +1 bonus to all attack and damage rolls with weaponry.
+              </div>
+            </div>
+            <div class="ability-tier-row <%= character.level >= 7 ? '' : 'is-locked' %>">
+              <span class="<%= character.level >= 7 ? 'ability-badge-active' : 'ability-badge-locked' %>">
+                <%= character.level >= 7 ? 'Active' : 'Unlocks Lvl 7' %>
+              </span>
+              <div>
+                <strong>Armor Training II:</strong> +2 Maximum Dexterity bonus allowed by armor.
+              </div>
+            </div>
           </div>
-        </div>
+        <% } else if (character.class === 'RANGER') { %>
+          <div class="ability-card">
+            <div class="ability-title">🏹 Ranger Survival & Stalking</div>
+            <div class="ability-tier-row">
+              <span class="ability-badge-active">Active</span>
+              <div>
+                <strong>Favored Enemy:</strong> Specialized combat tactics against <strong><%= character.favored_enemy_type %><%= character.favored_enemy_subtype ? (' (' + character.favored_enemy_subtype + ')') : '' %></strong> (+1 Attack & Damage).
+              </div>
+            </div>
+            <div class="ability-tier-row">
+              <span class="ability-badge-active">Active</span>
+              <div>
+                <strong>Keen Senses & Opening Shot:</strong> Detects obscure wilderness clues and fires a free Opening Shot against spotted ground threats before combat begins.
+              </div>
+            </div>
+            <div class="ability-tier-row <%= character.level >= 5 ? '' : 'is-locked' %>">
+              <span class="<%= character.level >= 5 ? 'ability-badge-active' : 'ability-badge-locked' %>">
+                <%= character.level >= 5 ? 'Active' : 'Unlocks Lvl 5' %>
+              </span>
+              <div>
+                <strong>Favored Enemy II:</strong> Bonus increases to +2 Attack and Damage.
+              </div>
+            </div>
+            <div class="ability-tier-row <%= character.level >= 9 ? '' : 'is-locked' %>">
+              <span class="<%= character.level >= 9 ? 'ability-badge-active' : 'ability-badge-locked' %>">
+                <%= character.level >= 9 ? 'Active' : 'Unlocks Lvl 9' %>
+              </span>
+              <div>
+                <strong>Favored Enemy III:</strong> Bonus increases to +3 Attack and Damage.
+              </div>
+            </div>
+          </div>
+        <% } else if (character.class === 'CLERIC') { %>
+          <div class="ability-card">
+            <div class="ability-title">✨ Divine Favor & Radiance</div>
+            <div class="ability-tier-row">
+              <span class="ability-badge-active">Active</span>
+              <div>
+                <strong>Holy Radiance:</strong> Sacred light punishes Undead abominations (+2 Atk, +3 Dmg, +2 AC bonus).
+              </div>
+            </div>
+            <div class="ability-tier-row">
+              <span class="ability-badge-active">Active</span>
+              <div>
+                <strong>Channel Divine Energy:</strong> Out-of-combat meditative healing (<%= safeClericHealInfo ? safeClericHealInfo.dice : '1d6' %>, <%= safeClericHealInfo ? safeClericHealInfo.remainingUses : 0 %>/<%= safeClericHealInfo ? safeClericHealInfo.maxUses : 3 %> uses remaining).
+              </div>
+            </div>
+            <div class="ability-tier-row <%= character.level >= 3 ? '' : 'is-locked' %>">
+              <span class="<%= character.level >= 3 ? 'ability-badge-active' : 'ability-badge-locked' %>">
+                <%= character.level >= 3 ? 'Active' : 'Unlocks Lvl 3' %>
+              </span>
+              <div>
+                <strong>Channel Energy II:</strong> Self-healing increases to 2d6 per use.
+              </div>
+            </div>
+            <div class="ability-tier-row <%= character.level >= 5 ? '' : 'is-locked' %>">
+              <span class="<%= character.level >= 5 ? 'ability-badge-active' : 'ability-badge-locked' %>">
+                <%= character.level >= 5 ? 'Active' : 'Unlocks Lvl 5' %>
+              </span>
+              <div>
+                <strong>Holy Radiance II & Healing III:</strong> Self-healing reaches 3d6; Holy Radiance empowers to +3 Atk, +4 Dmg, +3 AC.
+              </div>
+            </div>
+          </div>
+        <% } %>
+      </div>
 
-        <!-- Tab Panel: Town Market (Safe City only) -->
-        <% if (safeIsSafeCity && safeShopStock) { %>
-          <div class="tab-content" id="tab-panel-shop" style="display: none;">
-            <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-gold); margin-bottom: 4px;">Market Stock</div>
-            
-            <% if (safeShopStock.resaleListings && safeShopStock.resaleListings.length > 0) { %>
-              <div style="margin-bottom: 8px;">
-                <div style="font-size: 0.75rem; color: #b794f4; margin-bottom: 2px;">✨ Magical Resale Market:</div>
-                <div style="display: flex; flex-direction: column; gap: 4px; max-height: 100px; overflow-y: auto; font-size: 0.8rem;">
-                  <% safeShopStock.resaleListings.forEach(item => { %>
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(76, 29, 149, 0.2); padding: 4px 6px; border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 4px;">
-                      <div>
-                        <div style="color: #d6bcfa;"><%= item.name %> ✨</div>
-                        <div style="font-size: 0.7rem; color: var(--accent-gold);"><%= item.resale_price %> gp</div>
-                      </div>
-                      <form action="/game/shop/buy" method="POST" style="margin: 0;">
-                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                        <input type="hidden" name="listingId" value="<%= item.listing_id %>">
-                        <button type="submit" class="btn btn-primary" style="padding: 2px 6px; font-size: 0.75rem;" <%= character.gold < item.resale_price ? 'disabled' : '' %>>Buy</button>
-                      </form>
-                    </div>
-                  <% }); %>
+      <div class="modal-section-group">
+        <h3 class="modal-subheading">Primary Weapon Preference</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
+          Select your default weapon preference when encountering ground enemies. Aerial threats will automatically enforce ranged combat.
+        </p>
+        <div style="display: flex; gap: 10px;">
+          <form action="/game/character/primary-weapon" method="POST" style="flex: 1;">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+            <input type="hidden" name="primaryWeapon" value="MELEE">
+            <input type="hidden" name="returnModal" value="character">
+            <button type="submit" class="btn <%= (character.primary_weapon || 'MELEE') === 'MELEE' ? 'btn-primary' : 'btn-secondary' %>" style="width: 100%;" <%= isEquipLocked ? 'disabled title="Cannot switch in combat"' : '' %>>
+              🗡️ Melee <%= (character.primary_weapon || 'MELEE') === 'MELEE' ? '✓' : '' %>
+            </button>
+          </form>
+          <form action="/game/character/primary-weapon" method="POST" style="flex: 1;">
+            <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+            <input type="hidden" name="primaryWeapon" value="RANGED">
+            <input type="hidden" name="returnModal" value="character">
+            <button type="submit" class="btn <%= character.primary_weapon === 'RANGED' ? 'btn-primary' : 'btn-secondary' %>" style="width: 100%;" <%= isEquipLocked ? 'disabled title="Cannot switch in combat"' : '' %>>
+              🏹 Ranged <%= character.primary_weapon === 'RANGED' ? '✓' : '' %>
+            </button>
+          </form>
+        </div>
+        <% if (isEquipLocked) { %>
+          <div style="font-size: 0.75rem; color: #fca5a5; margin-top: 6px; text-align: center;">Weapon preference is locked while engaged in active combat.</div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- -------------------------------------------------------------------
+       2. BACKPACK MODAL
+       ------------------------------------------------------------------- -->
+  <div class="game-modal-dialog" id="modal-backpack" role="dialog" aria-modal="true" aria-labelledby="modal-backpack-title" <%= safeActiveModal === 'backpack' ? '' : 'hidden' %>>
+    <div class="game-modal-header">
+      <h2 class="game-modal-title" id="modal-backpack-title">🎒 Equipment & Backpack (<%= character.name %>)</h2>
+      <button type="button" class="game-modal-close" onclick="closeGameModal()" aria-label="Close dialog">✕</button>
+    </div>
+    <div class="game-modal-body">
+      <!-- Equipped Gear -->
+      <div class="modal-section-group">
+        <h3 class="modal-subheading">Equipped Armaments & Protection</h3>
+        <% if (isEquipLocked) { %>
+          <div class="modal-combat-lock-note">
+            ⚠️ Armaments cannot be equipped or unequipped while in active combat.
+          </div>
+        <% } %>
+        <% const equippedItems = [safeEquipment.meleeWeapon, safeEquipment.rangedWeapon, safeEquipment.armor, safeEquipment.shield].filter(Boolean); %>
+        <% if (equippedItems.length === 0) { %>
+          <div style="color: var(--text-dim); font-size: 0.85rem;">No gear currently equipped.</div>
+        <% } else { %>
+          <div class="gear-list-container">
+            <% equippedItems.forEach(item => { %>
+              <div class="gear-row-item">
+                <div class="gear-item-info">
+                  <div class="gear-item-name"><strong>[<%= item.equipped_slot %>]</strong> <%= item.name %> <%= item.is_magical ? '✨' : '' %></div>
+                  <div class="gear-item-meta"><%= item.category %> • <%= item.damage_dice ? ('Dmg: ' + item.damage_dice) : '' %> <%= item.armor_bonus ? ('AC+' + item.armor_bonus) : '' %></div>
                 </div>
+                <form action="/game/inventory/unequip" method="POST" style="margin: 0;">
+                  <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                  <input type="hidden" name="itemInstanceId" value="<%= item.id || item.instance_id %>">
+                  <input type="hidden" name="returnModal" value="backpack">
+                  <button type="submit" class="btn btn-subtle" <%= isEquipLocked ? 'disabled title="Cannot change gear during combat"' : '' %>>Unequip</button>
+                </form>
               </div>
-            <% } %>
+            <% }); %>
+          </div>
+        <% } %>
+      </div>
 
-            <div style="margin-bottom: 8px;">
-              <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 2px;">Standard Armory & Supplies:</div>
-              <div style="display: flex; flex-direction: column; gap: 4px; max-height: 120px; overflow-y: auto; font-size: 0.8rem;">
-                <% safeShopStock.standardItems.forEach(item => { %>
-                  <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 4px;">
-                    <div>
-                      <div><%= item.name %></div>
-                      <div style="font-size: 0.7rem; color: var(--accent-gold);"><%= item.buy_price %> gp</div>
-                    </div>
-                    <form action="/game/shop/buy" method="POST" style="margin: 0;">
-                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                      <input type="hidden" name="itemDefinitionId" value="<%= item.id %>">
-                      <button type="submit" class="btn btn-secondary" style="padding: 2px 6px; font-size: 0.75rem;" <%= character.gold < item.buy_price ? 'disabled' : '' %>>Buy</button>
-                    </form>
-                  </div>
-                <% }); %>
-              </div>
-            </div>
-
-            <% const sellableItems = safeInventory.filter(item => !item.equipped_slot); %>
-            <% if (sellableItems.length > 0) { %>
-              <div style="margin-top: 6px; border-top: 1px solid var(--border-dark); padding-top: 6px;">
-                <div style="font-size: 0.75rem; color: var(--accent-gold); margin-bottom: 2px;">Sell from Backpack:</div>
-                <div style="display: flex; flex-direction: column; gap: 4px; max-height: 100px; overflow-y: auto; font-size: 0.8rem;">
-                  <% sellableItems.forEach(item => { %>
-                    <% const payout = (item.is_magical && item.category !== 'POTION') ? Math.floor(item.buy_price * 0.4) : Math.floor(item.buy_price * 0.5); %>
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 4px;">
-                      <div>
-                        <div><%= item.name %> <%= item.is_magical ? '✨' : '' %></div>
-                        <div style="font-size: 0.7rem; color: #68d391;">Payout: <%= payout %> gp</div>
-                      </div>
-                      <form action="/game/shop/sell" method="POST" style="margin: 0;">
-                        <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                        <input type="hidden" name="itemInstanceId" value="<%= item.id %>">
-                        <button type="submit" class="btn btn-subtle" style="padding: 2px 6px; font-size: 0.75rem;">Sell</button>
-                      </form>
-                    </div>
-                  <% }); %>
+      <!-- Backpack Items (Non-potion gear) -->
+      <div class="modal-section-group">
+        <h3 class="modal-subheading">Backpack Armaments & Relics (<%= backpackGear.length %> items)</h3>
+        <% if (backpackGear.length === 0) { %>
+          <div style="color: var(--text-dim); font-size: 0.85rem;">No unequipped gear or armaments in your backpack. Potion supplies are cataloged below.</div>
+        <% } else { %>
+          <div class="gear-list-container">
+            <% backpackGear.forEach(item => { %>
+              <%
+                let derivedSlot = '';
+                if (item.category === 'WEAPON') {
+                  derivedSlot = item.weapon_range_type === 'RANGED' ? 'RANGED' : 'MELEE';
+                } else if (item.category === 'ARMOR') {
+                  derivedSlot = 'ARMOR';
+                } else if (item.category === 'SHIELD') {
+                  derivedSlot = 'SHIELD';
+                }
+              %>
+              <div class="gear-row-item">
+                <div class="gear-item-info">
+                  <div class="gear-item-name"><%= item.name %> <%= item.is_magical ? '✨' : '' %></div>
+                  <div class="gear-item-meta"><%= item.category %> • <%= item.damage_dice ? ('Dmg: ' + item.damage_dice) : '' %> <%= item.armor_bonus ? ('AC+' + item.armor_bonus) : '' %></div>
                 </div>
+                <% if (['WEAPON', 'ARMOR', 'SHIELD'].includes(item.category)) { %>
+                  <form action="/game/inventory/equip" method="POST" style="margin: 0;">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                    <input type="hidden" name="itemInstanceId" value="<%= item.id %>">
+                    <input type="hidden" name="targetSlot" value="<%= derivedSlot %>">
+                    <input type="hidden" name="returnModal" value="backpack">
+                    <button type="submit" class="btn btn-secondary" <%= isEquipLocked ? 'disabled title="Cannot change gear during combat"' : '' %>>Equip</button>
+                  </form>
+                <% } %>
               </div>
-            <% } %>
+            <% }); %>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- Potions List -->
+      <div class="modal-section-group">
+        <h3 class="modal-subheading">Potion Supplies (<%= safePotionCount %> total)</h3>
+        <% if (safePotions.length === 0) { %>
+          <div style="color: var(--text-dim); font-size: 0.85rem;">No potions in your possession.</div>
+        <% } else { %>
+          <div class="gear-list-container">
+            <% safePotions.forEach(pot => { %>
+              <div class="gear-row-item">
+                <div class="gear-item-info">
+                  <div class="gear-item-name">🧪 <%= pot.name %> <%= pot.is_magical ? '✨' : '' %></div>
+                  <div class="gear-item-meta">Heals <%= pot.healEffect || '1d8+1' %> Vitality HP upon consumption</div>
+                </div>
+                <div style="font-size: 0.8rem; color: #7ce;">Ready</div>
+              </div>
+            <% }); %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- -------------------------------------------------------------------
+       3. MARKET MODAL
+       ------------------------------------------------------------------- -->
+  <div class="game-modal-dialog" id="modal-market" role="dialog" aria-modal="true" aria-labelledby="modal-market-title" <%= safeActiveModal === 'market' ? '' : 'hidden' %>>
+    <div class="game-modal-header">
+      <h2 class="game-modal-title" id="modal-market-title">🛒 Town Market & Resale Hub</h2>
+      <button type="button" class="game-modal-close" onclick="closeGameModal()" aria-label="Close dialog">✕</button>
+    </div>
+    <div class="game-modal-body">
+      <% if (!safeIsSafeCity || !safeShopStock) { %>
+        <div class="modal-notice-box">
+          <div class="notice-title">🌲 Far from Civilization</div>
+          <p>Merchant stalls and magical pawn auctions are only maintained within safe haven cities such as Oakhaven. Return to a safe haven to trade goods and purchase arms.</p>
+        </div>
+      <% } else { %>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 4px;">
+          <span>Coin in purse:</span>
+          <span style="font-family: var(--font-serif); font-size: 1.1rem; color: var(--accent-gold); font-weight: bold;"><%= character.gold %> gp</span>
+        </div>
+
+        <!-- Global Resale Market -->
+        <% if (safeShopStock.resaleListings && safeShopStock.resaleListings.length > 0) { %>
+          <div class="modal-section-group">
+            <h3 class="modal-subheading" style="color: #b794f4;">✨ Global Magical Resale Market</h3>
+            <div class="gear-list-container">
+              <% safeShopStock.resaleListings.forEach(item => { %>
+                <div class="gear-row-item" style="border: 1px solid rgba(139, 92, 246, 0.3); background: rgba(76, 29, 149, 0.15);">
+                  <div class="gear-item-info">
+                    <div class="gear-item-name" style="color: #d6bcfa;"><%= item.name %> ✨</div>
+                    <div class="gear-item-meta" style="color: var(--accent-gold); font-weight: bold;"><%= item.resale_price %> gp</div>
+                  </div>
+                  <form action="/game/shop/buy" method="POST" style="margin: 0;">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                    <input type="hidden" name="listingId" value="<%= item.listing_id %>">
+                    <input type="hidden" name="returnModal" value="market">
+                    <button type="submit" class="btn btn-primary" style="padding: 4px 10px; font-size: 0.8rem;" <%= character.gold < item.resale_price ? 'disabled' : '' %>>Buy</button>
+                  </form>
+                </div>
+              <% }); %>
+            </div>
           </div>
         <% } %>
 
-        <script>
-          function switchGameTab(tabName) {
-            ['status', 'inventory', 'shop'].forEach(function(t) {
-              var btn = document.getElementById('tab-btn-' + t);
-              var panel = document.getElementById('tab-panel-' + t);
-              if (btn) btn.classList.remove('active');
-              if (panel) panel.style.display = 'none';
-            });
-            var activeBtn = document.getElementById('tab-btn-' + tabName);
-            var activePanel = document.getElementById('tab-panel-' + tabName);
-            if (activeBtn) activeBtn.classList.add('active');
-            if (activePanel) activePanel.style.display = 'block';
-          }
-        </script>
+        <!-- Standard Supplies -->
+        <div class="modal-section-group">
+          <h3 class="modal-subheading">Standard Armory & Supplies</h3>
+          <div class="gear-list-container">
+            <% safeShopStock.standardItems.forEach(item => { %>
+              <div class="gear-row-item">
+                <div class="gear-item-info">
+                  <div class="gear-item-name"><%= item.name %></div>
+                  <div class="gear-item-meta" style="color: var(--accent-gold); font-weight: bold;"><%= item.buy_price %> gp</div>
+                </div>
+                <form action="/game/shop/buy" method="POST" style="margin: 0;">
+                  <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                  <input type="hidden" name="itemDefinitionId" value="<%= item.id %>">
+                  <input type="hidden" name="returnModal" value="market">
+                  <button type="submit" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" <%= character.gold < item.buy_price ? 'disabled' : '' %>>Buy</button>
+                </form>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+
+        <!-- Sell from Backpack -->
+        <% const sellableItems = safeInventory.filter(item => !item.equipped_slot); %>
+        <% if (sellableItems.length > 0) { %>
+          <div class="modal-section-group">
+            <h3 class="modal-subheading">Sell Goods from Backpack</h3>
+            <div class="gear-list-container">
+              <% sellableItems.forEach(item => { %>
+                <% const payout = (item.is_magical && item.category !== 'POTION') ? Math.floor(item.buy_price * 0.4) : Math.floor(item.buy_price * 0.5); %>
+                <div class="gear-row-item">
+                  <div class="gear-item-info">
+                    <div class="gear-item-name"><%= item.name %> <%= item.is_magical ? '✨' : '' %></div>
+                    <div class="gear-item-meta" style="color: #68d391;">Payout: <%= payout %> gp</div>
+                  </div>
+                  <form action="/game/shop/sell" method="POST" style="margin: 0;">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                    <input type="hidden" name="itemInstanceId" value="<%= item.id %>">
+                    <input type="hidden" name="returnModal" value="market">
+                    <button type="submit" class="btn btn-subtle" style="padding: 4px 10px; font-size: 0.8rem;">Sell</button>
+                  </form>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+        <% } %>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- -------------------------------------------------------------------
+       4. JOURNAL MODAL
+       ------------------------------------------------------------------- -->
+  <div class="game-modal-dialog" id="modal-journal" role="dialog" aria-modal="true" aria-labelledby="modal-journal-title" <%= safeActiveModal === 'journal' ? '' : 'hidden' %>>
+    <div class="game-modal-header">
+      <h2 class="game-modal-title" id="modal-journal-title">📜 Adventurer's Journal & Chronicles</h2>
+      <button type="button" class="game-modal-close" onclick="closeGameModal()" aria-label="Close dialog">✕</button>
+    </div>
+    <div class="game-modal-body">
+      <div class="modal-section-group">
+        <h3 class="modal-subheading">Current Expedition</h3>
+        <div class="journal-entry-card">
+          <div class="journal-entry-header">
+            <span>📍 <%= currentTile.name %></span>
+            <span class="panel-coords">[X: <%= currentTile.x %>, Y: <%= currentTile.y %>]</span>
+          </div>
+          <p style="font-size: 0.9rem; font-style: italic; color: #ddd;"><%= currentTile.description %></p>
+        </div>
+      </div>
+
+      <div class="modal-section-group">
+        <h3 class="modal-subheading">Recorded Battles & Encounters</h3>
+        <% if (safeJournal.length === 0) { %>
+          <div style="color: var(--text-dim); font-size: 0.85rem;">No recorded combat encounters in this chronicle yet. Venture forth into the unknown to carve your legend.</div>
+        <% } else { %>
+          <div class="journal-log-list">
+            <% safeJournal.forEach(entry => { %>
+              <div class="journal-entry-card">
+                <div class="journal-entry-header">
+                  <strong><%= entry.monster_name || 'Unknown Threat' %></strong>
+                  <span class="badge <%= entry.status === 'VICTORY' ? 'badge-safe' : (entry.status === 'ESCAPED' ? 'badge-terrain' : 'badge-danger') %>">
+                    <%= entry.status %>
+                  </span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">
+                  Location: <%= entry.tile_name || 'Wilderness' %> • Rounds: <%= entry.combat_round || 1 %>
+                </div>
+                <% if (entry.victory_text) { %>
+                  <div style="font-size: 0.85rem; color: var(--accent-gold);">
+                    <%= entry.victory_text %>
+                  </div>
+                <% } %>
+              </div>
+            <% }); %>
+          </div>
+        <% } %>
       </div>
     </div>
   </div>
 </div>
+
+<!-- =====================================================================
+     CLIENT-SIDE SCRIPT FOR MODALS & ACCESSIBILITY
+     ===================================================================== -->
+<script>
+  let lastFocusedElement = null;
+
+  function openGameModal(modalName) {
+    var backdrop = document.getElementById('game-modal-backdrop');
+    if (!backdrop) return;
+
+    lastFocusedElement = document.activeElement;
+
+    var allModals = backdrop.querySelectorAll('.game-modal-dialog');
+    allModals.forEach(function(m) {
+      m.hidden = true;
+      m.setAttribute('aria-hidden', 'true');
+    });
+
+    var targetModal = document.getElementById('modal-' + modalName);
+    if (!targetModal) return;
+
+    backdrop.hidden = false;
+    backdrop.classList.add('is-active');
+    targetModal.hidden = false;
+    targetModal.setAttribute('aria-hidden', 'false');
+
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState(null, '', '#' + modalName);
+    }
+
+    var focusable = targetModal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (focusable) {
+      focusable.focus();
+    }
+  }
+
+  function closeGameModal() {
+    var backdrop = document.getElementById('game-modal-backdrop');
+    if (!backdrop) return;
+
+    var allModals = backdrop.querySelectorAll('.game-modal-dialog');
+    allModals.forEach(function(m) {
+      m.hidden = true;
+      m.setAttribute('aria-hidden', 'true');
+    });
+
+    backdrop.hidden = true;
+    backdrop.classList.remove('is-active');
+
+    if (window.history && window.history.replaceState) {
+      var cleanUrl = window.location.pathname + window.location.search.replace(/[?&]modal=[^&]*/, '');
+      window.history.replaceState(null, '', cleanUrl);
+    }
+
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+      lastFocusedElement.focus();
+    }
+  }
+
+  function handleBackdropClick(e) {
+    if (e.target && e.target.id === 'game-modal-backdrop') {
+      closeGameModal();
+    }
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      var backdrop = document.getElementById('game-modal-backdrop');
+      if (backdrop && !backdrop.hidden) {
+        closeGameModal();
+      }
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var initialModal = <%= JSON.stringify(safeActiveModal) %>;
+    var hash = window.location.hash ? window.location.hash.substring(1) : null;
+    var toOpen = initialModal || hash;
+    if (toOpen && ['character', 'backpack', 'market', 'journal'].indexOf(toOpen) !== -1) {
+      openGameModal(toOpen);
+    }
+  });
+</script>
 
 <%- include('partials/footer') %>

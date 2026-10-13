@@ -142,6 +142,20 @@ router.get('/game', (req, res) => {
 
   const errorMessage = req.query.error || null;
   const infoMessage = req.query.info || null;
+  const activeModal = req.query.modal || null;
+
+  // Journal entries: recent finished encounters (VICTORY or ESCAPED), plus active events
+  const journalEncounters = req.db.prepare(`
+    SELECT e.id, e.status, e.combat_round, e.created_at, m.name as monster_name, t.name as tile_name,
+           (SELECT COUNT(*) FROM combat_events ce WHERE ce.encounter_id = e.id) as event_count,
+           (SELECT ce.public_text FROM combat_events ce WHERE ce.encounter_id = e.id AND ce.event_type = 'VICTORY' LIMIT 1) as victory_text
+    FROM encounters e
+    LEFT JOIN monsters m ON e.monster_id = m.id
+    LEFT JOIN map_tiles t ON e.tile_id = t.id
+    WHERE e.character_id = ? AND e.status IN ('VICTORY', 'ESCAPED', 'IN_COMBAT')
+    ORDER BY e.id DESC
+    LIMIT 10
+  `).all(character.id);
 
   res.render('game', {
     character,
@@ -164,7 +178,9 @@ router.get('/game', (req, res) => {
     shopStock,
     modifiers,
     errorMessage,
-    infoMessage
+    infoMessage,
+    activeModal,
+    journalEncounters
   });
 });
 
@@ -422,12 +438,13 @@ router.post('/game/inventory/equip', (req, res) => {
 
   const itemInstanceId = parseInt(req.body.itemInstanceId, 10);
   const targetSlot = req.body.targetSlot || null;
+  const returnModal = req.body.returnModal || 'backpack';
 
   try {
     equipItem(req.db, character.id, itemInstanceId, targetSlot);
-    res.redirect('/game?info=' + encodeURIComponent('Equipment updated.'));
+    res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&info=` + encodeURIComponent('Equipment updated.'));
   } catch (err) {
-    res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
+    res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&error=${encodeURIComponent(err.message)}`);
   }
 });
 
@@ -441,12 +458,13 @@ router.post('/game/inventory/unequip', (req, res) => {
   }
 
   const itemInstanceId = parseInt(req.body.itemInstanceId, 10);
+  const returnModal = req.body.returnModal || 'backpack';
 
   try {
     unequipItem(req.db, character.id, itemInstanceId);
-    res.redirect('/game?info=' + encodeURIComponent('Item unequipped to backpack.'));
+    res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&info=` + encodeURIComponent('Item unequipped to backpack.'));
   } catch (err) {
-    res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
+    res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&error=${encodeURIComponent(err.message)}`);
   }
 });
 
@@ -460,12 +478,13 @@ router.post('/game/character/primary-weapon', (req, res) => {
   }
 
   const { primaryWeapon } = req.body;
+  const returnModal = req.body.returnModal || 'character';
   try {
     setPrimaryWeaponPreference(req.db, character.id, primaryWeapon);
     const prefLabel = (primaryWeapon || '').toUpperCase() === 'RANGED' ? 'Ranged' : 'Melee';
-    res.redirect('/game?info=' + encodeURIComponent(`Primary weapon preference set to ${prefLabel}.`));
+    res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&info=` + encodeURIComponent(`Primary weapon preference set to ${prefLabel}.`));
   } catch (err) {
-    res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
+    res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&error=${encodeURIComponent(err.message)}`);
   }
 });
 
@@ -480,12 +499,13 @@ router.post('/game/shop/buy', (req, res) => {
 
   const itemDefinitionId = req.body.itemDefinitionId ? parseInt(req.body.itemDefinitionId, 10) : null;
   const listingId = req.body.listingId ? parseInt(req.body.listingId, 10) : null;
+  const returnModal = req.body.returnModal || 'market';
 
   try {
     const result = buyItem(req.db, character.id, { itemDefinitionId, listingId });
-    res.redirect('/game?info=' + encodeURIComponent(`Purchased ${result.purchasedItem.name} for ${result.purchasedItem.price} gp. Remaining gold: ${result.remainingGold} gp.`));
+    res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&info=` + encodeURIComponent(`Purchased ${result.purchasedItem.name} for ${result.purchasedItem.price} gp. Remaining gold: ${result.remainingGold} gp.`));
   } catch (err) {
-    res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
+    res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&error=${encodeURIComponent(err.message)}`);
   }
 });
 
@@ -499,6 +519,7 @@ router.post('/game/shop/sell', (req, res) => {
   }
 
   const itemInstanceId = parseInt(req.body.itemInstanceId, 10);
+  const returnModal = req.body.returnModal || 'market';
 
   try {
     const result = sellItem(req.db, character.id, itemInstanceId);
@@ -506,9 +527,9 @@ router.post('/game/shop/sell', (req, res) => {
     if (result.movedToMarket) {
       msg += ` The artifact is now listed in the global resale market for ${result.resalePrice} gp.`;
     }
-    res.redirect('/game?info=' + encodeURIComponent(msg));
+    res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&info=` + encodeURIComponent(msg));
   } catch (err) {
-    res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
+    res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&error=${encodeURIComponent(err.message)}`);
   }
 });
 
