@@ -834,7 +834,17 @@
             ⚠️ Armaments cannot be equipped or unequipped while in active combat.
           </div>
         <% } %>
-        <% const equippedItems = [safeEquipment.meleeWeapon, safeEquipment.rangedWeapon, safeEquipment.armor, safeEquipment.shield].filter(Boolean); %>
+        <% const equippedItems = [
+          safeEquipment.meleeWeapon,
+          safeEquipment.rangedWeapon,
+          safeEquipment.armor,
+          safeEquipment.shield,
+          safeEquipment.ring,
+          safeEquipment.cloak,
+          safeEquipment.neck,
+          safeEquipment.belt,
+          safeEquipment.feet
+        ].filter(Boolean); %>
         <% if (equippedItems.length === 0) { %>
           <div style="color: var(--text-dim); font-size: 0.85rem;">No gear currently equipped.</div>
         <% } else { %>
@@ -842,8 +852,21 @@
             <% equippedItems.forEach(item => { %>
               <div class="gear-row-item">
                 <div class="gear-item-info">
-                  <div class="gear-item-name"><strong>[<%= item.equipped_slot %>]</strong> <%= item.name %> <%= item.is_magical ? '✨' : '' %></div>
-                  <div class="gear-item-meta"><%= item.category %> • <%= item.damage_dice ? ('Dmg: ' + item.damage_dice) : '' %> <%= item.armor_bonus ? ('AC+' + item.armor_bonus) : '' %></div>
+                  <div class="gear-item-name">
+                    <strong>[<%= item.equipped_slot %>]</strong> <%= item.name %> <%= item.is_magical ? '✨' : '' %>
+                    <% if (item.rarity) { %>
+                      <span class="rarity-badge rarity-<%= item.rarity.toLowerCase() %>"><%= item.rarity %></span>
+                    <% } %>
+                  </div>
+                  <div class="gear-item-meta">
+                    <%= item.category %> <%= item.subtype ? ('(' + item.subtype + ')') : '' %> • 
+                    <%= item.damage_dice ? ('Dmg: ' + item.damage_dice + ' ') : '' %>
+                    <%= item.armor_bonus ? ('AC+' + item.armor_bonus + ' ') : '' %>
+                    <%= item.combat_effect_desc ? ('• ' + item.combat_effect_desc) : '' %>
+                  </div>
+                  <% if (item.description) { %>
+                    <div class="item-desc-text"><%= item.description %></div>
+                  <% } %>
                 </div>
                 <form action="/game/inventory/unequip" method="POST" style="margin: 0;">
                   <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
@@ -857,11 +880,11 @@
         <% } %>
       </div>
 
-      <!-- Backpack Items (Non-potion gear) -->
+      <!-- Backpack Items (Non-potion gear & treasures) -->
       <div class="modal-section-group">
-        <h3 class="modal-subheading">Backpack Armaments & Relics (<%= backpackGear.length %> items)</h3>
+        <h3 class="modal-subheading">Backpack Armaments, Relics & Treasures (<%= backpackGear.length %> items)</h3>
         <% if (backpackGear.length === 0) { %>
-          <div style="color: var(--text-dim); font-size: 0.85rem;">No unequipped gear or armaments in your backpack. Potion supplies are cataloged below.</div>
+          <div style="color: var(--text-dim); font-size: 0.85rem;">No unequipped gear, relics, or treasures in your backpack. Potion supplies are cataloged below.</div>
         <% } else { %>
           <div class="gear-list-container">
             <% backpackGear.forEach(item => { %>
@@ -873,14 +896,34 @@
                   derivedSlot = 'ARMOR';
                 } else if (item.category === 'SHIELD') {
                   derivedSlot = 'SHIELD';
+                } else if (item.equip_slot && ['RING', 'CLOAK', 'NECK', 'BELT', 'FEET'].includes(item.equip_slot.toUpperCase())) {
+                  derivedSlot = item.equip_slot.toUpperCase();
                 }
               %>
               <div class="gear-row-item">
                 <div class="gear-item-info">
-                  <div class="gear-item-name"><%= item.name %> <%= item.is_magical ? '✨' : '' %></div>
-                  <div class="gear-item-meta"><%= item.category %> • <%= item.damage_dice ? ('Dmg: ' + item.damage_dice) : '' %> <%= item.armor_bonus ? ('AC+' + item.armor_bonus) : '' %></div>
+                  <div class="gear-item-name">
+                    <%= item.name %> <%= item.is_magical ? '✨' : '' %>
+                    <% if (item.rarity) { %>
+                      <span class="rarity-badge rarity-<%= item.rarity.toLowerCase() %>"><%= item.rarity %></span>
+                    <% } %>
+                  </div>
+                  <div class="gear-item-meta">
+                    <%= item.category %> <%= item.subtype ? ('(' + item.subtype + ')') : '' %> • 
+                    <%= item.damage_dice ? ('Dmg: ' + item.damage_dice + ' ') : '' %>
+                    <%= item.armor_bonus ? ('AC+' + item.armor_bonus + ' ') : '' %>
+                    <%= item.combat_effect_desc ? ('• ' + item.combat_effect_desc) : '' %>
+                  </div>
+                  <% if (item.subtype === 'TREASURE') { %>
+                    <div style="font-size: 0.8rem; color: var(--accent-gold); font-weight: bold; margin-top: 2px;">
+                      Appraised value: <%= Math.floor(item.buy_price * 0.5) %> gp
+                    </div>
+                  <% } %>
+                  <% if (item.description) { %>
+                    <div class="item-desc-text"><%= item.description %></div>
+                  <% } %>
                 </div>
-                <% if (['WEAPON', 'ARMOR', 'SHIELD'].includes(item.category)) { %>
+                <% if (derivedSlot) { %>
                   <form action="/game/inventory/equip" method="POST" style="margin: 0;">
                     <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                     <input type="hidden" name="itemInstanceId" value="<%= item.id %>">
@@ -905,10 +948,29 @@
             <% safePotions.forEach(pot => { %>
               <div class="gear-row-item">
                 <div class="gear-item-info">
-                  <div class="gear-item-name">🧪 <%= pot.name %> <%= pot.is_magical ? '✨' : '' %></div>
-                  <div class="gear-item-meta">Heals <%= pot.healEffect || '1d8+1' %> Vitality HP upon consumption</div>
+                  <div class="gear-item-name">
+                    🧪 <%= pot.name %> <%= pot.is_magical ? '✨' : '' %>
+                    <% if (pot.rarity) { %>
+                      <span class="rarity-badge rarity-<%= pot.rarity.toLowerCase() %>"><%= pot.rarity %></span>
+                    <% } %>
+                  </div>
+                  <div class="gear-item-meta">
+                    <%= pot.combat_effect_desc || ('Restores ' + (pot.healEffect || 'vitality') + ' HP upon consumption') %>
+                  </div>
+                  <% if (pot.description) { %>
+                    <div class="item-desc-text"><%= pot.description %></div>
+                  <% } %>
                 </div>
-                <div style="font-size: 0.8rem; color: #7ce;">Ready</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <form action="/game/inventory/use" method="POST" style="margin: 0;">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                    <input type="hidden" name="itemInstanceId" value="<%= pot.id %>">
+                    <input type="hidden" name="returnModal" value="backpack">
+                    <button type="submit" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" <%= (isEquipLocked || character.current_hp >= character.max_hp) ? ('disabled title="' + (isEquipLocked ? 'Cannot use in combat' : 'HP already full') + '"') : '' %>>
+                      🧪 Drink
+                    </button>
+                  </form>
+                </div>
               </div>
             <% }); %>
           </div>
@@ -945,8 +1007,16 @@
               <% safeShopStock.resaleListings.forEach(item => { %>
                 <div class="gear-row-item" style="border: 1px solid rgba(139, 92, 246, 0.3); background: rgba(76, 29, 149, 0.15);">
                   <div class="gear-item-info">
-                    <div class="gear-item-name" style="color: #d6bcfa;"><%= item.name %> ✨</div>
+                    <div class="gear-item-name" style="color: #d6bcfa;">
+                      <%= item.name %> ✨
+                      <% if (item.rarity) { %>
+                        <span class="rarity-badge rarity-<%= item.rarity.toLowerCase() %>"><%= item.rarity %></span>
+                      <% } %>
+                    </div>
                     <div class="gear-item-meta" style="color: var(--accent-gold); font-weight: bold;"><%= item.resale_price %> gp</div>
+                    <% if (item.description) { %>
+                      <div class="item-desc-text"><%= item.description %></div>
+                    <% } %>
                   </div>
                   <form action="/game/shop/buy" method="POST" style="margin: 0;">
                     <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
@@ -967,8 +1037,16 @@
             <% safeShopStock.standardItems.forEach(item => { %>
               <div class="gear-row-item">
                 <div class="gear-item-info">
-                  <div class="gear-item-name"><%= item.name %></div>
+                  <div class="gear-item-name">
+                    <%= item.name %>
+                    <% if (item.rarity) { %>
+                      <span class="rarity-badge rarity-<%= item.rarity.toLowerCase() %>"><%= item.rarity %></span>
+                    <% } %>
+                  </div>
                   <div class="gear-item-meta" style="color: var(--accent-gold); font-weight: bold;"><%= item.buy_price %> gp</div>
+                  <% if (item.description) { %>
+                    <div class="item-desc-text"><%= item.description %></div>
+                  <% } %>
                 </div>
                 <form action="/game/shop/buy" method="POST" style="margin: 0;">
                   <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
@@ -991,8 +1069,18 @@
                 <% const payout = (item.is_magical && item.category !== 'POTION') ? Math.floor(item.buy_price * 0.4) : Math.floor(item.buy_price * 0.5); %>
                 <div class="gear-row-item">
                   <div class="gear-item-info">
-                    <div class="gear-item-name"><%= item.name %> <%= item.is_magical ? '✨' : '' %></div>
-                    <div class="gear-item-meta" style="color: #68d391;">Payout: <%= payout %> gp</div>
+                    <div class="gear-item-name">
+                      <%= item.name %> <%= item.is_magical ? '✨' : '' %>
+                      <% if (item.rarity) { %>
+                        <span class="rarity-badge rarity-<%= item.rarity.toLowerCase() %>"><%= item.rarity %></span>
+                      <% } %>
+                    </div>
+                    <div class="gear-item-meta" style="color: #68d391;">
+                      Payout: <%= payout %> gp • <%= item.category %> <%= item.subtype ? ('(' + item.subtype + ')') : '' %>
+                    </div>
+                    <% if (item.description) { %>
+                      <div class="item-desc-text"><%= item.description %></div>
+                    <% } %>
                   </div>
                   <form action="/game/shop/sell" method="POST" style="margin: 0;">
                     <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">

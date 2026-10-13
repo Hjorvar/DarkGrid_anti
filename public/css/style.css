@@ -1929,11 +1929,66 @@ body.game-page .logout-link {
 .gear-item-name {
   font-size: 0.82rem;
   color: var(--text-heading);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .gear-item-meta {
   font-size: 0.7rem;
   color: var(--text-muted);
+}
+
+/* Item Rarity Badges */
+.rarity-badge {
+  display: inline-block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 3px;
+  line-height: 1.2;
+}
+
+.rarity-common {
+  background: rgba(160, 174, 192, 0.15);
+  color: #a0aec0;
+  border: 1px solid rgba(160, 174, 192, 0.35);
+}
+
+.rarity-uncommon {
+  background: rgba(72, 187, 120, 0.15);
+  color: #68d391;
+  border: 1px solid rgba(72, 187, 120, 0.4);
+}
+
+.rarity-rare {
+  background: rgba(66, 153, 225, 0.15);
+  color: #63b3ed;
+  border: 1px solid rgba(66, 153, 225, 0.45);
+}
+
+.rarity-epic {
+  background: rgba(159, 122, 234, 0.18);
+  color: #b794f4;
+  border: 1px solid rgba(159, 122, 234, 0.5);
+  box-shadow: 0 0 6px rgba(159, 122, 234, 0.25);
+}
+
+.rarity-legendary {
+  background: rgba(236, 201, 75, 0.2);
+  color: #f6e05e;
+  border: 1px solid rgba(236, 201, 75, 0.6);
+  box-shadow: 0 0 8px rgba(236, 201, 75, 0.35);
+}
+
+.item-desc-text {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-style: italic;
+  margin-top: 2px;
 }
 
 .ability-card,

@@ -146,7 +146,18 @@ function calculateHeroAC(character, equippedArmor = null, equippedShield = null,
     holyRadianceAC = getClericHolyRadianceBonus(character, targetMonster).ac;
   }
 
-  return 10 + effectiveDex + armorBonus + shieldBonus + holyRadianceAC;
+  // Wondrous Accessories AC bonus (e.g. Ring of Protection deflection, Amulet of Natural Armor)
+  let accessoryAC = 0;
+  if (equippedArmor && typeof equippedArmor === 'object') {
+    if (equippedArmor.ring && equippedArmor.ring.armor_bonus) {
+      accessoryAC += Number(equippedArmor.ring.armor_bonus || 0);
+    }
+    if (equippedArmor.neck && equippedArmor.neck.armor_bonus) {
+      accessoryAC += Number(equippedArmor.neck.armor_bonus || 0);
+    }
+  }
+
+  return 10 + effectiveDex + armorBonus + shieldBonus + holyRadianceAC + accessoryAC;
 }
 
 /**

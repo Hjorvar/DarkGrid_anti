@@ -38,7 +38,8 @@ function getCityStoreStock(db) {
   const standardItems = db.prepare(`
     SELECT id, name, category, description, buy_price, sell_price, is_magical,
            damage_dice, armor_bonus, shield_bonus, max_dex_bonus, enhancement_bonus,
-           weapon_range_type, is_two_handed, allowed_classes
+           weapon_range_type, is_two_handed, allowed_classes,
+           rarity, subtype
     FROM item_definitions
     WHERE is_magical = 0 OR name = 'Minor Healing Potion'
     ORDER BY category ASC, buy_price ASC
@@ -50,7 +51,8 @@ function getCityStoreStock(db) {
            ii.id as item_instance_id, id.id as definition_id, id.name, id.category,
            id.description, id.damage_dice, id.armor_bonus, id.shield_bonus,
            id.max_dex_bonus, id.enhancement_bonus, id.weapon_range_type,
-           id.is_two_handed, id.allowed_classes, id.is_magical
+           id.is_two_handed, id.allowed_classes, id.is_magical,
+           id.rarity, id.subtype
     FROM market_listings ml
     JOIN item_instances ii ON ml.item_instance_id = ii.id
     JOIN item_definitions id ON ii.item_definition_id = id.id

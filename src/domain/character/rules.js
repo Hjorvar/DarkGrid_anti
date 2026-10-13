@@ -560,7 +560,8 @@ function getCharacterEquipment(db, characterId) {
   const items = db.prepare(`
     SELECT ii.id, ii.id AS instance_id, ii.equipped_slot, id.name, id.category, id.damage_dice,
            id.armor_bonus, id.shield_bonus, id.is_magical, id.buy_price, id.attributes,
-           id.max_dex_bonus, id.enhancement_bonus, id.weapon_range_type, id.is_two_handed
+           id.max_dex_bonus, id.enhancement_bonus, id.weapon_range_type, id.is_two_handed,
+           id.rarity, id.subtype, id.equip_slot as def_equip_slot
     FROM item_instances ii
     JOIN item_definitions id ON ii.item_definition_id = id.id
     WHERE ii.owner_type = 'CHARACTER' AND ii.owner_character_id = ? AND ii.equipped_slot IS NOT NULL
@@ -570,6 +571,11 @@ function getCharacterEquipment(db, characterId) {
   let rangedWeapon = null;
   let armor = null;
   let shield = null;
+  let ring = null;
+  let cloak = null;
+  let neck = null;
+  let belt = null;
+  let feet = null;
 
   for (const it of items) {
     const slot = (it.equipped_slot || '').toUpperCase();
@@ -581,6 +587,16 @@ function getCharacterEquipment(db, characterId) {
       armor = it;
     } else if (slot === 'SHIELD' || slot === 'OFF_HAND') {
       shield = it;
+    } else if (slot === 'RING') {
+      ring = it;
+    } else if (slot === 'CLOAK') {
+      cloak = it;
+    } else if (slot === 'NECK') {
+      neck = it;
+    } else if (slot === 'BELT') {
+      belt = it;
+    } else if (slot === 'FEET') {
+      feet = it;
     } else if (slot === 'MAIN_HAND') {
       if (it.weapon_range_type === 'RANGED') {
         rangedWeapon = it;
@@ -598,6 +614,11 @@ function getCharacterEquipment(db, characterId) {
     rangedWeapon,
     armor,
     shield,
+    ring,
+    cloak,
+    neck,
+    belt,
+    feet,
     items
   };
 }
@@ -611,7 +632,8 @@ function getCharacterInventory(db, characterId) {
            id.name, id.category, id.buy_price, id.sell_price, id.is_magical,
            id.damage_dice, id.armor_bonus, id.shield_bonus, id.max_dex_bonus,
            id.enhancement_bonus, id.weapon_range_type, id.is_two_handed,
-           id.allowed_classes, id.description, id.attributes
+           id.allowed_classes, id.description, id.attributes,
+           id.rarity, id.subtype, id.equip_slot
     FROM item_instances ii
     JOIN item_definitions id ON ii.item_definition_id = id.id
     WHERE ii.owner_type = 'CHARACTER' AND ii.owner_character_id = ?
@@ -659,11 +681,14 @@ function equipItem(db, characterId, itemInstanceId, targetSlot) {
         slot = 'ARMOR';
       } else if (item.category === 'SHIELD') {
         slot = 'SHIELD';
+      } else if (item.def_equip_slot || item.equip_slot) {
+        slot = (item.def_equip_slot || item.equip_slot).toUpperCase().trim();
       }
     }
 
-    if (!['MELEE', 'RANGED', 'ARMOR', 'SHIELD'].includes(slot)) {
-      throw new Error(`Invalid equipment slot: ${targetSlot}. Allowed: MELEE, RANGED, ARMOR, SHIELD.`);
+    const ALLOWED_SLOTS = ['MELEE', 'RANGED', 'ARMOR', 'SHIELD', 'RING', 'CLOAK', 'NECK', 'BELT', 'FEET'];
+    if (!ALLOWED_SLOTS.includes(slot)) {
+      throw new Error(`Invalid equipment slot: ${targetSlot}. Allowed: ${ALLOWED_SLOTS.join(', ')}.`);
     }
 
     if (slot === 'MELEE') {
@@ -681,6 +706,14 @@ function equipItem(db, characterId, itemInstanceId, targetSlot) {
     } else if (slot === 'SHIELD') {
       if (item.category !== 'SHIELD') {
         throw new Error('Only shields can be equipped in the SHIELD slot.');
+      }
+    } else if (['RING', 'CLOAK', 'NECK', 'BELT', 'FEET'].includes(slot)) {
+      const itemDefSlot = (item.def_equip_slot || item.equip_slot || '').toUpperCase().trim();
+      if (itemDefSlot && itemDefSlot !== slot) {
+        throw new Error(`The ${item.name} must be equipped in the ${itemDefSlot} slot.`);
+      }
+      if (item.category !== 'OTHER' && item.category !== 'ARMOR') {
+        throw new Error(`The ${item.name} cannot be equipped in the ${slot} slot.`);
       }
     }
 
@@ -862,6 +895,93 @@ function getAllCharacterItems(db, characterId) {
   `).all(characterId);
 }
 
+/**
+ * Uses a consumable item (e.g. potion, elixir) from the player's inventory outside of combat.
+ * Thread-safe, atomic, validates ownership, prevents dead hero usage and race conditions.
+ */
+function useConsumable(db, characterId, itemInstanceId, options = {}) {
+  const rng = typeof options === 'function' ? options : (options && options.rng ? options.rng : Math.random);
+
+  return withTransaction(db, (tx) => {
+    // 1. Validate living character
+    const character = tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
+    if (!character || character.is_alive !== 1) {
+      throw new Error('Dead characters cannot use consumables.');
+    }
+
+    // 2. Validate out-of-combat
+    const inCombat = tx.prepare("SELECT 1 FROM encounters WHERE character_id = ? AND status = 'IN_COMBAT'").get(characterId);
+    if (inCombat) {
+      throw new Error('Cannot use items from your backpack during active combat. Use the combat action menu.');
+    }
+
+    // 3. Fetch item instance
+    const item = tx.prepare(`
+      SELECT ii.*, id.name, id.category, id.subtype, id.attributes, id.is_magical
+      FROM item_instances ii
+      JOIN item_definitions id ON ii.item_definition_id = id.id
+      WHERE ii.id = ? AND ii.owner_type = 'CHARACTER' AND ii.owner_character_id = ?
+    `).get(itemInstanceId, characterId);
+
+    if (!item) {
+      throw new Error('Item not found in your inventory.');
+    }
+
+    if (item.category !== 'POTION') {
+      throw new Error(`The ${item.name} is not a consumable item.`);
+    }
+
+    let attrs = {};
+    if (typeof item.attributes === 'string') {
+      try { attrs = JSON.parse(item.attributes); } catch { attrs = {}; }
+    } else if (item.attributes && typeof item.attributes === 'object') {
+      attrs = item.attributes;
+    }
+
+    const potionType = attrs.potion_type || (attrs.heal_dice ? 'healing' : 'other');
+
+    // Healing potion handling
+    if (potionType === 'healing' || (attrs.heal_dice && attrs.heal_dice !== '0')) {
+      if (character.current_hp >= character.max_hp) {
+        throw new Error('Hero is already at maximum health.');
+      }
+
+      // Consume item (atomic delete)
+      tx.prepare('DELETE FROM item_instances WHERE id = ?').run(item.id);
+
+      const healResult = rollDice(attrs.heal_dice || '1d8+1', rng);
+      const healAmount = Math.max(1, healResult.total);
+      const oldHp = character.current_hp;
+      const newHp = Math.min(character.max_hp, oldHp + healAmount);
+      const actualHealed = newHp - oldHp;
+
+      tx.prepare('UPDATE characters SET current_hp = ? WHERE id = ?').run(newHp, characterId);
+
+      return {
+        success: true,
+        item: { id: item.id, name: item.name },
+        healed: actualHealed,
+        currentHp: newHp,
+        maxHp: character.max_hp,
+        message: `You drank ${item.name} and recovered ${actualHealed} HP (${newHp}/${character.max_hp} HP).`
+      };
+    }
+
+    // Buff or other potion consumed out of combat
+    tx.prepare('DELETE FROM item_instances WHERE id = ?').run(item.id);
+    const desc = attrs.description || `Consumed ${item.name}.`;
+
+    return {
+      success: true,
+      item: { id: item.id, name: item.name },
+      healed: 0,
+      currentHp: character.current_hp,
+      maxHp: character.max_hp,
+      message: `You consumed ${item.name}. ${desc}`
+    };
+  });
+}
+
 module.exports = {
   STAT_KEYS,
   FAST_XP_TABLE,
@@ -891,5 +1011,6 @@ module.exports = {
   getActiveWeapon,
   getCharacterPotionCount,
   getCharacterPotions,
-  getAllCharacterItems
+  getAllCharacterItems,
+  useConsumable
 };

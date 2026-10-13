@@ -373,3 +373,87 @@ test('C1 HTTP Integration: Primary Weapon Preference and Two-Handed Shield Suppr
   assert.ok(htmlRanged.includes('Active: 🏹 Ranged'), 'UI must display Active: Ranged');
   assert.ok(htmlRanged.includes('Shield disabled with ranged'), 'UI must note that shield is disabled with ranged');
 });
+
+test('C1 HTTP Integration: Out-of-combat potion drinking via Backpack modal form', async () => {
+  let cookie = '';
+  const suffix = Date.now().toString().slice(-6);
+  const username = `PotionHero_${suffix}`;
+
+  // 1. Register & Login
+  const regPage = await fetch(`${baseUrl}/register`);
+  cookie = updateCookies(cookie, regPage);
+  const regHtml = await regPage.text();
+  const csrf = regHtml.match(/name="_csrf"\s+value="([^"]+)"/)[1];
+
+  const regRes = await fetch(`${baseUrl}/register`, {
+    method: 'POST',
+    body: new URLSearchParams({
+      username,
+      password: 'password123',
+      confirmPassword: 'password123',
+      _csrf: csrf
+    }),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookie },
+    redirect: 'manual'
+  });
+  cookie = updateCookies(cookie, regRes);
+
+  // 2. Create Fighter character (receives starting gear including potions)
+  const createPage = await fetch(`${baseUrl}/character/create`, { headers: { Cookie: cookie } });
+  cookie = updateCookies(cookie, createPage);
+  const createHtml = await createPage.text();
+  const createCsrf = createHtml.match(/name="_csrf"\s+value="([^"]+)"/)[1];
+
+  await fetch(`${baseUrl}/character/create`, {
+    method: 'POST',
+    body: new URLSearchParams({
+      name: `PotKappi_${suffix}`,
+      classType: 'FIGHTER',
+      strength: '16',
+      dexterity: '14',
+      constitution: '12',
+      intelligence: '10',
+      wisdom: '10',
+      charisma: '9',
+      _csrf: createCsrf
+    }),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookie },
+    redirect: 'manual'
+  });
+
+  const hero = db.prepare('SELECT * FROM characters WHERE name = ?').get(`PotKappi_${suffix}`);
+
+  // Reduce hero's HP to 3 so potion can be drunk
+  db.prepare('UPDATE characters SET current_hp = 3 WHERE id = ?').run(hero.id);
+
+  // Fetch /game and extract potion use forms
+  const gamePage = await fetch(`${baseUrl}/game`, { headers: { Cookie: cookie } });
+  cookie = updateCookies(cookie, gamePage);
+  const html = await gamePage.text();
+
+  const potionForms = extractFormsByAction(html, '/game/inventory/use');
+  assert.ok(potionForms.length >= 1, 'Must render at least 1 potion use form');
+
+  const drinkForm = potionForms[0];
+  assert.equal(drinkForm.fields.returnModal, 'backpack');
+  assert.ok(drinkForm.fields.itemInstanceId, 'Must have itemInstanceId');
+
+  // Submit Drink POST
+  const drinkRes = await fetch(`${baseUrl}${drinkForm.action}`, {
+    method: 'POST',
+    body: new URLSearchParams(drinkForm.fields),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookie },
+    redirect: 'manual'
+  });
+  assert.equal(drinkRes.status, 302);
+  cookie = updateCookies(cookie, drinkRes);
+
+  // Verify HP restored in DB
+  const heroAfterDrink = db.prepare('SELECT * FROM characters WHERE id = ?').get(hero.id);
+  assert.ok(heroAfterDrink.current_hp > 3, `Hero HP must be restored (was 3, now ${heroAfterDrink.current_hp})`);
+
+  // Verify item consumed
+  const consumedItem = db.prepare('SELECT * FROM item_instances WHERE id = ?').get(Number(drinkForm.fields.itemInstanceId));
+  assert.strictEqual(consumedItem, undefined, 'Consumed potion instance must be deleted from SQLite');
+});
+

@@ -16,7 +16,8 @@ const {
   performClericSelfHeal,
   performCityRest,
   getClericSelfHealInfo,
-  getClericRemainingHealUses
+  getClericRemainingHealUses,
+  useConsumable
 } = require('../domain/character/rules');
 const {
   calculateHeroAC,
@@ -468,6 +469,26 @@ router.post('/game/inventory/unequip', (req, res) => {
   try {
     unequipItem(req.db, character.id, itemInstanceId);
     res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&info=` + encodeURIComponent('Item unequipped to backpack.'));
+  } catch (err) {
+    res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&error=${encodeURIComponent(err.message)}`);
+  }
+});
+
+/**
+ * Use / Consume Item (e.g. potion, elixir) outside of combat
+ */
+router.post('/game/inventory/use', (req, res) => {
+  const character = getLivingCharacterByUserId(req.db, req.user.id);
+  if (!character) {
+    return res.redirect('/game');
+  }
+
+  const itemInstanceId = parseInt(req.body.itemInstanceId, 10);
+  const returnModal = req.body.returnModal || 'backpack';
+
+  try {
+    const result = useConsumable(req.db, character.id, itemInstanceId);
+    res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&info=` + encodeURIComponent(result.message));
   } catch (err) {
     res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&error=${encodeURIComponent(err.message)}`);
   }
