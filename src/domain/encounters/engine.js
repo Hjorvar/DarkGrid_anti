@@ -240,6 +240,22 @@ function resolveDetectionAndAmbush(character, monster, options = {}, defaults = 
 }
 
 /**
+ * Normalizes a tile's wilderness region name for Hunting Contract matching.
+ */
+function resolveTileRegionName(tile) {
+  if (!tile) return null;
+  if (!tile.is_passable || tile.is_safe === 1) return null;
+  if (tile.terrain === 'CITY' || tile.terrain === 'BRIDGE' || tile.terrain === 'WATER' || tile.terrain === 'MOUNTAINS') {
+    return null;
+  }
+  const rawName = (tile.name || '').trim();
+  if (!rawName) return null;
+  if (rawName === 'Heart of the Mirkwood') return 'Mirkwood Forest';
+  if (rawName === "Deadman's Mire") return 'Rotting Fen';
+  return rawName;
+}
+
+/**
  * Checks and rolls for an encounter upon moving onto targetTile
  * Strictly called ONLY during valid move step, not on page refresh
  */
@@ -252,6 +268,7 @@ function checkTileEncounter(db, character, targetTile, options = {}) {
   }
 
   // 2. Check for active persistent monster on tile (NOT subject to CR restriction!)
+  // Global persistent monster always takes 100% priority over normal and bounty encounters.
   const persistentMonster = db.prepare(`
     SELECT mi.*, m.name, m.symbol, m.color, m.descriptions, m.base_hp, m.initiative_bonus
     FROM monster_instances mi
@@ -294,35 +311,83 @@ function checkTileEncounter(db, character, targetTile, options = {}) {
   }
   const maxCr = getMaxCrForDistance(distance);
 
-  // 4. Roll encounter chance (configurable 25%)
-  const chancePercent = options.forcedChance !== undefined ? options.forcedChance : config.encounterChancePercent;
+  // 4. Check if character has an ACTIVE hunting contract in this tile's region
+  let activeBountyContract = null;
+  const tileRegion = resolveTileRegionName(targetTile);
+  if (tileRegion && character && character.id) {
+    try {
+      activeBountyContract = db.prepare(`
+        SELECT hc.*
+        FROM hunting_contracts hc
+        WHERE hc.character_id = ? AND hc.status = 'ACTIVE' AND hc.region_name = ?
+        LIMIT 1
+      `).get(character.id, tileRegion);
+    } catch {
+      activeBountyContract = null;
+    }
+  }
+
+  // 5. Roll encounter chance:
+  // In an active bounty region, encounter chance is 40% (replacing the standard 25%, not an extra roll).
+  const defaultChance = activeBountyContract ? 40 : config.encounterChancePercent;
+  const chancePercent = options.forcedChance !== undefined ? options.forcedChance : defaultChance;
   const roll = rng() * 100;
   if (roll >= chancePercent) {
     return null; // No encounter
   }
 
-  // 5. Select appropriate monster via terrain, level normal distribution, and City Safety CR cap
-  const monster = selectMonsterForTerrainAndHero(db, targetTile.terrain, character.level, { rng, maxCr });
+  // 6. Select monster:
+  // If in active bounty region, 75% chance to encounter the Named Bounty target (respecting CR & level safety caps).
+  let monster = null;
+  let selectedBountyContract = null;
+
+  if (activeBountyContract) {
+    const bountyMonster = db.prepare('SELECT * FROM monsters WHERE id = ?').get(activeBountyContract.base_monster_id);
+    const heroLevel = Number((character && character.level) || 1);
+    const passesLevel1Safety = heroLevel > 1 || (bountyMonster && bountyMonster.solo_level <= 1 && bountyMonster.challenge_rating <= 0.5);
+    const passesLevelCap = Boolean(bountyMonster && bountyMonster.solo_level <= heroLevel + 1);
+
+    if (bountyMonster && passesLevel1Safety && passesLevelCap) {
+      const bountyRng = options.bountyRng || rng;
+      const bountyTargetRoll = bountyRng();
+      if (bountyTargetRoll < 0.75) {
+        monster = bountyMonster;
+        selectedBountyContract = activeBountyContract;
+      }
+    }
+  }
+
+  if (!monster) {
+    monster = selectMonsterForTerrainAndHero(db, targetTile.terrain, character.level, { rng, maxCr });
+  }
   if (!monster) {
     return null;
   }
 
-  // 6. Ambush vs Hero Detection Check (with Level 1 ambush immunity)
+  // 7. Ambush vs Hero Detection Check (with Level 1 ambush immunity)
   const { isAmbush, spottedByHero } = resolveDetectionAndAmbush(character, monster, options);
 
-  // 7. Create pending encounter record
+  // 8. Create pending encounter record (persisting bounty_contract_id and boosted HP if Named Bounty)
+  const initialMonsterHp = selectedBountyContract
+    ? (selectedBountyContract.boosted_max_hp || monster.base_hp)
+    : monster.base_hp;
+  const bountyContractId = selectedBountyContract ? selectedBountyContract.id : null;
+
   const insertEncounter = db.prepare(`
     INSERT INTO encounters (
-      character_id, tile_id, monster_id, status, current_monster_hp, combat_round,
+      character_id, tile_id, monster_id, bounty_contract_id, status,
+      current_monster_hp, monster_max_hp, combat_round,
       spotted_by_hero, is_ambush, opening_shot_resolved
-    ) VALUES (?, ?, ?, 'DISCOVERED', ?, 0, ?, ?, 0)
+    ) VALUES (?, ?, ?, ?, 'DISCOVERED', ?, ?, 0, ?, ?, 0)
   `);
 
   const result = insertEncounter.run(
     character.id,
     targetTile.id,
     monster.id,
-    monster.base_hp,
+    bountyContractId,
+    initialMonsterHp,
+    initialMonsterHp,
     spottedByHero,
     isAmbush
   );
@@ -335,7 +400,7 @@ function checkTileEncounter(db, character, targetTile, options = {}) {
  */
 function getEncounterById(db, encounterId, heroClass) {
   const stmt = db.prepare(`
-    SELECT e.*, m.name as monster_name, m.symbol as monster_symbol,
+    SELECT e.*, m.name as base_monster_name, m.symbol as monster_symbol,
            m.color as monster_color, m.solo_level as monster_level,
            m.descriptions as monster_descriptions, m.image_path as monster_image_path,
            m.defeated_image_path as monster_defeated_image_path,
@@ -344,11 +409,24 @@ function getEncounterById(db, encounterId, heroClass) {
            m.armor_class as monster_ac, m.attack_bonus as monster_ab,
            m.damage_dice as monster_damage_dice, m.initiative_bonus,
            c.level as character_level,
-           t.name as tile_name, t.terrain as tile_terrain
+           t.name as tile_name, t.terrain as tile_terrain,
+           hc.custom_name as bounty_custom_name,
+           hc.title as bounty_title,
+           hc.region_name as bounty_region_name,
+           hc.boost_type as bounty_boost_type,
+           hc.boost_label as bounty_boost_label,
+           hc.boosted_max_hp as bounty_boosted_max_hp,
+           hc.attack_bonus_mod as bounty_attack_bonus_mod,
+           hc.damage_bonus_mod as bounty_damage_bonus_mod,
+           hc.reward_gold as bounty_reward_gold,
+           hc.status as bounty_status,
+           mi.custom_title as instance_custom_title
     FROM encounters e
     JOIN monsters m ON e.monster_id = m.id
     JOIN map_tiles t ON e.tile_id = t.id
     LEFT JOIN characters c ON e.character_id = c.id
+    LEFT JOIN hunting_contracts hc ON e.bounty_contract_id = hc.id
+    LEFT JOIN monster_instances mi ON e.monster_instance_id = mi.id
     WHERE e.id = ?
   `);
 
@@ -372,7 +450,7 @@ function getEncounterById(db, encounterId, heroClass) {
     encounter.status
   );
 
-  const cleanName = (encounter.monster_name || '').replace(/\[.*?\]/g, '').trim();
+  const cleanName = (encounter.base_monster_name || '').replace(/\[.*?\]/g, '').trim();
   const slug = cleanName
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
@@ -412,16 +490,46 @@ function getEncounterById(db, encounterId, heroClass) {
     defeatedImageUrl = `/images/monsters/${defeatedFilename}`;
   }
 
+  const hasBountyContract = Boolean(encounter.bounty_contract_id && encounter.bounty_custom_name);
+  const isRevealed = encounter.status === 'IN_COMBAT';
+  const isBountyTarget = hasBountyContract && encounter.status !== 'DISCOVERED';
+  const customDisplayName = (isBountyTarget ? encounter.bounty_custom_name : null) || encounter.instance_custom_title || null;
+  const monsterDisplayName = customDisplayName || encounter.base_monster_name;
+
+  // Stage 1 atmospheric hint for bounty target (strictly preserves encounter secrecy without naming the monster)
+  let finalDescription = resolved.text;
+  if (encounter.status === 'DISCOVERED' && hasBountyContract) {
+    finalDescription = `${resolved.text} Fresh tracks matching the Watcher's warrant suggest a hunted quarry prowls nearby.`;
+  }
+
+  // Qualitative trait description for combat UI (no raw numbers per Hidden Math Policy)
+  let bountyTraitNotice = null;
+  if (isBountyTarget) {
+    if (encounter.bounty_boost_type === 'TOUGH') {
+      bountyTraitNotice = 'Tough Quarry — Battle-hardened and unusually resilient';
+    } else if (encounter.bounty_boost_type === 'AGGRESSIVE') {
+      bountyTraitNotice = 'Aggressive Quarry — Strikes with relentless ferocity';
+    } else if (encounter.bounty_boost_type === 'BRUTAL') {
+      bountyTraitNotice = 'Brutal Quarry — Delivers bone-shattering blows';
+    }
+  }
+
   return {
     ...encounter,
-    resolvedDescription: resolved.text,
+    monster_name: monsterDisplayName,
+    base_monster_name: encounter.base_monster_name,
+    custom_title: encounter.instance_custom_title || null,
+    isBountyTarget,
+    bountyTraitNotice,
+    description: finalDescription,
+    resolvedDescription: finalDescription,
     isRangerSpecial: resolved.isRangerSpecial,
     descriptionType: resolved.type,
     imageUrl,
     defeatedImageUrl,
     hasDefeatedImage: Boolean(defeatedImageUrl),
     imageSlug: slug,
-    isRevealed: encounter.status === 'IN_COMBAT',
+    isRevealed,
     isAmbush: Number(encounter.is_ambush || 0) === 1,
     spottedByHero: Number(encounter.spotted_by_hero !== undefined ? encounter.spotted_by_hero : 1) === 1,
     openingShotResolved: Number(encounter.opening_shot_resolved || 0) === 1
@@ -464,6 +572,11 @@ function ignoreEncounter(db, characterId, encounterId) {
 
     if (enc.status !== 'DISCOVERED') {
       throw new Error(`Encounter cannot be ignored in status: ${enc.status}`);
+    }
+
+    const effectiveAmbush = Number(enc.character_level || 1) <= 1 ? 0 : Number(enc.is_ambush || 0);
+    if (effectiveAmbush === 1) {
+      throw new Error('Ambush! Your path is cut off—you cannot bypass this threat and must face the ambush!');
     }
 
     tx.prepare(`

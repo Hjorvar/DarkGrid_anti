@@ -195,7 +195,7 @@ test('4. Safe Haven Rest: Fully restores HP and recharges Cleric self-healing', 
   assert.equal(heroRested.cleric_heal_uses, 0);
 });
 
-test('5. Combat dynamic weapon selection: Flying monster forces ranged and removes shield AC', async () => {
+test('5. Combat dynamic weapon selection: Flying monster respects weapon preference and preserves shield AC in melee', async () => {
   const db = createTestDb();
   const user = await registerUser(db, 'TacticalFighter', 'pass1234');
   const hero = createCharacter(db, {
@@ -210,11 +210,11 @@ test('5. Combat dynamic weapon selection: Flying monster forces ranged and remov
   const meleeAc = calculateHeroAC(hero, eq, false);
   assert.equal(meleeAc, 16);
 
-  // Ranged airborne AC: Shield is excluded! 10 + Chain Shirt (4) + DEX (1) = 15
+  // Ranged AC: Shield is excluded! 10 + Chain Shirt (4) + DEX (1) = 15
   const rangedAc = calculateHeroAC(hero, eq, true);
   assert.equal(rangedAc, 15);
 
-  // Start combat against a flying monster (Stirge)
+  // Start combat against a flying monster (Stirge) with default MELEE preference
   const stirge = db.prepare("SELECT * FROM monsters WHERE name = 'Stirge'").get();
   assert.equal(stirge.movement_type, 'FLY');
 
@@ -226,9 +226,10 @@ test('5. Combat dynamic weapon selection: Flying monster forces ranged and remov
   const encounterId = Number(encounterRes.lastInsertRowid);
   const combatState = startCombat(db, hero.id, encounterId);
 
-  // Combat engine automatically armed hero with Shortbow
-  assert.equal(combatState.activeWeapon.weapon_range_type, 'RANGED');
-  assert.equal(combatState.activeWeapon.name, 'Shortbow');
+  // Fighter with MELEE preference keeps Longsword and full 16 AC (including shield) against flying monster
+  assert.equal(combatState.activeWeapon.weapon_range_type, 'MELEE');
+  assert.equal(combatState.activeWeapon.name, 'Longsword');
+  assert.equal(combatState.heroAC, 16);
 });
 
 test('6. Class abilities: Fighter Weapon/Armor Training, Ranger Favored Enemy, Cleric Divine Power', () => {

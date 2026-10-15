@@ -18,8 +18,41 @@ const {
 const { rollD20, rollDice } = require('./dice');
 
 /**
- * Calculates hero Attack Bonus according to DARKGRID_GAME_SPEC.md §8.1:
- * floor((STR_modifier + DEX_modifier) / 2) + level_progression + weapon_enhancement + class_bonuses
+ * Determines whether the active weapon or hero attack mode is Ranged.
+ */
+function isWeaponRanged(equippedWeapon, character = null, equipment = null) {
+  if (equippedWeapon) {
+    const rangeType = (equippedWeapon.weapon_range_type || '').toUpperCase();
+    if (rangeType === 'RANGED') return true;
+    if (rangeType === 'MELEE') return false;
+    const slot = (equippedWeapon.equipped_slot || '').toUpperCase();
+    if (slot === 'RANGED' || slot === 'PREPARED_RANGED') return true;
+    if (slot === 'MELEE' || slot === 'PREPARED_MELEE') return false;
+    if (equippedWeapon.attributes) {
+      let attrs = equippedWeapon.attributes;
+      if (typeof attrs === 'string') {
+        try { attrs = JSON.parse(attrs); } catch { attrs = {}; }
+      }
+      const wType = (attrs.weapon_type || '').toLowerCase();
+      if (wType === 'ranged') return true;
+      if (wType === 'melee') return false;
+    }
+    const nameLower = (equippedWeapon.name || '').toLowerCase();
+    if (nameLower.includes('bow') || nameLower.includes('sling') || nameLower.includes('dart') || nameLower.includes('javelin')) {
+      return true;
+    }
+    return false;
+  }
+  if (character && (character.primary_weapon || '').toUpperCase() === 'RANGED') {
+    if (!equipment || equipment.rangedWeapon) return true;
+  }
+  return false;
+}
+
+/**
+ * Calculates hero Attack Bonus:
+ * - Melee attacks use STR modifier (+ level_progression + weapon_enhancement + class_bonuses, -1 vs airborne FLY targets).
+ * - Ranged attacks use DEX modifier (+ level_progression + weapon_enhancement + class_bonuses, 0 penalty vs FLY targets).
  * Supports Belt of Giant Strength +2 via effective stats without double counting.
  * @param {object} character
  * @param {object|null} equippedWeapon
@@ -35,7 +68,17 @@ function calculateHeroAttackBonus(character, equippedWeapon = null, monster = nu
   }
   const strMod = getModifier(strVal);
   const dexMod = getModifier(character.dexterity);
-  const baseBonus = Math.floor((strMod + dexMod) / 2);
+  const isRanged = isWeaponRanged(equippedWeapon, character, equipment);
+  const baseBonus = isRanged ? dexMod : strMod;
+
+  // Evasive Flyer penalty: Melee attacks against airborne creatures take a -1 attack penalty; Ranged attacks take 0 penalty
+  const mType = (monster && monster.movement_type ? monster.movement_type : '').toUpperCase();
+  const isAirborne = Boolean(monster && (
+    mType === 'FLY' ||
+    mType === 'FLYING' ||
+    Boolean(monster.is_flying)
+  ));
+  const evasiveFlyerPenalty = (!isRanged && isAirborne) ? -1 : 0;
 
   // Level Attack Progression
   const levelBonus = getLevelAttackBonus(character.class, character.level || 1);
@@ -72,7 +115,7 @@ function calculateHeroAttackBonus(character, equippedWeapon = null, monster = nu
     clericBonus = getClericHolyRadianceBonus(character, monster).attack;
   }
 
-  return baseBonus + levelBonus + weaponBonus + fighterBonus + rangerBonus + clericBonus;
+  return baseBonus + levelBonus + weaponBonus + fighterBonus + rangerBonus + clericBonus + evasiveFlyerPenalty;
 }
 
 /**
@@ -226,13 +269,16 @@ function getHeroDamageFormula(character, equippedWeapon = null, monster = null, 
     strVal = eff.strength;
   }
   const strMod = getModifier(strVal);
+  const dexMod = getModifier(character.dexterity);
+  const isRanged = isWeaponRanged(equippedWeapon, character, equipment);
   let baseDice = '1d4';
 
   if (equippedWeapon && equippedWeapon.damage_dice) {
     baseDice = equippedWeapon.damage_dice;
   }
 
-  let flatBonus = strMod;
+  // Melee uses full STR modifier; Ranged uses DEX modifier (half DEX mod, or STR mod on composite/heavy draws)
+  let flatBonus = isRanged ? Math.max(strMod, Math.floor(dexMod / 2)) : strMod;
   if (equippedWeapon && equippedWeapon.enhancement_bonus) {
     flatBonus += Number(equippedWeapon.enhancement_bonus);
   }
@@ -322,6 +368,7 @@ function resolvePotionHealing(potionItem = null, rng = Math.random) {
 }
 
 module.exports = {
+  isWeaponRanged,
   calculateHeroAttackBonus,
   calculateHeroAC,
   getHeroDamageFormula,

@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+function initCharacterBuilder() {
   const form = document.getElementById('character-creation-form');
   if (!form) return;
 
@@ -160,4 +160,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const initialClass = classInput.value || 'FIGHTER';
   initStatsForClass(initialClass);
   updateUI();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCharacterBuilder);
+} else {
+  initCharacterBuilder();
+}

@@ -103,19 +103,28 @@ test('1.2 Primary Weapon Preference: Ranged preference selects ranged weapon aga
   assert.equal(active.activeWeapon.id, equipment.rangedWeapon.id);
 });
 
-test('1.3 Primary Weapon Preference: Flying monster forces ranged weapon regardless of preference', async () => {
+test('1.3 Primary Weapon Preference: Flying monster respects preference (Melee keeps weapon & shield; Ranged uses ranged)', async () => {
   const db = createTestDb();
   const { hero } = await setupTestHero(db, 'FlyingTargetHero', 'FIGHTER');
   const equipment = getCharacterEquipment(db, hero.id);
-  const flyingMonster = { is_flying: 1, creature_type: 'BEAST' };
+  const flyingMonster = { is_flying: 1, movement_type: 'FLY', creature_type: 'BEAST' };
 
-  // Set preference to MELEE
+  // Set preference to MELEE: keeps melee weapon and shield
   setPrimaryWeaponPreference(db, hero.id, 'MELEE');
-  const refreshedHero = db.prepare('SELECT * FROM characters WHERE id = ?').get(hero.id);
-  const active = getActiveWeapon(refreshedHero, equipment, flyingMonster);
+  let refreshedHero = db.prepare('SELECT * FROM characters WHERE id = ?').get(hero.id);
+  let active = getActiveWeapon(refreshedHero, equipment, flyingMonster);
 
-  // Must force ranged
+  assert.equal(active.isRangedActive, false);
+  assert.equal(active.isAirborne, true);
+  assert.equal(active.activeWeapon.id, equipment.meleeWeapon.id);
+
+  // Set preference to RANGED: uses ranged weapon
+  setPrimaryWeaponPreference(db, hero.id, 'RANGED');
+  refreshedHero = db.prepare('SELECT * FROM characters WHERE id = ?').get(hero.id);
+  active = getActiveWeapon(refreshedHero, equipment, flyingMonster);
+
   assert.equal(active.isRangedActive, true);
+  assert.equal(active.isAirborne, true);
   assert.equal(active.activeWeapon.id, equipment.rangedWeapon.id);
 });
 
@@ -375,7 +384,7 @@ test('2.7 Ranger Opening Shot: Favored Enemy applies to legal type and strictly 
   assert.equal(corruptedBonus.damage, 0);
 });
 
-test('2.8 Ranger Opening Shot: lethal hit completes victory with XP and loot', async () => {
+test('2.8 Ranger Opening Shot: high damage leaves monster at 1 HP so combat always requires at least one Attack action', async () => {
   const db = createTestDb();
   const { hero } = await setupTestHero(db, 'LethalSniper', 'RANGER');
   const tile = getTileByCoords(db, 7, 5);
@@ -387,19 +396,26 @@ test('2.8 Ranger Opening Shot: lethal hit completes victory with XP and loot', a
     isAmbush: 0
   });
 
-  // Set monster HP low so opening shot kills it
+  // Set monster HP low so opening shot damage exceeds its remaining HP
   db.prepare('UPDATE encounters SET current_monster_hp = 2 WHERE id = ?').run(encounter.id);
 
   const startXp = hero.xp;
   const result = startCombat(db, hero.id, encounter.id, hero.class, {
-    rng: createRngSequence([0.9, 0.9]) // Nat 19 hit, max damage
+    rng: createRngSequence([0.9, 0.9, 0.9, 0.1]) // Nat 19 hit, max damage, hero wins initiative
   });
 
   assert.equal(result.openingShotFired, true);
-  assert.equal(result.encounter.status, 'VICTORY');
+  assert.equal(result.encounter.status, 'IN_COMBAT', 'Opening shot must never skip combat; status stays IN_COMBAT');
+  assert.equal(result.encounter.current_monster_hp, 1, 'Monster HP must be capped at minimum 1 HP from opening shot');
+
+  // Now player takes at least one Attack action to finish the monster
+  const roundState = executeCombatRound(db, hero.id, encounter.id, 'ATTACK', {
+    rng: createRngSequence([0.9, 0.9])
+  });
+  assert.equal(roundState.encounter.status, 'VICTORY');
 
   const refreshedHero = db.prepare('SELECT * FROM characters WHERE id = ?').get(hero.id);
-  assert.ok(refreshedHero.xp > startXp, 'Hero must be awarded XP from opening shot victory');
+  assert.ok(refreshedHero.xp > startXp, 'Hero must be awarded XP after finishing the monster in combat');
 });
 
 test('2.9 Ranger Opening Shot Idempotency: cannot fire twice on same encounter', async () => {

@@ -47,6 +47,14 @@ const {
 } = require('../domain/combat/engine');
 const { getVictoryData } = require('../domain/combat/victory');
 const { getTerrainArtworkForTile } = require('../domain/world/artwork');
+const {
+  getOrGenerateContracts,
+  getActiveContractForCharacter,
+  acceptContract,
+  abandonContract,
+  autoClaimCompletedBounties,
+  getWildernessThreats
+} = require('../domain/bounties/board');
 const { withTransaction } = require('../db/connection');
 
 router.use(requireAuth);
@@ -75,7 +83,7 @@ router.get('/', (req, res) => {
  * Main game screen
  */
 router.get('/game', (req, res) => {
-  const character = getLivingCharacterByUserId(req.db, req.user.id);
+  let character = getLivingCharacterByUserId(req.db, req.user.id);
   if (!character) {
     const fallen = req.db.prepare(`
       SELECT id FROM characters
@@ -92,6 +100,17 @@ router.get('/game', (req, res) => {
   const currentTile = getTileById(req.db, character.tile_id);
   if (!currentTile) {
     return res.status(500).send('Error: Current tile not found in the world.');
+  }
+
+  const isSafeCity = (currentTile.terrain === 'CITY' && currentTile.is_safe === 1);
+
+  // Auto-claim any READY_TO_CLAIM hunting contracts upon being in Oakhaven
+  let claimedBounties = [];
+  if (isSafeCity) {
+    claimedBounties = autoClaimCompletedBounties(req.db, character.id);
+    if (claimedBounties.length > 0) {
+      character = getLivingCharacterByUserId(req.db, req.user.id) || character;
+    }
   }
 
   // Terrain artwork resolution (location override > terrain default > fallback)
@@ -129,9 +148,11 @@ router.get('/game', (req, res) => {
     };
   }
 
-  // Shop stock if in safe haven city
-  const isSafeCity = (currentTile.terrain === 'CITY' && currentTile.is_safe === 1);
-  const shopStock = isSafeCity ? getCityStoreStock(req.db) : null;
+  // Shop stock & Watcher's Board data if in safe haven city
+  const shopStock = isSafeCity ? getCityStoreStock(req.db, effectiveHero) : null;
+  const bountyContracts = isSafeCity ? getOrGenerateContracts(req.db, effectiveHero) : [];
+  const wildernessThreats = isSafeCity ? getWildernessThreats(req.db) : [];
+  const activeContract = getActiveContractForCharacter(req.db, character.id);
 
   // 5x5 minimap around current tile
   const minimap = getMinimapData(req.db, currentTile, 2);
@@ -150,16 +171,27 @@ router.get('/game', (req, res) => {
   };
 
   const errorMessage = req.query.error || null;
-  const infoMessage = req.query.info || null;
+  let infoMessage = req.query.info || null;
+  if (!infoMessage && claimedBounties.length > 0) {
+    infoMessage = claimedBounties
+      .map(b => `Bounty Completed! You have slain ${b.customName}. Oakhaven awards you ${b.rewardGold} Gold.`)
+      .join(' ');
+  }
   const activeModal = req.query.modal || null;
 
   // Journal entries: recent finished encounters (VICTORY or ESCAPED), plus active events
   const journalEncounters = req.db.prepare(`
-    SELECT e.id, e.status, e.combat_round, e.created_at, m.name as monster_name, t.name as tile_name,
+    SELECT e.id, e.status, e.combat_round, e.created_at,
+           COALESCE(hc.custom_name, mi.custom_title, m.name) as monster_name,
+           m.name as base_monster_name,
+           CASE WHEN e.bounty_contract_id IS NOT NULL THEN 1 ELSE 0 END as is_bounty_target,
+           t.name as tile_name,
            (SELECT COUNT(*) FROM combat_events ce WHERE ce.encounter_id = e.id) as event_count,
            (SELECT ce.public_text FROM combat_events ce WHERE ce.encounter_id = e.id AND ce.event_type = 'VICTORY' LIMIT 1) as victory_text
     FROM encounters e
     LEFT JOIN monsters m ON e.monster_id = m.id
+    LEFT JOIN hunting_contracts hc ON e.bounty_contract_id = hc.id
+    LEFT JOIN monster_instances mi ON e.monster_instance_id = mi.id
     LEFT JOIN map_tiles t ON e.tile_id = t.id
     WHERE e.character_id = ? AND e.status IN ('VICTORY', 'ESCAPED', 'IN_COMBAT')
     ORDER BY e.id DESC
@@ -186,6 +218,10 @@ router.get('/game', (req, res) => {
     clericHealInfo,
     isSafeCity,
     shopStock,
+    bountyContracts,
+    wildernessThreats,
+    activeContract,
+    claimedBounties,
     modifiers,
     errorMessage,
     infoMessage,
@@ -204,7 +240,12 @@ router.get('/game/fallen', (req, res) => {
   }
 
   const fallen = req.db.prepare(`
-    SELECT c.*, m.name as killer_name, mi.kill_count as killer_kills, t.name as tile_name
+    SELECT c.*,
+           COALESCE(mi.custom_title, m.name) as killer_name,
+           m.name as killer_base_name,
+           mi.custom_title as killer_custom_title,
+           mi.kill_count as killer_kills,
+           t.name as tile_name
     FROM characters c
     LEFT JOIN monster_instances mi ON c.killed_by_monster_instance_id = mi.id
     LEFT JOIN monsters m ON mi.monster_id = m.id
@@ -217,7 +258,24 @@ router.get('/game/fallen', (req, res) => {
     return res.redirect('/character/create');
   }
 
-  res.render('fallen', { fallen });
+  // Retrieve combat events from the final encounter in which the hero fell
+  const lastEncounter = req.db.prepare(`
+    SELECT id, combat_round
+    FROM encounters
+    WHERE character_id = ?
+    ORDER BY id DESC LIMIT 1
+  `).get(fallen.id);
+
+  const combatEvents = lastEncounter
+    ? req.db.prepare(`
+        SELECT id, round_number, event_type, public_text
+        FROM combat_events
+        WHERE encounter_id = ?
+        ORDER BY id ASC
+      `).all(lastEncounter.id)
+    : [];
+
+  res.render('fallen', { fallen, combatEvents });
 });
 
 /**
@@ -279,13 +337,25 @@ router.post('/game/move', (req, res) => {
   }
 
   const targetTile = validation.targetTile;
+  let claimedBounties = [];
 
-  // Execute movement atomically and roll encounter
+  // Execute movement atomically and roll encounter (or auto-claim bounties if arriving in Oakhaven)
   withTransaction(req.db, (tx) => {
     tx.prepare('UPDATE characters SET tile_id = ? WHERE id = ?').run(targetTile.id, character.id);
-    // Encounter check only happens on valid movement
-    checkTileEncounter(tx, character, targetTile);
+    if (targetTile.terrain === 'CITY' && targetTile.is_safe === 1) {
+      claimedBounties = autoClaimCompletedBounties(tx, character.id);
+    } else {
+      // Encounter check only happens on valid movement outside safe city
+      checkTileEncounter(tx, character, targetTile);
+    }
   });
+
+  if (claimedBounties.length > 0) {
+    const notice = claimedBounties
+      .map(b => `Bounty Completed! You have slain ${b.customName}. Oakhaven awards you ${b.rewardGold} Gold.`)
+      .join(' ');
+    return res.redirect(`/game?info=${encodeURIComponent(notice)}`);
+  }
 
   res.redirect('/game');
 });
@@ -587,4 +657,63 @@ router.post('/game/shop/sell', (req, res) => {
   }
 });
 
+/**
+ * The Watcher's Board: Accept Hunting Contract
+ */
+router.post('/game/bounties/accept', (req, res) => {
+  const character = getLivingCharacterByUserId(req.db, req.user.id);
+  if (!character) {
+    return res.redirect('/game');
+  }
+
+  const currentTile = getTileById(req.db, character.tile_id);
+  if (!currentTile || currentTile.terrain !== 'CITY' || currentTile.is_safe !== 1) {
+    return res.redirect('/game?error=' + encodeURIComponent('You must be in Oakhaven to accept a hunting contract from The Watcher\'s Board.'));
+  }
+
+  const activeEncounter = getActiveEncounterForCharacter(req.db, character.id, character.class);
+  if (activeEncounter) {
+    return res.redirect('/game?error=' + encodeURIComponent('Cannot accept a hunting contract during an active encounter.'));
+  }
+
+  const contractId = parseInt(req.body.contractId, 10);
+  const returnModal = req.body.returnModal || 'bounties';
+
+  try {
+    const result = acceptContract(req.db, character, contractId);
+    if (!result.ok) {
+      return res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&error=${encodeURIComponent(result.error)}`);
+    }
+    const msg = `Accepted hunting contract: "${result.contract.contract_title}". Venture into ${result.contract.target_region} to hunt down your quarry!`;
+    res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&info=${encodeURIComponent(msg)}`);
+  } catch (err) {
+    res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&error=${encodeURIComponent(err.message)}`);
+  }
+});
+
+/**
+ * The Watcher's Board: Abandon Active Hunting Contract
+ */
+router.post('/game/bounties/abandon', (req, res) => {
+  const character = getLivingCharacterByUserId(req.db, req.user.id);
+  if (!character) {
+    return res.redirect('/game');
+  }
+
+  const contractId = req.body.contractId ? parseInt(req.body.contractId, 10) : null;
+  const returnModal = req.body.returnModal || '';
+  const modalParam = returnModal ? `modal=${encodeURIComponent(returnModal)}&` : '';
+
+  try {
+    const result = abandonContract(req.db, character, contractId);
+    if (!result.ok) {
+      return res.redirect(`/game?${modalParam}error=${encodeURIComponent(result.error)}`);
+    }
+    res.redirect(`/game?${modalParam}info=${encodeURIComponent('Hunting contract abandoned.')}`);
+  } catch (err) {
+    res.redirect(`/game?${modalParam}error=${encodeURIComponent(err.message)}`);
+  }
+});
+
 module.exports = router;
+

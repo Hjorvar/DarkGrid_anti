@@ -22,3 +22,8 @@ logs/
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Firebase Spark build output
+dist/
+.firebase/
+src/firebase/compiled-templates.js

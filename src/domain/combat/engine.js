@@ -30,6 +30,17 @@ const {
   describeFleeAttempt
 } = require('./narrative');
 const { handlePlayerDeath, handleMonsterDefeat } = require('../monsters/persistence');
+const {
+  parseCombatStateJson,
+  serializeCombatStateJson,
+  getActiveStatusModifiers,
+  getPublicHeroStatusBadges,
+  resolveCombatStartAura,
+  modifyHeroAttackDamageAndState,
+  resolveMonsterTurnSpecials,
+  resolveMonsterOnHitEffects,
+  resolveEndOfRoundStatusTicks
+} = require('./abilities');
 
 /**
  * Calculates current health bracket (100, 75, 50, 25, 0)
@@ -66,12 +77,12 @@ function getConditionTextForBracket(descriptionsJson, bracket) {
 
 /**
  * Shared query helper that fetches the encounter joined with all monster combat, CR, treasure,
- * and subtype metadata, plus any persistent monster instance HP fields.
+ * subtype metadata, persistent monster instance fields, and Named Hunting Contract modifiers.
  */
 function fetchEncounterWithMonster(db, encounterId, characterId) {
-  return db.prepare(`
+  const row = db.prepare(`
     SELECT e.*,
-           m.name as monster_name,
+           m.name as base_monster_name,
            m.symbol as monster_symbol,
            m.color as monster_color,
            m.solo_level as monster_level,
@@ -81,7 +92,7 @@ function fetchEncounterWithMonster(db, encounterId, characterId) {
            m.image_path as monster_image_path,
            m.defeated_image_path as monster_defeated_image_path,
            m.armor_class as monster_ac,
-           m.attack_bonus as monster_ab,
+           m.attack_bonus as base_monster_ab,
            m.damage_dice as monster_damage_dice,
            m.xp_reward,
            m.creature_type,
@@ -89,13 +100,43 @@ function fetchEncounterWithMonster(db, encounterId, characterId) {
            m.movement_type,
            m.challenge_rating,
            m.treasure_type,
+           m.special_abilities,
            mi.max_hp as instance_max_hp,
-           mi.current_hp as instance_current_hp
+           mi.current_hp as instance_current_hp,
+           mi.custom_title as instance_custom_title,
+           hc.custom_name as bounty_custom_name,
+           hc.title as bounty_title,
+           hc.region_name as bounty_region_name,
+           hc.boost_type as bounty_boost_type,
+           hc.boost_label as bounty_boost_label,
+           hc.boosted_max_hp as bounty_boosted_max_hp,
+           hc.attack_bonus_mod as bounty_attack_bonus_mod,
+           hc.damage_bonus_mod as bounty_damage_bonus_mod,
+           hc.reward_gold as bounty_reward_gold,
+           hc.status as bounty_status
     FROM encounters e
     JOIN monsters m ON e.monster_id = m.id
     LEFT JOIN monster_instances mi ON e.monster_instance_id = mi.id
+    LEFT JOIN hunting_contracts hc ON e.bounty_contract_id = hc.id
     WHERE e.id = ? AND e.character_id = ?
   `).get(encounterId, characterId);
+
+  if (!row) return null;
+
+  const isBountyTarget = Boolean(row.bounty_contract_id && row.bounty_custom_name);
+  const customDisplayName = row.bounty_custom_name || row.instance_custom_title || null;
+  const attackBonusMod = isBountyTarget ? Number(row.bounty_attack_bonus_mod || 0) : 0;
+  const damageBonusMod = isBountyTarget ? Number(row.bounty_damage_bonus_mod || 0) : 0;
+
+  return {
+    ...row,
+    monster_name: customDisplayName || row.base_monster_name,
+    base_monster_name: row.base_monster_name,
+    custom_title: row.instance_custom_title || null,
+    isBountyTarget,
+    monster_ab: Number(row.base_monster_ab || 0) + attackBonusMod,
+    bounty_damage_bonus: damageBonusMod
+  };
 }
 
 /**
@@ -141,8 +182,8 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
       throw new Error(`Encounter is already resolved (${encounter.status}).`);
     }
 
-    // Determine monster max HP
-    const monsterMaxHp = encounter.instance_max_hp || encounter.monster_max_hp || encounter.base_hp;
+    // Determine monster max HP (accounting for persistent monster HP or Named Bounty TOUGH boost)
+    const monsterMaxHp = encounter.instance_max_hp || encounter.bounty_boosted_max_hp || encounter.monster_max_hp || encounter.base_hp;
     // Persistent monsters start each new combat engagement at full boosted max HP (H2)
     let currentMonsterHp = encounter.monster_instance_id
       ? monsterMaxHp
@@ -185,7 +226,8 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
       if (attackRoll.isHit) {
         const damageFormula = getHeroDamageFormula(effectiveCharacter, equipment.rangedWeapon, encounter);
         openingDamage = resolveDamage(damageFormula, attackRoll.isCrit, rng);
-        currentMonsterHp = Math.max(0, currentMonsterHp - openingDamage);
+        // Opening Shot can wound a monster down to at least 1 HP, but never kill it outright before combat begins
+        currentMonsterHp = Math.max(1, currentMonsterHp - openingDamage);
       }
 
       const openingNarrative = `[Opening Shot] ${describeHeroAttack(equipment.rangedWeapon, attackRoll)}`;
@@ -203,48 +245,6 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
           isOpeningShot: true
         })
       );
-
-      // Check if monster died from opening shot
-      if (currentMonsterHp <= 0) {
-        tx.prepare(`
-          UPDATE encounters
-          SET status = 'VICTORY',
-              current_monster_hp = 0,
-              monster_max_hp = ?,
-              opening_shot_resolved = 1,
-              combat_round = 1,
-              last_health_bracket = 0,
-              updated_at = CURRENT_TIMESTAMP
-          WHERE id = ?
-        `).run(monsterMaxHp, encounterId);
-
-        if (encounter.monster_instance_id) {
-          tx.prepare('UPDATE monster_instances SET current_hp = 0 WHERE id = ?').run(encounter.monster_instance_id);
-        }
-
-        const deadCondition = getConditionTextForBracket(encounter.monster_descriptions, 0);
-        if (deadCondition) {
-          tx.prepare(`
-            INSERT INTO combat_events (
-              encounter_id, round_number, event_type, public_text, details
-            ) VALUES (?, 1, 'MONSTER_CONDITION', ?, ?)
-          `).run(encounterId, deadCondition, JSON.stringify({ bracket: 0 }));
-        }
-
-        let monsterInstance = null;
-        if (encounter.monster_instance_id) {
-          monsterInstance = tx.prepare('SELECT * FROM monster_instances WHERE id = ?').get(encounter.monster_instance_id);
-        }
-
-        handleMonsterDefeat(tx, character, encounter, encounter, monsterInstance, { rng });
-        const victoryState = getCombatState(tx, characterId, encounterId);
-        return {
-          ...victoryState,
-          openingShotFired,
-          openingShotHit,
-          openingShotCrit
-        };
-      }
     }
 
     // Roll initiative if not already rolled
@@ -254,41 +254,18 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
 
     if (!initiativeWinner) {
       const heroDexMod = getModifier(character.dexterity);
+      const isAmbushActive = Number(encounter.is_ambush || 0) === 1;
+      const ambushInitBonus = isAmbushActive ? 4 : 0;
       heroInit = rollInitiative(heroDexMod, rng);
-      monsterInit = rollInitiative(encounter.initiative_bonus || 0, rng);
-      // Ties go to the hero
-      initiativeWinner = heroInit >= monsterInit ? 'HERO' : 'MONSTER';
+      monsterInit = rollInitiative((encounter.initiative_bonus || 0) + ambushInitBonus, rng);
+      // Ties go to the hero normally, but to the ambushing monster during an ambush
+      initiativeWinner = isAmbushActive
+        ? (monsterInit >= heroInit ? 'MONSTER' : 'HERO')
+        : (heroInit >= monsterInit ? 'HERO' : 'MONSTER');
     }
 
     const initialBracket = getHealthBracket(currentMonsterHp, monsterMaxHp);
-
-    tx.prepare(`
-      UPDATE encounters
-      SET status = 'IN_COMBAT',
-          initiative_winner = ?,
-          hero_initiative = ?,
-          monster_initiative = ?,
-          monster_max_hp = ?,
-          current_monster_hp = ?,
-          combat_round = CASE WHEN combat_round = 0 THEN 1 ELSE combat_round END,
-          last_health_bracket = ?,
-          opening_shot_resolved = ?,
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `).run(
-      initiativeWinner,
-      heroInit,
-      monsterInit,
-      monsterMaxHp,
-      currentMonsterHp,
-      initialBracket,
-      openingShotResolved,
-      encounterId
-    );
-
-    if (encounter.monster_instance_id) {
-      tx.prepare('UPDATE monster_instances SET current_hp = ? WHERE id = ?').run(currentMonsterHp, encounter.monster_instance_id);
-    }
+    const combatStatusState = parseCombatStateJson(encounter.combat_state_json);
 
     // Initial engagement description
     const initialCondition = getConditionTextForBracket(encounter.monster_descriptions, initialBracket);
@@ -304,6 +281,47 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
         initialCondition,
         JSON.stringify({ bracket: initialBracket, initiativeWinner })
       );
+    }
+
+    // Resolve Combat-Start Auras (Stench, Fear, Web/Entangle) after initiative and initial condition
+    if (!combatStatusState.auraResolved) {
+      resolveCombatStartAura(effectiveCharacter, equipment, encounter, combatStatusState, rng, (type, text, details = {}) => {
+        tx.prepare(`
+          INSERT INTO combat_events (
+            encounter_id, round_number, event_type, public_text, details
+          ) VALUES (?, 1, ?, ?, ?)
+        `).run(encounterId, type, text, JSON.stringify(details));
+      });
+    }
+
+    tx.prepare(`
+      UPDATE encounters
+      SET status = 'IN_COMBAT',
+          initiative_winner = ?,
+          hero_initiative = ?,
+          monster_initiative = ?,
+          monster_max_hp = ?,
+          current_monster_hp = ?,
+          combat_round = CASE WHEN combat_round = 0 THEN 1 ELSE combat_round END,
+          last_health_bracket = ?,
+          opening_shot_resolved = ?,
+          combat_state_json = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(
+      initiativeWinner,
+      heroInit,
+      monsterInit,
+      monsterMaxHp,
+      currentMonsterHp,
+      initialBracket,
+      openingShotResolved,
+      serializeCombatStateJson(combatStatusState),
+      encounterId
+    );
+
+    if (encounter.monster_instance_id) {
+      tx.prepare('UPDATE monster_instances SET current_hp = ? WHERE id = ?').run(currentMonsterHp, encounter.monster_instance_id);
     }
 
     const combatState = getCombatState(tx, characterId, encounterId);
@@ -339,10 +357,16 @@ function getCombatState(db, characterId, encounterId) {
   const potions = getCharacterPotions(db, characterId, { combatOnly: true });
   const potionCount = potions.length;
 
-  const { activeWeapon, isRangedActive } = getActiveWeapon(effectiveCharacter, equipment, encounter);
-  const heroAC = calculateHeroAC(effectiveCharacter, equipment, isRangedActive, encounter, activeWeapon);
+  const combatStatusState = parseCombatStateJson(encounter.combat_state_json);
+  const statusMods = getActiveStatusModifiers(combatStatusState);
+  const heroStatusBadges = getPublicHeroStatusBadges(combatStatusState);
 
-  const currentBracket = getHealthBracket(encounter.current_monster_hp, encounter.monster_max_hp || encounter.base_hp);
+  const { activeWeapon, isRangedActive } = getActiveWeapon(effectiveCharacter, equipment, encounter);
+  const baseHeroAC = calculateHeroAC(effectiveCharacter, equipment, isRangedActive, encounter, activeWeapon);
+  const heroAC = baseHeroAC + statusMods.acMod;
+
+  const effectiveMonsterMaxHp = encounter.instance_max_hp || encounter.bounty_boosted_max_hp || encounter.monster_max_hp || encounter.base_hp;
+  const currentBracket = getHealthBracket(encounter.current_monster_hp, effectiveMonsterMaxHp);
   const currentConditionText = getConditionTextForBracket(encounter.monster_descriptions, currentBracket);
 
   return {
@@ -356,7 +380,9 @@ function getCombatState(db, characterId, encounterId) {
     potionCount,
     potions,
     currentBracket,
-    currentConditionText
+    currentConditionText,
+    heroStatusBadges,
+    combatStatusState
   };
 }
 
@@ -431,12 +457,17 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
     const equipment = getCharacterEquipment(tx, characterId);
     const effectiveHero = getEffectiveStats(character, equipment);
     const { activeWeapon, isRangedActive } = getActiveWeapon(effectiveHero, equipment, encounter);
-    const heroAC = calculateHeroAC(effectiveHero, equipment, isRangedActive, encounter, activeWeapon);
-    const heroAB = calculateHeroAttackBonus(effectiveHero, activeWeapon, encounter);
+    const baseHeroAC = calculateHeroAC(effectiveHero, equipment, isRangedActive, encounter, activeWeapon);
+    const baseHeroAB = calculateHeroAttackBonus(effectiveHero, activeWeapon, encounter);
+    const combatStatusState = parseCombatStateJson(encounter.combat_state_json);
+    const initialStatusMods = getActiveStatusModifiers(combatStatusState);
+    const heroAC = baseHeroAC + initialStatusMods.acMod;
+
     let currentMonsterHp = encounter.current_monster_hp;
-    let monsterMaxHp = encounter.monster_max_hp || (monsterInstance ? monsterInstance.max_hp : encounter.base_hp);
+    let monsterMaxHp = encounter.monster_max_hp || encounter.bounty_boosted_max_hp || (monsterInstance ? monsterInstance.max_hp : encounter.base_hp);
     let currentHeroHp = character.current_hp;
     let lastHealthBracket = encounter.last_health_bracket != null ? encounter.last_health_bracket : 100;
+    const bountyDamageBonus = Number(encounter.bounty_damage_bonus || 0);
 
     const roundEvents = [];
 
@@ -463,13 +494,14 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
     // =========================================================================
     // ACTION 1: FLEE
     // Flótti yfirtekur umferðarflæði. Skrímslið fær nákvæmlega eina fría árás.
+    // (Permadeath Safety Rule #8: Flee is always available even if Grabbed/Entangled/Paralyzed)
     // =========================================================================
     if (normalizedAction === 'FLEE') {
       const freeAttackRoll = resolveAttackRoll(encounter.monster_ab, heroAC, rng);
       let freeDamage = 0;
 
       if (freeAttackRoll.isHit) {
-        freeDamage = resolveDamage(encounter.monster_damage_dice, freeAttackRoll.isCrit, rng);
+        freeDamage = resolveDamage(encounter.monster_damage_dice, freeAttackRoll.isCrit, rng) + bountyDamageBonus;
         currentHeroHp = Math.max(0, currentHeroHp - freeDamage);
       }
 
@@ -488,10 +520,10 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
         return getCombatState(tx, characterId, encounterId);
       }
 
-      // Escape succeeded: close encounter, unlock movement, player remains on tile
+      // Escape succeeded: close encounter, clear temporary combat statuses, unlock movement
       tx.prepare(`
         UPDATE encounters
-        SET status = 'ESCAPED', updated_at = CURRENT_TIMESTAMP
+        SET status = 'ESCAPED', combat_state_json = '{}', updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `).run(encounter.id);
 
@@ -552,6 +584,14 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       const actualHealed = newHeroHp - currentHeroHp;
       currentHeroHp = newHeroHp;
 
+      // Drinking a healing potion staunchly stops active Bleeding and clears 1-round Paralysis
+      if (combatStatusState.heroStatuses.bleed) {
+        combatStatusState.heroStatuses.bleed = null;
+      }
+      if (combatStatusState.heroStatuses.paralyzed > 0) {
+        combatStatusState.heroStatuses.paralyzed = 0;
+      }
+
       logEvent('POTION_USED', describePotionDrink(), {
         potionName: potion.name,
         rollAmount,
@@ -559,25 +599,78 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
         actualHealed
       });
 
-      // Monster makes its standard round attack against the hero
-      const monsterAttackRoll = resolveAttackRoll(encounter.monster_ab, heroAC, rng);
-      let monsterDamage = 0;
+      // Monster turn specials & standard attack
+      const currentMods = getActiveStatusModifiers(combatStatusState);
+      const effectiveHeroAC = baseHeroAC + currentMods.acMod;
+      const turnSpecials = resolveMonsterTurnSpecials({
+        character: effectiveHero,
+        equipment,
+        encounter,
+        combatState: combatStatusState,
+        roundNumber,
+        currentHeroHp,
+        currentMonsterHp,
+        monsterMaxHp,
+        rng,
+        logEvent
+      });
+      currentHeroHp = turnSpecials.newHeroHp;
+      currentMonsterHp = turnSpecials.newMonsterHp;
 
-      if (monsterAttackRoll.isHit) {
-        monsterDamage = resolveDamage(encounter.monster_damage_dice, monsterAttackRoll.isCrit, rng);
-        currentHeroHp = Math.max(0, currentHeroHp - monsterDamage);
+      if (currentHeroHp > 0 && !turnSpecials.usedBreathOrVolley) {
+        const monsterAttackRoll = resolveAttackRoll(encounter.monster_ab + turnSpecials.monsterAbBonus, effectiveHeroAC, rng);
+        let monsterDamage = 0;
+
+        if (monsterAttackRoll.isHit) {
+          monsterDamage = resolveDamage(encounter.monster_damage_dice, monsterAttackRoll.isCrit, rng);
+          if (turnSpecials.bonusDamageFormula) {
+            monsterDamage += resolveDamage(turnSpecials.bonusDamageFormula, false, rng);
+          }
+          monsterDamage = Math.max(1, monsterDamage + turnSpecials.bloodFrenzyDmgBonus + bountyDamageBonus);
+          currentHeroHp = Math.max(0, currentHeroHp - monsterDamage);
+        }
+
+        logEvent('MONSTER_ATTACK', describeMonsterAttack(encounter, monsterAttackRoll), {
+          isHit: monsterAttackRoll.isHit,
+          isCrit: monsterAttackRoll.isCrit,
+          damage: monsterDamage
+        });
+
+        if (monsterAttackRoll.isHit && currentHeroHp > 0) {
+          const onHit = resolveMonsterOnHitEffects({
+            character: effectiveHero,
+            equipment,
+            encounter,
+            combatState: combatStatusState,
+            monsterAttackRoll,
+            heroAC: effectiveHeroAC,
+            currentHeroHp,
+            currentMonsterHp,
+            monsterMaxHp,
+            rng,
+            logEvent
+          });
+          currentHeroHp = onHit.newHeroHp;
+          currentMonsterHp = onHit.newMonsterHp;
+        }
       }
 
-      logEvent('MONSTER_ATTACK', describeMonsterAttack(encounter, monsterAttackRoll), {
-        isHit: monsterAttackRoll.isHit,
-        isCrit: monsterAttackRoll.isCrit,
-        damage: monsterDamage
-      });
+      if (currentHeroHp > 0) {
+        const eor = resolveEndOfRoundStatusTicks({
+          character: effectiveHero,
+          equipment,
+          combatState: combatStatusState,
+          currentHeroHp,
+          rng,
+          logEvent
+        });
+        currentHeroHp = eor.newHeroHp;
+      }
 
       tx.prepare('UPDATE characters SET current_hp = ? WHERE id = ?').run(currentHeroHp, character.id);
 
       if (currentHeroHp <= 0) {
-        // Player slain by monster attack after drinking potion
+        // Player slain by monster attack or DoT after drinking potion
         handlePlayerDeath(tx, character, encounter, encounter, monsterInstance, { rng });
         return getCombatState(tx, characterId, encounterId);
       }
@@ -585,9 +678,16 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       // Round advances
       tx.prepare(`
         UPDATE encounters
-        SET combat_round = ?, updated_at = CURRENT_TIMESTAMP
+        SET combat_round = ?,
+            current_monster_hp = ?,
+            combat_state_json = ?,
+            updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
-      `).run(roundNumber + 1, encounter.id);
+      `).run(roundNumber + 1, currentMonsterHp, serializeCombatStateJson(combatStatusState), encounter.id);
+
+      if (monsterInstance) {
+        tx.prepare('UPDATE monster_instances SET current_hp = ? WHERE id = ?').run(currentMonsterHp, monsterInstance.id);
+      }
 
       return getCombatState(tx, characterId, encounterId);
     }
@@ -599,13 +699,46 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
     const initiativeWinner = encounter.initiative_winner || 'HERO';
 
     function heroAttackPhase() {
-      const heroAttackRoll = resolveAttackRoll(heroAB, encounter.monster_ac, rng);
+      // Permadeath Safety Rule #1: 1-round Paralysis consumes Attack action to break free
+      if (combatStatusState.heroStatuses.paralyzed > 0) {
+        combatStatusState.heroStatuses.paralyzed = 0;
+        logEvent(
+          'HERO_ATTACK',
+          'You strain with all your might against the numbing paralysis, wrenching your limbs free of the rigor!',
+          { isHit: false, isCrit: false, damage: 0, paralyzedStun: true }
+        );
+        tx.prepare('UPDATE encounters SET combat_state_json = ? WHERE id = ?').run(
+          serializeCombatStateJson(combatStatusState),
+          encounter.id
+        );
+        return false;
+      }
+
+      const currentMods = getActiveStatusModifiers(combatStatusState);
+      const effectiveHeroAB = baseHeroAB + currentMods.atkMod;
+      const effectiveMonsterAC = Math.max(1, (encounter.monster_ac || 10) - (combatStatusState.bloodFrenzyActive ? 2 : 0));
+
+      const heroAttackRoll = resolveAttackRoll(effectiveHeroAB, effectiveMonsterAC, rng);
       let heroDamage = 0;
 
       if (heroAttackRoll.isHit) {
         const damageFormula = getHeroDamageFormula(effectiveHero, activeWeapon, encounter);
-        heroDamage = resolveDamage(damageFormula, heroAttackRoll.isCrit, rng);
-        currentMonsterHp = Math.max(0, currentMonsterHp - heroDamage);
+        let rawHeroDamage = resolveDamage(damageFormula, heroAttackRoll.isCrit, rng);
+        rawHeroDamage = Math.max(1, rawHeroDamage + currentMods.dmgMod);
+
+        const modResult = modifyHeroAttackDamageAndState({
+          character: effectiveHero,
+          activeWeapon,
+          encounter,
+          combatState: combatStatusState,
+          heroAttackRoll,
+          rawHeroDamage,
+          currentMonsterHp,
+          monsterMaxHp,
+          logEvent
+        });
+        heroDamage = modResult.finalDamage;
+        currentMonsterHp = modResult.newMonsterHp;
       }
 
       logEvent('HERO_ATTACK', describeHeroAttack(activeWeapon, heroAttackRoll), {
@@ -618,9 +751,9 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
 
       tx.prepare(`
         UPDATE encounters
-        SET current_monster_hp = ?, last_health_bracket = ?
+        SET current_monster_hp = ?, last_health_bracket = ?, combat_state_json = ?
         WHERE id = ?
-      `).run(currentMonsterHp, lastHealthBracket, encounter.id);
+      `).run(currentMonsterHp, lastHealthBracket, serializeCombatStateJson(combatStatusState), encounter.id);
 
       if (monsterInstance) {
         tx.prepare('UPDATE monster_instances SET current_hp = ? WHERE id = ?').run(currentMonsterHp, monsterInstance.id);
@@ -629,22 +762,86 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       return currentMonsterHp <= 0;
     }
 
-    function monsterAttackPhase() {
-      const monsterAttackRoll = resolveAttackRoll(encounter.monster_ab, heroAC, rng);
-      let monsterDamage = 0;
+    const heroStartOfRoundHp = currentHeroHp;
+    const eligibleForLevel1SpikeGuard = (
+      Number(character.level || 1) <= 1 &&
+      roundNumber === 1 &&
+      heroStartOfRoundHp >= Math.max(6, Math.ceil((character.max_hp || 8) * 0.70))
+    );
 
-      if (monsterAttackRoll.isHit) {
-        monsterDamage = resolveDamage(encounter.monster_damage_dice, monsterAttackRoll.isCrit, rng);
-        currentHeroHp = Math.max(0, currentHeroHp - monsterDamage);
+    function monsterAttackPhase() {
+      const currentMods = getActiveStatusModifiers(combatStatusState);
+      const effectiveHeroAC = baseHeroAC + currentMods.acMod;
+
+      const turnSpecials = resolveMonsterTurnSpecials({
+        character: effectiveHero,
+        equipment,
+        encounter,
+        combatState: combatStatusState,
+        roundNumber,
+        currentHeroHp,
+        currentMonsterHp,
+        monsterMaxHp,
+        rng,
+        logEvent
+      });
+      currentHeroHp = turnSpecials.newHeroHp;
+      currentMonsterHp = turnSpecials.newMonsterHp;
+
+      if (currentHeroHp > 0 && !turnSpecials.usedBreathOrVolley) {
+        const monsterAttackRoll = resolveAttackRoll(encounter.monster_ab + turnSpecials.monsterAbBonus, effectiveHeroAC, rng);
+        let monsterDamage = 0;
+
+        if (monsterAttackRoll.isHit) {
+          monsterDamage = resolveDamage(encounter.monster_damage_dice, monsterAttackRoll.isCrit, rng);
+          if (turnSpecials.bonusDamageFormula) {
+            monsterDamage += resolveDamage(turnSpecials.bonusDamageFormula, false, rng);
+          }
+          monsterDamage = Math.max(1, monsterDamage + turnSpecials.bloodFrenzyDmgBonus + bountyDamageBonus);
+          currentHeroHp = Math.max(0, currentHeroHp - monsterDamage);
+        }
+
+        logEvent('MONSTER_ATTACK', describeMonsterAttack(encounter, monsterAttackRoll), {
+          isHit: monsterAttackRoll.isHit,
+          isCrit: monsterAttackRoll.isCrit,
+          damage: monsterDamage
+        });
+
+        if (monsterAttackRoll.isHit && currentHeroHp > 0) {
+          const onHit = resolveMonsterOnHitEffects({
+            character: effectiveHero,
+            equipment,
+            encounter,
+            combatState: combatStatusState,
+            monsterAttackRoll,
+            heroAC: effectiveHeroAC,
+            currentHeroHp,
+            currentMonsterHp,
+            monsterMaxHp,
+            rng,
+            logEvent
+          });
+          currentHeroHp = onHit.newHeroHp;
+          currentMonsterHp = onHit.newMonsterHp;
+        }
       }
 
-      logEvent('MONSTER_ATTACK', describeMonsterAttack(encounter, monsterAttackRoll), {
-        isHit: monsterAttackRoll.isHit,
-        isCrit: monsterAttackRoll.isCrit,
-        damage: monsterDamage
-      });
+      if (currentHeroHp <= 0 && eligibleForLevel1SpikeGuard) {
+        currentHeroHp = 1;
+        logEvent('HERO_STATUS', "Death's Door! Sheer survival instinct keeps you standing at 1 HP after a lethal opening blow!", {
+          level1SpikeGuard: true
+        });
+      }
 
       tx.prepare('UPDATE characters SET current_hp = ? WHERE id = ?').run(currentHeroHp, character.id);
+      tx.prepare('UPDATE encounters SET current_monster_hp = ?, combat_state_json = ? WHERE id = ?').run(
+        currentMonsterHp,
+        serializeCombatStateJson(combatStatusState),
+        encounter.id
+      );
+      if (monsterInstance) {
+        tx.prepare('UPDATE monster_instances SET current_hp = ? WHERE id = ?').run(currentMonsterHp, monsterInstance.id);
+      }
 
       return currentHeroHp <= 0;
     }
@@ -683,12 +880,36 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       }
     }
 
+    // End of round status ticks (Poison DoT + cure 1 save, Bleed DoT, Grab break-free, duration countdowns)
+    const eor = resolveEndOfRoundStatusTicks({
+      character: effectiveHero,
+      equipment,
+      combatState: combatStatusState,
+      currentHeroHp,
+      rng,
+      logEvent
+    });
+    if (eor.newHeroHp !== currentHeroHp) {
+      currentHeroHp = eor.newHeroHp;
+      if (currentHeroHp <= 0 && eligibleForLevel1SpikeGuard) {
+        currentHeroHp = 1;
+      }
+      tx.prepare('UPDATE characters SET current_hp = ? WHERE id = ?').run(currentHeroHp, character.id);
+      if (currentHeroHp <= 0) {
+        handlePlayerDeath(tx, character, encounter, encounter, monsterInstance, { rng });
+        return getCombatState(tx, characterId, encounterId);
+      }
+    }
+
     // Both combatants survived: advance round
     tx.prepare(`
       UPDATE encounters
-      SET combat_round = ?, updated_at = CURRENT_TIMESTAMP
+      SET combat_round = ?,
+          current_monster_hp = ?,
+          combat_state_json = ?,
+          updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(roundNumber + 1, encounter.id);
+    `).run(roundNumber + 1, currentMonsterHp, serializeCombatStateJson(combatStatusState), encounter.id);
 
     return getCombatState(tx, characterId, encounterId);
   });

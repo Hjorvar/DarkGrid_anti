@@ -448,11 +448,11 @@ describe('Final Item System Stabilization Test Suite', () => {
       assert.equal(effectiveHero.strength, 18, 'Effective strength should be 16 + 2 = 18');
       assert.equal(effectiveHero.is_str_boosted, true);
 
-      // Melee attack bonus: in Darkgrid, baseBonus = floor((STR mod + DEX mod) / 2)
-      // Unboosted: floor((3 + 2) / 2) = 2. Boosted with 18 STR: floor((4 + 2) / 2) = 3
+      // Melee attack bonus uses full STR modifier:
+      // Unboosted STR 16 (+3 mod). Boosted with Belt to STR 18 (+4 mod)
       const longswordDef = db.prepare("SELECT * FROM item_definitions WHERE name = 'Longsword'").get();
       const abBoosted = calculateHeroAttackBonus(effectiveHero, longswordDef);
-      assert.equal(abBoosted, 3, 'Attack bonus with Belt should be +3 (boosted from +2)');
+      assert.equal(abBoosted, 4, 'Attack bonus with Belt should be +4 (boosted from +3)');
 
       // Damage formula: 1d8 + 4 (STR mod +4)
       const dmgFormula = getHeroDamageFormula(effectiveHero, longswordDef);
@@ -468,7 +468,7 @@ describe('Final Item System Stabilization Test Suite', () => {
       assert.equal(revertedHero.is_str_boosted, false);
 
       const abReverted = calculateHeroAttackBonus(revertedHero, longswordDef);
-      assert.equal(abReverted, 2, 'Attack bonus reverts to +2');
+      assert.equal(abReverted, 3, 'Attack bonus reverts to +3');
       assert.equal(getHeroDamageFormula(revertedHero, longswordDef), '1d8+3', 'Damage formula reverts to 1d8+3');
     });
 
@@ -626,8 +626,7 @@ describe('Final Item System Stabilization Test Suite', () => {
   // 7. Flying Monster Detection with Real Database Monster
   // =========================================================================
   describe('7. Flying Monster Detection & Dynamic Weapon Selection', () => {
-    test('Real DB monster with movement_type=FLY forces ranged combat and suppresses shield AC', () => {
-      // Find real flying monster from database (e.g. Young Green Dragon or Harpy)
+    test('Real DB monster with movement_type=FLY respects Melee preference (keeping shield AC) and applies -1 melee Evasive Flyer penalty', () => {
       const flyingMonster = db.prepare("SELECT * FROM monsters WHERE movement_type = 'FLY' LIMIT 1").get();
       assert.ok(flyingMonster, 'A monster with movement_type = FLY exists in database');
       assert.equal(flyingMonster.movement_type, 'FLY');
@@ -649,25 +648,25 @@ describe('Final Item System Stabilization Test Suite', () => {
 
       const equipment = getCharacterEquipment(db, 201);
 
-      // When encountering the real flying monster:
       const encounter = {
         movement_type: flyingMonster.movement_type
       };
 
-      const { activeWeapon, isRangedActive } = getActiveWeapon(hero, equipment, encounter);
-      assert.equal(isRangedActive, true, 'Flying monster must enforce isRangedActive = true');
-      assert.equal(activeWeapon.name, 'Longbow', 'Active weapon must be Longbow');
+      const { activeWeapon, isRangedActive, isAirborne } = getActiveWeapon(hero, equipment, encounter);
+      assert.equal(isAirborne, true, 'Flying monster must be detected as airborne');
+      assert.equal(isRangedActive, false, 'Melee hero keeps melee weapon active against flying monster');
+      assert.equal(activeWeapon.name, 'Longsword', 'Active weapon must remain Longsword');
 
-      // AC calculation: Shield bonus must be suppressed when ranged weapon is active
+      // AC calculation: Shield bonus (+2) is PRESERVED when melee weapon is active!
       const ac = calculateHeroAC(hero, null, equipment.shield, isRangedActive, encounter, activeWeapon);
-      // Unarmored (10) + DEX 14 (+2) + 0 shield (suppressed) = 12 AC
-      assert.equal(ac, 12, 'Shield AC must be suppressed against flying threat with active ranged weapon');
+      // Unarmored (10) + DEX 14 (+2) + Heavy Steel Shield (+2) = 14 AC
+      assert.equal(ac, 14, 'Shield AC must be preserved against flying threat with active melee weapon');
     });
 
     test('Supports both FLY and FLYING values case-insensitively', () => {
       const hero = db.prepare('SELECT * FROM characters WHERE id = 201').get();
 
-      // Equip a ranged weapon
+      // Equip only a ranged weapon (no melee weapon -> falls back to ranged)
       const bowDef = db.prepare("SELECT id FROM item_definitions WHERE name = 'Longbow'").get();
       const bInst = db.prepare("INSERT INTO item_instances (item_definition_id, owner_type, owner_character_id) VALUES (?, 'CHARACTER', 201)").run(bowDef.id);
       equipItem(db, 201, Number(bInst.lastInsertRowid), 'RANGED');
@@ -680,6 +679,8 @@ describe('Final Item System Stabilization Test Suite', () => {
       const resFly = getActiveWeapon(hero, equipment, flyThreat);
       const resFlying = getActiveWeapon(hero, equipment, flyingThreat);
 
+      assert.equal(resFly.isAirborne, true);
+      assert.equal(resFlying.isAirborne, true);
       assert.equal(resFly.isRangedActive, true);
       assert.equal(resFlying.isRangedActive, true);
     });

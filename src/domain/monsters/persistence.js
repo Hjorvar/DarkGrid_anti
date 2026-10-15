@@ -5,7 +5,7 @@
  */
 
 const { withTransaction } = require('../../db/connection');
-const { getAllCharacterItems, getLevelForXp, getHpPerLevel } = require('../character/rules');
+const { getAllCharacterItems, getLevelForXp, getHpPerLevel, calculateXpWithIntelligence } = require('../character/rules');
 const { generateMonsterLoot } = require('../combat/loot');
 
 /**
@@ -30,7 +30,29 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
       WHERE id = ?
     `).run(character.id);
 
+    // 1b. Fail any active or unclaimed hunting contracts belonging to the slain character
+    let bountyCustomTitle = (encounter && encounter.bounty_custom_name) || null;
+    let bountyBoostedHp = (encounter && encounter.bounty_boosted_max_hp) || null;
+
+    try {
+      if (encounter && encounter.bounty_contract_id && (!bountyCustomTitle || !bountyBoostedHp)) {
+        const hcRow = tx.prepare('SELECT custom_name, boosted_max_hp FROM hunting_contracts WHERE id = ?').get(encounter.bounty_contract_id);
+        if (hcRow) {
+          bountyCustomTitle = hcRow.custom_name;
+          bountyBoostedHp = hcRow.boosted_max_hp;
+        }
+      }
+      tx.prepare(`
+        UPDATE hunting_contracts
+        SET status = 'FAILED', completed_at = CURRENT_TIMESTAMP
+        WHERE character_id = ? AND status IN ('ACTIVE', 'READY_TO_CLAIM')
+      `).run(character.id);
+    } catch {
+      // Gracefully ignore if hunting_contracts table is not present in a minimal test schema
+    }
+
     // 2. Identify or create persistent monster instance
+    const hadExistingInstance = Boolean(encounter.monster_instance_id || (monsterInstance && monsterInstance.id));
     let instanceId = encounter.monster_instance_id || (monsterInstance ? monsterInstance.id : null);
 
     if (instanceId) {
@@ -41,7 +63,7 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
         WHERE id = ?
       `).run(instanceId);
     } else {
-      // Monster was a random spawn — check if an active persistent monster already occupies the tile
+      // Monster was a random or bounty spawn — check if an active persistent monster already occupies the tile
       const existingOnTile = tx.prepare(`
         SELECT * FROM monster_instances
         WHERE tile_id = ? AND status = 'ACTIVE'
@@ -50,28 +72,38 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
       const actualMonsterId = encounter.monster_id || (monster ? (monster.monster_id || monster.id) : null);
       const baseMonsterHp = (monster && monster.base_hp) || encounter.base_hp || 10;
 
+      // Avoid double-stacking +15% TOUGH bounty HP boost and +10% persistent HP boost
+      const standardPersistentHp = Math.ceil(baseMonsterHp * 1.10);
+      const boostedMaxHp = bountyBoostedHp
+        ? Math.max(standardPersistentHp, Number(bountyBoostedHp))
+        : standardPersistentHp;
+
       if (existingOnTile && existingOnTile.monster_id === actualMonsterId) {
         // Tile collision edge case: absorb kill into existing persistent monster of the SAME species
         instanceId = existingOnTile.id;
+        const mergedMaxHp = Math.max(existingOnTile.max_hp || standardPersistentHp, boostedMaxHp);
         tx.prepare(`
           UPDATE monster_instances
-          SET kill_count = kill_count + 1, current_hp = max_hp
+          SET kill_count = kill_count + 1,
+               max_hp = ?,
+               current_hp = ?,
+               custom_title = COALESCE(custom_title, ?)
           WHERE id = ?
-        `).run(instanceId);
+        `).run(mergedMaxHp, mergedMaxHp, bountyCustomTitle, instanceId);
       } else if (!existingOnTile) {
-        // Create new persistent monster instance with +10% HP boost (granted once)
-        const boostedMaxHp = Math.ceil(baseMonsterHp * 1.10);
+        // Create new persistent monster instance (preserving custom_title if killed by a Named Bounty)
         const insertStmt = tx.prepare(`
           INSERT INTO monster_instances (
-            monster_id, tile_id, current_hp, max_hp, held_gold, kill_count, status
-          ) VALUES (?, ?, ?, ?, 0, 1, 'ACTIVE')
+            monster_id, tile_id, current_hp, max_hp, held_gold, kill_count, custom_title, status
+          ) VALUES (?, ?, ?, ?, 0, 1, ?, 'ACTIVE')
         `);
 
         const res = insertStmt.run(
           actualMonsterId,
           encounter.tile_id,
           boostedMaxHp,
-          boostedMaxHp
+          boostedMaxHp,
+          bountyCustomTitle
         );
         instanceId = Number(res.lastInsertRowid);
       } else {
@@ -85,26 +117,39 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
         `).get(encounter.tile_id, encounter.tile_id);
 
         const targetTileId = openTile ? openTile.id : encounter.tile_id;
-        const boostedMaxHp = Math.ceil(baseMonsterHp * 1.10);
         const insertStmt = tx.prepare(`
           INSERT INTO monster_instances (
-            monster_id, tile_id, current_hp, max_hp, held_gold, kill_count, status
-          ) VALUES (?, ?, ?, ?, 0, 1, 'ACTIVE')
+            monster_id, tile_id, current_hp, max_hp, held_gold, kill_count, custom_title, status
+          ) VALUES (?, ?, ?, ?, 0, 1, ?, 'ACTIVE')
         `);
 
         const res = insertStmt.run(
           actualMonsterId,
           targetTileId,
           boostedMaxHp,
-          boostedMaxHp
+          boostedMaxHp,
+          bountyCustomTitle
         );
         instanceId = Number(res.lastInsertRowid);
       }
     }
 
-    // 3. Gold retention: 50% transferred to monster, 50% destroyed
+    // 3. Anti-Mule-Feeding & Gold retention: 50% transferred to monster, 50% destroyed
     const charRow = tx.prepare('SELECT * FROM characters WHERE id = ?').get(character.id) || character;
-    const goldTransferred = Math.floor((charRow.gold || 0) * 0.5);
+    const isZeroXpLevel1 = Number(charRow.level || 1) <= 1 && Number(charRow.xp || 0) === 0;
+    let priorZeroXpDeaths = 0;
+    if (isZeroXpLevel1 && charRow.user_id) {
+      const priorRow = tx.prepare(`
+        SELECT COUNT(*) as c FROM characters
+        WHERE user_id = ? AND is_alive = 0 AND COALESCE(xp, 0) = 0 AND id != ?
+      `).get(charRow.user_id, charRow.id);
+      priorZeroXpDeaths = priorRow ? Number(priorRow.c || 0) : 0;
+    }
+    const isMuleFeed = isZeroXpLevel1 && (priorZeroXpDeaths > 0 || (hadExistingInstance && Number(charRow.gold || 0) <= 10));
+
+    const goldTransferred = (isMuleFeed && Number(charRow.gold || 0) <= 10)
+      ? 0
+      : Math.floor((charRow.gold || 0) * 0.5);
     tx.prepare(`
       UPDATE monster_instances
       SET held_gold = held_gold + ?
@@ -118,12 +163,25 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
     `).run(character.id);
 
     // 4. Equipment and Inventory retention: 50% roll per item across ALL owned items
+    // (Starter items on a 0-XP mule alt are destroyed rather than stacked onto the monster)
     const allItems = getAllCharacterItems(tx, character.id);
     const survivingItems = [];
     const destroyedItemIds = [];
 
     for (const item of allItems) {
-      if (rng() < 0.50) {
+      let isStarterItem = false;
+      if (item.modifications) {
+        try {
+          const mods = typeof item.modifications === 'string' ? JSON.parse(item.modifications) : item.modifications;
+          isStarterItem = Boolean(mods && mods.is_starter === true);
+        } catch {
+          isStarterItem = false;
+        }
+      }
+
+      if (isMuleFeed && isStarterItem) {
+        destroyedItemIds.push(item.id);
+      } else if (rng() < 0.50) {
         survivingItems.push(item);
       } else {
         destroyedItemIds.push(item.id);
@@ -358,12 +416,13 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
       monster = resolvedMonster;
     }
 
-    // Award standard XP reward and check for level-up
-    const xpAwarded = (monster && monster.xp_reward) || (encounter && encounter.xp_reward) || 0;
+    // Award XP reward scaled by Hero Intelligence modifier (+10% per +1 INT mod) and check for level-up
+    const rawXp = (monster && monster.xp_reward) || (encounter && encounter.xp_reward) || 0;
     const charRow = tx.prepare('SELECT * FROM characters WHERE id = ?').get(character.id) || character;
+    const xpAwarded = calculateXpWithIntelligence(rawXp, charRow.intelligence);
     const newXp = (charRow.xp || 0) + xpAwarded;
     const oldLevel = charRow.level || 1;
-    const newLevel = getLevelForXp(newXp);
+    const newLevel = Math.max(oldLevel, getLevelForXp(newXp));
 
     let currentHp = charRow.current_hp;
     let maxHp = charRow.max_hp;
@@ -393,11 +452,51 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
       WHERE id = ?
     `).run(encounter.id);
 
+    // Check if this encounter was a Named Hunting Contract target
+    let bountyCompleted = null;
+    if (encounter && encounter.bounty_contract_id) {
+      try {
+        const contractRow = tx.prepare(`
+          SELECT hc.*, m.name AS base_monster_name
+          FROM hunting_contracts hc
+          JOIN monsters m ON hc.base_monster_id = m.id
+          WHERE hc.id = ? AND hc.character_id = ? AND hc.status = 'ACTIVE'
+        `).get(encounter.bounty_contract_id, character.id);
+
+        if (contractRow) {
+          const updateBounty = tx.prepare(`
+            UPDATE hunting_contracts
+            SET status = 'READY_TO_CLAIM', completed_at = CURRENT_TIMESTAMP
+            WHERE id = ? AND character_id = ? AND status = 'ACTIVE'
+          `).run(contractRow.id, character.id);
+
+          if (updateBounty.changes === 1) {
+            bountyCompleted = {
+              contractId: contractRow.id,
+              title: contractRow.title,
+              customName: contractRow.custom_name,
+              baseMonsterName: contractRow.base_monster_name,
+              regionName: contractRow.region_name,
+              rewardGold: contractRow.reward_gold
+            };
+          }
+        }
+      } catch {
+        bountyCompleted = null;
+      }
+    }
+
     // Log victory event in combat log
-    let victoryText = `The abominable beast collapses to the earth with a final shudder. The battle is won! (+${xpAwarded} XP`;
+    const slainLabel = bountyCompleted
+      ? `${bountyCompleted.customName} collapses to the earth with a final shudder`
+      : `The abominable beast collapses to the earth with a final shudder`;
+    let victoryText = `${slainLabel}. The battle is won! (+${xpAwarded} XP`;
     if (goldLooted > 0) victoryText += `, +${goldLooted} gp`;
     if (lootedItemNames.length > 0) victoryText += `, Looted: ${lootedItemNames.join(', ')}`;
     victoryText += `)`;
+    if (bountyCompleted) {
+      victoryText += ` Bounty Target Slain! Return to Oakhaven to collect your ${bountyCompleted.rewardGold} gold reward.`;
+    }
 
     tx.prepare(`
       INSERT INTO combat_events (
@@ -414,7 +513,9 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
         looted_items: lootedItemNames,
         leveled_up: newLevel > oldLevel,
         new_level: newLevel,
-        hp_gain: totalHpGain
+        hp_gain: totalHpGain,
+        bounty_completed: Boolean(bountyCompleted),
+        bounty_info: bountyCompleted
       })
     );
 
@@ -438,7 +539,8 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
       itemsLooted,
       leveledUp: newLevel > oldLevel,
       newLevel,
-      totalHpGain
+      totalHpGain,
+      bountyCompleted
     };
   });
 }

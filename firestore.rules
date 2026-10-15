@@ -1,0 +1,517 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// This security rules file assumes the following data structures:
+//
+// Collection: /users/{userId}
+// Document ID: Firebase Auth UID
+// Fields:
+//   - username: string (required, 1..50 chars, immutable on update) - player username
+//   - createdAt: timestamp or string (optional, immutable on update) - account creation timestamp
+//   - updatedAt: timestamp or string (optional) - last update timestamp
+//
+// Collection: /usernames/{username}
+// Document ID: Lowercase username string
+// Fields:
+//   - uid: string (required, 1..128 chars, must match request.auth.uid, immutable) - owner Auth UID
+//   - username: string (optional, 1..50 chars) - original display username
+//   - createdAt: timestamp or string (optional, immutable on update) - creation timestamp
+//
+// Collection: /characters/{characterId}
+// Document ID: Auto-generated or character ID
+// Fields:
+//   - user_id: string (required, 1..128 chars, must match request.auth.uid, immutable) - owner Auth UID
+//   - name: string (required, 1..50 chars) - hero name
+//   - class: string (required, in ['FIGHTER', 'RANGER', 'CLERIC']) - hero class
+//   - level: number (optional, 1..20) - hero level
+//   - xp: number (optional, >= 0) - experience points
+//   - gold: number (optional, >= 0) - gold pieces
+//   - current_hp: number (optional, >= 0) - current hit points
+//   - max_hp: number (optional, >= 1) - maximum hit points
+//   - is_alive: number or bool (optional) - alive flag (1/0 or true/false)
+//   - status: string (optional, 1..40 chars) - hero status (e.g., 'ALIVE', 'DEAD', 'FALLEN')
+//   - tile_id: number or string (optional) - current map tile ID
+//   - x: number (optional) - current map X coordinate
+//   - y: number (optional) - current map Y coordinate
+//   - strength, constitution, dexterity, intelligence, wisdom, charisma: number (optional, 1..50)
+//   - favored_enemy_type: string or null (optional, <= 60 chars)
+//   - favored_enemy_subtype: string or null (optional, <= 60 chars)
+//   - cleric_heal_uses: number (optional, >= 0)
+//   - primary_weapon: string (optional, <= 20 chars)
+//   - equipment, inventory, items, stats: map or list or string (optional, bounded)
+//   - killed_by_monster_instance_id, killed_by_monster_name, died_at, created_at, updated_at: optional metadata
+//
+// Collection: /encounters/{encounterId}
+// Document ID: Auto-generated or encounter ID
+// Fields:
+//   - user_id: string (required, 1..128 chars, must match request.auth.uid, immutable) - owner Auth UID
+//   - character_id: string or number (required) - associated character ID
+//   - status: string (required, in ['DISCOVERED', 'IN_COMBAT', 'VICTORY', 'DEFEAT', 'ESCAPED', 'IGNORED'])
+//   - combat_state_json: string (optional, <= 50000 chars) - serialized combat status state
+//   - tile_id, monster_id, monster_instance_id, combat_round, current_monster_hp, monster_max_hp: optional combat fields
+//   - events, combat_events: list or string (optional, bounded) - combat log events
+//
+// Collection: /persistent_monsters/{pmId}
+// Document ID: Auto-generated or persistent monster instance ID
+// Fields:
+//   - tile_id: number or string (required) - wilderness tile ID
+//   - monster_id: number or string (required) - base monster definition ID
+//   - status: string (required, in ['ACTIVE', 'DEFEATED']) - instance status
+//   - gold_held / held_gold: number (optional, >= 0) - gold carried from fallen heroes
+//   - items_held_json: string (optional, <= 50000 chars) - serialized looted items
+//   - items_held: list (optional, <= 50 items) - array of looted items
+//   - killed_character_id: string or number or null (optional) - fallen hero ID
+//   - killed_character_name: string or null (optional, <= 60 chars) - fallen hero name
+//   - defeated_by_character_id: string or number or null (optional) - avenging hero ID
+//   - defeated_by_character_name: string or null (optional, <= 60 chars) - avenging hero name
+//   - current_hp, max_hp, kill_count: number (optional, >= 0)
+//
+// Collection: /market_listings/{listingId}
+// Document ID: Auto-generated or item/listing ID
+// Fields:
+//   - item_id: number or string (optional) - item definition or instance ID
+//   - stock_qty: number (optional, >= 0) - available quantity in shared town market
+//   - listed_by_character_id: string or number or null (optional) - seller character ID
+//   - listed_by_character_name: string or null (optional, <= 60 chars) - seller character name
+//   - price: number (optional, >= 0) - resale price in gold pieces
+//   - status: string (optional, in ['ACTIVE', 'SOLD', 'WITHDRAWN'])
+//
+// Collection: /world_state/{docId}
+// Document ID: State key (e.g., 'global', 'counters', 'seed')
+// Fields:
+//   - Shared counters, version markers, and world state properties (bounded size)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    // Check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if user owns the resource based on path userId
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if user is owner based on existing document's uid field
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+
+    // Check if user is owner based on existing document's user_id field
+    function isUserIdOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.user_id;
+    }
+
+    // Verify uid hasn't been tampered with on create
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) ||
+        request.resource.data.uid == request.auth.uid;
+    }
+
+    // Ensure uid field is not modified on update
+    function uidNotModified() {
+      return !('uid' in request.resource.data) ||
+        request.resource.data.uid == resource.data.uid;
+    }
+
+    // Verify user_id matches authenticated user on create
+    function userIdUnchanged() {
+      return ('user_id' in request.resource.data) &&
+        request.resource.data.user_id is string &&
+        request.resource.data.user_id == request.auth.uid;
+    }
+
+    // Ensure user_id field is not modified on update
+    function userIdNotModified() {
+      return ('user_id' in request.resource.data) &&
+        request.resource.data.user_id == resource.data.user_id;
+    }
+
+    // Validate required fields exist
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // Validate that the document contains only the allowed fields
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // Validate that immutable fields have not changed on update
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // Validate string length
+    function validStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
+    }
+
+    // Validate optional string (if present and non-null, must be string within length)
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] == null ||
+        (request.resource.data[field] is string &&
+         request.resource.data[field].size() >= minLen &&
+         request.resource.data[field].size() <= maxLen);
+    }
+
+    // Validate optional string or number ID
+    function isValidOptionalId(field) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] == null ||
+        (request.resource.data[field] is int) ||
+        (request.resource.data[field] is float) ||
+        (request.resource.data[field] is string &&
+         request.resource.data[field].size() >= 1 &&
+         request.resource.data[field].size() <= 128);
+    }
+
+    // Validate required string or number ID
+    function isValidRequiredId(field) {
+      return (field in request.resource.data) && (
+        (request.resource.data[field] is int) ||
+        (request.resource.data[field] is float) ||
+        (request.resource.data[field] is string &&
+         request.resource.data[field].size() >= 1 &&
+         request.resource.data[field].size() <= 128)
+      );
+    }
+
+    // Validate optional non-negative number
+    function isValidOptionalNonNegativeNumber(field, maxVal) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] == null ||
+        ((request.resource.data[field] is int || request.resource.data[field] is float) &&
+         request.resource.data[field] >= 0 &&
+         request.resource.data[field] <= maxVal);
+    }
+
+    // Validate optional number in range
+    function isValidOptionalNumberInRange(field, minVal, maxVal) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] == null ||
+        ((request.resource.data[field] is int || request.resource.data[field] is float) &&
+         request.resource.data[field] >= minVal &&
+         request.resource.data[field] <= maxVal);
+    }
+
+    // Validate optional timestamp or ISO string
+    function isValidOptionalTimestampOrString(field) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] == null ||
+        request.resource.data[field] is timestamp ||
+        (request.resource.data[field] is string && request.resource.data[field].size() <= 64);
+    }
+
+    // Validate optional list with maximum size
+    function isValidOptionalList(field, maxSize) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] == null ||
+        (request.resource.data[field] is list && request.resource.data[field].size() <= maxSize);
+    }
+
+    // Validate optional map with maximum key count
+    function isValidOptionalMap(field, maxKeys) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] == null ||
+        (request.resource.data[field] is map && request.resource.data[field].keys().size() <= maxKeys);
+    }
+
+    // Enforce bounded key count on document to prevent DoS / resource exhaustion
+    function hasBoundedDocumentKeys(maxKeys) {
+      return request.resource.data.keys().size() <= maxKeys;
+    }
+
+    // ===============================================================
+    // Domain Validators (Called in BOTH create and update)
+    // ===============================================================
+
+    // 1. User Profile Validator (/users/{userId})
+    function isValidUser(data) {
+      let allowedFields = [
+        'uid', 'username', 'createdAt', 'created_at', 'updatedAt', 'updated_at'
+      ];
+      return hasOnlyAllowedFields(allowedFields) &&
+        hasRequiredFields(['username']) &&
+        validStringLength('username', 1, 50) &&
+        isValidOptionalString('uid', 1, 128) &&
+        uidUnchanged() &&
+        isValidOptionalTimestampOrString('createdAt') &&
+        isValidOptionalTimestampOrString('created_at') &&
+        isValidOptionalTimestampOrString('updatedAt') &&
+        isValidOptionalTimestampOrString('updated_at');
+    }
+
+    // 2. Username Mapping Validator (/usernames/{username})
+    function isValidUsernameMapping(data, usernameDocId) {
+      let allowedFields = [
+        'uid', 'username', 'createdAt', 'created_at'
+      ];
+      return hasOnlyAllowedFields(allowedFields) &&
+        hasRequiredFields(['uid']) &&
+        usernameDocId.size() >= 1 &&
+        usernameDocId.size() <= 50 &&
+        data.uid is string &&
+        data.uid.size() >= 1 &&
+        data.uid.size() <= 128 &&
+        data.uid == request.auth.uid &&
+        isValidOptionalString('username', 1, 50) &&
+        isValidOptionalTimestampOrString('createdAt') &&
+        isValidOptionalTimestampOrString('created_at');
+    }
+
+    // 3. Character Validator (/characters/{characterId})
+    function isValidCharacter(data) {
+      return hasBoundedDocumentKeys(45) &&
+        hasRequiredFields(['user_id', 'name', 'class']) &&
+        userIdUnchanged() &&
+        validStringLength('name', 1, 50) &&
+        data['class'] is string &&
+        data['class'] in ['FIGHTER', 'RANGER', 'CLERIC'] &&
+        isValidOptionalNumberInRange('level', 1, 20) &&
+        isValidOptionalNonNegativeNumber('xp', 10000000) &&
+        isValidOptionalNonNegativeNumber('gold', 10000000) &&
+        isValidOptionalNonNegativeNumber('current_hp', 10000) &&
+        isValidOptionalNumberInRange('max_hp', 1, 10000) &&
+        isValidOptionalNumberInRange('x', -1000, 1000) &&
+        isValidOptionalNumberInRange('y', -1000, 1000) &&
+        isValidOptionalId('tile_id') &&
+        isValidOptionalString('status', 1, 40) &&
+        (!( 'is_alive' in data ) || data.is_alive is bool || (data.is_alive is int && data.is_alive in [0, 1])) &&
+        isValidOptionalNumberInRange('strength', 1, 50) &&
+        isValidOptionalNumberInRange('constitution', 1, 50) &&
+        isValidOptionalNumberInRange('dexterity', 1, 50) &&
+        isValidOptionalNumberInRange('intelligence', 1, 50) &&
+        isValidOptionalNumberInRange('wisdom', 1, 50) &&
+        isValidOptionalNumberInRange('charisma', 1, 50) &&
+        isValidOptionalString('favored_enemy_type', 0, 60) &&
+        isValidOptionalString('favored_enemy_subtype', 0, 60) &&
+        isValidOptionalNonNegativeNumber('cleric_heal_uses', 100) &&
+        isValidOptionalString('primary_weapon', 1, 20) &&
+        isValidOptionalId('killed_by_monster_instance_id') &&
+        isValidOptionalId('killed_by_monster_id') &&
+        isValidOptionalString('killed_by_monster_name', 0, 100) &&
+        isValidOptionalString('killer_name', 0, 100) &&
+        isValidOptionalNonNegativeNumber('killer_kills', 10000) &&
+        isValidOptionalString('tile_name', 0, 100) &&
+        isValidOptionalString('equipment_json', 0, 50000) &&
+        isValidOptionalString('inventory_json', 0, 50000) &&
+        isValidOptionalMap('equipment', 20) &&
+        isValidOptionalMap('stats', 15) &&
+        isValidOptionalList('inventory', 60) &&
+        isValidOptionalList('items', 60) &&
+        isValidOptionalList('potions', 60) &&
+        isValidOptionalTimestampOrString('died_at') &&
+        isValidOptionalTimestampOrString('diedAt') &&
+        isValidOptionalTimestampOrString('created_at') &&
+        isValidOptionalTimestampOrString('createdAt') &&
+        isValidOptionalTimestampOrString('updated_at') &&
+        isValidOptionalTimestampOrString('updatedAt');
+    }
+
+    // 4. Encounter Validator (/encounters/{encounterId})
+    function isValidEncounter(data) {
+      return hasBoundedDocumentKeys(40) &&
+        hasRequiredFields(['user_id', 'character_id']) &&
+        userIdUnchanged() &&
+        isValidRequiredId('character_id') &&
+        isValidOptionalId('tile_id') &&
+        isValidOptionalId('monster_id') &&
+        isValidOptionalId('monster_instance_id') &&
+        (!( 'status' in data ) || (data.status is string && data.status in ['DISCOVERED', 'IN_COMBAT', 'VICTORY', 'DEFEAT', 'ESCAPED', 'IGNORED'])) &&
+        isValidOptionalString('combat_state_json', 0, 50000) &&
+        isValidOptionalString('combat_events_json', 0, 50000) &&
+        isValidOptionalString('monster_name', 0, 100) &&
+        isValidOptionalString('tile_name', 0, 100) &&
+        isValidOptionalString('initiative_winner', 0, 20) &&
+        isValidOptionalString('victory_text', 0, 1000) &&
+        isValidOptionalNonNegativeNumber('combat_round', 10000) &&
+        isValidOptionalNonNegativeNumber('current_monster_hp', 100000) &&
+        isValidOptionalNonNegativeNumber('monster_max_hp', 100000) &&
+        isValidOptionalNumberInRange('last_health_bracket', 0, 100) &&
+        isValidOptionalList('events', 200) &&
+        isValidOptionalList('combat_events', 200) &&
+        isValidOptionalMap('combat_state', 30) &&
+        isValidOptionalMap('rewards', 20) &&
+        isValidOptionalTimestampOrString('created_at') &&
+        isValidOptionalTimestampOrString('createdAt') &&
+        isValidOptionalTimestampOrString('updated_at') &&
+        isValidOptionalTimestampOrString('updatedAt');
+    }
+
+    // 5. Persistent Monster Validator (/persistent_monsters/{pmId})
+    function isValidPersistentMonster(data) {
+      return hasBoundedDocumentKeys(30) &&
+        isValidRequiredId('tile_id') &&
+        isValidRequiredId('monster_id') &&
+        ('status' in data) &&
+        data.status is string &&
+        data.status in ['ACTIVE', 'DEFEATED'] &&
+        isValidOptionalNonNegativeNumber('gold_held', 10000000) &&
+        isValidOptionalNonNegativeNumber('held_gold', 10000000) &&
+        isValidOptionalNonNegativeNumber('current_hp', 100000) &&
+        isValidOptionalNonNegativeNumber('max_hp', 100000) &&
+        isValidOptionalNonNegativeNumber('kill_count', 10000) &&
+        isValidOptionalString('items_held_json', 0, 50000) &&
+        isValidOptionalList('items_held', 50) &&
+        isValidOptionalList('items', 50) &&
+        isValidOptionalId('killed_character_id') &&
+        isValidOptionalString('killed_character_name', 0, 60) &&
+        isValidOptionalId('defeated_by_character_id') &&
+        isValidOptionalString('defeated_by_character_name', 0, 60) &&
+        isValidOptionalString('monster_name', 0, 100) &&
+        isValidOptionalTimestampOrString('created_at') &&
+        isValidOptionalTimestampOrString('createdAt') &&
+        isValidOptionalTimestampOrString('defeated_at') &&
+        isValidOptionalTimestampOrString('defeatedAt') &&
+        isValidOptionalTimestampOrString('updated_at') &&
+        isValidOptionalTimestampOrString('updatedAt');
+    }
+
+    // 6. Market Listing Validator (/market_listings/{listingId})
+    function isValidMarketListing(data) {
+      return hasBoundedDocumentKeys(25) &&
+        isValidOptionalId('item_id') &&
+        isValidOptionalId('item_definition_id') &&
+        isValidOptionalId('item_instance_id') &&
+        isValidOptionalNonNegativeNumber('stock_qty', 10000) &&
+        isValidOptionalNonNegativeNumber('price', 10000000) &&
+        isValidOptionalNonNegativeNumber('resale_price', 10000000) &&
+        isValidOptionalId('listed_by_character_id') &&
+        isValidOptionalId('seller_character_id') &&
+        isValidOptionalId('buyer_character_id') &&
+        isValidOptionalString('listed_by_character_name', 0, 60) &&
+        isValidOptionalString('seller_character_name', 0, 60) &&
+        isValidOptionalString('name', 0, 100) &&
+        isValidOptionalString('category', 0, 40) &&
+        isValidOptionalString('status', 0, 30) &&
+        isValidOptionalMap('item', 30) &&
+        isValidOptionalTimestampOrString('created_at') &&
+        isValidOptionalTimestampOrString('createdAt') &&
+        isValidOptionalTimestampOrString('completed_at') &&
+        isValidOptionalTimestampOrString('completedAt') &&
+        isValidOptionalTimestampOrString('updated_at') &&
+        isValidOptionalTimestampOrString('updatedAt');
+    }
+
+    // 7. World State Validator (/world_state/{docId})
+    function isValidWorldState(data, docId) {
+      return docId.size() >= 1 &&
+        docId.size() <= 100 &&
+        hasBoundedDocumentKeys(50) &&
+        isValidOptionalString('state_json', 0, 50000) &&
+        isValidOptionalTimestampOrString('updated_at') &&
+        isValidOptionalTimestampOrString('updatedAt') &&
+        isValidOptionalTimestampOrString('created_at') &&
+        isValidOptionalTimestampOrString('createdAt');
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // 1. /users/{userId}
+    // Signed-in users can read any profile (for leaderboards / fallen hero names).
+    // Users can create and update ONLY their own profile document.
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) &&
+        isValidUser(request.resource.data) &&
+        uidNotModified() &&
+        areImmutableFieldsUnchanged(['uid', 'username', 'createdAt', 'created_at']);
+      allow delete: if false;
+    }
+
+    // 2. /usernames/{username}
+    // Publicly readable so username login and uniqueness verification work before sign-in.
+    // Creatable only by the authenticated owner whose UID matches request.resource.data.uid.
+    match /usernames/{username} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidUsernameMapping(request.resource.data, username);
+      allow update: if isDocOwner() &&
+        isValidUsernameMapping(request.resource.data, username) &&
+        uidNotModified() &&
+        areImmutableFieldsUnchanged(['uid', 'username', 'createdAt', 'created_at']);
+      allow delete: if false;
+    }
+
+    // 3. /characters/{characterId}
+    // Readable by any authenticated user (Fallen Heroes memorial / avenging persistent monsters).
+    // Creatable and updatable only by the owning player (user_id == request.auth.uid).
+    match /characters/{characterId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidCharacter(request.resource.data);
+      allow update: if isUserIdOwner() &&
+        userIdNotModified() &&
+        isValidCharacter(request.resource.data) &&
+        areImmutableFieldsUnchanged(['user_id', 'created_at', 'createdAt']);
+      allow delete: if false;
+    }
+
+    // 4. /encounters/{encounterId}
+    // Readable by authenticated users (for victory/fallen summaries and combat logs).
+    // Creatable and updatable only by the owning player (user_id == request.auth.uid).
+    match /encounters/{encounterId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidEncounter(request.resource.data);
+      allow update: if isUserIdOwner() &&
+        userIdNotModified() &&
+        isValidEncounter(request.resource.data) &&
+        areImmutableFieldsUnchanged(['user_id', 'character_id', 'created_at', 'createdAt']);
+      allow delete: if false;
+    }
+
+    // 5. /persistent_monsters/{pmId}
+    // Shared-world monsters spawned when a hero falls and updated when another hero defeats them.
+    match /persistent_monsters/{pmId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidPersistentMonster(request.resource.data);
+      allow update: if isAuthenticated() &&
+        isValidPersistentMonster(request.resource.data) &&
+        areImmutableFieldsUnchanged(['monster_id', 'created_at', 'createdAt']);
+      allow delete: if false;
+    }
+
+    // 6. /market_listings/{listingId}
+    // Shared-world magic item shop listings in safe haven cities.
+    match /market_listings/{listingId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidMarketListing(request.resource.data);
+      allow update: if isAuthenticated() &&
+        isValidMarketListing(request.resource.data) &&
+        areImmutableFieldsUnchanged(['created_at', 'createdAt']);
+      allow delete: if false;
+    }
+
+    // 7. /world_state/{docId}
+    // Shared world counters and state.
+    match /world_state/{docId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidWorldState(request.resource.data, docId);
+      allow update: if isAuthenticated() &&
+        isValidWorldState(request.resource.data, docId) &&
+        areImmutableFieldsUnchanged(['created_at', 'createdAt']);
+      allow delete: if false;
+    }
+
+    // Default Deny for all other paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -71,7 +71,27 @@ const config = {
   classBases: {
     FIGHTER: {
       name: 'Fighter',
-      description: 'A battle-hardened warrior with formidable vitality and mastery over all weapons and armor.',
+      title: 'Iron-Clad Vanguard',
+      icon: '⚔️',
+      loreQuote: '“Faith wavers and arrows spend, but cold iron and scarred sinew endure until the bitter end.”',
+      description: 'Forged in the mud and blood of hopeless sieges, the Fighter stands unbroken where lesser mortals perish. Masters of every blade, polearm, and warbow, they alone bear the crushing weight of full plate and tower shields into the dark.',
+      pillars: [
+        {
+          icon: '⚔️',
+          title: 'Master of All Arms',
+          text: 'No weapon is foreign to your grip—from greatswords and halberds to heavy warbows—and veteran instinct makes every strike cleave deeper as your legend grows.'
+        },
+        {
+          icon: '🛡️',
+          title: 'Bulwark of Iron',
+          text: 'Trained to bear heavy plate and tower shields that would crush others; seasoned discipline gradually turns the heaviest armor into a nimble second skin.'
+        },
+        {
+          icon: '🩸',
+          title: 'Unyielding Lifeblood',
+          text: 'Hardened by a lifetime of brutal close-quarters warfare, you possess the deepest reserves of vitality to survive bone-shattering blows.'
+        }
+      ],
       strength: 14,
       constitution: 12,
       dexterity: 12,
@@ -82,7 +102,27 @@ const config = {
     },
     RANGER: {
       name: 'Ranger',
-      description: 'A hunter and wilderness tracker who perceives nature and lurking threats with keen senses from afar.',
+      title: 'Shadow-Stalker of the Wilds',
+      icon: '🏹',
+      loreQuote: '“To walk the mist-choked wilds and live, you must hear the beast breathe before it catches your scent.”',
+      description: 'A silent predator who reads snapped twigs, fouled wind, and faint tracks in the mire. Moving unseen through cursed boughs, the Ranger discerns lurking horrors from afar and looses the first lethal shaft before the beast knows it is hunted.',
+      pillars: [
+        {
+          icon: '👁️',
+          title: 'Eyes in the Mist',
+          text: 'Where others see only shifting shadows, your keen wilderness senses uncover the habits and hidden tells of distant threats before you step into their jaws.'
+        },
+        {
+          icon: '🏹',
+          title: 'Ambush from the Shadows',
+          text: 'With a bow or crossbow readied, you loose a free opening shot from the gloom against grounded threats the instant battle is joined.'
+        },
+        {
+          icon: '🐺',
+          title: 'Sworn Blood-Quarry',
+          text: 'By swearing a blood-hunt against a chosen breed of living monster, you exploit their vital spots with escalating lethality—though the soulless Undead defy a hunter’s craft.'
+        }
+      ],
       strength: 12,
       constitution: 10,
       dexterity: 14,
@@ -93,7 +133,27 @@ const config = {
     },
     CLERIC: {
       name: 'Cleric',
-      description: 'An anointed servant of divine powers possessing deep wisdom and the sacred power to heal wounds.',
+      title: 'Vessel of the Dying Light',
+      icon: '✨',
+      loreQuote: '“Where the sun dares not shine, I carry the ember. What the grave refuses to keep, I shall return to ash.”',
+      description: 'Anointed beneath crumbling cathedrals, the Cleric marches into the abyss clad in heavy mail, bearing mace and shield. Through solemn prayer they mend their own torn flesh in the wild and sear the restless dead with sacred wrath.',
+      pillars: [
+        {
+          icon: '✨',
+          title: 'Sacred Restoration',
+          text: 'Between battles in the unforgiving wilds, you channel divine grace to knit your own wounds without relying solely on scarce potions—renewing your prayers at any sanctuary.'
+        },
+        {
+          icon: '☀️',
+          title: 'Bane of the Restless Dead',
+          text: 'When confronting Undead abominations, holy radiance blazes around your vestments—guiding your strikes, searing unholy bone, and warding you from the grave’s chill.'
+        },
+        {
+          icon: '🔨',
+          title: 'Sanctified Iron & Presence',
+          text: 'Clad in sturdy mail with consecrated mace and shield, your commanding presence also earns fairer terms when bartering with town merchants.'
+        }
+      ],
       strength: 12,
       constitution: 10,
       dexterity: 10,

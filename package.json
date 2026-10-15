@@ -9,7 +9,9 @@
     "test": "node --require ./tests/test_helpers.js --test tests/*.test.js",
     "db:setup": "node scripts/setup_db.js",
     "setup:db": "node scripts/setup_db.js",
-    "db:world": "node scripts/generate_world_seed.js"
+    "db:world": "node scripts/generate_world_seed.js",
+    "build:firebase": "node scripts/build_firebase.js",
+    "deploy:firebase": "node scripts/build_firebase.js && npx -y firebase-tools@latest deploy --project darkgrid-rpg"
   },
   "keywords": [],
   "author": "",
@@ -24,5 +26,10 @@
     "ejs": "^7.0.1",
     "express": "^5.3.0",
     "express-session": "^1.19.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "firebase": "^13.0.0",
+    "sql.js": "^1.14.2"
   }
 }

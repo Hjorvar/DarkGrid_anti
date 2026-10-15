@@ -38,7 +38,7 @@ function getWeaponDescriptor(equippedWeapon) {
  * Returns natural attack descriptors for a monster.
  */
 function getMonsterAttackDescriptor(monster) {
-  const name = (monster.monster_name || monster.name || '').toLowerCase();
+  const name = (monster.base_monster_name || monster.monster_name || monster.name || '').toLowerCase();
   const type = (monster.creature_type || '').toLowerCase();
 
   if (type === 'plant' || name.includes('vine') || name.includes('creeper')) {
@@ -134,23 +134,34 @@ function describeHeroAttack(equippedWeapon, attackResult) {
  */
 function describeMonsterAttack(monster, attackResult) {
   const m = getMonsterAttackDescriptor(monster);
+  const namedActor = monster && (monster.bounty_custom_name || monster.custom_title);
 
   if (attackResult.isCrit) {
+    if (namedActor) {
+      return `CRITICAL STRIKE! ${namedActor}'s attack lands with devastating ferocity, inflicting a grievous wound!`;
+    }
     return `CRITICAL STRIKE! The beast's attack lands with devastating ferocity, inflicting a grievous wound!`;
   }
 
   if (attackResult.isFumble) {
+    if (namedActor) {
+      return `${namedActor} lunges clumsily, overextending itself and stumbling harmlessly past your guard.`;
+    }
     return `The creature lunges clumsily, overextending itself and stumbling harmlessly past your guard.`;
   }
 
   if (attackResult.isHit) {
+    const actorSubject = namedActor || 'The monster';
     if (m.hitVerb.includes('flesh') || m.hitVerb.includes('against') || m.hitVerb.includes('into') || m.hitVerb.includes('force')) {
-      return `The monster ${m.verb}; its ${m.weapon} ${m.hitVerb}!`;
+      return `${actorSubject} ${m.verb}; its ${m.weapon} ${m.hitVerb}!`;
     }
-    return `The monster ${m.verb}; its ${m.weapon} ${m.hitVerb} you painfully!`;
+    return `${actorSubject} ${m.verb}; its ${m.weapon} ${m.hitVerb} you painfully!`;
   }
 
   // Miss
+  if (namedActor) {
+    return `${namedActor} strikes toward you, but your defenses turn the attack aside.`;
+  }
   return `The creature strikes toward you, but your defenses turn the attack aside.`;
 }
 

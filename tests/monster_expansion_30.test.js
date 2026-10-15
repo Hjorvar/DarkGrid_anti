@@ -53,22 +53,22 @@ test('Session 2 Cleanup: Placeholders removed, Wolf and Troll upgraded', () => {
   const marshLeech = db.prepare("SELECT * FROM monsters WHERE name LIKE '%Marsh Leech%'").get();
   assert.equal(marshLeech, undefined, 'Marsh Leech must be deleted from catalog');
 
-  // Wolf must exist and be official Pathfinder Animal
+  // Wolf must exist and be official Pathfinder Animal (13 * 0.75 = 10 HP after 25% reduction)
   const wolf = db.prepare("SELECT * FROM monsters WHERE name = 'Wolf'").get();
   assert.ok(wolf, 'Wolf must exist');
   assert.equal(wolf.challenge_rating, 1.0);
   assert.equal(wolf.creature_type, 'Animal');
-  assert.equal(wolf.base_hp, 13);
+  assert.equal(wolf.base_hp, 10);
   assert.equal(wolf.armor_class, 14);
   assert.ok(wolf.source_url.includes('aonprd.com'));
 
-  // Troll must exist and be official Pathfinder Humanoid (giant)
+  // Troll must exist and be official Pathfinder Humanoid (giant) (63 * 0.75 = 47 HP after 25% reduction)
   const troll = db.prepare("SELECT * FROM monsters WHERE name = 'Troll'").get();
   assert.ok(troll, 'Troll must exist');
   assert.equal(troll.challenge_rating, 5.0);
   assert.equal(troll.creature_type, 'Humanoid');
   assert.equal(troll.creature_subtype, 'giant');
-  assert.equal(troll.base_hp, 63);
+  assert.equal(troll.base_hp, 47);
   assert.equal(troll.armor_class, 16);
   assert.ok(troll.source_url.includes('aonprd.com'));
 });

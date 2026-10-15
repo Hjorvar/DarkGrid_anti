@@ -17,8 +17,13 @@
   const safeShopStock = (typeof shopStock !== 'undefined') ? shopStock : null;
   const safeIsRangedActive = (typeof isRangedActive !== 'undefined') ? Boolean(isRangedActive) : false;
   const safeActiveWeapon = (typeof activeWeapon !== 'undefined') ? activeWeapon : null;
-  const safeActiveModal = (typeof activeModal !== 'undefined' && ['character', 'backpack', 'market', 'journal'].includes(activeModal)) ? activeModal : null;
+  const safeActiveModal = (typeof activeModal !== 'undefined' && ['character', 'backpack', 'market', 'journal', 'bounties'].includes(activeModal)) ? activeModal : null;
   const safeJournal = (typeof journalEncounters !== 'undefined' && Array.isArray(journalEncounters)) ? journalEncounters : [];
+  const safeBountyContracts = (typeof bountyContracts !== 'undefined' && Array.isArray(bountyContracts)) ? bountyContracts : [];
+  const safeWildernessThreats = (typeof wildernessThreats !== 'undefined' && Array.isArray(wildernessThreats)) ? wildernessThreats : [];
+  const safeActiveContract = (typeof activeContract !== 'undefined' && activeContract !== null) ? activeContract : null;
+  const safeClaimedBounties = (typeof claimedBounties !== 'undefined' && Array.isArray(claimedBounties)) ? claimedBounties : [];
+  const safeBountyClaimMessage = (typeof bountyClaimMessage !== 'undefined' && bountyClaimMessage) ? bountyClaimMessage : null;
   const safeTerrainArtwork = (typeof terrainArtwork !== 'undefined' && terrainArtwork !== null)
     ? terrainArtwork
     : {
@@ -32,7 +37,8 @@
 
   const isRevealed = Boolean(encounter && encounter.status === 'IN_COMBAT');
   const cleanMonsterName = isRevealed ? (encounter.monster_name || '').replace(/\[.*?\]/g, '').trim() : '';
-  const cleanSlug = isRevealed ? (encounter.imageSlug || cleanMonsterName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')) : '';
+  const cleanBaseMonsterName = isRevealed ? (encounter.base_monster_name || encounter.monster_name || '').replace(/\[.*?\]/g, '').trim() : '';
+  const cleanSlug = isRevealed ? (encounter.imageSlug || cleanBaseMonsterName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')) : '';
   const monsterImgUrl = isRevealed ? (encounter.imageUrl || ('/images/monsters/' + cleanSlug + '.png')) : null;
 
   const isTwoHandedMeleeActive = !safeIsRangedActive && Boolean(safeEquipment.meleeWeapon && (Number(safeEquipment.meleeWeapon.is_two_handed) === 1 || safeEquipment.meleeWeapon.is_two_handed === true));
@@ -60,7 +66,7 @@
             <% minimap.rows.forEach(function(row) { %>
               <div class="minimap-row">
                 <% row.forEach(function(cell) { %>
-                  <div class="minimap-cell <%= cell.isPlayer ? 'is-player' : '' %> <%= !cell.isPassable ? 'impassable' : '' %>"
+                  <div class="minimap-cell <%= cell.isPlayer ? 'is-player' : '' %> <%= cell.hasPersistentMonster ? 'has-persistent-monster' : '' %> <%= !cell.isPassable ? 'impassable' : '' %>"
                        style="color: <%= cell.color %>;"
                        title="<%= cell.label %> [<%= cell.x %>, <%= cell.y %>]">
                     <%= cell.symbol %>
@@ -72,6 +78,7 @@
 
           <div class="minimap-legend">
             <span><strong>@</strong> Hero</span>
+            <span><strong>💀</strong> Fallen Threat</span>
             <span><strong>🏰</strong> City</span>
             <span><strong>🌲</strong> Forest</span>
             <span><strong>🌫️</strong> Swamp</span>
@@ -189,6 +196,22 @@
             <span><%= infoMessage %></span>
           </div>
         <% } %>
+        <% if (safeBountyClaimMessage) { %>
+          <div class="alert alert-bounty-claimed" role="status">
+            <span class="alert-icon">🏆</span>
+            <div><strong><%= safeBountyClaimMessage %></strong></div>
+          </div>
+        <% } %>
+        <% if (safeClaimedBounties.length > 0) { %>
+          <% safeClaimedBounties.forEach(function(claimed) { %>
+            <div class="alert alert-bounty-claimed" role="status">
+              <span class="alert-icon">🏆</span>
+              <div>
+                <strong>Bounty Completed!</strong> You have slain <strong><%= claimed.customName %></strong> (<%= claimed.baseMonsterName %> in <%= claimed.regionName %>). Oakhaven awards you <strong><%= claimed.rewardGold %> Gold</strong>.
+              </div>
+            </div>
+          <% }); %>
+        <% } %>
         <% if (safeInventory.length > 50) { %>
           <div class="alert alert-warning" role="alert" style="border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.15); color: #fca5a5; padding: 10px 14px; margin-bottom: 12px; border-radius: 4px; display: flex; align-items: center; gap: 10px;">
             <span class="alert-icon" style="font-size: 1.2rem;">⚠️</span>
@@ -226,23 +249,40 @@
             <!-- -------------------------------------------------------------
                  STATE 1: ACTIVE COMBAT (Stage 2: Revealed Threat)
                  ------------------------------------------------------------- -->
-            <div class="encounter-panel in-combat">
+            <div class="encounter-panel in-combat <%= encounter.isBountyTarget ? 'is-bounty-encounter' : '' %>">
               <div class="encounter-header">
                 <div class="encounter-title">
                   <span class="encounter-symbol-badge" style="color: <%= encounter.monster_color || 'var(--accent-crimson)' %>;">
                     [<%= encounter.monster_symbol %>]
                   </span>
                   <span>Revealed Threat: <strong><%= cleanMonsterName %></strong></span>
+                  <% if (encounter.isBountyTarget && cleanBaseMonsterName && cleanBaseMonsterName !== cleanMonsterName) { %>
+                    <span class="bounty-species-sublabel">(<%= cleanBaseMonsterName %>)</span>
+                  <% } %>
                 </div>
-                <% if (encounter.isRangerSpecial) { %>
-                  <span class="ranger-badge">🏹 Ranger at close quarters</span>
-                <% } %>
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  <% if (encounter.isBountyTarget) { %>
+                    <span class="bounty-target-badge">🎯 Wanted Quarry</span>
+                  <% } else if (encounter.custom_title) { %>
+                    <span class="bounty-target-badge">💀 Infamous Killer</span>
+                  <% } %>
+                  <% if (encounter.isRangerSpecial) { %>
+                    <span class="ranger-badge">🏹 Ranger at close quarters</span>
+                  <% } %>
+                </div>
               </div>
+
+              <% if (encounter.isBountyTarget && encounter.bountyTraitNotice) { %>
+                <div class="bounty-combat-banner">
+                  <span class="bounty-banner-tag">🎯 Watcher's Warrant</span>
+                  <span class="bounty-banner-detail"><%= encounter.bountyTraitNotice %></span>
+                </div>
+              <% } %>
 
               <div class="combat-middle-layout">
                 <!-- Monster Artwork -->
                 <div class="monster-art-container">
-                  <div class="monster-art-frame">
+                  <div class="monster-art-frame <%= (encounter.isBountyTarget || encounter.custom_title) ? 'bounty-art-frame' : '' %>">
                     <% if (monsterImgUrl) { %>
                       <img src="<%= monsterImgUrl %>" alt="<%= cleanMonsterName %>" class="monster-art-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                       <div class="monster-placeholder" style="display: none;">
@@ -251,7 +291,7 @@
                           <%= encounter.monster_symbol %>
                         </div>
                         <div class="placeholder-label"><%= cleanMonsterName %></div>
-                        <div class="placeholder-sublabel">Revealed Threat</div>
+                        <div class="placeholder-sublabel"><%= encounter.isBountyTarget ? 'Wanted Quarry' : 'Revealed Threat' %></div>
                       </div>
                     <% } else { %>
                       <div class="monster-placeholder">
@@ -260,7 +300,7 @@
                           <%= encounter.monster_symbol %>
                         </div>
                         <div class="placeholder-label"><%= cleanMonsterName %></div>
-                        <div class="placeholder-sublabel">Revealed Threat</div>
+                        <div class="placeholder-sublabel"><%= encounter.isBountyTarget ? 'Wanted Quarry' : 'Revealed Threat' %></div>
                       </div>
                     <% } %>
                     <div class="monster-art-vignette"></div>
@@ -275,23 +315,39 @@
                     </div>
                   <% } %>
 
+                  <% if (safeCombatState && Array.isArray(safeCombatState.heroStatusBadges) && safeCombatState.heroStatusBadges.length > 0) { %>
+                    <div class="hero-combat-statuses" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
+                      <% safeCombatState.heroStatusBadges.forEach(function(badge) { %>
+                        <span class="combat-status-badge status-<%= badge.severity || 'warning' %>" style="font-size: 0.78rem; padding: 3px 8px; border-radius: 4px; background: <%= badge.severity === 'danger' ? 'rgba(220, 38, 38, 0.25)' : (badge.severity === 'warning' ? 'rgba(217, 119, 6, 0.22)' : 'rgba(59, 130, 246, 0.2)') %>; border: 1px solid <%= badge.severity === 'danger' ? '#ef4444' : (badge.severity === 'warning' ? '#f59e0b' : '#60a5fa') %>; color: <%= badge.severity === 'danger' ? '#fca5a5' : (badge.severity === 'warning' ? '#fde68a' : '#bfdbfe') %>; font-weight: 600;">
+                          ⚠️ <%= badge.label %>
+                        </span>
+                      <% }); %>
+                    </div>
+                  <% } %>
+
                   <div class="combat-log-container">
+                    <%
+                      // Filter out CONDITION events to prevent repeating the condition quote directly below itself
+                      const actionEvents = (safeCombatState && safeCombatState.events)
+                        ? safeCombatState.events.filter(ev => ev.event_type !== 'CONDITION')
+                        : [];
+                      const latestRoundNum = actionEvents.length > 0
+                        ? Math.max(...actionEvents.map(ev => Number(ev.round_number || 1)))
+                        : (encounter.combat_round || 1);
+                      const currentRoundEvents = actionEvents.filter(ev => Number(ev.round_number || 1) === latestRoundNum);
+                    %>
                     <div class="combat-log-header">
                       Battle Record (Round <%= encounter.combat_round || 1 %>)
                     </div>
                     <div class="combat-log-scroll">
-                      <%
-                        // Filter out CONDITION events to prevent repeating the condition quote directly below itself
-                        const actionEvents = (safeCombatState && safeCombatState.events)
-                          ? safeCombatState.events.filter(ev => ev.event_type !== 'CONDITION')
-                          : [];
-                      %>
-                      <% if (actionEvents.length > 0) { %>
-                        <% actionEvents.slice(-6).forEach(function(ev) { %>
+                      <% if (currentRoundEvents.length > 0) { %>
+                        <% currentRoundEvents.forEach(function(ev) { %>
                           <div class="combat-event-row <%= (ev.event_type || '').toLowerCase() %>">
                             <% if (ev.event_type === 'OPENING_SHOT') { %>🏹 <% } %>
                             <% if (ev.event_type === 'HERO_ATTACK') { %>⚔️ <% } %>
                             <% if (ev.event_type === 'MONSTER_ATTACK') { %>🩸 <% } %>
+                            <% if (ev.event_type === 'MONSTER_ABILITY') { %>⚡ <% } %>
+                            <% if (ev.event_type === 'STATUS_EFFECT') { %>☠️ <% } %>
                             <% if (ev.event_type === 'POTION_USED') { %>🧪 <% } %>
                             <% if (ev.event_type === 'FLEE') { %>🏃 <% } %>
                             <% if (ev.event_type === 'MONSTER_CONDITION') { %>⚠️ <% } %>
@@ -328,7 +384,7 @@
                       <select name="potionInstanceId" class="form-control potion-select" aria-label="Select healing potion">
                         <% safePotions.forEach((p, idx) => { %>
                           <option value="<%= p.id %>" <%= idx === 0 ? 'selected' : '' %>>
-                            <%= p.displayName || (p.name + ' (' + (p.healEffect || '1d8+1') + ')') %>
+                            <%= p.displayName || p.name %>
                           </option>
                         <% }); %>
                       </select>
@@ -392,7 +448,7 @@
                 <div class="encounter-details-column">
                   <% if (encounter.isAmbush) { %>
                     <div class="ambush-banner">
-                      ⚠️ <strong>Ambush!</strong> The creature lunged from hiding before you could spot it or draw a bead!
+                      ⚠️ <strong>Ambush!</strong> The creature lunged from hiding before you could spot it—your retreat is cut off and the enemy seizes surprise advantage!
                     </div>
                   <% } %>
 
@@ -405,17 +461,23 @@
                       <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
                       <input type="hidden" name="encounterId" value="<%= encounter.id %>">
                       <button type="submit" class="btn btn-primary">
-                        Advance & Investigate
+                        <% if (encounter.isAmbush) { %>⚔️ Face the Ambush<% } else { %>Advance & Investigate<% } %>
                       </button>
                     </form>
 
-                    <form action="/game/encounter/ignore" method="POST">
-                      <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                      <input type="hidden" name="encounterId" value="<%= encounter.id %>">
-                      <button type="submit" class="btn btn-secondary">
-                        Bypass & Ignore
+                    <% if (encounter.isAmbush) { %>
+                      <button type="button" class="btn btn-secondary" disabled title="You have been ambushed and cannot slip past undetected!">
+                        🚫 Retreat Cut Off (Ambushed)
                       </button>
-                    </form>
+                    <% } else { %>
+                      <form action="/game/encounter/ignore" method="POST">
+                        <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                        <input type="hidden" name="encounterId" value="<%= encounter.id %>">
+                        <button type="submit" class="btn btn-secondary">
+                          Bypass & Ignore
+                        </button>
+                      </form>
+                    <% } %>
                   </div>
                 </div>
               </div>
@@ -434,7 +496,7 @@
               <div class="peaceful-status-card city-card">
                 <div class="peaceful-card-title">🛡️ Safe Haven Sanctuary</div>
                 <p class="peaceful-card-text">
-                  The gates of <%= currentTile.name %> stand shut against the horrors of the wild. You may rest safely in the sanctuary or trade equipment with the town merchants.
+                  The gates of <%= currentTile.name %> stand shut against the horrors of the wild. You may rest safely in the sanctuary, inspect The Watcher's Board for hunting contracts, or trade equipment with the town merchants.
                 </p>
               </div>
 
@@ -445,6 +507,10 @@
                     🛌 Rest at Sanctuary (Full Heal & Ability Recharge)
                   </button>
                 </form>
+
+                <button type="button" class="btn btn-secondary btn-watchers-board" onclick="openGameModal('bounties')" id="btn-open-watchers-board" style="flex: 1; min-width: 190px; border-color: var(--accent-gold); color: var(--accent-gold);">
+                  🎯 The Watcher's Board
+                </button>
 
                 <% if (safeShopStock) { %>
                   <button type="button" class="btn btn-secondary" onclick="openGameModal('market')" style="flex: 1; min-width: 180px;">
@@ -628,6 +694,41 @@
             </div>
           </div>
         </div>
+
+        <!-- Active Hunting Contract Summary -->
+        <%
+          const isStage1Secrecy = Boolean(encounter && encounter.status === 'DISCOVERED');
+        %>
+        <% if (safeActiveContract) { %>
+          <div class="prepared-gear-card active-contract-card <%= safeActiveContract.status === 'READY_TO_CLAIM' ? 'is-ready-claim' : '' %>" id="active-contract-panel">
+            <div class="gear-card-header">
+              <span class="gear-header-lbl">🎯 Active Warrant</span>
+              <span class="contract-status-pill <%= safeActiveContract.status === 'READY_TO_CLAIM' ? 'status-claim' : 'status-hunting' %>">
+                <%= safeActiveContract.status === 'READY_TO_CLAIM' ? 'Target Slain' : 'Active Hunt' %>
+              </span>
+            </div>
+            <div class="gear-summary-lines">
+              <div class="contract-card-title"><strong><%= safeActiveContract.contract_title %></strong></div>
+              <% if (safeActiveContract.status === 'READY_TO_CLAIM') { %>
+                <div style="color: #68d391;">✔ Quarry Slain: <strong><%= isStage1Secrecy ? 'Hunted Quarry' : safeActiveContract.custom_name %></strong></div>
+                <div style="color: var(--accent-gold);">🏛️ Return alive to Oakhaven to claim <strong><%= safeActiveContract.reward_gold %> gp</strong></div>
+              <% } else { %>
+                <div>🐾 <strong>Target:</strong> <%= isStage1Secrecy ? 'Dangerous Quarry' : ('Dangerous ' + safeActiveContract.base_monster_name) %></div>
+                <div>🧭 <strong>Region:</strong> <%= safeActiveContract.target_region %><%= safeActiveContract.compass_direction && safeActiveContract.compass_direction !== 'In Oakhaven' ? (' (' + safeActiveContract.compass_direction + ' of Oakhaven)') : '' %></div>
+                <div>🪙 <strong>Bounty:</strong> <span style="color: var(--accent-gold); font-weight: 700;"><%= safeActiveContract.reward_gold %> gp</span></div>
+              <% } %>
+            </div>
+            <% if (safeActiveContract.status === 'ACTIVE') { %>
+              <div style="margin-top: 8px; display: flex; justify-content: flex-end;">
+                <form action="/game/bounties/abandon" method="POST" style="margin: 0;">
+                  <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                  <input type="hidden" name="contractId" value="<%= safeActiveContract.id %>">
+                  <button type="submit" class="btn btn-subtle" style="padding: 3px 8px; font-size: 0.72rem;">Abandon Contract</button>
+                </form>
+              </div>
+            <% } %>
+          </div>
+        <% } %>
       </div>
     </div>
   </div>
@@ -658,7 +759,7 @@
           </thead>
           <tbody>
             <tr>
-              <td class="stat-lbl">STR (Strength)</td>
+              <td class="stat-lbl">STR (Strength) <span style="font-size: 0.72rem; color: var(--text-dim); display: block;">Melee attack & damage</span></td>
               <td class="stat-num">
                 <%= character.strength %>
                 <% if (character.is_str_boosted) { %>
@@ -668,27 +769,27 @@
               <td class="stat-mod <%= modifiers.strength.startsWith('+') && modifiers.strength !== '+0' ? 'positive' : (modifiers.strength.startsWith('-') ? 'negative' : 'neutral') %>"><%= modifiers.strength %></td>
             </tr>
             <tr>
-              <td class="stat-lbl">CON (Constitution)</td>
+              <td class="stat-lbl">CON (Constitution) <span style="font-size: 0.72rem; color: var(--text-dim); display: block;">Vitality (HP) & Fortitude</span></td>
               <td class="stat-num"><%= character.constitution %></td>
               <td class="stat-mod <%= modifiers.constitution.startsWith('+') && modifiers.constitution !== '+0' ? 'positive' : (modifiers.constitution.startsWith('-') ? 'negative' : 'neutral') %>"><%= modifiers.constitution %></td>
             </tr>
             <tr>
-              <td class="stat-lbl">DEX (Dexterity)</td>
+              <td class="stat-lbl">DEX (Dexterity) <span style="font-size: 0.72rem; color: var(--text-dim); display: block;">Ranged attack, AC, Initiative & Reflex</span></td>
               <td class="stat-num"><%= character.dexterity %></td>
               <td class="stat-mod <%= modifiers.dexterity.startsWith('+') && modifiers.dexterity !== '+0' ? 'positive' : (modifiers.dexterity.startsWith('-') ? 'negative' : 'neutral') %>"><%= modifiers.dexterity %></td>
             </tr>
             <tr>
-              <td class="stat-lbl">INT (Intelligence)</td>
+              <td class="stat-lbl">INT (Intelligence) <span style="font-size: 0.72rem; color: var(--text-dim); display: block;">Experience gained (±10% XP per mod)</span></td>
               <td class="stat-num"><%= character.intelligence %></td>
               <td class="stat-mod <%= modifiers.intelligence.startsWith('+') && modifiers.intelligence !== '+0' ? 'positive' : (modifiers.intelligence.startsWith('-') ? 'negative' : 'neutral') %>"><%= modifiers.intelligence %></td>
             </tr>
             <tr>
-              <td class="stat-lbl">WIS (Wisdom)</td>
+              <td class="stat-lbl">WIS (Wisdom) <span style="font-size: 0.72rem; color: var(--text-dim); display: block;">Perception, Cleric healing & Will</span></td>
               <td class="stat-num"><%= character.wisdom %></td>
               <td class="stat-mod <%= modifiers.wisdom.startsWith('+') && modifiers.wisdom !== '+0' ? 'positive' : (modifiers.wisdom.startsWith('-') ? 'negative' : 'neutral') %>"><%= modifiers.wisdom %></td>
             </tr>
             <tr>
-              <td class="stat-lbl">CHA (Charisma)</td>
+              <td class="stat-lbl">CHA (Charisma) <span style="font-size: 0.72rem; color: var(--text-dim); display: block;">Merchant prices (±5% shop price per mod)</span></td>
               <td class="stat-num"><%= character.charisma %></td>
               <td class="stat-mod <%= modifiers.charisma.startsWith('+') && modifiers.charisma !== '+0' ? 'positive' : (modifiers.charisma.startsWith('-') ? 'negative' : 'neutral') %>"><%= modifiers.charisma %></td>
             </tr>
@@ -808,7 +909,7 @@
       <div class="modal-section-group">
         <h3 class="modal-subheading">Primary Weapon Preference</h3>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
-          Select your default weapon preference when encountering ground enemies. Aerial threats will automatically enforce ranged combat.
+          Select your default combat stance. Melee uses Strength and keeps your shield raised (with a slight reach penalty against flying foes); Ranged uses Dexterity and strikes flying foes without penalty.
         </p>
         <div style="display: flex; gap: 10px;">
           <form action="/game/character/primary-weapon" method="POST" style="flex: 1;">
@@ -883,10 +984,7 @@
                     <% } %>
                   </div>
                   <div class="gear-item-meta">
-                    <%= item.category %> <%= item.subtype ? ('(' + item.subtype + ')') : '' %> • 
-                    <%= item.damage_dice ? ('Dmg: ' + item.damage_dice + ' ') : '' %>
-                    <%= item.armor_bonus ? ('AC+' + item.armor_bonus + ' ') : '' %>
-                    <%= item.combat_effect_desc ? ('• ' + item.combat_effect_desc) : '' %>
+                    <%= item.category %><%= item.subtype ? (' (' + item.subtype + ')') : '' %>
                   </div>
                   <% if (item.description) { %>
                     <div class="item-desc-text"><%= item.description %></div>
@@ -933,10 +1031,7 @@
                     <% } %>
                   </div>
                   <div class="gear-item-meta">
-                    <%= item.category %> <%= item.subtype ? ('(' + item.subtype + ')') : '' %> • 
-                    <%= item.damage_dice ? ('Dmg: ' + item.damage_dice + ' ') : '' %>
-                    <%= item.armor_bonus ? ('AC+' + item.armor_bonus + ' ') : '' %>
-                    <%= item.combat_effect_desc ? ('• ' + item.combat_effect_desc) : '' %>
+                    <%= item.category %><%= item.subtype ? (' (' + item.subtype + ')') : '' %>
                   </div>
                   <% if (item.subtype === 'TREASURE') { %>
                     <% const treasureSellValue = (item.sell_price !== null && item.sell_price !== undefined) ? Number(item.sell_price) : Math.floor((item.buy_price || 0) * 0.5); %>
@@ -983,7 +1078,7 @@
                     <% if (pot.is_inactive) { %>
                       <span style="color: #f59e0b;">Pending implementation — effect not yet active</span>
                     <% } else { %>
-                      <%= pot.combat_effect_desc || ('Restores ' + (pot.healEffect || 'vitality') + ' HP upon consumption') %>
+                      Restores vitality upon consumption
                     <% } %>
                   </div>
                   <% if (pot.description) { %>
@@ -1029,24 +1124,151 @@
           <p>Merchant stalls and magical pawn auctions are only maintained within safe haven cities such as Oakhaven. Return to a safe haven to trade goods and purchase arms.</p>
         </div>
       <% } else { %>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 4px;">
+        <%
+          const standardItemsList = Array.isArray(safeShopStock.standardItems) ? safeShopStock.standardItems : [];
+          const resaleItemsList = Array.isArray(safeShopStock.resaleListings) ? safeShopStock.resaleListings : [];
+          const sellableItems = safeInventory.filter(item => !item.equipped_slot);
+
+          const meleeWeapons = standardItemsList.filter(it => it.category === 'WEAPON' && it.weapon_range_type !== 'RANGED');
+          const rangedWeapons = standardItemsList.filter(it => it.category === 'WEAPON' && it.weapon_range_type === 'RANGED');
+          const armorItems = standardItemsList.filter(it => it.category === 'ARMOR');
+          const shieldItems = standardItemsList.filter(it => it.category === 'SHIELD');
+          const generalItems = standardItemsList.filter(it => it.category !== 'WEAPON' && it.category !== 'ARMOR' && it.category !== 'SHIELD');
+
+          function formatShopItemSpecs(item) {
+            const specs = [];
+            if (item.category === 'WEAPON') {
+              specs.push(Number(item.is_two_handed) === 1 ? 'Two-Handed' : 'One-Handed');
+              if (item.subtype) {
+                specs.push(item.subtype.replace(/_/g, ' '));
+              }
+            } else if (item.category === 'ARMOR' || item.category === 'SHIELD') {
+              if (item.subtype) {
+                specs.push(item.subtype.replace(/_/g, ' '));
+              }
+            } else if (item.subtype) {
+              specs.push(item.subtype.replace(/_/g, ' '));
+            }
+            return specs.join(' • ');
+          }
+
+          function canHeroEquipItem(item, heroClass) {
+            if (!item.allowed_classes) return true;
+            try {
+              const allowed = typeof item.allowed_classes === 'string' ? JSON.parse(item.allowed_classes) : item.allowed_classes;
+              if (Array.isArray(allowed)) {
+                return allowed.includes((heroClass || '').toUpperCase());
+              }
+            } catch (e) {}
+            return true;
+          }
+
+          const marketSections = [
+            { key: 'melee', title: '🗡️ Melee Weapons', items: meleeWeapons },
+            { key: 'ranged', title: '🏹 Ranged Weapons', items: rangedWeapons },
+            { key: 'armor', title: '🛡️ Armor', items: armorItems },
+            { key: 'shield', title: '🔰 Shields', items: shieldItems },
+            { key: 'items', title: '🧪 Items & Potions', items: generalItems }
+          ];
+        %>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 4px;">
           <span>Coin in purse:</span>
           <span style="font-family: var(--font-serif); font-size: 1.1rem; color: var(--accent-gold); font-weight: bold;"><%= character.gold %> gp</span>
         </div>
 
         <% if (safeInventory.length >= 50) { %>
-          <div class="modal-notice-box" style="border: 1px solid #ef4444; background: rgba(239, 68, 68, 0.15); color: #fca5a5; margin-bottom: 12px;">
+          <div class="modal-notice-box" style="border: 1px solid #ef4444; background: rgba(239, 68, 68, 0.15); color: #fca5a5; margin-bottom: 10px;">
             <div class="notice-title" style="color: #ef4444;">⚠️ Backpack Full (<%= safeInventory.length %>/50)</div>
-            <p>Your backpack is at or above capacity. Sell items to the merchant below before purchasing new gear.</p>
+            <p>Your backpack is at or above capacity. Sell items to the merchant before purchasing new gear.</p>
           </div>
         <% } %>
 
-        <!-- Global Resale Market -->
-        <% if (safeShopStock.resaleListings && safeShopStock.resaleListings.length > 0) { %>
-          <div class="modal-section-group">
-            <h3 class="modal-subheading" style="color: #b794f4;">✨ Global Magical Resale Market</h3>
+        <!-- Market Category Tabs -->
+        <div class="market-category-tabs" role="tablist" aria-label="Market Categories">
+          <button type="button" class="market-tab-btn is-active" data-market-tab="melee" role="tab" aria-selected="true" onclick="switchMarketTab('melee')">
+            <span>🗡️ Melee Weapons</span>
+            <span class="market-tab-count"><%= meleeWeapons.length %></span>
+          </button>
+          <button type="button" class="market-tab-btn" data-market-tab="ranged" role="tab" aria-selected="false" onclick="switchMarketTab('ranged')">
+            <span>🏹 Ranged Weapons</span>
+            <span class="market-tab-count"><%= rangedWeapons.length %></span>
+          </button>
+          <button type="button" class="market-tab-btn" data-market-tab="armor" role="tab" aria-selected="false" onclick="switchMarketTab('armor')">
+            <span>🛡️ Armor</span>
+            <span class="market-tab-count"><%= armorItems.length %></span>
+          </button>
+          <button type="button" class="market-tab-btn" data-market-tab="shield" role="tab" aria-selected="false" onclick="switchMarketTab('shield')">
+            <span>🔰 Shields</span>
+            <span class="market-tab-count"><%= shieldItems.length %></span>
+          </button>
+          <button type="button" class="market-tab-btn" data-market-tab="items" role="tab" aria-selected="false" onclick="switchMarketTab('items')">
+            <span>🧪 Items &amp; Potions</span>
+            <span class="market-tab-count"><%= generalItems.length %></span>
+          </button>
+          <button type="button" class="market-tab-btn <%= resaleItemsList.length > 0 ? 'has-magical' : '' %>" data-market-tab="resale" role="tab" aria-selected="false" onclick="switchMarketTab('resale')">
+            <span>✨ Magical Market</span>
+            <span class="market-tab-count"><%= resaleItemsList.length %></span>
+          </button>
+          <button type="button" class="market-tab-btn" data-market-tab="sell" role="tab" aria-selected="false" onclick="switchMarketTab('sell')">
+            <span>💰 Sell Goods</span>
+            <span class="market-tab-count"><%= sellableItems.length %></span>
+          </button>
+        </div>
+
+        <!-- Standard Armory & Supplies Category Panels -->
+        <% marketSections.forEach(function(sec, idx) { %>
+          <div class="modal-section-group market-category-panel" id="market-panel-<%= sec.key %>" data-market-panel="<%= sec.key %>" <%= idx === 0 ? '' : 'hidden' %>>
+            <h3 class="modal-subheading"><%= sec.title %> (<%= sec.items.length %>)</h3>
+            <% if (sec.items.length === 0) { %>
+              <div style="color: var(--text-dim); font-size: 0.85rem; padding: 8px 0;">No items currently stocked in this category.</div>
+            <% } else { %>
+              <div class="gear-list-container">
+                <% sec.items.forEach(item => { %>
+                  <% const specStr = formatShopItemSpecs(item); %>
+                  <% const equippable = canHeroEquipItem(item, character.class); %>
+                  <div class="gear-row-item">
+                    <div class="gear-item-info">
+                      <div class="gear-item-name">
+                        <%= item.name %>
+                        <% if (item.rarity) { %>
+                          <span class="rarity-badge rarity-<%= item.rarity.toLowerCase() %>"><%= item.rarity %></span>
+                        <% } %>
+                        <% if (!equippable) { %>
+                          <span class="market-class-warn-badge" title="Your class (<%= character.class %>) cannot equip this item">Unusable by <%= character.class %></span>
+                        <% } %>
+                      </div>
+                      <div class="gear-item-meta">
+                        <strong style="color: var(--accent-gold);"><%= item.buy_price %> gp</strong>
+                        <% if (specStr) { %>
+                          <span> • <%= specStr %></span>
+                        <% } %>
+                      </div>
+                      <% if (item.description) { %>
+                        <div class="item-desc-text"><%= item.description %></div>
+                      <% } %>
+                    </div>
+                    <form action="/game/shop/buy" method="POST" style="margin: 0;">
+                      <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                      <input type="hidden" name="itemDefinitionId" value="<%= item.id %>">
+                      <input type="hidden" name="returnModal" value="market">
+                      <button type="submit" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" <% if (character.gold < item.buy_price || safeInventory.length >= 50) { %>disabled title="<%= safeInventory.length >= 50 ? 'Backpack full' : 'Insufficient gold' %>"<% } %>>Buy</button>
+                    </form>
+                  </div>
+                <% }); %>
+              </div>
+            <% } %>
+          </div>
+        <% }); %>
+
+        <!-- Global Magical Resale Market Panel -->
+        <div class="modal-section-group market-category-panel" id="market-panel-resale" data-market-panel="resale" hidden>
+          <h3 class="modal-subheading" style="color: #b794f4;">✨ Global Magical Resale Market (<%= resaleItemsList.length %>)</h3>
+          <% if (resaleItemsList.length === 0) { %>
+            <div style="color: var(--text-dim); font-size: 0.85rem; padding: 8px 0;">No enchanted artifacts are currently offered on the shared realm market. Magical items sold by heroes in any safe city appear here for all adventurers to claim.</div>
+          <% } else { %>
             <div class="gear-list-container">
-              <% safeShopStock.resaleListings.forEach(item => { %>
+              <% resaleItemsList.forEach(item => { %>
+                <% const specStr = formatShopItemSpecs(item); %>
                 <div class="gear-row-item" style="border: 1px solid rgba(139, 92, 246, 0.3); background: rgba(76, 29, 149, 0.15);">
                   <div class="gear-item-info">
                     <div class="gear-item-name" style="color: #d6bcfa;">
@@ -1055,7 +1277,12 @@
                         <span class="rarity-badge rarity-<%= item.rarity.toLowerCase() %>"><%= item.rarity %></span>
                       <% } %>
                     </div>
-                    <div class="gear-item-meta" style="color: var(--accent-gold); font-weight: bold;"><%= item.resale_price %> gp</div>
+                    <div class="gear-item-meta">
+                      <strong style="color: var(--accent-gold);"><%= item.resale_price %> gp</strong>
+                      <% if (specStr) { %>
+                        <span> • <%= specStr %></span>
+                      <% } %>
+                    </div>
                     <% if (item.description) { %>
                       <div class="item-desc-text"><%= item.description %></div>
                     <% } %>
@@ -1069,43 +1296,15 @@
                 </div>
               <% }); %>
             </div>
-          </div>
-        <% } %>
-
-        <!-- Standard Supplies -->
-        <div class="modal-section-group">
-          <h3 class="modal-subheading">Standard Armory & Supplies</h3>
-          <div class="gear-list-container">
-            <% safeShopStock.standardItems.forEach(item => { %>
-              <div class="gear-row-item">
-                <div class="gear-item-info">
-                  <div class="gear-item-name">
-                    <%= item.name %>
-                    <% if (item.rarity) { %>
-                      <span class="rarity-badge rarity-<%= item.rarity.toLowerCase() %>"><%= item.rarity %></span>
-                    <% } %>
-                  </div>
-                  <div class="gear-item-meta" style="color: var(--accent-gold); font-weight: bold;"><%= item.buy_price %> gp</div>
-                  <% if (item.description) { %>
-                    <div class="item-desc-text"><%= item.description %></div>
-                  <% } %>
-                </div>
-                <form action="/game/shop/buy" method="POST" style="margin: 0;">
-                  <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
-                  <input type="hidden" name="itemDefinitionId" value="<%= item.id %>">
-                  <input type="hidden" name="returnModal" value="market">
-                  <button type="submit" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" <% if (character.gold < item.buy_price || safeInventory.length >= 50) { %>disabled title="<%= safeInventory.length >= 50 ? 'Backpack full' : 'Insufficient gold' %>"<% } %>>Buy</button>
-                </form>
-              </div>
-            <% }); %>
-          </div>
+          <% } %>
         </div>
 
-        <!-- Sell from Backpack -->
-        <% const sellableItems = safeInventory.filter(item => !item.equipped_slot); %>
-        <% if (sellableItems.length > 0) { %>
-          <div class="modal-section-group">
-            <h3 class="modal-subheading">Sell Goods from Backpack</h3>
+        <!-- Sell from Backpack Panel -->
+        <div class="modal-section-group market-category-panel" id="market-panel-sell" data-market-panel="sell" hidden>
+          <h3 class="modal-subheading">💰 Sell Goods from Backpack (<%= sellableItems.length %>)</h3>
+          <% if (sellableItems.length === 0) { %>
+            <div style="color: var(--text-dim); font-size: 0.85rem; padding: 8px 0;">You have no unequipped items in your backpack to sell. Unequip gear in your Backpack first if you wish to sell it.</div>
+          <% } else { %>
             <div class="gear-list-container">
               <% sellableItems.forEach(item => { %>
                 <% const payout = (item.is_magical && item.category !== 'POTION')
@@ -1135,8 +1334,8 @@
                 </div>
               <% }); %>
             </div>
-          </div>
-        <% } %>
+          <% } %>
+        </div>
       <% } %>
     </div>
   </div>
@@ -1160,6 +1359,32 @@
           <p style="font-size: 0.9rem; font-style: italic; color: #ddd;"><%= currentTile.description %></p>
         </div>
       </div>
+
+      <% if (safeActiveContract) { %>
+        <div class="modal-section-group">
+          <h3 class="modal-subheading">Active Hunting Contract</h3>
+          <div class="journal-entry-card active-contract-journal-card">
+            <div class="journal-entry-header">
+              <strong>🎯 <%= safeActiveContract.contract_title %></strong>
+              <span class="badge <%= safeActiveContract.status === 'READY_TO_CLAIM' ? 'badge-safe' : 'badge-danger' %>">
+                <%= safeActiveContract.status === 'READY_TO_CLAIM' ? 'TARGET SLAIN' : 'ACTIVE HUNT' %>
+              </span>
+            </div>
+            <p style="font-size: 0.85rem; color: #ccc; margin: 6px 0;"><%= isStage1Secrecy ? 'A sanctioned Oakhaven warrant for a dangerous quarry in the wilds.' : safeActiveContract.contract_description %></p>
+            <div style="font-size: 0.82rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px;">
+              <% if (safeActiveContract.status === 'READY_TO_CLAIM') { %>
+                <span style="color: #68d391;">✔ Slain: <strong><%= isStage1Secrecy ? 'Hunted Quarry' : safeActiveContract.custom_name %></strong></span>
+                <span style="color: var(--accent-gold);">🏛️ Return alive to Oakhaven to collect <strong><%= safeActiveContract.reward_gold %> Gold</strong></span>
+              <% } else { %>
+                <span>Target: <strong style="color: var(--text-heading);"><%= isStage1Secrecy ? 'Dangerous Quarry' : ('Dangerous ' + safeActiveContract.base_monster_name) %></strong></span>
+                <span>Region: <strong style="color: var(--text-heading);"><%= safeActiveContract.target_region %></strong></span>
+                <span>Threat: <strong style="color: #f87171;"><%= safeActiveContract.threat_label || 'Dangerous' %></strong></span>
+                <span>Reward: <strong style="color: var(--accent-gold);"><%= safeActiveContract.reward_gold %> Gold</strong></span>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      <% } %>
 
       <div class="modal-section-group">
         <h3 class="modal-subheading">Recorded Battles & Encounters</h3>
@@ -1188,6 +1413,148 @@
           </div>
         <% } %>
       </div>
+    </div>
+  </div>
+
+  <!-- -------------------------------------------------------------------
+       5. THE WATCHER'S BOARD MODAL (BOUNTIES & WILDERNESS THREATS)
+       ------------------------------------------------------------------- -->
+  <div class="game-modal-dialog" id="modal-bounties" role="dialog" aria-modal="true" aria-labelledby="modal-bounties-title" <%= safeActiveModal === 'bounties' ? '' : 'hidden' %>>
+    <div class="game-modal-header">
+      <h2 class="game-modal-title" id="modal-bounties-title">🎯 The Watcher's Board — Oakhaven Garrison</h2>
+      <button type="button" class="game-modal-close" onclick="closeGameModal()" aria-label="Close dialog">✕</button>
+    </div>
+    <div class="game-modal-body">
+      <% if (!safeIsSafeCity) { %>
+        <div class="market-locked-notice">
+          <div class="locked-icon">🏛️</div>
+          <h3>Available Only at the Oakhaven Garrison</h3>
+          <p>You must stand within the walls of <strong>Oakhaven</strong> to inspect posted warrants or accept new hunting contracts.</p>
+        </div>
+      <% } else { %>
+        <!-- SECTION A: HUNTING CONTRACTS -->
+        <div class="modal-section-group" id="watcher-hunting-contracts-section">
+          <div class="watcher-section-header">
+            <div>
+              <h3 class="modal-subheading" style="margin-bottom: 2px;">A. Hunting Contracts</h3>
+              <p class="watcher-section-desc">Sanctioned warrants posted by the Watchers of Oakhaven. Only one contract may be active at a time. Return alive after slaying your quarry to claim the bounty.</p>
+            </div>
+          </div>
+
+          <% if (safeBountyContracts.length === 0) { %>
+            <div style="color: var(--text-dim); font-size: 0.85rem; padding: 12px 0;">
+              No hunting contracts are currently posted for your rank. Check back after your next expedition.
+            </div>
+          <% } else { %>
+            <div class="watcher-contracts-grid">
+              <% safeBountyContracts.forEach(function(contract) {
+                const isThisActive = contract.status === 'ACTIVE' || contract.status === 'READY_TO_CLAIM';
+                const isCompleted = contract.status === 'COMPLETED';
+                const isAbandoned = contract.status === 'ABANDONED';
+                const isFailed = contract.status === 'FAILED';
+                const canAccept = contract.status === 'AVAILABLE' && !safeActiveContract;
+              %>
+                <div class="watcher-contract-card status-<%= (contract.status || 'available').toLowerCase() %>" data-contract-id="<%= contract.id %>">
+                  <div class="watcher-contract-top">
+                    <div class="watcher-contract-title-row">
+                      <h4 class="watcher-contract-title"><%= contract.contract_title %></h4>
+                      <span class="watcher-contract-badge badge-<%= (contract.status || 'available').toLowerCase() %>">
+                        <% if (contract.status === 'ACTIVE') { %>Active Contract<% } %>
+                        <% if (contract.status === 'READY_TO_CLAIM') { %>Ready to Claim<% } %>
+                        <% if (contract.status === 'AVAILABLE') { %>Available<% } %>
+                        <% if (contract.status === 'COMPLETED') { %>Completed<% } %>
+                        <% if (contract.status === 'ABANDONED') { %>Abandoned<% } %>
+                        <% if (contract.status === 'FAILED') { %>Failed<% } %>
+                      </span>
+                    </div>
+                    <p class="watcher-contract-desc">“<%= isStage1Secrecy ? 'Travelers report a dangerous quarry terrorizing the frontier.' : contract.contract_description %>”</p>
+                  </div>
+
+                  <div class="watcher-contract-meta">
+                    <div class="contract-meta-row">
+                      <span class="meta-label">Target:</span>
+                      <strong class="meta-value"><%= isStage1Secrecy ? 'Dangerous Quarry' : ('Dangerous ' + contract.base_monster_name) %></strong>
+                    </div>
+                    <div class="contract-meta-row">
+                      <span class="meta-label">Region:</span>
+                      <strong class="meta-value"><%= contract.target_region %><%= contract.compass_direction && contract.compass_direction !== 'In Oakhaven' ? (' (' + contract.compass_direction + ')') : '' %></strong>
+                    </div>
+                    <div class="contract-meta-row">
+                      <span class="meta-label">Threat:</span>
+                      <strong class="meta-value threat-level-text"><%= contract.threat_label || 'Dangerous' %></strong>
+                    </div>
+                    <div class="contract-meta-row">
+                      <span class="meta-label">Reward:</span>
+                      <strong class="meta-value reward-gold-text">🪙 <%= contract.reward_gold %> Gold</strong>
+                    </div>
+                  </div>
+
+                  <div class="watcher-contract-actions">
+                    <% if (isThisActive) { %>
+                      <form action="/game/bounties/abandon" method="POST" style="margin: 0; width: 100%;">
+                        <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                        <input type="hidden" name="contractId" value="<%= contract.id %>">
+                        <button type="submit" class="btn btn-subtle" style="width: 100%;">Abandon Contract</button>
+                      </form>
+                    <% } else if (contract.status === 'AVAILABLE') { %>
+                      <% if (canAccept) { %>
+                        <form action="/game/bounties/accept" method="POST" style="margin: 0; width: 100%;">
+                          <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                          <input type="hidden" name="contractId" value="<%= contract.id %>">
+                          <button type="submit" class="btn btn-primary" style="width: 100%;">Accept Contract</button>
+                        </form>
+                      <% } else { %>
+                        <button type="button" class="btn btn-subtle" disabled style="width: 100%; opacity: 0.5; cursor: not-allowed;" title="Complete or abandon your active contract first">
+                          Another Contract Active
+                        </button>
+                      <% } %>
+                    <% } else if (isCompleted) { %>
+                      <div class="contract-settled-label" style="color: #68d391;">✔ Bounty Claimed</div>
+                    <% } else if (isAbandoned) { %>
+                      <div class="contract-settled-label" style="color: var(--text-dim);">✕ Warrant Forfeited</div>
+                    <% } else if (isFailed) { %>
+                      <div class="contract-settled-label" style="color: #f87171;">💀 Contract Failed</div>
+                    <% } %>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          <% } %>
+        </div>
+
+        <!-- SECTION B: THREATS IN THE WILDERNESS -->
+        <div class="modal-section-group" id="watcher-wilderness-threats-section" style="margin-top: 22px;">
+          <div class="watcher-section-header">
+            <div>
+              <h3 class="modal-subheading" style="margin-bottom: 2px;">B. Threats in the Wilderness</h3>
+              <p class="watcher-section-desc">Ominous reports of enduring horrors that have slain heroes in the wilds. The Watchers know only the direction and the toll of the fallen—never the exact creature awaiting in the dark.</p>
+            </div>
+          </div>
+
+          <% if (safeWildernessThreats.length === 0) { %>
+            <div class="wilderness-threats-empty">
+              <span>🕯️</span>
+              <span>No enduring slayers of heroes are currently reported in the surrounding wilds.</span>
+            </div>
+          <% } else { %>
+            <div class="wilderness-threats-list">
+              <% safeWildernessThreats.forEach(function(threat) { %>
+                <div class="wilderness-threat-card">
+                  <div class="threat-card-header">
+                    <span class="threat-direction-title">💀 Threat to the <%= threat.direction %></span>
+                    <span class="threat-severity-badge"><%= threat.severity %></span>
+                  </div>
+                  <p class="threat-rumor-text">“<%= threat.rumor %>”</p>
+                  <div class="threat-card-footer">
+                    <span class="threat-kill-toll">Heroes Fallen: <strong><%= threat.killCount %></strong></span>
+                    <span class="threat-Location-vague">Direction from Oakhaven: <strong><%= threat.direction %></strong></span>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          <% } %>
+        </div>
+      <% } %>
     </div>
   </div>
 </div>
@@ -1257,20 +1624,100 @@
     }
   }
 
+  var isSubmittingMove = false;
+
   document.addEventListener('keydown', function(e) {
+    var backdrop = document.getElementById('game-modal-backdrop');
+    var isModalOpen = backdrop && !backdrop.hidden;
+
     if (e.key === 'Escape') {
-      var backdrop = document.getElementById('game-modal-backdrop');
-      if (backdrop && !backdrop.hidden) {
+      if (isModalOpen) {
         closeGameModal();
+      }
+      return;
+    }
+
+    // Ignore movement keys if modal is open, modifier keys are held, key is repeating, or user is focused in an input/select/textarea
+    if (isModalOpen || isSubmittingMove || e.repeat || e.ctrlKey || e.altKey || e.metaKey) {
+      return;
+    }
+
+    var activeTag = document.activeElement ? document.activeElement.tagName : '';
+    if (activeTag === 'INPUT' || activeTag === 'SELECT' || activeTag === 'TEXTAREA' || (document.activeElement && document.activeElement.isContentEditable)) {
+      return;
+    }
+
+    var directionClass = null;
+    switch (e.key) {
+      case 'w':
+      case 'W':
+      case 'ArrowUp':
+        directionClass = '.compass-north';
+        break;
+      case 's':
+      case 'S':
+      case 'ArrowDown':
+        directionClass = '.compass-south';
+        break;
+      case 'a':
+      case 'A':
+      case 'ArrowLeft':
+        directionClass = '.compass-west';
+        break;
+      case 'd':
+      case 'D':
+      case 'ArrowRight':
+        directionClass = '.compass-east';
+        break;
+    }
+
+    if (directionClass) {
+      var form = document.querySelector(directionClass);
+      if (form) {
+        var btn = form.querySelector('button[type="submit"]');
+        if (btn && !btn.disabled) {
+          e.preventDefault();
+          isSubmittingMove = true;
+          form.submit();
+        }
       }
     }
   });
 
+  function switchMarketTab(tabKey) {
+    var marketModal = document.getElementById('modal-market');
+    if (!marketModal) return;
+
+    var tabs = marketModal.querySelectorAll('.market-tab-btn');
+    tabs.forEach(function(btn) {
+      var isMatch = btn.getAttribute('data-market-tab') === tabKey;
+      btn.classList.toggle('is-active', isMatch);
+      btn.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+    });
+
+    var panels = marketModal.querySelectorAll('.market-category-panel');
+    panels.forEach(function(panel) {
+      var isMatch = panel.getAttribute('data-market-panel') === tabKey;
+      panel.hidden = !isMatch;
+    });
+
+    try {
+      window.sessionStorage.setItem('darkgrid_market_tab', tabKey);
+    } catch (e) {}
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
+    try {
+      var savedMarketTab = window.sessionStorage.getItem('darkgrid_market_tab');
+      if (savedMarketTab && ['melee', 'ranged', 'armor', 'shield', 'items', 'resale', 'sell'].indexOf(savedMarketTab) !== -1) {
+        switchMarketTab(savedMarketTab);
+      }
+    } catch (e) {}
+
     var initialModal = <%- JSON.stringify(safeActiveModal) %>;
     var hash = window.location.hash ? window.location.hash.substring(1) : null;
     var toOpen = initialModal || hash;
-    if (toOpen && ['character', 'backpack', 'market', 'journal'].indexOf(toOpen) !== -1) {
+    if (toOpen && ['character', 'backpack', 'market', 'journal', 'bounties'].indexOf(toOpen) !== -1) {
       openGameModal(toOpen);
     }
   });

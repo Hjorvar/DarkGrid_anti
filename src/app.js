@@ -12,6 +12,9 @@ const gameRoutes = require('./routes/game');
 
 const app = express();
 
+// Trust first proxy (required for secure session cookies behind Cloud Run / Firebase App Hosting)
+app.set('trust proxy', 1);
+
 // View engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');

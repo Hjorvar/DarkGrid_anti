@@ -99,10 +99,14 @@ test('UI Dashboard: Desktop 3-column layout and core elements in City state', as
   });
   cookie = updateCookies(cookie, regRes);
 
-  // 2. Create Character
+  // 2. Create Character (and verify Dark Fantasy class descriptions & pillars)
   const createPage = await fetch(`${baseUrl}/character/create`, { headers: { Cookie: cookie } });
   cookie = updateCookies(cookie, createPage);
   const createHtml = await createPage.text();
+  assert.ok(createHtml.includes('Iron-Clad Vanguard'), 'Fighter dark fantasy archetype title must be rendered');
+  assert.ok(createHtml.includes('Shadow-Stalker of the Wilds'), 'Ranger dark fantasy archetype title must be rendered');
+  assert.ok(createHtml.includes('Vessel of the Dying Light'), 'Cleric dark fantasy archetype title must be rendered');
+  assert.ok(createHtml.includes('class-pillars-list'), 'Dark fantasy class strength pillars must be rendered');
   const createCsrf = createHtml.match(/name="_csrf"\s+value="([^"]+)"/)[1];
 
   await fetch(`${baseUrl}/character/create`, {
@@ -163,12 +167,19 @@ test('UI Dashboard: Desktop 3-column layout and core elements in City state', as
   assert.ok(html.includes('btn-open-market'), 'Market modal button must be present');
   assert.ok(html.includes('btn-open-journal'), 'Journal modal button must be present');
 
-  // Validate Modal System Containers
+  // Validate Modal System Containers & Market Category Tabs
   assert.ok(html.includes('game-modal-backdrop'), 'Modal backdrop must be present');
   assert.ok(html.includes('modal-character'), 'Character modal dialog must exist');
   assert.ok(html.includes('modal-backpack'), 'Backpack modal dialog must exist');
   assert.ok(html.includes('modal-market'), 'Market modal dialog must exist');
   assert.ok(html.includes('modal-journal'), 'Journal modal dialog must exist');
+  assert.ok(html.includes('data-market-tab="melee"'), 'Market Melee Weapons tab must exist');
+  assert.ok(html.includes('data-market-tab="ranged"'), 'Market Ranged Weapons tab must exist');
+  assert.ok(html.includes('data-market-tab="armor"'), 'Market Armor tab must exist');
+  assert.ok(html.includes('data-market-tab="shield"'), 'Market Shields tab must exist');
+  assert.ok(html.includes('data-market-tab="items"'), 'Market Items & Potions tab must exist');
+  assert.ok(html.includes('data-market-tab="resale"'), 'Market Magical Market tab must exist');
+  assert.ok(html.includes('data-market-tab="sell"'), 'Market Sell Goods tab must exist');
 });
 
 test('UI Dashboard: Modal forms, returnModal parameter, and redirect preservation', async () => {
@@ -369,3 +380,124 @@ test('UI Dashboard: Combat interface renders 3 actions and battle record without
   const compassDisabledCount = (html.match(/disabled\s+title="[^"]*"/g) || []).length;
   assert.ok(compassDisabledCount >= 4, 'All 4 movement directions must be locked during combat');
 });
+
+test('UI Dashboard: Combat log displays only current round events in active combat, and Victory/Fallen screens include full battle record toggle', async () => {
+  let cookie = '';
+  const suffix = (Date.now() + 5).toString().slice(-6);
+  const username = `RoundHero_${suffix}`;
+
+  // Register & login
+  const regPage = await fetch(`${baseUrl}/register`);
+  cookie = updateCookies(cookie, regPage);
+  const regHtml = await regPage.text();
+  const csrf = regHtml.match(/name="_csrf"\s+value="([^"]+)"/)[1];
+
+  const regRes = await fetch(`${baseUrl}/register`, {
+    method: 'POST',
+    body: new URLSearchParams({
+      username,
+      password: 'password123',
+      confirmPassword: 'password123',
+      _csrf: csrf
+    }),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookie },
+    redirect: 'manual'
+  });
+  cookie = updateCookies(cookie, regRes);
+
+  // Create Fighter
+  const createPage = await fetch(`${baseUrl}/character/create`, { headers: { Cookie: cookie } });
+  cookie = updateCookies(cookie, createPage);
+  const createHtml = await createPage.text();
+  const createCsrf = createHtml.match(/name="_csrf"\s+value="([^"]+)"/)[1];
+
+  await fetch(`${baseUrl}/character/create`, {
+    method: 'POST',
+    body: new URLSearchParams({
+      name: `Hrolfur_${suffix}`,
+      classType: 'FIGHTER',
+      strength: '16',
+      dexterity: '14',
+      constitution: '12',
+      intelligence: '10',
+      wisdom: '10',
+      charisma: '9',
+      _csrf: createCsrf
+    }),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookie },
+    redirect: 'manual'
+  });
+
+  const hero = db.prepare('SELECT * FROM characters WHERE name = ?').get(`Hrolfur_${suffix}`);
+  const wolf = db.prepare("SELECT * FROM monsters WHERE name = 'Wolf'").get();
+  const wildTile = db.prepare("SELECT * FROM map_tiles WHERE is_safe = 0 AND is_passable = 1 LIMIT 1").get();
+  db.prepare('UPDATE characters SET tile_id = ? WHERE id = ?').run(wildTile.id, hero.id);
+
+  // Create an encounter in Round 3 with events from Round 1 and Round 2
+  const encRes = db.prepare(`
+    INSERT INTO encounters (
+      character_id, monster_id, tile_id, status, current_monster_hp,
+      monster_max_hp, combat_round, initiative_winner, created_at
+    ) VALUES (?, ?, ?, 'IN_COMBAT', 5, ?, 3, 'HERO', CURRENT_TIMESTAMP)
+  `).run(hero.id, wolf.id, wildTile.id, wolf.base_hp);
+  const encId = Number(encRes.lastInsertRowid);
+
+  db.prepare(`
+    INSERT INTO combat_events (encounter_id, round_number, event_type, public_text)
+    VALUES (?, 1, 'HERO_ATTACK', 'RoundOneUniqueStrikeText'),
+           (?, 1, 'MONSTER_ATTACK', 'RoundOneUniqueBiteText'),
+           (?, 2, 'HERO_ATTACK', 'RoundTwoUniqueSlashText'),
+           (?, 2, 'MONSTER_ATTACK', 'RoundTwoUniqueClawText')
+  `).run(encId, encId, encId, encId);
+
+  // 1. Verify active combat screen ONLY renders the latest round (Round 2) and NOT Round 1
+  const gamePage = await fetch(`${baseUrl}/game`, { headers: { Cookie: cookie } });
+  cookie = updateCookies(cookie, gamePage);
+  const combatHtml = await gamePage.text();
+
+  // Extract active combat log scroll block
+  const logScrollMatch = combatHtml.match(/<div class="combat-log-scroll">([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>\s*<\/div>/);
+  assert.ok(logScrollMatch, 'Combat log scroll container must exist');
+  const activeLogContent = logScrollMatch[1];
+
+  assert.ok(!activeLogContent.includes('RoundOneUniqueStrikeText'), 'Round 1 hero event must NOT appear in active combat log during later rounds');
+  assert.ok(!activeLogContent.includes('RoundOneUniqueBiteText'), 'Round 1 monster event must NOT appear in active combat log during later rounds');
+  assert.ok(activeLogContent.includes('RoundTwoUniqueSlashText'), 'Latest round hero event MUST appear in active combat log');
+  assert.ok(activeLogContent.includes('RoundTwoUniqueClawText'), 'Latest round monster event MUST appear in active combat log');
+
+  // 2. Conclude encounter in VICTORY and verify /game/victory has single-button toggle with ALL rounds
+  db.prepare(`UPDATE encounters SET status = 'VICTORY', current_monster_hp = 0 WHERE id = ?`).run(encId);
+  db.prepare(`
+    INSERT INTO combat_events (encounter_id, round_number, event_type, public_text, details)
+    VALUES (?, 3, 'VICTORY', 'FinalVictoryStrikeText', '{"xp_awarded":100,"gold_looted":10}')
+  `).run(encId);
+
+  const victoryPage = await fetch(`${baseUrl}/game/victory?encounterId=${encId}`, { headers: { Cookie: cookie } });
+  assert.equal(victoryPage.status, 200);
+  const victoryHtml = await victoryPage.text();
+
+  assert.ok(victoryHtml.includes('id="btn-toggle-battle-log"'), 'Victory screen must render single-click battle log toggle button');
+  assert.ok(victoryHtml.includes('Read Full Battle Record'), 'Victory toggle button must have English label');
+  assert.ok(victoryHtml.includes('RoundOneUniqueStrikeText'), 'Victory full battle record must include Round 1 events');
+  assert.ok(victoryHtml.includes('RoundTwoUniqueSlashText'), 'Victory full battle record must include Round 2 events');
+  assert.ok(victoryHtml.includes('FinalVictoryStrikeText'), 'Victory full battle record must include final Victory event');
+
+  // 3. Simulate hero death and verify /game/fallen has single-button toggle with ALL rounds
+  db.prepare(`UPDATE encounters SET status = 'DEFEAT' WHERE id = ?`).run(encId);
+  db.prepare(`
+    INSERT INTO combat_events (encounter_id, round_number, event_type, public_text)
+    VALUES (?, 3, 'DEATH', 'FinalFallenHeroText')
+  `).run(encId);
+  db.prepare(`UPDATE characters SET is_alive = 0, current_hp = 0, died_at = CURRENT_TIMESTAMP WHERE id = ?`).run(hero.id);
+
+  const fallenPage = await fetch(`${baseUrl}/game/fallen`, { headers: { Cookie: cookie } });
+  assert.equal(fallenPage.status, 200);
+  const fallenHtml = await fallenPage.text();
+
+  assert.ok(fallenHtml.includes('id="btn-toggle-battle-log"'), 'Fallen screen must render single-click battle log toggle button');
+  assert.ok(fallenHtml.includes('Read Final Battle Record'), 'Fallen toggle button must have English label');
+  assert.ok(fallenHtml.includes('RoundOneUniqueStrikeText'), 'Fallen full battle record must include Round 1 events');
+  assert.ok(fallenHtml.includes('RoundTwoUniqueSlashText'), 'Fallen full battle record must include Round 2 events');
+  assert.ok(fallenHtml.includes('FinalFallenHeroText'), 'Fallen full battle record must include final Death event');
+});
+

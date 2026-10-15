@@ -2,10 +2,11 @@
 <%
   const isAvenged = Boolean(persistentInfo && persistentInfo.isPersistent && persistentInfo.avengedHeroes && persistentInfo.avengedHeroes.length > 0);
   const isPersistent = Boolean(persistentInfo && persistentInfo.isPersistent);
+  const isBountyVictory = Boolean(typeof bountyInfo !== 'undefined' && bountyInfo && bountyInfo.isBountyTarget);
 %>
 
 <div class="victory-viewport">
-  <div class="victory-card <%= isAvenged ? 'is-avenged-victory' : (isPersistent ? 'is-persistent-victory' : '') %>">
+  <div class="victory-card <%= isAvenged ? 'is-avenged-victory' : (isPersistent ? 'is-persistent-victory' : (isBountyVictory ? 'is-bounty-victory' : '')) %>">
     
     <!-- Top Sigil & Main Title -->
     <div class="victory-header">
@@ -14,6 +15,8 @@
           <span class="sigil-icon avenged-sigil">⚖️</span>
         <% } else if (isPersistent) { %>
           <span class="sigil-icon persistent-sigil">💀</span>
+        <% } else if (isBountyVictory) { %>
+          <span class="sigil-icon bounty-sigil">🎯</span>
         <% } else { %>
           <span class="sigil-icon standard-sigil">⚔️</span>
         <% } %>
@@ -29,6 +32,11 @@
         <p class="victory-subtitle">
           “An enduring terror that haunted these wilderness trails has at last been eradicated.”
         </p>
+      <% } else if (isBountyVictory) { %>
+        <h1 class="victory-title bounty-victory-title">BOUNTY TARGET SLAIN</h1>
+        <p class="victory-subtitle">
+          “The hunted terror lies dead at your feet. Return alive to Oakhaven to claim your warrant.”
+        </p>
       <% } else { %>
         <h1 class="victory-title standard-title">VICTORY</h1>
         <p class="victory-subtitle">
@@ -36,6 +44,20 @@
         </p>
       <% } %>
     </div>
+
+    <!-- Bounty Target Slain Notice (When a Named Hunting Contract quarry is defeated) -->
+    <% if (isBountyVictory) { %>
+      <div class="victory-bounty-panel" role="status">
+        <div class="bounty-panel-header">
+          <span class="bounty-badge-icon">🎯</span>
+          <span class="bounty-badge-label">Watcher's Warrant Fulfilled: <%= bountyInfo.contractTitle %></span>
+        </div>
+        <p class="bounty-return-notice">
+          You have slain <strong><%= bountyInfo.customName || cleanMonsterName %></strong><%= (typeof cleanBaseMonsterName !== 'undefined' && cleanBaseMonsterName && cleanBaseMonsterName !== cleanMonsterName) ? (' (' + cleanBaseMonsterName + ')') : '' %>!
+          Return alive to <strong>Oakhaven</strong> to collect your <strong><%= bountyInfo.rewardGold %> Gold</strong> bounty reward from the Watchers.
+        </p>
+      </div>
+    <% } %>
 
     <!-- Avenged Heroes Memorial (When persistent monster killed previous hero) -->
     <% if (isAvenged) { %>
@@ -68,11 +90,14 @@
           [<%= monsterSymbol %>]
         </span>
         <h2 class="victory-monster-name"><%= cleanMonsterName %></h2>
+        <% if (isBountyVictory) { %>
+          <span class="bounty-target-badge">🎯 Wanted Quarry</span>
+        <% } %>
       </div>
 
       <!-- Monster Artwork Frame -->
       <div class="victory-art-container">
-        <div class="victory-art-frame">
+        <div class="victory-art-frame <%= isBountyVictory ? 'bounty-art-frame' : '' %>">
           <% if (imageUrl) { %>
             <img src="<%= imageUrl %>" alt="Defeated <%= cleanMonsterName %>" class="victory-art-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <div class="victory-placeholder" style="display: none;">
@@ -179,6 +204,78 @@
         <span>Current Purse: <strong style="color: var(--accent-gold);"><%= character.gold %> gp</strong></span>
       </div>
     </div>
+
+    <!-- Full Battle Chronicle (Single-click toggle) -->
+    <%
+      const safeCombatEvents = (typeof combatEvents !== 'undefined' && Array.isArray(combatEvents))
+        ? combatEvents.filter(ev => ev.event_type !== 'CONDITION')
+        : [];
+    %>
+    <% if (safeCombatEvents.length > 0) { %>
+      <div class="post-battle-log-section" style="margin-bottom: 24px; text-align: left;">
+        <button type="button"
+                class="btn btn-secondary post-battle-log-toggle"
+                id="btn-toggle-battle-log"
+                aria-expanded="false"
+                aria-controls="post-battle-log-panel"
+                onclick="toggleBattleChronicle()"
+                style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 18px; font-size: 0.9rem; border-color: var(--border-gold);">
+          <span>📜</span>
+          <span id="battle-log-toggle-label">Read Full Battle Record (<%= encounter.combat_round || 1 %> <%= (encounter.combat_round || 1) === 1 ? 'Round' : 'Rounds' %>)</span>
+          <span id="battle-log-toggle-chevron" style="font-size: 0.75rem; transition: transform 0.2s;">▼</span>
+        </button>
+
+        <div id="post-battle-log-panel"
+             class="post-battle-log-panel"
+             hidden
+             style="margin-top: 10px; background: rgba(10, 12, 16, 0.95); border: 1px solid var(--border-gold); border-radius: 6px; padding: 14px 16px; max-height: 360px; overflow-y: auto; box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.7);">
+          <%
+            let lastRenderedRound = null;
+            safeCombatEvents.forEach(function(ev) {
+              const rNum = Number(ev.round_number || 1);
+              if (rNum !== lastRenderedRound) {
+                lastRenderedRound = rNum;
+          %>
+                <div class="post-battle-round-divider" style="font-family: var(--font-serif); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-gold); border-bottom: 1px solid rgba(197, 160, 89, 0.25); padding-bottom: 3px; margin: <%= rNum > 1 ? '12px' : '0' %> 0 6px 0; font-weight: 700;">
+                  Round <%= rNum %>
+                </div>
+          <%  } %>
+              <div class="combat-event-row <%= (ev.event_type || '').toLowerCase() %>" style="margin-bottom: 4px; font-size: 0.85rem; line-height: 1.45;">
+                <% if (ev.event_type === 'OPENING_SHOT') { %>🏹 <% } %>
+                <% if (ev.event_type === 'HERO_ATTACK') { %>⚔️ <% } %>
+                <% if (ev.event_type === 'MONSTER_ATTACK') { %>🩸 <% } %>
+                <% if (ev.event_type === 'MONSTER_ABILITY') { %>⚡ <% } %>
+                <% if (ev.event_type === 'STATUS_EFFECT') { %>☠️ <% } %>
+                <% if (ev.event_type === 'POTION_USED') { %>🧪 <% } %>
+                <% if (ev.event_type === 'FLEE') { %>🏃 <% } %>
+                <% if (ev.event_type === 'MONSTER_CONDITION') { %>⚠️ <% } %>
+                <% if (ev.event_type === 'VICTORY') { %>🏆 <% } %>
+                <% if (ev.event_type === 'LEVEL_UP') { %>⚜️ <% } %>
+                <span><%= ev.public_text %></span>
+              </div>
+          <% }); %>
+        </div>
+      </div>
+
+      <script>
+        function toggleBattleChronicle() {
+          var panel = document.getElementById('post-battle-log-panel');
+          var btn = document.getElementById('btn-toggle-battle-log');
+          var chevron = document.getElementById('battle-log-toggle-chevron');
+          if (!panel || !btn) return;
+          var isHidden = panel.hasAttribute('hidden');
+          if (isHidden) {
+            panel.removeAttribute('hidden');
+            btn.setAttribute('aria-expanded', 'true');
+            if (chevron) chevron.style.transform = 'rotate(180deg)';
+          } else {
+            panel.setAttribute('hidden', '');
+            btn.setAttribute('aria-expanded', 'false');
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
+          }
+        }
+      </script>
+    <% } %>
 
     <!-- Action Button (Continue Exploring) -->
     <div class="victory-actions">

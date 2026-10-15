@@ -101,3 +101,36 @@ test('Minimap produces 5x5 grid with player in the center', () => {
   assert.equal(centerCell.isPlayer, true);
   assert.equal(centerCell.symbol, '@');
 });
+
+test('Minimap displays skull icon (💀) on tiles with an active persistent monster without leaking species name', () => {
+  const db = createTestDb();
+  const centerTile = getTileByCoords(db, 7, 7);
+  const neighborTile = getTileByCoords(db, 7, 6); // 1 step North of (7, 7) -> row 1, col 2
+  const monster = db.prepare("SELECT * FROM monsters WHERE name = 'Wolf'").get();
+
+  // Insert active persistent monster on (7, 6)
+  const pmRes = db.prepare(`
+    INSERT INTO monster_instances (monster_id, tile_id, current_hp, max_hp, held_gold, kill_count, status)
+    VALUES (?, ?, 25, 25, 10, 2, 'ACTIVE')
+  `).run(monster.id, neighborTile.id);
+  const pmId = Number(pmRes.lastInsertRowid);
+
+  const minimap = getMinimapData(db, centerTile, 2);
+  const northCell = minimap.rows[1][2];
+
+  assert.equal(northCell.x, 7);
+  assert.equal(northCell.y, 6);
+  assert.equal(northCell.hasPersistentMonster, true);
+  assert.equal(northCell.persistentKillCount, 2);
+  assert.equal(northCell.symbol, '💀');
+  assert.ok(northCell.label.includes('Persistent Threat (2 fallen heroes)'), 'Label should indicate persistent threat and fallen count');
+  assert.ok(!northCell.label.includes('Wolf'), 'Minimap label must NOT leak monster species name');
+
+  // When defeated, minimap returns to normal terrain icon
+  db.prepare("UPDATE monster_instances SET status = 'DEFEATED' WHERE id = ?").run(pmId);
+  const minimapAfter = getMinimapData(db, centerTile, 2);
+  const northCellAfter = minimapAfter.rows[1][2];
+  assert.equal(northCellAfter.hasPersistentMonster, false);
+  assert.notEqual(northCellAfter.symbol, '💀');
+});
+

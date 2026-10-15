@@ -40,15 +40,34 @@
 
       <!-- Class Selector -->
       <div class="form-group">
-        <label class="form-label">Choose Class</label>
+        <label class="form-label">Choose Your Calling</label>
         <div class="class-selector-grid">
           <% Object.entries(classBases).forEach(([key, info]) => { %>
             <div class="class-card <%= (formData.classType || 'FIGHTER') === key ? 'selected' : '' %>" data-class="<%= key %>">
               <div class="class-card-header">
-                <h3 class="class-name"><%= info.name %></h3>
+                <h3 class="class-name"><%= info.icon ? info.icon + ' ' : '' %><%= info.name %></h3>
                 <span class="class-badge"><%= key %></span>
               </div>
+              <% if (info.title) { %>
+                <div class="class-archetype-title"><%= info.title %></div>
+              <% } %>
+              <% if (info.loreQuote) { %>
+                <blockquote class="class-lore-quote"><%= info.loreQuote %></blockquote>
+              <% } %>
               <p class="class-desc"><%= info.description %></p>
+              <% if (Array.isArray(info.pillars) && info.pillars.length > 0) { %>
+                <div class="class-pillars-list">
+                  <% info.pillars.forEach(function(pillar) { %>
+                    <div class="class-pillar-item">
+                      <span class="pillar-icon"><%= pillar.icon %></span>
+                      <div class="pillar-body">
+                        <strong class="pillar-title"><%= pillar.title %>:</strong>
+                        <span class="pillar-text"><%= pillar.text %></span>
+                      </div>
+                    </div>
+                  <% }); %>
+                </div>
+              <% } %>
               <div class="class-preview-stats">
                 <div class="class-stat-chip">STR <%= info.strength %></div>
                 <div class="class-stat-chip">CON <%= info.constitution %></div>
@@ -56,7 +75,7 @@
                 <div class="class-stat-chip">INT <%= info.intelligence %></div>
                 <div class="class-stat-chip">WIS <%= info.wisdom %></div>
                 <div class="class-stat-chip">CHA <%= info.charisma %></div>
-                <div class="class-hp-badge">HP per level: <strong><%= info.hpPerLevel %></strong></div>
+                <div class="class-hp-badge">Vitality per level: <strong><%= info.hpPerLevel %> HP</strong></div>
               </div>
             </div>
           <% }); %>
@@ -65,11 +84,11 @@
 
       <!-- Ranger Favored Enemy (displayed when Ranger selected) -->
       <div class="form-group" id="ranger-favored-enemy-group" style="<%= (formData.classType || 'FIGHTER') === 'RANGER' ? '' : 'display: none;' %>">
-        <label class="form-label" for="favored-enemy-select">Ranger Favored Enemy (Permanent)</label>
-        <p class="form-help" style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem;">
-          Grants attack & damage bonuses (+1/+2/+3) against this quarry. Undead cannot be chosen. Humanoids require a subtype.
+        <label class="form-label" for="favored-enemy-select">🐺 Sworn Blood-Quarry (Permanent Ranger Oath)</label>
+        <p class="form-help" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; font-style: italic;">
+          Name the breed of living creature you have hunted through the dark. You know their anatomy and strike their vital spots with escalating lethality as your legend grows—though the soulless Undead lie beyond a mortal hunter's craft.
         </p>
-        <select id="favored-enemy-select" class="form-input" style="background: var(--bg-dark); color: var(--text-light); padding: 0.6rem; border: 1px solid var(--border-gold);">
+        <select id="favored-enemy-select" class="form-input form-select" style="border-color: var(--border-gold);">
           <option value="ANIMAL:">Animal (Wolves, Boars, Vipers, Dire Rats)</option>
           <option value="MAGICAL BEAST:">Magical Beast (Owlbears, Manticores, Blink Dogs)</option>
           <option value="MONSTROUS HUMANOID:">Monstrous Humanoid (Minotaurs, Harpies, Morlocks)</option>
@@ -111,12 +130,21 @@
               wisdom: 'WIS (Wisdom)',
               charisma: 'CHA (Charisma)'
             };
+            const statDescriptions = {
+              strength: 'Melee attack & melee damage',
+              constitution: 'Max HP & Fortitude saves',
+              dexterity: 'Ranged attack, AC, Initiative & Reflex',
+              intelligence: 'Experience gained (±10% XP per mod)',
+              wisdom: 'Perception, Cleric healing & Will',
+              charisma: 'Merchant prices (±5% shop price per mod)'
+            };
             ['strength', 'constitution', 'dexterity', 'intelligence', 'wisdom', 'charisma'].forEach(stat => { 
           %>
             <div class="stat-control-row">
               <div class="stat-label-group">
                 <span class="stat-name"><%= statDisplayNames[stat] %></span>
                 <span id="base-<%= stat %>" class="stat-base-label">(base)</span>
+                <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 2px;"><%= statDescriptions[stat] %></div>
               </div>
 
               <div class="stat-stepper">

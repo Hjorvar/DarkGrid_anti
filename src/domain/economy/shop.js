@@ -6,6 +6,7 @@
 
 const { withTransaction } = require('../../db/connection');
 const { INACTIVE_ITEM_NAMES } = require('../combat/loot');
+const { calculateShopPriceWithCharisma } = require('../character/rules');
 
 const INACTIVE_ITEMS_SQL = INACTIVE_ITEM_NAMES.map(n => `'${n.replace(/'/g, "''")}'`).join(', ');
 
@@ -36,9 +37,8 @@ function assertInSafeCity(tx, characterId) {
  * 1. Standard unlimited stock (all non-magical equipment + Minor Healing Potion, excluding inactive items)
  * 2. Active global magical resale listings
  */
-function getCityStoreStock(db) {
-  // 1. Unlimited standard merchandise
-  const standardItems = db.prepare(`
+function getCityStoreStock(db, character = null) {
+  const rawStandardItems = db.prepare(`
     SELECT id, name, category, description, buy_price, sell_price, is_magical,
            damage_dice, armor_bonus, shield_bonus, max_dex_bonus, enhancement_bonus,
            weapon_range_type, is_two_handed, allowed_classes,
@@ -48,6 +48,12 @@ function getCityStoreStock(db) {
       AND name NOT IN (${INACTIVE_ITEMS_SQL})
     ORDER BY category ASC, buy_price ASC
   `).all();
+
+  const standardItems = rawStandardItems.map((it) => ({
+    ...it,
+    base_buy_price: it.buy_price,
+    buy_price: character ? calculateShopPriceWithCharisma(it.buy_price, character.charisma) : it.buy_price
+  }));
 
   // 2. Global magical resale market items
   const resaleListings = db.prepare(`
@@ -152,7 +158,7 @@ function buyItem(db, characterId, { itemDefinitionId, listingId }) {
       throw new Error('Item definition not available for regular purchase.');
     }
 
-    const price = itemDef.buy_price;
+    const price = calculateShopPriceWithCharisma(itemDef.buy_price, character.charisma);
     if (character.gold < price) {
       throw new Error(`Insufficient gold. Price is ${price} gp, but you only possess ${character.gold} gp.`);
     }
@@ -214,6 +220,16 @@ function sellItem(db, characterId, itemInstanceId) {
 
     if (item.equipped_slot !== null && item.equipped_slot !== undefined) {
       throw new Error('Cannot sell equipped gear. You must unequip the item first.');
+    }
+
+    let itemMods = {};
+    if (typeof item.modifications === 'string' && item.modifications.trim()) {
+      try { itemMods = JSON.parse(item.modifications); } catch { itemMods = {}; }
+    } else if (item.modifications && typeof item.modifications === 'object') {
+      itemMods = item.modifications;
+    }
+    if (itemMods.is_starter === true) {
+      throw new Error('Starter issue equipment cannot be sold at the Oakhaven market.');
     }
 
     // Minor Healing Potion exception: consumable potion sold back as standard goods

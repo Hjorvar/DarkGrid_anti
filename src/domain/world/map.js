@@ -88,9 +88,11 @@ function getMinimapData(db, currentTile, radius = 2) {
   const maxY = currentTile.y + radius;
 
   const stmt = db.prepare(`
-    SELECT x, y, name, terrain, is_passable, is_safe
-    FROM map_tiles
-    WHERE x >= ? AND x <= ? AND y >= ? AND y <= ?
+    SELECT mt.id, mt.x, mt.y, mt.name, mt.terrain, mt.is_passable, mt.is_safe,
+           mi.id as persistent_monster_id, mi.kill_count as persistent_kill_count
+    FROM map_tiles mt
+    LEFT JOIN monster_instances mi ON mt.id = mi.tile_id AND mi.status = 'ACTIVE'
+    WHERE mt.x >= ? AND mt.x <= ? AND mt.y >= ? AND mt.y <= ?
   `);
   const tiles = stmt.all(minX, maxX, minY, maxY);
 
@@ -112,12 +114,36 @@ function getMinimapData(db, currentTile, radius = 2) {
           y,
           exists: false,
           isPlayer: false,
+          hasPersistentMonster: false,
+          persistentKillCount: 0,
           symbol: ' ',
           color: '#1a202c',
           label: 'Unknown'
         });
       } else {
         const terrainMeta = TERRAIN_SYMBOLS[tile.terrain] || TERRAIN_SYMBOLS.OTHER;
+        const hasPersistentMonster = Boolean(tile.persistent_monster_id);
+        const persistentKillCount = tile.persistent_kill_count || 0;
+
+        let symbol = terrainMeta.symbol;
+        let char = terrainMeta.char;
+        let color = terrainMeta.color;
+        let label = `${tile.name} (${terrainMeta.label})`;
+
+        if (isPlayer) {
+          symbol = '@';
+          char = '@';
+          color = '#e53e3e';
+          label = hasPersistentMonster
+            ? `You are here — Persistent Threat on tile!`
+            : 'You are here';
+        } else if (hasPersistentMonster) {
+          symbol = '💀';
+          char = '!';
+          color = '#e53e3e';
+          label = `${tile.name} (${terrainMeta.label}) — Persistent Threat (${persistentKillCount} fallen ${persistentKillCount === 1 ? 'hero' : 'heroes'})`;
+        }
+
         row.push({
           x,
           y,
@@ -125,12 +151,14 @@ function getMinimapData(db, currentTile, radius = 2) {
           name: tile.name,
           terrain: tile.terrain,
           isPlayer,
+          hasPersistentMonster,
+          persistentKillCount,
           isPassable: tile.is_passable === 1,
           isSafe: tile.is_safe === 1,
-          symbol: isPlayer ? '@' : terrainMeta.symbol,
-          char: isPlayer ? '@' : terrainMeta.char,
-          color: isPlayer ? '#e53e3e' : terrainMeta.color,
-          label: isPlayer ? 'You are here' : `${tile.name} (${terrainMeta.label})`
+          symbol,
+          char,
+          color,
+          label
         });
       }
     }

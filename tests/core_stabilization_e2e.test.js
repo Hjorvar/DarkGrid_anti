@@ -642,10 +642,10 @@ test('Section 6: Encounter Secrecy & DISCOVERED Lock — No Hero Panel stat leak
     db.prepare('UPDATE characters SET current_hp = 5 WHERE id = ?').run(cleric.id);
     const spareMace = giveItemByName(db, cleric.id, 'Light Mace');
 
-    // 1. Baseline peaceful Hero Panel stats (Cleric L1: STR 14 (+2), DEX 8 (-1) -> base atk floor((2-1)/2)=0)
+    // 1. Baseline peaceful Hero Panel stats (Cleric L1: STR 14 (+2 melee), DEX 8 (-1 ranged))
     const peacefulPage = await client.request('GET', '/game');
     assert.ok(peacefulPage.text.includes('Active: 🗡️ Melee'), 'Peaceful Cleric must show Active: Melee');
-    assert.ok(peacefulPage.text.includes('⚔️ +0 • 🏹 +0'), 'Peaceful Cleric must show baseline +0 attack');
+    assert.ok(peacefulPage.text.includes('⚔️ +2 • 🏹 -1'), 'Peaceful Cleric must show baseline +2 melee / -1 ranged attack');
 
     // 2. Create a DISCOVERED encounter with a FLYING UNDEAD monster
     const wildTile = db.prepare("SELECT * FROM map_tiles WHERE is_safe = 0 AND is_passable = 1 LIMIT 1").get();
@@ -658,11 +658,10 @@ test('Section 6: Encounter Secrecy & DISCOVERED Lock — No Hero Panel stat leak
     `).run(cleric.id, wildTile.id, undeadMonster.id, undeadMonster.base_hp, undeadMonster.base_hp).lastInsertRowid);
 
     // Fetch /game while DISCOVERED:
-    // - Must NOT switch Active stance to Ranged (which would leak flying monster)
-    // - Must NOT add Cleric Holy Radiance (+2 AC, +2 Atk) to Hero Panel (which would leak Undead)
+    // - Must NOT leak flying or Undead status in Hero Panel while DISCOVERED
     const discoveredPage = await client.request('GET', '/game');
-    assert.ok(discoveredPage.text.includes('Active: 🗡️ Melee'), 'DISCOVERED state must NOT leak flying status via auto-ranged stance');
-    assert.ok(discoveredPage.text.includes('⚔️ +0 • 🏹 +0'), 'DISCOVERED state must NOT leak Undead status via Holy Radiance attack bonus');
+    assert.ok(discoveredPage.text.includes('Active: 🗡️ Melee'), 'DISCOVERED state must NOT leak flying status');
+    assert.ok(discoveredPage.text.includes('⚔️ +2 • 🏹 -1'), 'DISCOVERED state must NOT leak Undead status via Holy Radiance attack bonus');
 
     // 3. Server-side & HTTP locks while DISCOVERED:
     const equip = getCharacterEquipment(db, cleric.id);
@@ -679,11 +678,11 @@ test('Section 6: Encounter Secrecy & DISCOVERED Lock — No Hero Panel stat leak
     assert.throws(() => performClericSelfHeal(db, cleric.id), /unresolved encounter|combat/i);
     assert.throws(() => performCityRest(db, cleric.id), /unresolved encounter|combat/i);
 
-    // 4. Once Investigated -> IN_COMBAT: monster is revealed, flying forces Ranged, and Holy Radiance (+2 Atk, +2 AC) applies!
+    // 4. Once Investigated -> IN_COMBAT: monster is revealed, Melee preference stays Melee (-1 Evasive Flyer) and Holy Radiance (+2 Atk, +2 AC) applies!
     await client.request('POST', '/game/encounter/investigate', { encounterId: String(encId) });
     const combatPage = await client.request('GET', '/game');
-    assert.ok(combatPage.text.includes('Active: 🏹 Ranged'), 'IN_COMBAT must reveal flying status and switch to Ranged');
-    assert.ok(combatPage.text.includes('⚔️ +2 • 🏹 +2'), 'IN_COMBAT must apply Cleric Holy Radiance (+2 Atk vs Undead)');
+    assert.ok(combatPage.text.includes('Active: 🗡️ Melee'), 'IN_COMBAT must preserve Melee stance and shield against flying monster');
+    assert.ok(combatPage.text.includes('⚔️ +3 • 🏹 +1'), 'IN_COMBAT must apply Cleric Holy Radiance (+2 Atk vs Undead) and -1 melee Evasive Flyer penalty');
   } finally {
     await new Promise(resolve => server.close(resolve));
     closeDb();
@@ -787,11 +786,11 @@ test('Section 9 & Section 10: Treasure sell prices match DB/UI and DB seed track
       assert.equal(afterGold - beforeGold, t.sell_price);
     }
 
-    // Section 10A: Running runSeeds again on an already-seeded DB is a safe no-op and tracks all 8 seeds
+    // Section 10A: Running runSeeds again on an already-seeded DB is a safe no-op and tracks all 10 seeds
     const secondRun = runSeeds(db);
     assert.equal(secondRun.length, 0, 'runSeeds must not re-run already tracked seeds');
     const trackedSeeds = db.prepare('SELECT COUNT(*) as c FROM schema_seeds').get().c;
-    assert.equal(trackedSeeds, 8, 'All 8 seed files must be recorded in schema_seeds');
+    assert.equal(trackedSeeds, 10, 'All 10 seed files must be recorded in schema_seeds');
 
     // Section 10B: Concurrent nested transactions across two separate DB connections do not collide
     const db2 = initializeDatabase(':memory:');

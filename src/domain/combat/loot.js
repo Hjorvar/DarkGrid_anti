@@ -41,12 +41,12 @@ const GOLD_RANGES_STANDARD = [
 ];
 
 const MAGIC_DROP_CHANCES = [
-  { maxCr: 0.99, chance: 0.005 }, // CR < 1: 0.5%
-  { maxCr: 1.00, chance: 0.010 }, // CR 1: 1.0%
-  { maxCr: 2.00, chance: 0.015 }, // CR 2: 1.5%
-  { maxCr: 3.00, chance: 0.020 }, // CR 3: 2.0%
-  { maxCr: 4.00, chance: 0.025 }, // CR 4: 2.5%
-  { maxCr: Infinity, chance: 0.030 } // CR 5+: 3.0%
+  { maxCr: 0.99, chance: 0.015 }, // CR < 1: 1.5%
+  { maxCr: 1.00, chance: 0.025 }, // CR 1: 2.5%
+  { maxCr: 2.00, chance: 0.035 }, // CR 2: 3.5%
+  { maxCr: 3.00, chance: 0.045 }, // CR 3: 4.5%
+  { maxCr: 4.00, chance: 0.055 }, // CR 4: 5.5%
+  { maxCr: Infinity, chance: 0.065 } // CR 5+: 6.5%
 ];
 
 /**
@@ -58,7 +58,7 @@ function getMagicDropChance(cr) {
       return tier.chance;
     }
   }
-  return 0.03;
+  return 0.065;
 }
 
 /**
@@ -214,13 +214,13 @@ function generateMonsterLoot(db, monster, characterId, options = {}) {
       let chosen = null;
 
       if (lootTable) {
-        // Query non-magical entries from the resolved loot table
+        // Query non-magical entries from the resolved loot table matching CR
         const tableEntries = tx.prepare(`
           SELECT lte.weight, id.*
           FROM loot_table_entries lte
           JOIN item_definitions id ON lte.item_definition_id = id.id
-          WHERE lte.loot_table_id = ? AND id.is_magical = 0 AND id.name NOT IN (${INACTIVE_ITEMS_SQL})
-        `).all(lootTable.id);
+          WHERE lte.loot_table_id = ? AND id.is_magical = 0 AND COALESCE(id.min_cr, 0) <= ? AND id.name NOT IN (${INACTIVE_ITEMS_SQL})
+        `).all(lootTable.id, cr);
 
         if (tableEntries.length > 0) {
           chosen = pickWeightedItem(tableEntries, rng);
@@ -231,10 +231,10 @@ function generateMonsterLoot(db, monster, characterId, options = {}) {
       if (!chosen) {
         const fallbackCandidates = tx.prepare(`
           SELECT * FROM item_definitions
-          WHERE is_magical = 0 AND buy_price > 0 AND category IN ('WEAPON', 'ARMOR', 'SHIELD', 'POTION', 'OTHER')
+          WHERE is_magical = 0 AND buy_price > 0 AND COALESCE(min_cr, 0) <= ? AND category IN ('WEAPON', 'ARMOR', 'SHIELD', 'POTION', 'OTHER')
             AND name NOT IN (${INACTIVE_ITEMS_SQL})
           ORDER BY id ASC
-        `).all();
+        `).all(cr);
 
         if (fallbackCandidates.length > 0) {
           chosen = fallbackCandidates[Math.floor(rng() * fallbackCandidates.length)];

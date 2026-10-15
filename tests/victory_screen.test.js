@@ -507,7 +507,7 @@ test('8. Death Screen priority: Dead character cannot access victory screen and 
   );
 });
 
-test('9. Ranger Opening Shot lethal hit redirects to /game/victory?encounterId=...', async () => {
+test('9. Ranger Opening Shot leaves monster at minimum 1 HP (redirects to /game combat screen), and first Attack redirects to /game/victory', async () => {
   let cookie = '';
   const username = `Rng_${Date.now().toString().slice(-8)}`;
 
@@ -548,19 +548,19 @@ test('9. Ranger Opening Shot lethal hit redirects to /game/victory?encounterId=.
   // Equip a Shortbow for Ranger
   const bowDef = db.prepare("SELECT id FROM item_definitions WHERE name = 'Shortbow'").get();
   if (bowDef) {
-    const bowInst = db.prepare(`
+    db.prepare(`
       INSERT INTO item_instances (item_definition_id, owner_type, owner_character_id, equipped_slot)
       VALUES (?, 'CHARACTER', ?, 'RANGED_WEAPON')
     `).run(bowDef.id, hero.id);
   }
 
-  // Create discovered encounter where hero spotted monster first and monster has 1 HP
+  // Create discovered encounter where hero spotted monster first and monster has 2 HP
   const wolf = db.prepare("SELECT * FROM monsters WHERE name = 'Wolf'").get();
   const encRes = db.prepare(`
     INSERT INTO encounters (
       character_id, tile_id, monster_id, status, current_monster_hp, combat_round,
       spotted_by_hero, is_ambush, opening_shot_resolved
-    ) VALUES (?, 1, ?, 'DISCOVERED', 1, 0, 1, 0, 0)
+    ) VALUES (?, 1, ?, 'DISCOVERED', 2, 0, 1, 0, 0)
   `).run(hero.id, wolf.id);
   const encId = Number(encRes.lastInsertRowid);
 
@@ -570,11 +570,11 @@ test('9. Ranger Opening Shot lethal hit redirects to /game/victory?encounterId=.
   const gameCsrfMatch = gamePageHtml.match(/name="_csrf"\s+value="([^"]+)"/);
   if (gameCsrfMatch) csrfToken = gameCsrfMatch[1];
 
-  // Submit investigate: opening shot fires and kills monster
+  // Submit investigate: opening shot fires, wounds monster to 1 HP, and enters combat on /game
   const originalRandom = Math.random;
   let investRes;
   try {
-    Math.random = () => 0.95; // Guaranteed hit & lethal damage
+    Math.random = () => 0.95; // Guaranteed hit & high damage
     investRes = await fetch(`${baseUrl}/game/encounter/investigate`, {
       method: 'POST',
       body: new URLSearchParams({ encounterId: encId.toString(), _csrf: csrfToken }),
@@ -586,10 +586,36 @@ test('9. Ranger Opening Shot lethal hit redirects to /game/victory?encounterId=.
   }
 
   assert.equal(investRes.status, 302);
-  const location = investRes.headers.get('location');
+  const investLocation = investRes.headers.get('location');
+  assert.equal(
+    investLocation,
+    '/game',
+    `Opening shot must enter combat on /game rather than skipping straight to victory, got: ${investLocation}`
+  );
+
+  const encAfterOpening = db.prepare('SELECT status, current_monster_hp FROM encounters WHERE id = ?').get(encId);
+  assert.equal(encAfterOpening.status, 'IN_COMBAT');
+  assert.equal(encAfterOpening.current_monster_hp, 1, 'Monster must remain at 1 HP after Opening Shot');
+
+  // Now player performs at least one Attack action to defeat the monster
+  let attackRes;
+  try {
+    Math.random = () => 0.95;
+    attackRes = await fetch(`${baseUrl}/game/combat/attack`, {
+      method: 'POST',
+      body: new URLSearchParams({ encounterId: encId.toString(), round: '1', _csrf: csrfToken }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookie },
+      redirect: 'manual'
+    });
+  } finally {
+    Math.random = originalRandom;
+  }
+
+  assert.equal(attackRes.status, 302);
+  const attackLocation = attackRes.headers.get('location');
   assert.ok(
-    location.includes(`/game/victory?encounterId=${encId}`),
-    `Opening shot kill must redirect to /game/victory?encounterId=${encId}, got: ${location}`
+    attackLocation.includes(`/game/victory?encounterId=${encId}`),
+    `Player attack kill must redirect to /game/victory?encounterId=${encId}, got: ${attackLocation}`
   );
 });
 

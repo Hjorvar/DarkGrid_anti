@@ -250,9 +250,9 @@ test('6. Assets integrity: goblin_defeated.png exists in both project root and p
   assert.ok(fs.statSync(pubPath).size > 1000, 'Public image must have non-zero size');
 });
 
-test('7. Comprehensive catalog audit: all 68 active monsters have defeated artwork on disk in both directories', () => {
+test('7. Comprehensive catalog audit: all 98 active monsters have defeated artwork on disk in both directories', () => {
   const monsters = db.prepare("SELECT id, name, image_path, defeated_image_path FROM monsters WHERE name != 'Shadow Spectre Mock' ORDER BY name ASC").all();
-  assert.equal(monsters.length, 68, 'There must be exactly 68 active monsters in the game');
+  assert.equal(monsters.length, 98, 'There must be exactly 98 active monsters in the game');
 
   let defeatedCount = 0;
 
@@ -268,6 +268,6 @@ test('7. Comprehensive catalog audit: all 68 active monsters have defeated artwo
     defeatedCount++;
   }
 
-  assert.equal(defeatedCount, 68, 'All 68 monsters must have high-fidelity defeated artwork on disk');
+  assert.equal(defeatedCount, 98, 'All 98 monsters must have high-fidelity defeated artwork on disk');
 });
 

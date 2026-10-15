@@ -554,25 +554,26 @@ function createCharacter(db, {
     };
 
     const starterItems = starterItemsByClass[validation.classType] || [];
+    const starterMeta = JSON.stringify({ is_starter: true });
     const insertItemStmt = tx.prepare(`
       INSERT INTO item_instances (
-        item_definition_id, owner_type, owner_character_id, equipped_slot
-      ) VALUES (?, 'CHARACTER', ?, ?)
+        item_definition_id, owner_type, owner_character_id, equipped_slot, modifications
+      ) VALUES (?, 'CHARACTER', ?, ?, ?)
     `);
 
     // Insert class gear
     for (const gear of starterItems) {
       const def = tx.prepare('SELECT id FROM item_definitions WHERE name = ?').get(gear.name);
       if (def) {
-        insertItemStmt.run(def.id, characterId, gear.slot);
+        insertItemStmt.run(def.id, characterId, gear.slot, starterMeta);
       }
     }
 
     // Insert 2 Minor Healing Potions
     const potionDef = tx.prepare("SELECT id FROM item_definitions WHERE name = 'Minor Healing Potion'").get();
     if (potionDef) {
-      insertItemStmt.run(potionDef.id, characterId, null);
-      insertItemStmt.run(potionDef.id, characterId, null);
+      insertItemStmt.run(potionDef.id, characterId, null, starterMeta);
+      insertItemStmt.run(potionDef.id, characterId, null, starterMeta);
     }
 
     return tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
@@ -595,7 +596,7 @@ function getCharacterEquipment(db, characterId) {
     SELECT ii.id, ii.id AS instance_id, ii.equipped_slot, id.name, id.category, id.damage_dice,
            id.armor_bonus, id.shield_bonus, id.is_magical, id.buy_price, id.attributes,
            id.max_dex_bonus, id.enhancement_bonus, id.weapon_range_type, id.is_two_handed,
-           id.rarity, id.subtype, id.equip_slot as def_equip_slot
+           id.rarity, id.subtype, id.equip_slot as def_equip_slot, id.description
     FROM item_instances ii
     JOIN item_definitions id ON ii.item_definition_id = id.id
     WHERE ii.owner_type = 'CHARACTER' AND ii.owner_character_id = ? AND ii.equipped_slot IS NOT NULL
@@ -675,6 +676,7 @@ function getCharacterEquipment(db, characterId) {
 function getCharacterInventory(db, characterId) {
   return db.prepare(`
     SELECT ii.id, ii.id AS instance_id, ii.item_definition_id, ii.equipped_slot, ii.owner_character_id,
+           ii.modifications,
            id.name, id.category, id.buy_price, id.sell_price, id.is_magical,
            id.damage_dice, id.armor_bonus, id.shield_bonus, id.max_dex_bonus,
            id.enhancement_bonus, id.weapon_range_type, id.is_two_handed,
@@ -842,11 +844,9 @@ function setPrimaryWeaponPreference(db, characterId, preference) {
 /**
  * Determines the hero's active weapon and whether ranged is active for combat & defense.
  * Rules:
- * 1. Against airborne enemies (movement_type === 'FLY'):
- *    Forces prepared ranged weapon if available, regardless of preference.
- * 2. Against ground enemies:
- *    Uses preferred primary weapon (RANGED or MELEE).
- * 3. Safe fallback:
+ * 1. Respects the hero's preferred primary weapon (RANGED or MELEE) against both ground and airborne enemies.
+ *    (Melee attacks against airborne enemies keep the melee weapon and shield AC, taking a small -1 Evasive Flyer attack penalty in combat rules).
+ * 2. Safe fallback:
  *    If preferred weapon is not equipped (removed, sold), falls back to the other legally equipped weapon,
  *    or unequipped/bare hands.
  */
@@ -861,34 +861,29 @@ function getActiveWeapon(character, equipment, monster = null) {
   const rangedWeapon = equipment ? (equipment.rangedWeapon || null) : null;
   const genericWeapon = equipment ? (equipment.weapon || null) : null;
 
-  // 1. Airborne monster forces prepared ranged weapon if equipped
-  if (isAirborne && rangedWeapon) {
-    return { activeWeapon: rangedWeapon, isRangedActive: true };
-  }
-
   const preference = (character && character.primary_weapon ? character.primary_weapon : 'MELEE').toUpperCase();
 
-  // 2. Primary Weapon Preference with Safe Fallback
+  // Primary Weapon Preference with Safe Fallback
   if (preference === 'RANGED') {
     if (rangedWeapon) {
-      return { activeWeapon: rangedWeapon, isRangedActive: true };
+      return { activeWeapon: rangedWeapon, isRangedActive: true, isAirborne };
     }
     // Safe fallback to melee
     if (meleeWeapon) {
-      return { activeWeapon: meleeWeapon, isRangedActive: false };
+      return { activeWeapon: meleeWeapon, isRangedActive: false, isAirborne };
     }
-    return { activeWeapon: genericWeapon, isRangedActive: false };
+    return { activeWeapon: genericWeapon, isRangedActive: false, isAirborne };
   }
 
   // Melee preference (default)
   if (meleeWeapon) {
-    return { activeWeapon: meleeWeapon, isRangedActive: false };
+    return { activeWeapon: meleeWeapon, isRangedActive: false, isAirborne };
   }
   // Safe fallback to ranged
   if (rangedWeapon) {
-    return { activeWeapon: rangedWeapon, isRangedActive: true };
+    return { activeWeapon: rangedWeapon, isRangedActive: true, isAirborne };
   }
-  return { activeWeapon: genericWeapon, isRangedActive: false };
+  return { activeWeapon: genericWeapon, isRangedActive: false, isAirborne };
 }
 
 /**
@@ -1006,7 +1001,7 @@ function getCharacterPotions(db, characterId, options = {}) {
  */
 function getAllCharacterItems(db, characterId) {
   return db.prepare(`
-    SELECT ii.id, ii.item_definition_id, ii.equipped_slot, ii.owner_character_id,
+    SELECT ii.id, ii.item_definition_id, ii.equipped_slot, ii.owner_character_id, ii.modifications,
            id.name, id.category, id.buy_price, id.is_magical, id.attributes
     FROM item_instances ii
     JOIN item_definitions id ON ii.item_definition_id = id.id
@@ -1096,6 +1091,72 @@ function useConsumable(db, characterId, itemInstanceId, options = {}) {
   });
 }
 
+/**
+ * Calculates Hero Saving Throws (Fortitude, Reflex, Will, and Physical = max(Fort, Ref))
+ * based on Pathfinder 1e class progressions and attribute modifiers, plus Cloak of Resistance.
+ * - FIGHTER: Good Fort, Poor Ref, Poor Will
+ * - RANGER:  Good Fort, Good Ref, Poor Will
+ * - CLERIC:  Good Fort, Poor Ref, Good Will
+ */
+function getHeroSavingThrows(character, equipment = null) {
+  if (!character) {
+    return { fort: 0, ref: 0, will: 0, physical: 0 };
+  }
+  const lvl = Math.max(1, Number(character.level || 1));
+  const goodSave = 2 + Math.floor(lvl / 2);
+  const poorSave = Math.floor(lvl / 3);
+  const cls = (character.class || 'FIGHTER').toUpperCase();
+
+  let baseFort = goodSave;
+  let baseRef = poorSave;
+  let baseWill = poorSave;
+
+  if (cls === 'RANGER') {
+    baseRef = goodSave;
+  } else if (cls === 'CLERIC') {
+    baseWill = goodSave;
+  }
+
+  const eq = equipment || character._equipment || (character.id ? getLastEquipmentForCharacter(character.id) : null);
+  let cloakBonus = 0;
+  if (eq && eq.cloak) {
+    if (eq.cloak.enhancement_bonus) {
+      cloakBonus += Number(eq.cloak.enhancement_bonus);
+    } else if ((eq.cloak.name || '').includes('Cloak of Resistance')) {
+      cloakBonus += 1;
+    }
+  }
+
+  const fort = baseFort + getModifier(character.constitution || 10) + cloakBonus;
+  const ref = baseRef + getModifier(character.dexterity || 10) + cloakBonus;
+  const will = baseWill + getModifier(character.wisdom || 10) + cloakBonus;
+  const physical = Math.max(fort, ref);
+
+  return { fort, ref, will, physical };
+}
+
+/**
+ * Scales XP gained from combat by the hero's Intelligence modifier (+10% per +1 INT mod, -10% per -1 INT mod).
+ */
+function calculateXpWithIntelligence(baseXp, intelligence = 10) {
+  const rawXp = Math.max(0, Number(baseXp) || 0);
+  if (rawXp === 0) return 0;
+  const intMod = getModifier(Number(intelligence !== undefined && intelligence !== null ? intelligence : 10));
+  const multiplier = Math.max(0.5, 1 + (intMod * 0.10));
+  return Math.max(1, Math.round(rawXp * multiplier));
+}
+
+/**
+ * Scales shop purchase prices by the hero's Charisma modifier (-5% price per +1 CHA mod, +5% price per -1 CHA mod).
+ */
+function calculateShopPriceWithCharisma(basePrice, charisma = 10) {
+  const rawPrice = Math.max(0, Number(basePrice) || 0);
+  if (rawPrice === 0) return 0;
+  const chaMod = getModifier(Number(charisma !== undefined && charisma !== null ? charisma : 10));
+  const multiplier = Math.min(1.5, Math.max(0.6, 1 - (chaMod * 0.05)));
+  return Math.max(1, Math.round(rawPrice * multiplier));
+}
+
 module.exports = {
   STAT_KEYS,
   FAST_XP_TABLE,
@@ -1129,5 +1190,8 @@ module.exports = {
   useConsumable,
   getEffectiveStats,
   getLastEquipmentForCharacter,
+  getHeroSavingThrows,
+  calculateXpWithIntelligence,
+  calculateShopPriceWithCharisma,
   INACTIVE_CONSUMABLE_NAMES
 };

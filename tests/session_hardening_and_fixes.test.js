@@ -535,7 +535,7 @@ test('M1 HTTP Integration: UI renders identical AC and active weapon as combatSt
       VALUES (?, 'CHARACTER', ?, 'RANGED')
     `).run(slingDef.id, hero.id);
 
-    // Case 1: Flying monster forces ranged weapon and suppresses shield AC
+    // Case 1: Flying monster respects Melee preference (keeping shield AC) or Ranged preference
     const batMonster = db.prepare("SELECT * FROM monsters WHERE movement_type = 'FLY' LIMIT 1").get();
     const encBatRes = db.prepare(`
       INSERT INTO encounters (
@@ -545,13 +545,12 @@ test('M1 HTTP Integration: UI renders identical AC and active weapon as combatSt
     const encBatId = Number(encBatRes.lastInsertRowid);
 
     const combatStateBat = getCombatState(db, hero.id, encBatId);
-    assert.equal(combatStateBat.isRangedActive, true, 'Flying monster must activate ranged');
+    assert.equal(combatStateBat.isRangedActive, false, 'Melee Cleric keeps melee weapon and shield active against flying monster');
 
     const gamePageBat = await fetch(`${baseUrl}/game`, { headers: { Cookie: cookie } });
     const htmlBat = await gamePageBat.text();
 
-    assert.ok(htmlBat.includes('Active: 🏹 Ranged'), 'UI must show Active: Ranged for flying monster');
-    assert.ok(htmlBat.includes('Shield disabled with ranged'), 'UI must note shield suppression');
+    assert.ok(htmlBat.includes('Active: 🗡️ Melee'), 'UI must show Active: Melee for melee-preferred hero vs flying monster');
     assert.ok(htmlBat.includes(`<div class="vital-value" style="color: var(--accent-gold);">${combatStateBat.heroAC}</div>`), 'UI AC must match combatState.heroAC exactly');
 
     // Case 2: Cleric vs Undead monster (Holy Radiance bonus)

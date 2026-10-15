@@ -86,6 +86,14 @@ function getVictoryData(db, characterId, encounterId) {
   const hpGain = details.hp_gain ?? 0;
   const resolvedByOther = Boolean(details.resolved_by_other);
 
+  // 4b. Retrieve full combat event log for post-battle review
+  const combatEvents = db.prepare(`
+    SELECT id, round_number, event_type, public_text
+    FROM combat_events
+    WHERE encounter_id = ?
+    ORDER BY id ASC
+  `).all(encounterId);
+
   // 5. Persistent Monster & Avenged Fallen Heroes check
   let persistentInfo = null;
   if (encounter.monster_instance_id) {
@@ -115,7 +123,28 @@ function getVictoryData(db, characterId, encounterId) {
     }
   }
 
+  let bountyInfo = details.bounty_info || null;
+  if (!bountyInfo && encounter.bounty_contract_id && encounter.bounty_custom_name) {
+    bountyInfo = {
+      isBountyTarget: true,
+      contractId: encounter.bounty_contract_id,
+      title: encounter.bounty_title,
+      contractTitle: encounter.bounty_title,
+      customName: encounter.bounty_custom_name,
+      baseMonsterName: (encounter.base_monster_name || '').replace(/\[.*?\]/g, '').trim(),
+      regionName: encounter.bounty_region_name,
+      rewardGold: encounter.bounty_reward_gold
+    };
+  } else if (bountyInfo) {
+    bountyInfo = {
+      isBountyTarget: true,
+      contractTitle: bountyInfo.title || encounter.bounty_title,
+      ...bountyInfo
+    };
+  }
+
   const cleanMonsterName = (encounter.monster_name || '').replace(/\[.*?\]/g, '').trim();
+  const cleanBaseMonsterName = (encounter.base_monster_name || encounter.monster_name || '').replace(/\[.*?\]/g, '').trim();
 
   // Defeated artwork takes precedence for the victory screen presentation.
   // Falls back gracefully to normal living monster imageUrl if defeated art is not yet on disk.
@@ -126,6 +155,7 @@ function getVictoryData(db, characterId, encounterId) {
     character,
     encounter,
     cleanMonsterName,
+    cleanBaseMonsterName,
     monsterSymbol: encounter.monster_symbol,
     monsterColor: encounter.monster_color || 'var(--accent-gold)',
     imageUrl: victoryImageUrl,
@@ -142,7 +172,9 @@ function getVictoryData(db, characterId, encounterId) {
     newLevel,
     hpGain,
     resolvedByOther,
-    persistentInfo
+    persistentInfo,
+    bountyInfo,
+    combatEvents
   };
 }
 
