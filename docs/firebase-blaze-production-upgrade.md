@@ -107,17 +107,16 @@ Darkgrid hefur verið uppfært úr viðkvæmri vaframiðaðri arkitektúrslausn 
    - Sett á **7 daga** (sjálfgefið er 30 dagar) með `scripts/deploy_blaze.js` (staðfest virkt á `darkgrid-rpg`).
 5. **Monthly Billing Budget & Sjálfvirkur Neyðarrofi (Automated Hard Kill-Switch):**
    - Eitt samræmt fjárhagsþak (`budgets/11520419-39b1-4536-9560-2d7487cd64ec` — `Darkgrid RPG Monthly Cap (< 5000 ISK)`, 25 USD ≈ 3.500 ISK) með viðvörunum við **25%, 50%, 75%, 90% og 100%** (tvítekna budgetinu sem myndaðist í Firebase Console hefur verið eytt og `deploy_blaze.js` kemur í veg fyrir tvískráningu).
-   - **Þriggja laga sjálfvirk stöðvunarvörn (Hard Stop / Kill-Switch) gegn óvæntum reikningum:**
-     1. **Lag 1 — Rauntíma Daglegt Free-Tier Þak í netþjóni (0 sekúndna töf):**
-        - **Firestore skrifþak (`MAX_DAILY_FIRESTORE_WRITES = 15000`):** Fría þakið á Firestore er 20.000 skrif á dag. Ef netþjónninn nær 15.000 skrifum á einum sólarhring (75% af fría þakinu = **$0.00**) stöðvar `src/db/durable-store.js` sjálfkrafa öll frekari Firestore-skrif þann daginn.
-        - **HTTP beiðnaþak (`MAX_DAILY_HTTP_REQUESTS = 25000`):** Fría þakið á Cloud Run er 2.000.000 beiðnir á mánuði (~66.000 á dag). Ef netþjónninn fær 25.000 beiðnir á einum sólarhring (< 40% af fría þakinu = **$0.00**) virkjar `src/middleware/security.js` samstundis neyðarlæsingu (HTTP 503) án gagnagrunns- eða Firestore-aðgerða.
-     2. **Lag 2 — Harðar Cloud Run auðlindatakmarkanir:**
-        - `maxInstanceCount: 1`, `cpu: 1`, `memory: 512Mi` — Google Cloud getur aldrei ræst fleiri en 1 container.
-     3. **Lag 3 — Google Cloud Billing Pub/Sub Hard Kill-Switch (`projects/darkgrid-rpg/topics/budget-killswitch`):**
-        - Fjárhagsþakið (`11520419-39b1-4536-9560-2d7487cd64ec`) er tengt við Pub/Sub rásina `projects/darkgrid-rpg/topics/budget-killswitch` og Push-áskriftina `budget-killswitch-sub` sem sendir kostnaðarstöðu á `POST /internal/budget-killswitch`.
-        - Ef `costAmount >= budgetAmount` (100% af budgeti næst) framkvæmir netþjónninn (`disableProjectBillingAndLockService` í `src/middleware/security.js` með `roles/billing.projectManager` og `roles/run.admin` heimildum) tvennt sjálfkrafa:
+   - **Þriggja laga sjálfvirk stöðvunarvörn (Hard Stop / Kill-Switch við \$25/mán.):**
+     1. **Lag 1 — Google Cloud Billing Pub/Sub Hard Kill-Switch við \$25 (`projects/darkgrid-rpg/topics/budget-killswitch`):**
+        - Fjárhagsþakið (`11520419-39b1-4536-9560-2d7487cd64ec`, **\$25 / mán.**) er tengt við Pub/Sub rásina `projects/darkgrid-rpg/topics/budget-killswitch` og Push-áskriftina `budget-killswitch-sub` sem sendir kostnaðarstöðu á `POST /internal/budget-killswitch`.
+        - Ef `costAmount >= budgetAmount` (**\$25.00** næst) framkvæmir netþjónninn (`disableProjectBillingAndLockService` í `src/middleware/security.js` með `roles/billing.projectManager` og `roles/run.admin` heimildum) tvennt sjálfkrafa:
           - **Aftengir greiðslureikninginn af verkefninu** (`PUT https://cloudbilling.googleapis.com/v1/projects/darkgrid-rpg/billingInfo` með `billingAccountName: ""`), sem slekkur samstundis á öllum gjaldskyldum Google Cloud / Blaze þjónustum.
           - **Fjarlægir opinberan aðgang (`allUsers`) að Cloud Run þjóninum** og setur vefinn í neyðarstöðvun (`budgetKillSwitchActive = true`).
+     2. **Lag 2 — Rauntíma DDoS / Runaway-Loop öryggisþak í netþjóni (stillt fyrir \$25/mán. ramma):**
+        - Leyfir eðlilega og mikla spilun umfram fría þakið upp að \$25/mán., en kemur í veg fyrir að stjórnlaus lykkja eða DDoS-árás geti brennt >\$25 á nokkrum mínútum áður en Billing Pub/Sub boð berast (`MAX_DAILY_FIRESTORE_WRITES = 250000` skrif/dag og `MAX_DAILY_HTTP_REQUESTS = 500000` beiðnir/dag).
+     3. **Lag 3 — Harðar Cloud Run auðlindatakmarkanir:**
+        - `maxInstanceCount: 1`, `cpu: 1`, `memory: 512Mi` — Google Cloud getur aldrei ræst fleiri en 1 container.
 
 ---
 

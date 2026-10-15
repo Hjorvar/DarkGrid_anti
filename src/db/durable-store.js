@@ -815,8 +815,7 @@ let firestoreDailyWrites = 0;
 
 /**
  * Pushes dirty SQLite rows to Cloud Firestore using the atomic `:commit` batch API.
- * Enforces a hard daily write cap (default 15,000 writes/day — inside the 20,000/day free tier)
- * so Firestore writes can never generate unexpected billing charges.
+ * Enforces a runaway-loop safety cap (default 250,000 writes/day) aligned with the $25/month budget.
  */
 async function pushDeltaToFirestoreServer(db, options = {}) {
   const delta = computeDirtyDelta(db);
@@ -835,9 +834,9 @@ async function pushDeltaToFirestoreServer(db, options = {}) {
     firestoreDailyWrites = 0;
   }
 
-  const maxDailyWrites = parseInt(process.env.MAX_DAILY_FIRESTORE_WRITES || '15000', 10);
+  const maxDailyWrites = parseInt(process.env.MAX_DAILY_FIRESTORE_WRITES || '250000', 10);
   if (!options.forceFull && firestoreDailyWrites >= maxDailyWrites) {
-    logError('FIRESTORE_DAILY_CAP_REACHED', `Hard daily Firestore write cap (${maxDailyWrites}) reached; skipping remote sync to guarantee $0 cost.`, {
+    logError('FIRESTORE_DAILY_CAP_REACHED', `Runaway daily Firestore write cap (${maxDailyWrites}) reached; pausing remote sync to protect $25 monthly budget.`, {
       firestoreDailyWrites,
       maxDailyWrites
     });

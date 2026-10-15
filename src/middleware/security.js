@@ -252,9 +252,9 @@ async function budgetKillSwitchHandler(req, res) {
 }
 
 function maintenanceModeGuard(req, res, next) {
-  if (req.path === '/healthz' || req.path === '/internal/budget-killswitch') return next();
+  if (req.path === '/healthz' || req.path === '/api/health' || req.path === '/internal/budget-killswitch') return next();
 
-  // Track daily requests in production to enforce hard Free-Tier Circuit Breaker (25,000 req/day)
+  // Track daily requests in production as a DDoS / runaway-loop safety net (500,000 req/day, aligned with $25/month cap)
   if (process.env.NODE_ENV !== 'test' || req.headers['x-enforce-daily-cap'] === '1') {
     const today = new Date().toISOString().slice(0, 10);
     if (today !== requestCounterDay) {
@@ -264,14 +264,14 @@ function maintenanceModeGuard(req, res, next) {
     dailyRequestCount += 1;
     const maxDailyRequests = req.headers['x-daily-cap-max']
       ? parseInt(req.headers['x-daily-cap-max'], 10)
-      : parseInt(process.env.MAX_DAILY_HTTP_REQUESTS || '25000', 10);
+      : parseInt(process.env.MAX_DAILY_HTTP_REQUESTS || '500000', 10);
 
     if (dailyRequestCount > maxDailyRequests) {
-      logSecurity('DAILY_FREE_TIER_CAP_REACHED', 'Hard daily request cap reached — pausing traffic to guarantee $0 cost', {
+      logSecurity('DAILY_DDOS_CAP_REACHED', 'Runaway daily request cap reached — pausing traffic to protect $25 monthly budget', {
         dailyRequestCount,
         maxDailyRequests
       });
-      return res.status(503).send('Darkgrid is temporarily paused: Daily free-tier traffic cap reached to prevent cloud billing charges.');
+      return res.status(503).send('Darkgrid is temporarily paused: Unusual traffic spike detected ($25 monthly budget protection).');
     }
   }
 

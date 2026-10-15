@@ -326,6 +326,8 @@ async function buildAndDeployCloudRun(token) {
             { name: 'FIREBASE_PROJECT_ID', value: PROJECT_ID },
             { name: 'FIRESTORE_DURABLE_SYNC', value: 'true' },
             { name: 'SESSION_SECRET', value: sessionSecret },
+            { name: 'MAX_DAILY_HTTP_REQUESTS', value: '500000' },
+            { name: 'MAX_DAILY_FIRESTORE_WRITES', value: '250000' },
             { name: 'DEPLOY_TIMESTAMP', value: new Date().toISOString() }
           ]
         }
