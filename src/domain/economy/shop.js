@@ -117,22 +117,38 @@ function buyItem(db, characterId, { itemDefinitionId, listingId }) {
         throw new Error(`Insufficient gold. Price is ${listing.price} gp, but you only carry ${character.gold} gp.`);
       }
 
-      // Deduct gold
-      tx.prepare('UPDATE characters SET gold = gold - ? WHERE id = ?').run(listing.price, characterId);
-
-      // Conclude market listing
-      tx.prepare(`
+      // Atomically claim the market listing first (prevents two players buying simultaneously)
+      const listingUpdate = tx.prepare(`
         UPDATE market_listings
         SET status = 'SOLD', buyer_character_id = ?, completed_at = CURRENT_TIMESTAMP
-        WHERE id = ?
+        WHERE id = ? AND status = 'ACTIVE'
       `).run(characterId, listing.id);
 
-      // Transfer the unique item instance to the buyer
-      tx.prepare(`
+      if (listingUpdate.changes !== 1) {
+        throw new Error('This magical artifact has already been acquired by another hero or withdrawn.');
+      }
+
+      // Atomically transfer the unique item instance from MARKET to buyer
+      const itemUpdate = tx.prepare(`
         UPDATE item_instances
         SET owner_type = 'CHARACTER', owner_character_id = ?, equipped_slot = NULL
-        WHERE id = ?
+        WHERE id = ? AND owner_type = 'MARKET'
       `).run(characterId, listing.instance_id);
+
+      if (itemUpdate.changes !== 1) {
+        throw new Error('This magical artifact is no longer available in the market.');
+      }
+
+      // Atomically deduct gold once
+      const goldUpdate = tx.prepare(`
+        UPDATE characters
+        SET gold = gold - ?
+        WHERE id = ? AND gold >= ?
+      `).run(listing.price, characterId, listing.price);
+
+      if (goldUpdate.changes !== 1) {
+        throw new Error(`Insufficient gold. Price is ${listing.price} gp, but you only carry ${character.gold} gp.`);
+      }
 
       return {
         success: true,
@@ -175,8 +191,16 @@ function buyItem(db, characterId, { itemDefinitionId, listingId }) {
       }
     }
 
-    // Deduct gold
-    tx.prepare('UPDATE characters SET gold = gold - ? WHERE id = ?').run(price, characterId);
+    // Deduct gold atomically
+    const stdGoldUpdate = tx.prepare(`
+      UPDATE characters
+      SET gold = gold - ?
+      WHERE id = ? AND gold >= ?
+    `).run(price, characterId, price);
+
+    if (stdGoldUpdate.changes !== 1) {
+      throw new Error(`Insufficient gold. Price is ${price} gp, but you only possess ${character.gold} gp.`);
+    }
 
     // Create new item instance
     const insertRes = tx.prepare(`
@@ -240,15 +264,19 @@ function sellItem(db, characterId, itemInstanceId) {
       const payPrice = Math.floor(item.buy_price * 0.40);
       const resalePrice = Math.ceil(item.buy_price * 1.25);
 
-      // Pay player
-      tx.prepare('UPDATE characters SET gold = gold + ? WHERE id = ?').run(payPrice, characterId);
-
-      // Move unique item instance to MARKET ownership
-      tx.prepare(`
+      // Atomically move unique item instance to MARKET ownership first
+      const moveRes = tx.prepare(`
         UPDATE item_instances
         SET owner_type = 'MARKET', owner_character_id = NULL, equipped_slot = NULL
-        WHERE id = ?
-      `).run(item.id);
+        WHERE id = ? AND owner_type = 'CHARACTER' AND owner_character_id = ? AND equipped_slot IS NULL
+      `).run(item.id, characterId);
+
+      if (moveRes.changes !== 1) {
+        throw new Error('Item could not be sold because it is no longer in your unequipped inventory.');
+      }
+
+      // Pay player
+      tx.prepare('UPDATE characters SET gold = gold + ? WHERE id = ?').run(payPrice, characterId);
 
       // Create active market listing visible across all cities
       tx.prepare(`
@@ -272,11 +300,18 @@ function sellItem(db, characterId, itemInstanceId) {
       ? Number(item.sell_price)
       : Math.floor((item.buy_price || 0) * 0.50);
 
+    // Atomically remove item instance first
+    const delRes = tx.prepare(`
+      DELETE FROM item_instances
+      WHERE id = ? AND owner_type = 'CHARACTER' AND owner_character_id = ? AND equipped_slot IS NULL
+    `).run(item.id, characterId);
+
+    if (delRes.changes !== 1) {
+      throw new Error('Item could not be sold because it is no longer in your unequipped inventory.');
+    }
+
     // Pay player
     tx.prepare('UPDATE characters SET gold = gold + ? WHERE id = ?').run(payPrice, characterId);
-
-    // Remove item instance
-    tx.prepare('DELETE FROM item_instances WHERE id = ?').run(item.id);
 
     return {
       success: true,

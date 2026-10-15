@@ -148,9 +148,15 @@ test('H1 & H2: Two heroes vs same persistent monster & full max HP reset', (t) =
 
   // Simultaneous killing blow race condition test:
   // If two combatants invoke handleMonsterDefeat concurrently on the same ACTIVE persistent monster instance:
-  db.prepare("UPDATE monster_instances SET status = 'ACTIVE', held_gold = 50 WHERE id = ?").run(pmId);
-  const resA = handleMonsterDefeat(db, heroA, { id: encAId, monster_instance_id: pmId }, orc, { id: pmId });
-  const resB = handleMonsterDefeat(db, heroB, { id: encBId, monster_instance_id: pmId }, orc, { id: pmId });
+  const pm2Res = db.prepare(`
+    INSERT INTO monster_instances (
+      monster_id, tile_id, current_hp, max_hp, held_gold, kill_count, status
+    ) VALUES (?, ?, 22, 22, 50, 1, 'ACTIVE')
+  `).run(orc.id, tile.id);
+  const pmId2 = Number(pm2Res.lastInsertRowid);
+  db.prepare("UPDATE encounters SET status = 'IN_COMBAT', monster_instance_id = ? WHERE id IN (?, ?)").run(pmId2, encAId, encBId);
+  const resA = handleMonsterDefeat(db, heroA, { id: encAId, monster_instance_id: pmId2 }, orc, { id: pmId2 });
+  const resB = handleMonsterDefeat(db, heroB, { id: encBId, monster_instance_id: pmId2 }, orc, { id: pmId2 });
   assert.equal(resA.resolvedByOther, undefined, 'First victor claims rewards');
   assert.equal(resA.goldLooted, 50, 'First victor receives the 50 gold');
   assert.equal(resB.resolvedByOther, true, 'Second victor is safely short-circuited as resolvedByOther');
@@ -159,13 +165,18 @@ test('H1 & H2: Two heroes vs same persistent monster & full max HP reset', (t) =
 
   // H2: Full boosted max HP reset after damage and flee
   // 1. Persistent monster starts at 22/22 HP
-  db.prepare("UPDATE monster_instances SET status = 'ACTIVE', current_hp = 22, max_hp = 22 WHERE id = ?").run(pmId);
+  const pm3Res = db.prepare(`
+    INSERT INTO monster_instances (
+      monster_id, tile_id, current_hp, max_hp, held_gold, kill_count, status
+    ) VALUES (?, ?, 22, 22, 0, 1, 'ACTIVE')
+  `).run(orc.id, tile.id);
+  const pmId3 = Number(pm3Res.lastInsertRowid);
   const encFleeRes = db.prepare(`
     INSERT INTO encounters (
       character_id, monster_id, monster_instance_id, tile_id, status,
       current_monster_hp, monster_max_hp, combat_round
     ) VALUES (?, ?, ?, ?, 'DISCOVERED', 22, 22, 0)
-  `).run(heroA.id, orc.id, pmId, tile.id);
+  `).run(heroA.id, orc.id, pmId3, tile.id);
   const encFleeId = Number(encFleeRes.lastInsertRowid);
   startCombat(db, heroA.id, encFleeId);
 
@@ -184,7 +195,7 @@ test('H1 & H2: Two heroes vs same persistent monster & full max HP reset', (t) =
   assert.equal(fleeState.status, 'ESCAPED');
 
   // Persistent monster in DB must recover to full boosted max HP (22)
-  const pmAfterFlee = db.prepare('SELECT current_hp, max_hp FROM monster_instances WHERE id = ?').get(pmId);
+  const pmAfterFlee = db.prepare('SELECT current_hp, max_hp FROM monster_instances WHERE id = ?').get(pmId3);
   assert.equal(pmAfterFlee.current_hp, 22, 'H2: Persistent monster resets to full 22 HP after hero flees');
   assert.equal(pmAfterFlee.max_hp, 22, 'H2: +10% max HP boost is preserved');
 

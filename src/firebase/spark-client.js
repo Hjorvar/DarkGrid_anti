@@ -298,7 +298,7 @@ async function pullStateFromFirestore(uid, username) {
       }
     }
 
-    // 4. Pull Current User's Encounters
+    // 4. Pull Current User's Encounters & Hunting Contracts
     const encDocRef = doc(firestore, 'encounters', uid);
     const encDocSnap = await getDoc(encDocRef);
     if (encDocSnap.exists()) {
@@ -306,23 +306,59 @@ async function pullStateFromFirestore(uid, username) {
       if (encData.combat_state_json) {
         try {
           const parsed = JSON.parse(encData.combat_state_json);
+          if (Array.isArray(parsed.hunting_contracts)) {
+            for (const hc of parsed.hunting_contracts) {
+              db.prepare(`
+                INSERT OR REPLACE INTO hunting_contracts (
+                  id, character_id, base_monster_id, custom_name, title, description,
+                  region_name, target_terrain, threat_label, boost_type, boost_label,
+                  boosted_max_hp, attack_bonus_mod, damage_bonus_mod, reward_gold,
+                  status, created_at_level, created_at_encounters, created_at, completed_at, claimed_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              `).run(
+                Number(hc.id),
+                Number(hc.character_id),
+                Number(hc.base_monster_id),
+                hc.custom_name,
+                hc.title,
+                hc.description,
+                hc.region_name,
+                hc.target_terrain,
+                hc.threat_label || 'Dangerous',
+                hc.boost_type,
+                hc.boost_label,
+                Number(hc.boosted_max_hp || 10),
+                Number(hc.attack_bonus_mod || 0),
+                Number(hc.damage_bonus_mod || 0),
+                Number(hc.reward_gold || 10),
+                hc.status || 'AVAILABLE',
+                Number(hc.created_at_level || 1),
+                Number(hc.created_at_encounters || 0),
+                hc.created_at || new Date().toISOString(),
+                hc.completed_at || null,
+                hc.claimed_at || null
+              );
+            }
+          }
           if (Array.isArray(parsed.encounters)) {
             for (const e of parsed.encounters) {
               db.prepare(`
                 INSERT OR REPLACE INTO encounters (
-                  id, character_id, tile_id, monster_id, monster_instance_id,
-                  status, current_monster_hp, combat_round, initiative_winner,
+                  id, character_id, tile_id, monster_id, monster_instance_id, bounty_contract_id,
+                  status, current_monster_hp, monster_max_hp, combat_round, initiative_winner,
                   last_health_bracket, spotted_by_hero, is_ambush, opening_shot_resolved,
                   combat_state_json, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
               `).run(
                 Number(e.id),
                 Number(e.character_id),
                 Number(e.tile_id),
                 Number(e.monster_id),
                 e.monster_instance_id ? Number(e.monster_instance_id) : null,
+                e.bounty_contract_id ? Number(e.bounty_contract_id) : null,
                 e.status,
                 e.current_monster_hp !== null && e.current_monster_hp !== undefined ? Number(e.current_monster_hp) : null,
+                e.monster_max_hp !== null && e.monster_max_hp !== undefined ? Number(e.monster_max_hp) : null,
                 Number(e.combat_round ?? 0),
                 e.initiative_winner || null,
                 e.last_health_bracket || null,
@@ -363,6 +399,7 @@ async function pullStateFromFirestore(uid, username) {
 
 /**
  * Pushes local SQLite changes for the current user and shared world back to Cloud Firestore
+ * while enforcing monotonic state rules (never resurrecting DEFEATED monsters or SOLD items).
  */
 async function pushStateToFirestore() {
   if (!currentAuthUser || !sqlDb) return;
@@ -409,7 +446,7 @@ async function pushStateToFirestore() {
       });
     }
 
-    // 2. Push user's encounters & combat events (recent 12 encounters)
+    // 2. Push user's encounters, combat events, and hunting contracts
     if (myChars.length > 0) {
       const charIds = myChars.map(c => c.id);
       const placeholders = charIds.map(() => '?').join(',');
@@ -417,6 +454,12 @@ async function pushStateToFirestore() {
         SELECT * FROM encounters
         WHERE character_id IN (${placeholders})
         ORDER BY id DESC LIMIT 12
+      `).all(...charIds);
+
+      const huntingContracts = db.prepare(`
+        SELECT * FROM hunting_contracts
+        WHERE character_id IN (${placeholders})
+        ORDER BY id DESC LIMIT 20
       `).all(...charIds);
 
       let combatEvents = [];
@@ -431,7 +474,11 @@ async function pushStateToFirestore() {
       }
 
       const latestEnc = encounters[0] || { character_id: myChars[myChars.length - 1].id, status: 'DISCOVERED' };
-      const payloadStr = JSON.stringify({ encounters, combat_events: combatEvents });
+      const payloadStr = JSON.stringify({
+        encounters,
+        combat_events: combatEvents,
+        hunting_contracts: huntingContracts
+      });
       if (payloadStr.length < 48000) {
         await setDoc(doc(firestore, 'encounters', uid), {
           user_id: uid,
@@ -444,18 +491,25 @@ async function pushStateToFirestore() {
       }
     }
 
-    // 3. Push Shared Persistent Monsters
+    // 3. Push Shared Persistent Monsters (Monotonic: never overwrite a remote DEFEATED monster with ACTIVE)
     const pms = db.prepare('SELECT * FROM monster_instances').all();
     for (const pm of pms) {
+      const pmRef = doc(firestore, 'persistent_monsters', String(pm.id));
+      const existingSnap = await getDoc(pmRef);
+      if (existingSnap.exists() && existingSnap.data().status === 'DEFEATED' && pm.status !== 'DEFEATED') {
+        continue;
+      }
+
       const pmItems = db.prepare(`
         SELECT id, item_definition_id, created_at
         FROM item_instances
         WHERE owner_type = 'MONSTER' AND owner_monster_id = ?
       `).all(pm.id);
 
-      await setDoc(doc(firestore, 'persistent_monsters', String(pm.id)), {
+      await setDoc(pmRef, {
         tile_id: Number(pm.tile_id),
         monster_id: Number(pm.monster_id),
+        custom_title: pm.custom_title || null,
         status: pm.status || 'ACTIVE',
         held_gold: Number(pm.held_gold || 0),
         current_hp: Number(pm.current_hp || pm.max_hp || 10),
@@ -468,14 +522,20 @@ async function pushStateToFirestore() {
       });
     }
 
-    // 4. Push Shared Market Listings
+    // 4. Push Shared Market Listings (Monotonic: never overwrite a remote SOLD listing with ACTIVE)
     const listings = db.prepare(`
       SELECT ml.*, ii.item_definition_id
       FROM market_listings ml
       LEFT JOIN item_instances ii ON ml.item_instance_id = ii.id
     `).all();
     for (const ml of listings) {
-      await setDoc(doc(firestore, 'market_listings', String(ml.id)), {
+      const mlRef = doc(firestore, 'market_listings', String(ml.id));
+      const existingMl = await getDoc(mlRef);
+      if (existingMl.exists() && existingMl.data().status === 'SOLD' && ml.status !== 'SOLD') {
+        continue;
+      }
+
+      await setDoc(mlRef, {
         item_instance_id: Number(ml.item_instance_id),
         item_definition_id: Number(ml.item_definition_id || 1),
         seller_character_id: ml.seller_character_id ? Number(ml.seller_character_id) : null,

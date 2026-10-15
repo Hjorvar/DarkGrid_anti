@@ -541,12 +541,26 @@ function getEncounterById(db, encounterId, heroClass) {
  */
 function getActiveEncounterForCharacter(db, characterId, heroClass) {
   const stmt = db.prepare(`
-    SELECT id FROM encounters
-    WHERE character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT')
-    ORDER BY id DESC LIMIT 1
+    SELECT e.id, e.status, e.monster_instance_id, mi.status as instance_status
+    FROM encounters e
+    LEFT JOIN monster_instances mi ON e.monster_instance_id = mi.id
+    WHERE e.character_id = ? AND e.status IN ('DISCOVERED', 'IN_COMBAT')
+    ORDER BY e.id DESC LIMIT 1
   `);
   const row = stmt.get(characterId);
   if (!row) return null;
+
+  // If a persistent monster was defeated by another player while this encounter was still DISCOVERED,
+  // automatically close the stale DISCOVERED encounter so Player B cannot resurrect or re-fight it.
+  if (row.monster_instance_id && row.status === 'DISCOVERED' && row.instance_status && row.instance_status !== 'ACTIVE') {
+    db.prepare(`
+      UPDATE encounters
+      SET status = 'ESCAPED', updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND status = 'DISCOVERED'
+    `).run(row.id);
+    return null;
+  }
+
   return getEncounterById(db, row.id, heroClass);
 }
 
@@ -588,7 +602,7 @@ function ignoreEncounter(db, characterId, encounterId) {
     `).run(Number(enc.character_level || 1), encounterId);
 
     if (enc.monster_instance_id) {
-      tx.prepare('UPDATE monster_instances SET current_hp = max_hp WHERE id = ?').run(enc.monster_instance_id);
+      tx.prepare("UPDATE monster_instances SET current_hp = max_hp WHERE id = ? AND status = 'ACTIVE'").run(enc.monster_instance_id);
     }
 
     return { success: true };
@@ -610,6 +624,14 @@ function investigateEncounter(db, characterId, encounterId, heroClass) {
 
     if (!enc) {
       throw new Error('No active encounter found to investigate.');
+    }
+
+    if (enc.monster_instance_id) {
+      const inst = txDb.prepare('SELECT status FROM monster_instances WHERE id = ?').get(enc.monster_instance_id);
+      if (!inst || inst.status !== 'ACTIVE') {
+        txDb.prepare("UPDATE encounters SET status = 'ESCAPED', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(encounterId);
+        throw new Error('Another champion has already slain this creature.');
+      }
     }
 
     if (Number(enc.character_level || 1) <= 1 && Number(enc.is_ambush) === 1) {

@@ -1,4 +1,6 @@
-# Firebase App Hosting / Cloud Run configuration for Darkgrid RPG
+# Firebase App Hosting / Cloud Run configuration for Darkgrid RPG (Blaze Plan)
+# Enforces strict cost caps (minInstances: 0, maxInstances: 1, 1 vCPU, 512 MiB)
+# and durable server-side persistence via Cloud Firestore write-through (never /tmp alone).
 runConfig:
   cpu: 1
   memoryMiB: 512
@@ -11,11 +13,23 @@ env:
     value: production
     availability:
       - RUNTIME
+  - variable: FIREBASE_PROJECT_ID
+    value: darkgrid-rpg
+    availability:
+      - RUNTIME
+  - variable: ENABLE_FIRESTORE_SYNC
+    value: "true"
+    availability:
+      - RUNTIME
   - variable: DB_PATH
     value: /tmp/darkgrid.sqlite
     availability:
       - RUNTIME
+  - variable: DURABLE_SNAPSHOT_PATH
+    value: /tmp/darkgrid-durable-snapshot.json
+    availability:
+      - RUNTIME
   - variable: SESSION_SECRET
-    value: b89c7f6241e305a89d142763c5e08f1249a3b7d65e1f809234a6c1d8e7b5029f
+    secret: SESSION_SECRET
     availability:
       - RUNTIME

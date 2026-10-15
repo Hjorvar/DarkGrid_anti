@@ -4,9 +4,12 @@ node_modules/
 # Environment variables
 .env
 
-# Data files / SQLite databases
+# Data files / SQLite databases & backups
 data/*.sqlite*
 data/*.db*
+data/*.json*
+data/*.tmp
+db/backups/*.json
 *.sqlite*
 *.db
 *.db-wal

@@ -182,6 +182,14 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
       throw new Error(`Encounter is already resolved (${encounter.status}).`);
     }
 
+    if (encounter.monster_instance_id) {
+      const inst = tx.prepare('SELECT status FROM monster_instances WHERE id = ?').get(encounter.monster_instance_id);
+      if (!inst || inst.status !== 'ACTIVE') {
+        tx.prepare("UPDATE encounters SET status = 'ESCAPED', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(encounterId);
+        throw new Error('Another champion has already slain this creature.');
+      }
+    }
+
     // Determine monster max HP (accounting for persistent monster HP or Named Bounty TOUGH boost)
     const monsterMaxHp = encounter.instance_max_hp || encounter.bounty_boosted_max_hp || encounter.monster_max_hp || encounter.base_hp;
     // Persistent monsters start each new combat engagement at full boosted max HP (H2)
@@ -321,7 +329,7 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
     );
 
     if (encounter.monster_instance_id) {
-      tx.prepare('UPDATE monster_instances SET current_hp = ? WHERE id = ?').run(currentMonsterHp, encounter.monster_instance_id);
+      tx.prepare("UPDATE monster_instances SET current_hp = ? WHERE id = ? AND status = 'ACTIVE'").run(currentMonsterHp, encounter.monster_instance_id);
     }
 
     const combatState = getCombatState(tx, characterId, encounterId);

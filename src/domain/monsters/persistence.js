@@ -23,12 +23,22 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
   const rng = options.rng || Math.random;
 
   return withTransaction(db, (tx) => {
-    // 1. Mark character permanently dead
-    tx.prepare(`
+    // 1. Mark character permanently dead atomically (idempotent: only if currently alive)
+    const deathUpdate = tx.prepare(`
       UPDATE characters
       SET is_alive = 0, current_hp = 0, died_at = CURRENT_TIMESTAMP
-      WHERE id = ?
+      WHERE id = ? AND is_alive = 1
     `).run(character.id);
+
+    if (deathUpdate.changes === 0) {
+      return {
+        instanceId: character.killed_by_monster_instance_id || null,
+        goldTransferred: 0,
+        itemsTransferred: 0,
+        itemsDestroyed: 0,
+        alreadyDead: true
+      };
+    }
 
     // 1b. Fail any active or unclaimed hunting contracts belonging to the slain character
     let bountyCustomTitle = (encounter && encounter.bounty_custom_name) || null;
@@ -56,11 +66,11 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
     let instanceId = encounter.monster_instance_id || (monsterInstance ? monsterInstance.id : null);
 
     if (instanceId) {
-      // Monster was already persistent — increment kill count, reset HP to full (H2)
+      // Monster was already persistent — increment kill count, reset HP to full (H2) only if still ACTIVE
       tx.prepare(`
         UPDATE monster_instances
         SET kill_count = kill_count + 1, current_hp = max_hp
-        WHERE id = ?
+        WHERE id = ? AND status = 'ACTIVE'
       `).run(instanceId);
     } else {
       // Monster was a random or bounty spawn — check if an active persistent monster already occupies the tile
@@ -153,7 +163,7 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
     tx.prepare(`
       UPDATE monster_instances
       SET held_gold = held_gold + ?
-      WHERE id = ?
+      WHERE id = ? AND status = 'ACTIVE'
     `).run(goldTransferred, instanceId);
 
     tx.prepare(`
@@ -295,6 +305,12 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
  */
 function handleMonsterDefeat(db, character, encounter, monster, monsterInstance = null, options = {}) {
   return withTransaction(db, (tx) => {
+    // Guard against duplicate victory resolution on the same encounter
+    const encCheck = tx.prepare('SELECT status FROM encounters WHERE id = ?').get(encounter.id);
+    if (encCheck && (encCheck.status === 'VICTORY' || encCheck.status === 'DEFEAT')) {
+      return { xpAwarded: 0, goldLooted: 0, itemsLooted: 0, alreadyResolved: true };
+    }
+
     let goldLooted = 0;
     let itemsLooted = 0;
 

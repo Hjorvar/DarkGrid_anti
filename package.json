@@ -10,6 +10,10 @@
     "db:setup": "node scripts/setup_db.js",
     "setup:db": "node scripts/setup_db.js",
     "db:world": "node scripts/generate_world_seed.js",
+    "backup:db": "node scripts/backup_database.js",
+    "restore:db": "node scripts/restore_database.js",
+    "migrate:firestore": "node scripts/migrate_from_firestore.js",
+    "deploy:blaze": "node scripts/deploy_blaze.js",
     "build:firebase": "node scripts/build_firebase.js",
     "deploy:firebase": "node scripts/build_firebase.js && npx -y firebase-tools@latest deploy --project darkgrid-rpg"
   },
