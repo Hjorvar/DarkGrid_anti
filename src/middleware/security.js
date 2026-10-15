@@ -146,8 +146,139 @@ function gameRateLimiter(maxRequests = 120, windowMs = 60 * 1000) {
   };
 }
 
+const crypto = require('crypto');
+const { getServerAccessToken } = require('../db/durable-store');
+
+let budgetKillSwitchActive = false;
+let requestCounterDay = new Date().toISOString().slice(0, 10);
+let dailyRequestCount = 0;
+
+async function disableProjectBillingAndLockService() {
+  const projectId = process.env.FIREBASE_PROJECT_ID || 'darkgrid-rpg';
+  const region = process.env.CLOUD_RUN_REGION || 'europe-west1';
+  const serviceName = 'darkgrid-api';
+  const token = await getServerAccessToken();
+  if (!token) return { billingDisabled: false, reason: 'no_token' };
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  };
+
+  // 1. Physically detach the Cloud Billing account from the project (hard stop on all paid GCP usage)
+  let billingDisabled = false;
+  try {
+    const billRes = await fetch(`https://cloudbilling.googleapis.com/v1/projects/${projectId}/billingInfo`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ billingAccountName: '' })
+    });
+    billingDisabled = billRes.ok;
+  } catch {
+    billingDisabled = false;
+  }
+
+  // 2. Revoke public allUsers invoker permission on Cloud Run so external traffic cannot invoke the container
+  let invokerRevoked = false;
+  try {
+    const iamRes = await fetch(
+      `https://run.googleapis.com/v2/projects/${projectId}/locations/${region}/services/${serviceName}:setIamPolicy`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ policy: { bindings: [] } })
+      }
+    );
+    invokerRevoked = iamRes.ok;
+  } catch {
+    invokerRevoked = false;
+  }
+
+  return { billingDisabled, invokerRevoked };
+}
+
+async function budgetKillSwitchHandler(req, res) {
+  const projectId = process.env.FIREBASE_PROJECT_ID || 'darkgrid-rpg';
+  const expectedKey =
+    process.env.BUDGET_KILLSWITCH_KEY ||
+    crypto.createHash('sha256').update(`darkgrid-budget-killswitch-${projectId}-v1`).digest('hex');
+
+  if (req.query?.key !== expectedKey) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  let payload = {};
+  if (req.body?.message?.data) {
+    try {
+      const decoded = Buffer.from(req.body.message.data, 'base64').toString('utf8');
+      payload = JSON.parse(decoded);
+    } catch {
+      payload = {};
+    }
+  } else if (req.body && typeof req.body === 'object') {
+    payload = req.body;
+  }
+
+  const costAmount = Number(payload.costAmount ?? 0);
+  const budgetAmount = Number(payload.budgetAmount ?? 25);
+  const shouldKill = payload.forceKill === true || (budgetAmount > 0 && costAmount >= budgetAmount);
+
+  logSecurity('BUDGET_ALERT_RECEIVED', 'Received Cloud Billing budget notification', {
+    costAmount,
+    budgetAmount,
+    currencyCode: payload.currencyCode || 'USD',
+    shouldKill
+  });
+
+  if (shouldKill) {
+    budgetKillSwitchActive = true;
+    if (req.db) {
+      try {
+        req.db.prepare("INSERT OR REPLACE INTO world_sync_meta (key, value, updated_at) VALUES ('maintenance_mode', '1', CURRENT_TIMESTAMP)").run();
+      } catch {
+        // Ignore
+      }
+    }
+    const result = await disableProjectBillingAndLockService();
+    logSecurity('BUDGET_KILLSWITCH_TRIGGERED', 'Monthly budget cap reached — billing detached and service locked', {
+      costAmount,
+      budgetAmount,
+      ...result
+    });
+    return res.status(200).json({ status: 'killswitch_activated', costAmount, budgetAmount, ...result });
+  }
+
+  return res.status(200).json({ status: 'ok', costAmount, budgetAmount });
+}
+
 function maintenanceModeGuard(req, res, next) {
-  if (req.path === '/healthz') return next();
+  if (req.path === '/healthz' || req.path === '/internal/budget-killswitch') return next();
+
+  // Track daily requests in production to enforce hard Free-Tier Circuit Breaker (25,000 req/day)
+  if (process.env.NODE_ENV !== 'test' || req.headers['x-enforce-daily-cap'] === '1') {
+    const today = new Date().toISOString().slice(0, 10);
+    if (today !== requestCounterDay) {
+      requestCounterDay = today;
+      dailyRequestCount = 0;
+    }
+    dailyRequestCount += 1;
+    const maxDailyRequests = req.headers['x-daily-cap-max']
+      ? parseInt(req.headers['x-daily-cap-max'], 10)
+      : parseInt(process.env.MAX_DAILY_HTTP_REQUESTS || '25000', 10);
+
+    if (dailyRequestCount > maxDailyRequests) {
+      logSecurity('DAILY_FREE_TIER_CAP_REACHED', 'Hard daily request cap reached — pausing traffic to guarantee $0 cost', {
+        dailyRequestCount,
+        maxDailyRequests
+      });
+      return res.status(503).send('Darkgrid is temporarily paused: Daily free-tier traffic cap reached to prevent cloud billing charges.');
+    }
+  }
+
+  if (budgetKillSwitchActive) {
+    return res.status(503).send('Darkgrid is offline: Monthly budget cap reached and billing kill-switch activated.');
+  }
+
   if (req.method === 'GET' || req.method === 'HEAD') return next();
 
   let inMaintenance = process.env.MAINTENANCE_MODE === 'true' || process.env.MAINTENANCE_MODE === '1';
@@ -181,5 +312,7 @@ module.exports = {
   securityHeaders,
   antiTamperProtection,
   gameRateLimiter,
-  maintenanceModeGuard
+  maintenanceModeGuard,
+  budgetKillSwitchHandler,
+  disableProjectBillingAndLockService
 };

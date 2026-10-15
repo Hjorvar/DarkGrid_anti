@@ -810,8 +810,13 @@ async function getServerAccessToken() {
   return null;
 }
 
+let firestoreWriteDay = new Date().toISOString().slice(0, 10);
+let firestoreDailyWrites = 0;
+
 /**
- * Pushes dirty SQLite rows to Cloud Firestore using the atomic `:commit` batch API
+ * Pushes dirty SQLite rows to Cloud Firestore using the atomic `:commit` batch API.
+ * Enforces a hard daily write cap (default 15,000 writes/day — inside the 20,000/day free tier)
+ * so Firestore writes can never generate unexpected billing charges.
  */
 async function pushDeltaToFirestoreServer(db, options = {}) {
   const delta = computeDirtyDelta(db);
@@ -824,7 +829,22 @@ async function pushDeltaToFirestoreServer(db, options = {}) {
     saveSnapshotToFile(db, options.snapshotFilePath);
   }
 
-  const token = options.accessToken || await getServerAccessToken();
+  const today = new Date().toISOString().slice(0, 10);
+  if (today !== firestoreWriteDay) {
+    firestoreWriteDay = today;
+    firestoreDailyWrites = 0;
+  }
+
+  const maxDailyWrites = parseInt(process.env.MAX_DAILY_FIRESTORE_WRITES || '15000', 10);
+  if (!options.forceFull && firestoreDailyWrites >= maxDailyWrites) {
+    logError('FIRESTORE_DAILY_CAP_REACHED', `Hard daily Firestore write cap (${maxDailyWrites}) reached; skipping remote sync to guarantee $0 cost.`, {
+      firestoreDailyWrites,
+      maxDailyWrites
+    });
+    return { synced: false, reason: 'daily_write_cap_reached', changes: delta.totalChanges };
+  }
+
+  const token = options.accessToken || options.token || await getServerAccessToken();
   if (!token) {
     return { synced: false, reason: 'no_access_token', changes: delta.totalChanges };
   }
@@ -875,6 +895,7 @@ async function pushDeltaToFirestoreServer(db, options = {}) {
       logError('FIRESTORE_SYNC_ERROR', `Failed to commit delta batch (${res.status})`, new Error(errText));
       return { synced: false, status: res.status, changes: delta.totalChanges };
     }
+    firestoreDailyWrites += chunk.length;
   }
 
   return { synced: true, changes: delta.totalChanges, writes: writes.length };

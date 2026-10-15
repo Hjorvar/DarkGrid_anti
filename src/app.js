@@ -12,7 +12,8 @@ const {
   securityHeaders,
   antiTamperProtection,
   gameRateLimiter,
-  maintenanceModeGuard
+  maintenanceModeGuard,
+  budgetKillSwitchHandler
 } = require('./middleware/security');
 const { idempotencyMiddleware } = require('./middleware/idempotency');
 const { logError } = require('./utils/logger');
@@ -34,7 +35,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 // Lightweight health check for Cloud Run / App Hosting probes (zero DB/Firestore read cost)
-app.get('/healthz', (req, res) => {
+app.get(['/healthz', '/api/health'], (req, res) => {
   res.status(200).json({
     status: 'ok',
     service: 'darkgrid-rpg',
@@ -99,6 +100,9 @@ app.use((req, res, next) => {
   } : null;
   next();
 });
+
+// Cloud Billing Pub/Sub Hard Kill-Switch Webhook (authenticated via secret key query parameter)
+app.post('/internal/budget-killswitch', budgetKillSwitchHandler);
 
 // Maintenance window guard, rate limiting, and anti-tamper validation
 app.use(maintenanceModeGuard);

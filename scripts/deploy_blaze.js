@@ -67,32 +67,73 @@ async function configureLogRetention(token) {
 async function configureBillingBudget(token, billingAccountName) {
   if (!billingAccountName) return { created: false, reason: 'No billingAccountName' };
   const url = `https://billingbudgets.googleapis.com/v1/${billingAccountName}/budgets`;
-  const body = {
-    displayName: 'Darkgrid RPG Monthly Budget (< 5000 ISK)',
-    budgetFilter: {
-      projects: [`projects/${PROJECT_ID}`]
-    },
-    amount: {
-      specifiedAmount: {
-        currencyCode: 'USD',
-        units: '25'
-      }
-    },
-    thresholdRules: [
-      { thresholdPercent: 0.25, spendBasis: 'CURRENT_SPEND' },
-      { thresholdPercent: 0.50, spendBasis: 'CURRENT_SPEND' },
-      { thresholdPercent: 0.75, spendBasis: 'CURRENT_SPEND' },
-      { thresholdPercent: 0.90, spendBasis: 'CURRENT_SPEND' },
-      { thresholdPercent: 1.00, spendBasis: 'CURRENT_SPEND' }
-    ]
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+    'x-goog-user-project': PROJECT_ID
   };
+  const topicName = `projects/${PROJECT_ID}/topics/budget-killswitch`;
+
   try {
+    // 1. Check existing budgets so we never create duplicates
+    const listRes = await fetch(url, { headers });
+    if (listRes.ok) {
+      const listData = await listRes.json();
+      const existing = listData.budgets || [];
+      if (existing.length > 0) {
+        // Keep the first budget, delete any extra duplicates
+        const primary = existing[0];
+        for (let i = 1; i < existing.length; i++) {
+          await fetch(`https://billingbudgets.googleapis.com/v1/${existing[i].name}`, {
+            method: 'DELETE',
+            headers
+          });
+        }
+        // Ensure Pub/Sub kill-switch topic is attached to the primary budget
+        if (primary.notificationsRule?.pubsubTopic !== topicName) {
+          await fetch(`https://billingbudgets.googleapis.com/v1/${primary.name}?updateMask=notificationsRule`, {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify({
+              name: primary.name,
+              notificationsRule: {
+                pubsubTopic: topicName,
+                schemaVersion: '1.0'
+              }
+            })
+          });
+        }
+        return { created: false, reused: true, name: primary.name };
+      }
+    }
+
+    // 2. Otherwise create a single budget with Pub/Sub kill-switch notifications
+    const body = {
+      displayName: 'Darkgrid RPG Monthly Cap (< 5000 ISK)',
+      budgetFilter: {
+        projects: [`projects/${PROJECT_ID}`]
+      },
+      amount: {
+        specifiedAmount: {
+          currencyCode: 'USD',
+          units: '25'
+        }
+      },
+      thresholdRules: [
+        { thresholdPercent: 0.25, spendBasis: 'CURRENT_SPEND' },
+        { thresholdPercent: 0.50, spendBasis: 'CURRENT_SPEND' },
+        { thresholdPercent: 0.75, spendBasis: 'CURRENT_SPEND' },
+        { thresholdPercent: 0.90, spendBasis: 'CURRENT_SPEND' },
+        { thresholdPercent: 1.00, spendBasis: 'CURRENT_SPEND' }
+      ],
+      notificationsRule: {
+        pubsubTopic: topicName,
+        schemaVersion: '1.0'
+      }
+    };
     const resp = await fetch(url, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
+      headers,
       body: JSON.stringify(body)
     });
     return { created: resp.ok, status: resp.status };

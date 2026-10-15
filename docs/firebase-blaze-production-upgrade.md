@@ -105,14 +105,19 @@ Darkgrid hefur verið uppfært úr viðkvæmri vaframiðaðri arkitektúrslausn 
    - `/healthz` endapunkturinn svarar án nokkurra gagnagrunns- eða Firestore-aðgerða.
 4. **Cloud Logging 7-daga eyðing (`_Default` bucket):**
    - Sett á **7 daga** (sjálfgefið er 30 dagar) með `scripts/deploy_blaze.js` (staðfest virkt á `darkgrid-rpg`).
-5. **Monthly Billing Budget & Viðvaranir (`scripts/deploy_blaze.js`):**
-   - Sjálfvirk uppsetning á mánaðarlegu fjárhagsþaki (25 USD ≈ 3.500 ISK, vel undir 5.000 ISK) með tölvupóstviðvörunum við **25%, 50%, 75%, 90% og 100%** um leið og greiðslureikningur er tengdur.
-
-> **Mikilvæg athugasemd um Budget Alerts vs. Hard Spend Caps:**  
-> Í Google Cloud / Firebase Blaze senda **Budget Alerts** tölvupóstviðvaranir þegar kostnaður nær 25%, 50%, 75%, 90% og 100%, en þær **slökkva ekki sjálfkrafa á þjónustum** nema sett sé upp Cloud Billing Budget Pub/Sub + Cloud Function sem aftengir billing eða lækkar kvóta. Eftirfarandi þjónustur geta tæknilega myndað kostnað umfram viðvörunarmörk ef umferð yrði gríðarleg:
-> - **Cloud Run & Firebase Hosting bandvídd (egress):** Varin með `maxInstances: 1` og ströngu Rate Limiting í `src/middleware/security.js`.
-> - **Cloud Firestore les/skrif:** Varin með `firestore.rules` (sem loka á beinan skrifaðgang vafra þegar `server_authoritative == true`) og differential write-through.
-> - **Artifact Registry geymsla:** Varin með léttri `node:22-alpine` Docker-mynd.
+5. **Monthly Billing Budget & Sjálfvirkur Neyðarrofi (Automated Hard Kill-Switch):**
+   - Eitt samræmt fjárhagsþak (`budgets/11520419-39b1-4536-9560-2d7487cd64ec` — `Darkgrid RPG Monthly Cap (< 5000 ISK)`, 25 USD ≈ 3.500 ISK) með viðvörunum við **25%, 50%, 75%, 90% og 100%** (tvítekna budgetinu sem myndaðist í Firebase Console hefur verið eytt og `deploy_blaze.js` kemur í veg fyrir tvískráningu).
+   - **Þriggja laga sjálfvirk stöðvunarvörn (Hard Stop / Kill-Switch) gegn óvæntum reikningum:**
+     1. **Lag 1 — Rauntíma Daglegt Free-Tier Þak í netþjóni (0 sekúndna töf):**
+        - **Firestore skrifþak (`MAX_DAILY_FIRESTORE_WRITES = 15000`):** Fría þakið á Firestore er 20.000 skrif á dag. Ef netþjónninn nær 15.000 skrifum á einum sólarhring (75% af fría þakinu = **$0.00**) stöðvar `src/db/durable-store.js` sjálfkrafa öll frekari Firestore-skrif þann daginn.
+        - **HTTP beiðnaþak (`MAX_DAILY_HTTP_REQUESTS = 25000`):** Fría þakið á Cloud Run er 2.000.000 beiðnir á mánuði (~66.000 á dag). Ef netþjónninn fær 25.000 beiðnir á einum sólarhring (< 40% af fría þakinu = **$0.00**) virkjar `src/middleware/security.js` samstundis neyðarlæsingu (HTTP 503) án gagnagrunns- eða Firestore-aðgerða.
+     2. **Lag 2 — Harðar Cloud Run auðlindatakmarkanir:**
+        - `maxInstanceCount: 1`, `cpu: 1`, `memory: 512Mi` — Google Cloud getur aldrei ræst fleiri en 1 container.
+     3. **Lag 3 — Google Cloud Billing Pub/Sub Hard Kill-Switch (`projects/darkgrid-rpg/topics/budget-killswitch`):**
+        - Fjárhagsþakið (`11520419-39b1-4536-9560-2d7487cd64ec`) er tengt við Pub/Sub rásina `projects/darkgrid-rpg/topics/budget-killswitch` og Push-áskriftina `budget-killswitch-sub` sem sendir kostnaðarstöðu á `POST /internal/budget-killswitch`.
+        - Ef `costAmount >= budgetAmount` (100% af budgeti næst) framkvæmir netþjónninn (`disableProjectBillingAndLockService` í `src/middleware/security.js` með `roles/billing.projectManager` og `roles/run.admin` heimildum) tvennt sjálfkrafa:
+          - **Aftengir greiðslureikninginn af verkefninu** (`PUT https://cloudbilling.googleapis.com/v1/projects/darkgrid-rpg/billingInfo` með `billingAccountName: ""`), sem slekkur samstundis á öllum gjaldskyldum Google Cloud / Blaze þjónustum.
+          - **Fjarlægir opinberan aðgang (`allUsers`) að Cloud Run þjóninum** og setur vefinn í neyðarstöðvun (`budgetKillSwitchActive = true`).
 
 ---
 
