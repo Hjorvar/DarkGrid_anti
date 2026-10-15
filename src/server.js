@@ -1,3 +1,4 @@
+const fs = require('fs');
 const app = require('./app');
 const config = require('./config');
 const { getDb, closeDb } = require('./db/connection');
@@ -10,6 +11,10 @@ const {
   primeRowHashCache
 } = require('./db/durable-store');
 const { logInfo, logError } = require('./utils/logger');
+
+function isFirestoreSyncEnabled() {
+  return process.env.ENABLE_FIRESTORE_SYNC === 'true' || process.env.FIRESTORE_DURABLE_SYNC === 'true';
+}
 
 async function startServer() {
   console.log('--- Darkgrid Server Startup ---');
@@ -25,25 +30,21 @@ async function startServer() {
       console.log(`Executed seeds: ${seeds.join(', ')}`);
     }
 
-    // Hydrate from durable snapshot file if configured
-    if (process.env.DURABLE_SNAPSHOT_PATH) {
+    // Hydrate from durable snapshot file if configured and already present on disk
+    if (process.env.DURABLE_SNAPSHOT_PATH && fs.existsSync(process.env.DURABLE_SNAPSHOT_PATH)) {
       loadDurableSnapshotFile(db, process.env.DURABLE_SNAPSHOT_PATH);
     }
 
-    // Hydrate from Cloud Firestore if server-side Firestore persistence is enabled
-    if (process.env.ENABLE_FIRESTORE_SYNC === 'true') {
-      await pullFromFirestoreServer(db);
-    } else {
-      primeRowHashCache(db);
-    }
+    primeRowHashCache(db);
   } catch (err) {
     console.error('Fatal: Could not initialize database schema/seeds:', err);
     process.exit(1);
   }
 
-  const server = app.listen(config.port, () => {
+  // Bind to 0.0.0.0:PORT immediately so Cloud Run health checks succeed without waiting on network I/O
+  const server = app.listen(config.port, '0.0.0.0', () => {
     console.log(`===============================================`);
-    console.log(` DARKGRID running at: http://localhost:${config.port}`);
+    console.log(` DARKGRID running at: http://0.0.0.0:${config.port}`);
     console.log(` Environment: ${config.nodeEnv}`);
     console.log(` Database: ${config.dbPath}`);
     console.log(`===============================================`);
@@ -53,6 +54,17 @@ async function startServer() {
     });
   });
 
+  // Hydrate from Cloud Firestore if server-side Firestore persistence is enabled
+  if (isFirestoreSyncEnabled()) {
+    try {
+      await pullFromFirestoreServer(db);
+    } catch (err) {
+      logError('STARTUP_FIRESTORE_HYDRATE_ERROR', 'Non-fatal error hydrating from Firestore on startup', {
+        error: err.message
+      });
+    }
+  }
+
   async function handleShutdown() {
     console.log('\nClosing Darkgrid server...');
     try {
@@ -60,7 +72,7 @@ async function startServer() {
       if (process.env.DURABLE_SNAPSHOT_PATH) {
         saveDurableSnapshotFile(currentDb, process.env.DURABLE_SNAPSHOT_PATH);
       }
-      if (process.env.ENABLE_FIRESTORE_SYNC === 'true') {
+      if (isFirestoreSyncEnabled()) {
         await pushDeltaToFirestoreServer(currentDb);
       }
     } catch (err) {

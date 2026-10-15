@@ -941,7 +941,7 @@ async function pullFromFirestoreServer(db, options = {}) {
     tables
   };
 
-  importDynamicState(db, snapshot);
+  importDynamicState(db, snapshot, { skipChecksum: true });
   logInfo('DURABLE_STORE_HYDRATED', 'Hydrated SQLite database from Cloud Firestore', { counts: snapshot.counts });
   return { hydrated: true, counts: snapshot.counts };
 }

@@ -119,7 +119,7 @@ app.use((req, res, next) => {
         if (process.env.DURABLE_SNAPSHOT_PATH && req.db) {
           saveDurableSnapshotFile(req.db, process.env.DURABLE_SNAPSHOT_PATH);
         }
-        if (process.env.ENABLE_FIRESTORE_SYNC === 'true' && req.db) {
+        if ((process.env.ENABLE_FIRESTORE_SYNC === 'true' || process.env.FIRESTORE_DURABLE_SYNC === 'true') && req.db) {
           pushDeltaToFirestoreServer(req.db).catch(err => {
             logError('FIRESTORE_SYNC_ERROR', 'Async Firestore delta sync failed', { error: err.message });
           });

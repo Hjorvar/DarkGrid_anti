@@ -126,6 +126,256 @@ async function activateServerAuthoritativeFlag(token) {
   return resp.ok;
 }
 
+async function buildAndDeployCloudRun(token) {
+  const os = require('os');
+  const crypto = require('crypto');
+  const bucketName = `${PROJECT_ID}_cloudbuild`;
+  const repoId = 'cloud-run-source-deploy';
+  const imageUri = `${REGION}-docker.pkg.dev/${PROJECT_ID}/${repoId}/${SERVICE_NAME}:latest`;
+
+  const skipBuild = process.argv.includes('--skip-build');
+  if (!skipBuild) {
+    // 1. Stage lightweight source context (actual heavy PNGs/WebPs are served by Firebase Hosting CDN from dist/,
+    // while 1-byte stubs in images/monsters satisfy fs.existsSync checks in src/domain/encounters/engine.js
+    // and keep the container image well inside the 0.5 GB Artifact Registry free tier).
+    const repoRoot = path.resolve(__dirname, '..');
+    const stageDir = path.join(os.tmpdir(), `darkgrid-stage-${Date.now()}`);
+    fs.mkdirSync(stageDir, { recursive: true });
+
+    fs.copyFileSync(path.join(repoRoot, 'Dockerfile'), path.join(stageDir, 'Dockerfile'));
+    fs.copyFileSync(path.join(repoRoot, 'package.json'), path.join(stageDir, 'package.json'));
+    fs.copyFileSync(path.join(repoRoot, 'package-lock.json'), path.join(stageDir, 'package-lock.json'));
+    fs.cpSync(path.join(repoRoot, 'src'), path.join(stageDir, 'src'), { recursive: true });
+    fs.cpSync(path.join(repoRoot, 'scripts'), path.join(stageDir, 'scripts'), { recursive: true });
+    fs.cpSync(path.join(repoRoot, 'db', 'migrations'), path.join(stageDir, 'db', 'migrations'), { recursive: true });
+    fs.cpSync(path.join(repoRoot, 'db', 'seeds'), path.join(stageDir, 'db', 'seeds'), { recursive: true });
+    fs.mkdirSync(path.join(stageDir, 'public', 'css'), { recursive: true });
+    if (fs.existsSync(path.join(repoRoot, 'public', 'css', 'style.css'))) {
+      fs.copyFileSync(path.join(repoRoot, 'public', 'css', 'style.css'), path.join(stageDir, 'public', 'css', 'style.css'));
+    }
+
+    const stageMonstersDir = path.join(stageDir, 'images', 'monsters');
+    fs.mkdirSync(stageMonstersDir, { recursive: true });
+    const srcMonstersDir = path.join(repoRoot, 'images', 'monsters');
+    if (fs.existsSync(srcMonstersDir)) {
+      for (const file of fs.readdirSync(srcMonstersDir)) {
+        if (file.endsWith('.png') || file.endsWith('.webp')) {
+          fs.writeFileSync(path.join(stageMonstersDir, file), '');
+        }
+      }
+    }
+
+    const tarPath = path.join(os.tmpdir(), `darkgrid-source-${Date.now()}.tgz`);
+    execSync(
+      `tar -czf "${tarPath}" Dockerfile package.json package-lock.json db public images src scripts`,
+      { cwd: stageDir, stdio: 'inherit' }
+    );
+    const tarBytes = fs.readFileSync(tarPath);
+    fs.unlinkSync(tarPath);
+    fs.rmSync(stageDir, { recursive: true, force: true });
+    console.log(`      Uploaded source archive (${(tarBytes.length / 1024).toFixed(1)} KB) to gs://${bucketName}/source/darkgrid-source.tgz...`);
+
+    const uploadRes = await fetch(
+      `https://storage.googleapis.com/upload/storage/v1/b/${bucketName}/o?uploadType=media&name=source/darkgrid-source.tgz`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/gzip'
+        },
+        body: tarBytes
+      }
+    );
+    if (!uploadRes.ok) {
+      throw new Error(`GCS source upload failed (${uploadRes.status}): ${await uploadRes.text()}`);
+    }
+
+    // 2. Trigger Cloud Build
+    console.log(`      Starting Cloud Build for ${imageUri}...`);
+    const buildTriggerRes = await fetch(
+      `https://cloudbuild.googleapis.com/v1/projects/${PROJECT_ID}/locations/global/builds`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          source: {
+            storageSource: {
+              bucket: bucketName,
+              object: 'source/darkgrid-source.tgz'
+            }
+          },
+          steps: [
+            {
+              name: 'gcr.io/cloud-builders/docker',
+              args: ['build', '-t', imageUri, '.']
+            },
+            {
+              name: 'gcr.io/cloud-builders/docker',
+              args: ['push', imageUri]
+            }
+          ],
+          images: [imageUri]
+        })
+      }
+    );
+    if (!buildTriggerRes.ok) {
+      throw new Error(`Cloud Build trigger failed (${buildTriggerRes.status}): ${await buildTriggerRes.text()}`);
+    }
+    const buildOp = await buildTriggerRes.json();
+    const buildId = buildOp.metadata?.build?.id;
+    console.log(`      Cloud Build started (buildId: ${buildId}). Waiting for container build...`);
+
+    // Poll build status
+    for (let i = 0; i < 60; i++) {
+      await new Promise(r => setTimeout(r, 5000));
+      const statusRes = await fetch(
+        `https://cloudbuild.googleapis.com/v1/projects/${PROJECT_ID}/locations/global/builds/${buildId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const buildData = await statusRes.json();
+      const st = buildData.status;
+      console.log(`      [Cloud Build] status: ${st}`);
+      if (st === 'SUCCESS') {
+        break;
+      }
+      if (st === 'FAILURE' || st === 'INTERNAL_ERROR' || st === 'TIMEOUT' || st === 'CANCELLED') {
+        throw new Error(`Cloud Build failed with status ${st}: ${buildData.statusDetail || JSON.stringify(buildData.failureInfo || {})}`);
+      }
+    }
+  }
+
+  // 3. Deploy Cloud Run v2 Service
+  console.log(`      Deploying Cloud Run service ${SERVICE_NAME} in ${REGION}...`);
+  const serviceUrl = `https://run.googleapis.com/v2/projects/${PROJECT_ID}/locations/${REGION}/services/${SERVICE_NAME}`;
+  const existingCheck = await fetch(serviceUrl, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  // Preserve or generate deterministic production SESSION_SECRET
+  let sessionSecret = process.env.SESSION_SECRET;
+  if (!sessionSecret) {
+    sessionSecret = crypto.createHash('sha256').update(`darkgrid-rpg-prod-secret-${PROJECT_ID}-v1`).digest('hex');
+  }
+
+  const serviceBody = {
+    ingress: 'INGRESS_TRAFFIC_ALL',
+    template: {
+      scaling: {
+        minInstanceCount: 0,
+        maxInstanceCount: 1
+      },
+      maxInstanceRequestConcurrency: 80,
+      containers: [
+        {
+          image: imageUri,
+          ports: [{ containerPort: 8080 }],
+          resources: {
+            limits: {
+              cpu: '1',
+              memory: '512Mi'
+            },
+            cpuIdle: true,
+            startupCpuBoost: true
+          },
+          env: [
+            { name: 'NODE_ENV', value: 'production' },
+            { name: 'FIREBASE_PROJECT_ID', value: PROJECT_ID },
+            { name: 'FIRESTORE_DURABLE_SYNC', value: 'true' },
+            { name: 'SESSION_SECRET', value: sessionSecret },
+            { name: 'DEPLOY_TIMESTAMP', value: new Date().toISOString() }
+          ]
+        }
+      ]
+    }
+  };
+
+  let deployRes;
+  if (existingCheck.status === 200) {
+    deployRes = await fetch(serviceUrl, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(serviceBody)
+    });
+  } else {
+    deployRes = await fetch(
+      `https://run.googleapis.com/v2/projects/${PROJECT_ID}/locations/${REGION}/services?serviceId=${SERVICE_NAME}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(serviceBody)
+      }
+    );
+  }
+
+  if (!deployRes.ok) {
+    throw new Error(`Cloud Run deploy failed (${deployRes.status}): ${await deployRes.text()}`);
+  }
+  const deployOp = await deployRes.json();
+  console.log(`      Waiting for Cloud Run revision readiness...`);
+
+  for (let i = 0; i < 40; i++) {
+    await new Promise(r => setTimeout(r, 4000));
+    const opRes = await fetch(`https://run.googleapis.com/v2/${deployOp.name}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const opData = await opRes.json();
+    if (opData.done) {
+      if (opData.error) {
+        throw new Error(`Cloud Run operation error: ${JSON.stringify(opData.error)}`);
+      }
+      console.log(`      Cloud Run service ready: ${opData.response?.uri || SERVICE_NAME}`);
+      break;
+    }
+  }
+
+  // 4. Grant public invoker role (allUsers -> roles/run.invoker) so Firebase Hosting can proxy requests
+  const iamRes = await fetch(`${serviceUrl}:setIamPolicy`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      policy: {
+        bindings: [
+          {
+            role: 'roles/run.invoker',
+            members: ['allUsers']
+          }
+        ]
+      }
+    })
+  });
+  console.log(`      Cloud Run public invoker IAM policy applied: ${iamRes.ok}`);
+}
+
+function prepareStaticHostingAssets() {
+  const repoRoot = path.resolve(__dirname, '..');
+  const distDir = path.join(repoRoot, 'dist');
+  fs.mkdirSync(distDir, { recursive: true });
+
+  // Remove old client-side Spark SPA artifacts so `/` routes to Cloud Run
+  for (const oldFile of ['index.html', 'seed.sqlite', path.join('js', 'spark-bundle.js')]) {
+    const p = path.join(distDir, oldFile);
+    if (fs.existsSync(p)) {
+      fs.unlinkSync(p);
+    }
+  }
+
+  // Copy static CSS/JS from public/ and artwork from images/ so CDN serves them with 0 Cloud Run cost
+  fs.cpSync(path.join(repoRoot, 'public'), distDir, { recursive: true });
+  fs.cpSync(path.join(repoRoot, 'images'), path.join(distDir, 'images'), { recursive: true });
+}
+
 async function main() {
   console.log('=== Darkgrid RPG — Blaze Deployment Orchestrator ===');
 
@@ -171,11 +421,15 @@ async function main() {
 
   await activateServerAuthoritativeFlag(token);
 
-  // Step 5: Update firebase.json to route traffic to Cloud Run service `darkgrid-api`
-  console.log('[5/5] Updating firebase.json for Cloud Run rewrite (`darkgrid-api` in `europe-west1`)...');
+  // Step 5: Build & deploy Cloud Run service `darkgrid-api` and configure Firebase Hosting rewrite
+  console.log('[5/5] Building & deploying Cloud Run service `darkgrid-api` (`europe-west1`)...');
+  await buildAndDeployCloudRun(token);
+
+  prepareStaticHostingAssets();
+
   const fbJsonPath = path.resolve(__dirname, '../firebase.json');
   const fbConfig = JSON.parse(fs.readFileSync(fbJsonPath, 'utf8'));
-  fbConfig.hosting.public = 'public';
+  fbConfig.hosting.public = 'dist';
   fbConfig.hosting.rewrites = [
     {
       source: '**',
@@ -187,7 +441,7 @@ async function main() {
   ];
   fs.writeFileSync(fbJsonPath, JSON.stringify(fbConfig, null, 2) + '\n', 'utf8');
 
-  console.log('=== Ready for Cloud Run + Firebase Hosting deployment ===');
+  console.log('=== Cloud Run Service Deployed & firebase.json Updated ===');
 }
 
 if (require.main === module) {
@@ -200,5 +454,6 @@ if (require.main === module) {
 module.exports = {
   checkBillingStatus,
   configureLogRetention,
-  configureBillingBudget
+  configureBillingBudget,
+  buildAndDeployCloudRun
 };

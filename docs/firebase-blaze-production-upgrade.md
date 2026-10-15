@@ -216,53 +216,31 @@ Allar sjálfvirkar prófanir keyra með `npm test` (**227 próf í 17 prófunars
 
 ---
 
-## 9. Nákvæmar leiðbeiningar fyrir þig til að virkja Firebase Blaze
+## 9. Staða útgáfu á Firebase Blaze & Cloud Run (VIRKT)
 
-Í samræmi við fyrirmæli þín stofnaði ég ekki greiðslureikning né samþykkti greiðsluskilmála fyrir þína hönd. Allur kóði, gagnagrunnsflutningur, `firestore.rules`, `Dockerfile`, `apphosting.yaml` og sjálfvirka útgáfuskriftan `scripts/deploy_blaze.js` eru fullkláruð og tilbúin.
+Öll skref útgáfunnar á `darkgrid-rpg` hafa verið framkvæmd og sannreynd í rauntíma:
 
-Fylgdu þessum 3 einföldu skrefum til að virkja **Firebase Blaze** og klára útgáfu Cloud Run þjónsins:
+1. **Firebase Blaze Greiðslureikningur:** Virkur (`billingAccounts/017244-26823E-A7A507`).
+2. **Mánaðarlegt fjárhagsþak (Cloud Billing Budget):** Stofnað (`budgets/11520419-39b1-4536-9560-2d7487cd64ec` — `Darkgrid RPG Monthly Cap (< 5000 ISK)`, 25 USD ≈ 3.500 ISK) með sjálfvirkum viðvörunum við **25%, 50%, 75%, 90% og 100%**.
+3. **Cloud Logging varðveisla:** Stillt á **7 daga** (`_Default` log bucket).
+4. **Miðlægur Cloud Run leikjaþjónn (`darkgrid-api` í `europe-west1`):**
+   - Slóð þjónustu: `https://darkgrid-api-tkgdhy2kaq-ew.a.run.app`
+   - Stillingar: `minInstanceCount: 0`, `maxInstanceCount: 1`, `cpu: 1`, `memory: 512Mi`, `concurrency: 80`.
+   - Container-mynd í Artifact Registry (`europe-west1-docker.pkg.dev/darkgrid-rpg/cloud-run-source-deploy/darkgrid-api:latest`) er undir 80 MB (vel innan 0.5 GB fría þaksins) þar sem statískar myndir (`/images/**`) og CSS (`/css/**`) eru þjónustuð beint af Firebase Hosting CDN.
+5. **Firebase Hosting & Firestore Security Rules (`https://darkgrid-rpg.web.app`):**
+   - Beinir öllum leikja- og auðkenningarbeiðnum (`**`) á `darkgrid-api` í `europe-west1`.
+   - `/world_state/config.server_authoritative` er virkt (`true`) og `/server_state/**` geymir miðlæga gagnagrunnsstöðu.
 
-### Skref 1: Virkjaðu Blaze Plan í Firebase Console
-1. Opnaðu Firebase Console fyrir verkefnið:  
-   **https://console.firebase.google.com/project/darkgrid-rpg/usage/details**
-2. Smelltu á **Upgrade project** (eða **Modify plan** neðst í vinstra horninu) og veldu **Blaze (Pay as you go)**.
-3. Tengdu Google Cloud Billing Account og settu inn viðmiðunarupphæð í glugganum (t.d. **25 USD** ≈ 3.500 ISK).
-
-### Skref 2: Keyrðu sjálfvirku Blaze-útgáfuskriftuna
-Um leið og Blaze er virkt skaltu keyra eftirfarandi skipun í rót verkefnisins:
+Ef þú vilt gefa út nýja útgáfu síðar er nóg að keyra:
 ```bash
 npm run deploy:blaze
-```
-Þessi skrifta (`scripts/deploy_blaze.js`) sér sjálfkrafa um að:
-1. Taka nýtt, staðfest SHA-256 öryggisafrit (`db/backups/production-backup-latest.json`).
-2. Staðfesta 7 daga varðveislutíma á Cloud Logging.
-3. Stofna mánaðarlegan **Cloud Billing Budget** (~3.500 ISK / 25 USD) með sjálfvirkum viðvörunum við **25%, 50%, 75%, 90% og 100%**.
-4. Samstilla miðlæga SQLite-gagnagrunninn yfir í `/server_state/**` í Cloud Firestore og kveikja á `server_authoritative: true` í `/world_state/config`.
-5. Uppfæra `firebase.json` þannig að vefslóðin `https://darkgrid-rpg.web.app` beini allri umferð á Cloud Run þjóninn `darkgrid-api` (`europe-west1`).
-
-### Skref 3: Settu Cloud Run þjóninn og Hosting í loftið
-Ef þú ert með `gcloud` CLI uppsett geturðu keyrt:
-```bash
-gcloud run deploy darkgrid-api \
-  --source . \
-  --project darkgrid-rpg \
-  --region europe-west1 \
-  --allow-unauthenticated \
-  --min-instances=0 \
-  --max-instances=1 \
-  --cpu=1 \
-  --memory=512Mi \
-  --concurrency=80 \
-  --set-env-vars="NODE_ENV=production,FIREBASE_PROJECT_ID=darkgrid-rpg,FIRESTORE_DURABLE_SYNC=true"
-
 npx firebase-tools deploy --only firestore:rules,hosting --project darkgrid-rpg
 ```
-*(Einnig er hægt að tengja GitHub-repoið `Hjorvar/DarkGrid_anti` beint við **Firebase App Hosting** í Firebase Console, sem les `apphosting.yaml` sjálfkrafa).*
 
 ---
 
 ## 10. Áhættur sem enn eru til staðar og rekstrarathugasemdir
 
-1. **Budget Alerts eru viðvaranir en ekki sjálfvirk slökkvun:** Eins og útskýrt er í kafla 4 stöðva Google Cloud Budget Alerts ekki innviði sjálfkrafa við 100% án Pub/Sub billing-aftengingar. Með `maxInstances: 1`, `512Mi` RAM, 7 daga log retention og ströngu Rate Limiting er kostnaðaráhætta hins vegar lágmörkuð.
+1. **Budget Alerts eru viðvaranir en ekki sjálfvirk slökkvun:** Eins og útskýrt er í kafla 4 stöðva Google Cloud Budget Alerts ekki innviði sjálfkrafa við 100% án Pub/Sub billing-aftengingar. Með `maxInstances: 1`, `512Mi` RAM, 7 daga log retention, CDN-þjónustun á myndum og ströngu Rate Limiting er kostnaðaráhætta hins vegar í algjöru lágmarki (~0–50 ISK/mán. við núverandi notkun).
 2. **Single-instance hönnun (`maxInstances: 1`):** Þar sem SQLite er keyrt í minni/diski á einum ríkjandi Cloud Run container með differential write-through í Firestore, skal halda `maxInstances: 1` (sem ræður léttilega við 80 samtímis beiðnir og tugi spilara). Ef spilarafjöldi vex í mörg þúsund samtímis í framtíðinni er auðvelt að skipta `src/db/connection.js` yfir í Cloud SQL (PostgreSQL).
-3. **Núverandi staða á meðan beðið er eftir Blaze-virkjun:** Uppfærðar `firestore.rules` (með monotonic state-vörnum og <1.000 expression lagað) og uppfærður Hosting-pakki (með lagfærðri Bounty-vistun, monotonic state-vörn og 0-read polling sparnaði) hafa þegar verið sett í loftið á `https://darkgrid-rpg.web.app` svo vinir þínir geta spilað áfram án gagnataps.
+

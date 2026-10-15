@@ -21,7 +21,10 @@
     "rewrites": [
       {
         "source": "**",
-        "destination": "/index.html"
+        "run": {
+          "serviceId": "darkgrid-api",
+          "region": "europe-west1"
+        }
       }
     ],
     "cleanUrls": true,
