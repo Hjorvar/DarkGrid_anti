@@ -1,0 +1,354 @@
+{
+  "generatedAt": "2026-10-20T21:40:26.176Z",
+  "passed": 10,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "Single-Monster Before/After (Stirge): 248x248px -> 140x125px",
+      "passed": true,
+      "details": {
+        "beforeW": 248,
+        "beforeH": 248,
+        "afterW": 140,
+        "afterH": 125,
+        "pfSize": "TINY",
+        "bodyProfile": "WINGED_TINY_PEST",
+        "beforeShot": "01_before_legacy_stirge_tiny_1920x1080.png",
+        "afterShot": "02_after_adaptive_stirge_tiny_1920x1080.png"
+      }
+    },
+    {
+      "name": "Single-Monster Before/After (Goblin): 248x248px -> 164x195px",
+      "passed": true,
+      "details": {
+        "beforeW": 248,
+        "beforeH": 248,
+        "afterW": 164,
+        "afterH": 195,
+        "pfSize": "SMALL",
+        "bodyProfile": "BIPED_SMALL",
+        "beforeShot": "03_before_legacy_goblin_small_1920x1080.png",
+        "afterShot": "04_after_adaptive_goblin_small_1920x1080.png"
+      }
+    },
+    {
+      "name": "Single-Monster Before/After (Giant Spider): 365x275px -> 268x181px",
+      "passed": true,
+      "details": {
+        "beforeW": 365,
+        "beforeH": 275,
+        "afterW": 268,
+        "afterH": 181,
+        "pfSize": "MEDIUM",
+        "bodyProfile": "ARACHNID_WIDE",
+        "beforeShot": "05_before_legacy_spider_medium_1920x1080.png",
+        "afterShot": "06_after_adaptive_spider_medium_1920x1080.png"
+      }
+    },
+    {
+      "name": "Single-Monster Before/After (Troll): 285x278px -> 367x447px",
+      "passed": true,
+      "details": {
+        "beforeW": 285,
+        "beforeH": 278,
+        "afterW": 367,
+        "afterH": 447,
+        "pfSize": "LARGE",
+        "bodyProfile": "BIPED_TALL_BRUTE",
+        "beforeShot": "07_before_legacy_troll_large_1920x1080.png",
+        "afterShot": "08_after_adaptive_troll_large_1920x1080.png"
+      }
+    },
+    {
+      "name": "5-Size Progression Arena at 1920x1080 (Tiny -> Small -> Medium -> Large -> Huge)",
+      "passed": true,
+      "details": {
+        "itemCount": 5,
+        "items": [
+          {
+            "slug": "stirge",
+            "pfSize": "TINY",
+            "combatW": 140,
+            "combatH": 125,
+            "dispW": 108,
+            "dispH": 97
+          },
+          {
+            "slug": "goblin",
+            "pfSize": "SMALL",
+            "combatW": 164,
+            "combatH": 195,
+            "dispW": 127,
+            "dispH": 151
+          },
+          {
+            "slug": "skeletal_champion",
+            "pfSize": "MEDIUM",
+            "combatW": 225,
+            "combatH": 289,
+            "dispW": 174,
+            "dispH": 223
+          },
+          {
+            "slug": "troll",
+            "pfSize": "LARGE",
+            "combatW": 367,
+            "combatH": 447,
+            "dispW": 284,
+            "dispH": 346
+          },
+          {
+            "slug": "ref_huge_elder_troll",
+            "pfSize": "HUGE",
+            "combatW": 501,
+            "combatH": 472,
+            "dispW": 387,
+            "dispH": 365
+          }
+        ],
+        "noOverflow": true,
+        "screenshot": "09_arena_size_progression_5_1920x1080.png"
+      }
+    },
+    {
+      "name": "5-Size Progression Arena at 1440x900 (Tiny -> Small -> Medium -> Large -> Huge)",
+      "passed": true,
+      "details": {
+        "itemCount": 5,
+        "items": [
+          {
+            "slug": "stirge",
+            "pfSize": "TINY",
+            "combatW": 116,
+            "combatH": 104,
+            "dispW": 78,
+            "dispH": 70
+          },
+          {
+            "slug": "goblin",
+            "pfSize": "SMALL",
+            "combatW": 136,
+            "combatH": 162,
+            "dispW": 92,
+            "dispH": 109
+          },
+          {
+            "slug": "skeletal_champion",
+            "pfSize": "MEDIUM",
+            "combatW": 188,
+            "combatH": 241,
+            "dispW": 127,
+            "dispH": 162
+          },
+          {
+            "slug": "troll",
+            "pfSize": "LARGE",
+            "combatW": 306,
+            "combatH": 373,
+            "dispW": 206,
+            "dispH": 251
+          },
+          {
+            "slug": "ref_huge_elder_troll",
+            "pfSize": "HUGE",
+            "combatW": 417,
+            "combatH": 393,
+            "dispW": 281,
+            "dispH": 265
+          }
+        ],
+        "noOverflow": true,
+        "screenshot": "10_arena_size_progression_5_1440x900.png"
+      }
+    },
+    {
+      "name": "5-Size Progression Arena at 1280x800 (Tiny -> Small -> Medium -> Large -> Huge)",
+      "passed": true,
+      "details": {
+        "itemCount": 5,
+        "items": [
+          {
+            "slug": "stirge",
+            "pfSize": "TINY",
+            "combatW": 103,
+            "combatH": 92,
+            "dispW": 68,
+            "dispH": 61
+          },
+          {
+            "slug": "goblin",
+            "pfSize": "SMALL",
+            "combatW": 121,
+            "combatH": 144,
+            "dispW": 80,
+            "dispH": 95
+          },
+          {
+            "slug": "skeletal_champion",
+            "pfSize": "MEDIUM",
+            "combatW": 167,
+            "combatH": 214,
+            "dispW": 111,
+            "dispH": 142
+          },
+          {
+            "slug": "troll",
+            "pfSize": "LARGE",
+            "combatW": 271,
+            "combatH": 331,
+            "dispW": 179,
+            "dispH": 219
+          },
+          {
+            "slug": "ref_huge_elder_troll",
+            "pfSize": "HUGE",
+            "combatW": 371,
+            "combatH": 350,
+            "dispW": 246,
+            "dispH": 232
+          }
+        ],
+        "noOverflow": true,
+        "screenshot": "11_arena_size_progression_5_1280x800.png"
+      }
+    },
+    {
+      "name": "Medium Body Profile Arena (5 distinct Medium silhouettes)",
+      "passed": true,
+      "details": {
+        "items": [
+          {
+            "slug": "skeletal_champion",
+            "profile": "BIPED_MEDIUM",
+            "combatW": 225,
+            "combatH": 289
+          },
+          {
+            "slug": "ghoul",
+            "profile": "BIPED_CROUCHED",
+            "combatW": 253,
+            "combatH": 239
+          },
+          {
+            "slug": "wolf",
+            "profile": "QUADRUPED_LOW",
+            "combatW": 243,
+            "combatH": 211
+          },
+          {
+            "slug": "giant_spider",
+            "profile": "ARACHNID_WIDE",
+            "combatW": 268,
+            "combatH": 181
+          },
+          {
+            "slug": "harpy",
+            "profile": "WINGED_HOVER_MEDIUM",
+            "combatW": 316,
+            "combatH": 272
+          }
+        ]
+      }
+    },
+    {
+      "name": "Large Body Profile Arena (5 distinct Large silhouettes)",
+      "passed": true,
+      "details": {
+        "items": [
+          {
+            "slug": "troll",
+            "profile": "BIPED_TALL_BRUTE",
+            "combatW": 367,
+            "combatH": 447
+          },
+          {
+            "slug": "manticore",
+            "profile": "WINGED_LARGE_PREDATOR",
+            "combatW": 458,
+            "combatH": 375
+          },
+          {
+            "slug": "winter_wolf",
+            "profile": "QUADRUPED_MASSIVE",
+            "combatW": 368,
+            "combatH": 317
+          },
+          {
+            "slug": "assassin_vine",
+            "profile": "PLANT_MASS_LARGE",
+            "combatW": 361,
+            "combatH": 376
+          },
+          {
+            "slug": "ochre_jelly",
+            "profile": "AMORPHOUS_LARGE_OOZE",
+            "combatW": 338,
+            "combatH": 245
+          }
+        ]
+      }
+    },
+    {
+      "name": "All 9 PF1e Size Categories Arena (Fine -> Colossal)",
+      "passed": true,
+      "details": {
+        "items": [
+          {
+            "slug": "ref_fine_spore_mite",
+            "pfSize": "FINE",
+            "combatW": 70,
+            "combatH": 67
+          },
+          {
+            "slug": "ref_diminutive_toad",
+            "pfSize": "DIMINUTIVE",
+            "combatW": 97,
+            "combatH": 82
+          },
+          {
+            "slug": "viper",
+            "pfSize": "TINY",
+            "combatW": 126,
+            "combatH": 102
+          },
+          {
+            "slug": "kobold",
+            "pfSize": "SMALL",
+            "combatW": 159,
+            "combatH": 189
+          },
+          {
+            "slug": "wolf",
+            "pfSize": "MEDIUM",
+            "combatW": 243,
+            "combatH": 211
+          },
+          {
+            "slug": "troll",
+            "pfSize": "LARGE",
+            "combatW": 367,
+            "combatH": 447
+          },
+          {
+            "slug": "ref_huge_elder_troll",
+            "pfSize": "HUGE",
+            "combatW": 501,
+            "combatH": 472
+          },
+          {
+            "slug": "ref_gargantuan_wyrm",
+            "pfSize": "GARGANTUAN",
+            "combatW": 524,
+            "combatH": 494
+          },
+          {
+            "slug": "ref_colossal_titan",
+            "pfSize": "COLOSSAL",
+            "combatW": 538,
+            "combatH": 508
+          }
+        ]
+      }
+    }
+  ]
+}

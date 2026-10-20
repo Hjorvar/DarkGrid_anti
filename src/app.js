@@ -70,15 +70,17 @@ app.use('/images', express.static(path.join(__dirname, '../images')));
 // Request parsing with safe payload size limits
 app.use(express.urlencoded({ extended: true, limit: '64kb' }));
 app.use(express.json({ limit: '64kb' }));
-app.use(cookieParser());
+app.use(cookieParser(config.sessionSecret));
 
 // Attach database connection to req
 app.use(attachDb);
 
-// Persistent SQLite-backed server-side session store (survives server restarts)
+// Persistent SQLite-backed server-side session store (survives server restarts).
+// IMPORTANT: Cookie name MUST be '__session' because Firebase Hosting strips all other cookies when proxying to Cloud Run.
 const sessionStore = new SqliteSessionStore(() => getDb());
 app.use(
   session({
+    name: '__session',
     store: sessionStore,
     secret: config.sessionSecret,
     resave: false,

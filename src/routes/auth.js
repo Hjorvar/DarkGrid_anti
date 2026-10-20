@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { registerUser, loginUser } = require('../domain/auth/service');
+const { deriveCsrfToken } = require('../middleware/csrf');
 
 // Lightweight in-memory rate limiter for auth endpoints (M3)
 const authAttempts = new Map();
@@ -35,7 +36,9 @@ router.get('/login', (req, res) => {
 router.post('/login', authRateLimiter(), async (req, res) => {
   const { username, password } = req.body;
   try {
-    const user = await loginUser(req.db, username, password);
+    const user = await loginUser(req.db, username, password, {
+      allowFirebaseFallback: process.env.NODE_ENV === 'production'
+    });
     if (req.session && typeof req.session.regenerate === 'function') {
       req.session.regenerate((err) => {
         if (err) {
@@ -43,7 +46,10 @@ router.post('/login', authRateLimiter(), async (req, res) => {
         }
         req.session.userId = user.id;
         req.session.username = user.username;
-        res.redirect('/');
+        req.session.csrfToken = deriveCsrfToken(req.sessionID);
+        req.session.save(() => {
+          res.redirect('/');
+        });
       });
     } else {
       req.session.userId = user.id;
@@ -80,7 +86,10 @@ router.post('/register', authRateLimiter(), async (req, res) => {
         }
         req.session.userId = user.id;
         req.session.username = user.username;
-        res.redirect('/');
+        req.session.csrfToken = deriveCsrfToken(req.sessionID);
+        req.session.save(() => {
+          res.redirect('/');
+        });
       });
     } else {
       req.session.userId = user.id;
@@ -97,6 +106,7 @@ router.post('/register', authRateLimiter(), async (req, res) => {
 
 router.post('/logout', (req, res) => {
   req.session.destroy(() => {
+    res.clearCookie('__session');
     res.redirect('/login');
   });
 });

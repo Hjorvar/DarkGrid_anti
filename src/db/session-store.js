@@ -9,11 +9,12 @@ const { getDb } = require('./connection');
 
 class SqliteSessionStore extends session.Store {
   constructor(options = {}) {
-    super(options);
-    this.getDbFn = options.getDb || getDb;
-    this.ttlMs = options.ttlMs || 1000 * 60 * 60 * 24 * 7; // 7 days
+    const opts = typeof options === 'function' ? { getDb: options } : (options || {});
+    super(opts);
+    this.getDbFn = opts.getDb || getDb;
+    this.ttlMs = opts.ttlMs || 1000 * 60 * 60 * 24 * 7; // 7 days
     this.lastPruneAt = 0;
-    this.pruneIntervalMs = options.pruneIntervalMs || 1000 * 60 * 15; // 15 minutes
+    this.pruneIntervalMs = opts.pruneIntervalMs || 1000 * 60 * 15; // 15 minutes
   }
 
   _db() {

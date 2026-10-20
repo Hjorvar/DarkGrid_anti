@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DARKGRID — Action Viewport Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/lab-assets/action-ui.css">
+</head>
+<body>
+
+  <!-- =====================================================================
+       LAB DIRECTOR BAR (Experience Mode Toggle, Scene/Monster/FX & Dev Tools)
+       ===================================================================== -->
+  <header class="lab-director-bar">
+    <div class="lab-brand">
+      <span>⚔️ DARKGRID</span>
+      <span class="lab-badge">ADVENTURE LAB</span>
+    </div>
+
+    <!-- Phase 3 (4.1): Current vs. Adventure Experience Toggle -->
+    <div class="lab-controls-group lab-experience-group" role="group" aria-label="Experience Mode">
+      <span class="lab-group-label">Experience:</span>
+      <button type="button" class="lab-pill" id="exp-mode-btn-current" onclick="setAdventureExperienceMode(false)" title="Current Experience (Baseline): Standard visual exploration without experimental discoveries, choices, or tension cues">
+        Current
+      </button>
+      <button type="button" class="lab-pill is-active lab-pill-adventure" id="exp-mode-btn-adventure" onclick="setAdventureExperienceMode(true)" title="Adventure Experience — Experimental: Enables environmental discoveries, 3-tier tension cues, contextual choices, Mirkwood Expedition & Journal">
+        Adventure ★
+      </button>
+    </div>
+
+    <!-- Primary Comparison Switcher: Scene Mode C (Default) vs A vs B vs Legacy -->
+    <div class="lab-controls-group lab-scene-mode-group" role="group" aria-label="Viewport Scene Mode">
+      <span class="lab-group-label">Scene:</span>
+      <button type="button" class="lab-pill is-active" id="scene-btn-C" onclick="setSceneMode('C')" title="Scene Mode C (First-Person POV — Default): Eye-level first-person perspective views with 5-tier POV-first fallback">
+        C: POV ★
+      </button>
+      <button type="button" class="lab-pill" id="scene-btn-A" onclick="setSceneMode('A')" title="Scene Mode A (Single Scene): One cohesive painting anchored to current location, terrain variant & landmarks">
+        A
+      </button>
+      <button type="button" class="lab-pill" id="scene-btn-B" onclick="setSceneMode('B')" title="Scene Mode B (Directional Scene): One cohesive painting showing the vista & landmarks in the direction you face">
+        B
+      </button>
+      <button type="button" class="lab-pill" id="scene-btn-LEGACY" onclick="setSceneMode('LEGACY')" title="Original Prototype: Blended radial ahead-portal + procedural SVG road/props/obstacles">
+        Legacy
+      </button>
+    </div>
+
+    <!-- Monster Presentation Mode: Integrated (Default) vs Card -->
+    <div class="lab-controls-group" role="group" aria-label="Monster Presentation Mode">
+      <span class="lab-group-label">Monster:</span>
+      <button type="button" class="lab-pill" id="blend-btn-card" onclick="setMonsterPresenceMode('card')" title="Card: Preserves the framed monster card presentation with original artwork">
+        Card
+      </button>
+      <button type="button" class="lab-pill is-active" id="blend-btn-integrated" onclick="setMonsterPresenceMode('integrated')" title="Integrated (Default): True alpha-cutout monster grounded directly inside the eye-level POV environment with contact shadows & lighting match">
+        Integrated ★
+      </button>
+      <button type="button" class="lab-pill" id="blend-btn-blend" onclick="setMonsterPresenceMode('blend')" title="Legacy Soft Radial Feather Blend">
+        Blend
+      </button>
+      <button type="button" class="lab-pill" id="blend-btn-framed" onclick="setMonsterPresenceMode('framed')" title="Crisp 1:1 antique-bronze relic frame over the scene">
+        Frame
+      </button>
+    </div>
+
+    <!-- Phase 3: Living Environment Atmospheric Effects Intensity -->
+    <div class="lab-controls-group" role="group" aria-label="Atmospheric Effects Intensity">
+      <span class="lab-group-label">FX:</span>
+      <button type="button" class="lab-pill" id="fx-btn-off" onclick="setAtmosphericEffectsMode('off')" title="Effects Off: Static paintings without moving mist or particles">
+        Off
+      </button>
+      <button type="button" class="lab-pill is-active" id="fx-btn-subtle" onclick="setAtmosphericEffectsMode('subtle')" title="Subtle (Default): Gentle, restrained mist drift, light breathing & rare motes">
+        Subtle ★
+      </button>
+      <button type="button" class="lab-pill" id="fx-btn-full" onclick="setAtmosphericEffectsMode('full')" title="Full: Enhanced atmospheric depth, mist layers & particles">
+        Full
+      </button>
+    </div>
+
+    <!-- Quick Expedition, Journal, Director, Atlas & QA Tools -->
+    <div class="lab-controls-group lab-dev-tools-group">
+      <button type="button" class="lab-pill lab-pill-sizelab" id="btn-toggle-sizelab" onclick="toggleMonsterSizeComparisonLab()" title="Toggle Pathfinder 1e Monster Size & Body-Profile Comparison Arena in Viewport [Z]">⚖️ Scale</button>
+      <button type="button" class="lab-pill lab-pill-journal" id="btn-open-journal" onclick="openLabModal('journal')" title="Open Expedition Journal & Exploration Progress [L]">📖 Journal</button>
+      <button type="button" class="lab-pill lab-pill-director" id="btn-open-director" onclick="openLabModal('director')" title="Open Gameplay Experiment Director (Expeditions, Scenarios, Monsters, Seed & State Inspector) [G]">🎬 Director</button>
+      <button type="button" class="lab-pill lab-pill-atlas" id="btn-open-atlas" onclick="openLabModal('atlas')" title="Open Interactive World Visual Atlas (All 225 tiles & 4-direction POV inspection) [V]">🗺️ Atlas</button>
+      <button type="button" class="lab-pill lab-pill-qa" id="btn-open-qa" onclick="openLabModal('qa')" title="Open Visual QA & Coverage Dashboard">📊 QA</button>
+    </div>
+
+    <!-- Preserved DOM hooks for automated test scripts (also rendered inside Gameplay Experiment Director modal) -->
+    <div style="display:none;" aria-hidden="true">
+      <button type="button" id="scenario-btn-manticore" onclick="triggerLabScenario('STAGE2_COMBAT', 'Manticore')">Manticore</button>
+      <button type="button" id="scenario-btn-ghoul" onclick="triggerLabScenario('STAGE2_COMBAT', 'Ghoul')">Ghoul</button>
+      <button type="button" id="scenario-btn-vine" onclick="triggerLabScenario('STAGE2_COMBAT', 'Assassin Vine')">Vine</button>
+      <button type="button" id="scenario-btn-wolf" onclick="triggerLabScenario('STAGE2_COMBAT', 'Wolf')">Wolf</button>
+      <button type="button" id="scenario-btn-skeleton" onclick="triggerLabScenario('STAGE2_COMBAT', 'Skeletal Champion')">Skeleton</button>
+      <button type="button" id="scenario-btn-spider" onclick="triggerLabScenario('STAGE2_COMBAT', 'Giant Spider')">Spider</button>
+      <button type="button" id="scenario-btn-troll" onclick="triggerLabScenario('STAGE2_COMBAT', 'Troll')">Troll</button>
+      <button type="button" id="scenario-btn-rust" onclick="triggerLabScenario('STAGE2_COMBAT', 'Rust Monster')">Rust</button>
+      <button type="button" id="class-btn-FIGHTER" onclick="triggerClassSwitch('FIGHTER')">Fighter</button>
+      <button type="button" id="class-btn-RANGER" onclick="triggerClassSwitch('RANGER')">Ranger</button>
+      <button type="button" id="class-btn-CLERIC" onclick="triggerClassSwitch('CLERIC')">Cleric</button>
+    </div>
+  </header>
+
+  <!-- =====================================================================
+       MAIN DUNGEON-MASTER / GRIMROCK INSPIRED ACTION SHELL
+       ===================================================================== -->
+  <main class="dm-shell">
+
+    <!-- -------------------------------------------------------------------
+         A. TOP CHAMPION STATUS & HANDS BAR
+         ------------------------------------------------------------------- -->
+    <section class="dm-top-deck" aria-label="Champion Status and Hands">
+      <!-- Hero Identity -->
+      <div class="dm-hero-identity">
+        <div class="dm-class-crest" id="hud-class-crest" title="Champion Class">⚔️</div>
+        <div class="dm-hero-meta">
+          <div class="dm-hero-name" id="hud-hero-name">Loading...</div>
+          <div class="dm-hero-sub">
+            <span id="hud-hero-class-lvl">FIGHTER • LVL 1</span>
+            <span id="hud-status-pills"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Left Hand & Right Hand Slots + DM Vertical Pillars -->
+      <div class="dm-hands-and-bars">
+        <div class="dm-hands-pair">
+          <!-- Main Hand Slot -->
+          <button type="button" class="dm-hand-slot is-active-hand" id="slot-main-hand" onclick="handleMainHandClick()" title="Active Main-Hand Armament">
+            <div class="hand-icon-box" id="main-hand-icon">🗡️</div>
+            <div class="hand-details">
+              <span class="hand-label" id="main-hand-label">Right Hand (Active)</span>
+              <span class="hand-item-name" id="main-hand-name">Longsword</span>
+              <span class="hand-item-stats" id="main-hand-stats">Atk +4 • 1d8+3</span>
+            </div>
+          </button>
+
+          <!-- Off-Hand / Secondary Slot -->
+          <button type="button" class="dm-hand-slot" id="slot-off-hand" onclick="handleOffHandClick()" title="Off-Hand / Secondary Armament">
+            <div class="hand-icon-box" id="off-hand-icon">🛡️</div>
+            <div class="hand-details">
+              <span class="hand-label" id="off-hand-label">Left Hand (Defense)</span>
+              <span class="hand-item-name" id="off-hand-name">Light Steel Shield</span>
+              <span class="hand-item-stats" id="off-hand-stats">+1 Shield AC</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Iconic Dungeon Master 3 Vertical Status Bars (HP / AC / XP) -->
+        <div class="dm-vertical-pillars" title="Vitality (HP), Armor Class (AC), and Experience (XP) Pillars">
+          <div class="dm-pillar">
+            <div class="dm-pillar-track">
+              <div class="dm-pillar-fill hp-pillar healthy" id="pillar-hp" style="height: 100%;"></div>
+            </div>
+            <span class="dm-pillar-lbl">HP</span>
+          </div>
+          <div class="dm-pillar">
+            <div class="dm-pillar-track">
+              <div class="dm-pillar-fill ac-pillar" id="pillar-ac" style="height: 75%;"></div>
+            </div>
+            <span class="dm-pillar-lbl">AC</span>
+          </div>
+          <div class="dm-pillar">
+            <div class="dm-pillar-track">
+              <div class="dm-pillar-fill xp-pillar" id="pillar-xp" style="height: 20%;"></div>
+            </div>
+            <span class="dm-pillar-lbl">XP</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Precision Vitals Readout -->
+      <div class="dm-vitals-readout">
+        <div class="dm-hp-Readout-box">
+          <div class="dm-hp-top-row">
+            <span class="dm-hp-title">Vitality</span>
+            <span class="dm-hp-numbers" id="hud-hp-text">12 / 12</span>
+          </div>
+          <div class="dm-hp-bar-outer">
+            <div class="dm-hp-bar-inner healthy" id="hud-hp-bar" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <div class="dm-stat-badges">
+          <div class="dm-stat-chip" title="Armor Class">
+            <span class="dm-stat-chip-lbl">Armor (AC)</span>
+            <span class="dm-stat-chip-val" id="hud-ac-val">16</span>
+          </div>
+          <div class="dm-stat-chip" title="Gold in Purse">
+            <span class="dm-stat-chip-lbl">Gold</span>
+            <span class="dm-stat-chip-val" id="hud-gold-val">180</span>
+          </div>
+          <div class="dm-stat-chip" title="Healing Potions in Pack">
+            <span class="dm-stat-chip-lbl">Potions</span>
+            <span class="dm-stat-chip-val" id="hud-potions-val" style="color: #7ce;">3</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- -------------------------------------------------------------------
+         B. MAIN WORKSPACE: FIRST-PERSON VIEWPORT (LEFT) + CONTROL DECK (RIGHT)
+         ------------------------------------------------------------------- -->
+    <div class="dm-main-grid">
+
+      <!-- =================================================================
+           LEFT / CENTER: THE FIRST-PERSON ACTION VIEWPORT
+           ================================================================= -->
+      <section class="fp-viewport-frame scene-mode-C presence-mode-integrated fx-mode-subtle" id="fp-viewport" aria-label="First-Person World Viewport">
+
+        <!-- Layer 1: Cohesive Environment Backdrop (Single Scene A / Directional B / Legacy) -->
+        <div class="fp-scene-backdrop" id="fp-scene-backdrop">
+          <!-- Outgoing Scene Crossfade Buffer (Smooth transitions between full scenes) -->
+          <img src="/images/terrain/terrain_city_oakhaven.webp" alt="" aria-hidden="true" class="fp-terrain-img-prev" id="fp-terrain-img-prev">
+
+          <!-- Primary Cohesive Scene Painting -->
+          <img src="/images/terrain/terrain_city_oakhaven.webp" alt="Current Realm Surroundings" class="fp-terrain-img" id="fp-terrain-img">
+
+          <!-- Supporting Atmosphere Layer (Lighting Tint, Horizon Glow, Layered Mist & Particle Engine) -->
+          <div class="fp-atmosphere-layer" id="fp-atmosphere-layer">
+            <div class="fp-mist-band fp-mist-band-back" id="fp-mist-band-back"></div>
+            <div class="fp-light-pulse-layer" id="fp-light-pulse-layer"></div>
+            <canvas class="fp-atmo-canvas" id="fp-atmo-canvas" aria-hidden="true"></canvas>
+            <div class="fp-mist-band fp-mist-band-front" id="fp-mist-band-front"></div>
+          </div>
+
+          <!-- Legacy Only: Forward Horizon Portal (Disabled in Modes A & B) -->
+          <div class="fp-ahead-portal" id="fp-ahead-portal">
+            <img src="/images/terrain/terrain_town_gates.webp" alt="Ahead Horizon Vista" class="fp-ahead-img" id="fp-ahead-img">
+          </div>
+
+          <!-- Left & Right Subtle Edge Shading -->
+          <div class="fp-flank-layer fp-flank-left" id="fp-flank-left"></div>
+          <div class="fp-flank-layer fp-flank-right" id="fp-flank-right"></div>
+
+          <!-- Legacy Only: Procedural SVG Overlay (Disabled in Modes A & B) -->
+          <div class="fp-scene-svg-wrap" id="fp-scene-svg-wrap"></div>
+        </div>
+
+        <div class="fp-scene-vignette"></div>
+        <div class="fp-scene-mist" id="fp-scene-mist"></div>
+        <div class="fp-fx-flash" id="fp-fx-flash"></div>
+        <div id="fp-floating-pop-container"></div>
+
+        <!-- Layer 2: Top Viewport HUD (Area Title, Coords, Facing Compass, FOV & POI Inspect) -->
+        <div class="fp-top-hud">
+          <div class="fp-location-plaque">
+            <div class="fp-location-top-row">
+              <div class="fp-location-title" id="fp-area-title">Oakhaven</div>
+              <span class="fp-facing-pill" id="fp-facing-pill" title="Current Hero Facing Direction">🧭 N ▲</span>
+            </div>
+            <div class="fp-location-sub">
+              <span class="fp-coord-tag" id="fp-area-coords">[X: 7, Y: 7]</span>
+              <span>•</span>
+              <span id="fp-area-terrain">CITY</span>
+              <span>•</span>
+              <span class="fp-scene-mode-tag" id="fp-scene-mode-tag">Scene C • Tier 1 Exact POV</span>
+            </div>
+            <div class="fp-scene-caption-line" id="fp-scene-caption-line">
+              Oakhaven Sanctuary
+            </div>
+            <div class="fp-fov-strip" id="fp-fov-strip">
+              <span id="fp-fov-left">◀ W: Plains</span>
+              <span>•</span>
+              <span id="fp-fov-ahead" class="fov-ahead-tag">▲ N: North Gate</span>
+              <span>•</span>
+              <span id="fp-fov-right">▶ E: Stone Bridge</span>
+            </div>
+          </div>
+
+          <div class="fp-top-hud-right">
+            <div class="fp-state-banner state-safe" id="fp-state-banner">
+              🛡️ Safe Haven Sanctuary
+            </div>
+            <div id="fp-poi-trigger-wrap" class="fp-poi-trigger-wrap"></div>
+            <div id="fp-expedition-pill-wrap" class="fp-expedition-pill-wrap"></div>
+          </div>
+        </div>
+
+        <!-- Layer 2b: Phase 4 Exploration Tension & Genuine Evidence Ribbon (Non-blocking) -->
+        <div class="fp-tension-ribbon-wrap" id="fp-tension-ribbon-wrap" hidden></div>
+
+        <!-- Layer 3: Center Interactive Stage (In-Scene Threat, Active Combat, Victory, POI Plaque, or Vista) -->
+        <div class="fp-center-stage" id="fp-center-stage">
+          <!-- Populated dynamically via action-ui.js -->
+        </div>
+
+        <!-- Layer 3b: Phase 3 & 5 Environmental Discovery & Choice Overlay (Non-blocking, 3 Tiers) -->
+        <div class="fp-discovery-layer" id="fp-discovery-layer" hidden></div>
+
+        <!-- Layer 4: Bottom Viewport Chronicle & Combat Ticker -->
+        <div class="fp-bottom-chronicle" id="fp-bottom-chronicle">
+          <div class="fp-chronicle-header">
+            <span id="fp-chronicle-title">📖 Realm Chronicle</span>
+            <span id="fp-chronicle-hint" class="fp-hotkey-legend">
+              [W/S] Step • [A/D] Turn 90° • [Q/E] Strafe • [Space/1] Action • [I] Inspect • [L] Journal • [V] Atlas
+            </span>
+          </div>
+          <div class="fp-chronicle-lines" id="fp-chronicle-lines">
+            <div class="fp-log-line">Initializing Darkgrid Action Viewport...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================
+           RIGHT COLUMN: TACTICAL CONTROL & NAVIGATION DECK (Zero Duplicates)
+           ================================================================= -->
+      <aside class="dm-right-deck" aria-label="Tactical Controls and Navigation">
+
+        <!-- 1. Compact 5x5 Minimap (North Up + Rotating Hero Arrow) & Compass Rose -->
+        <div class="dm-deck-card">
+          <div class="dm-deck-header">
+            <span class="dm-deck-title">🧭 Tactical Minimap (North ▲)</span>
+            <span class="dm-header-status" id="minimap-Lock-indicator">Ready</span>
+          </div>
+          <div class="dm-minimap-wrap">
+            <div class="dm-minimap-grid" id="dm-minimap-grid" aria-label="5 by 5 Tactical Minimap">
+              <!-- 5x5 cells rendered by JS -->
+            </div>
+            <div class="dm-compass-widget">
+              <div class="compass-rose-ring" id="compass-rose-ring" title="Compass Rose (North is Up)">
+                <span class="compass-pt pt-n" id="comp-n">N</span>
+                <span class="compass-pt pt-e" id="comp-e">E</span>
+                <span class="compass-pt pt-s" id="comp-s">S</span>
+                <span class="compass-pt pt-w" id="comp-w">W</span>
+                <div class="compass-needle" id="compass-needle">▲</div>
+              </div>
+              <div class="compass-readout-text">
+                <div class="compass-facing-lbl" id="compass-facing-lbl">Facing North</div>
+                <div class="compass-ahead-lbl" id="compass-ahead-lbl">Ahead: North Gate</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. The 4-Column Tactical Action Deck -->
+        <div class="dm-deck-card">
+          <div class="dm-deck-header">
+            <span class="dm-deck-title">⚔️ Tactical Action Deck</span>
+            <span class="dm-header-status" id="deck-stance-indicator" style="color: var(--accent-gold);">Melee Stance</span>
+          </div>
+
+          <div class="dm-action-columns">
+            <!-- Slot 1: Primary Strike / Engage / Sanctuary Rest -->
+            <button type="button" class="dm-action-tile tile-primary-strike" id="action-slot-1" onclick="handleSlot1Click()">
+              <span class="tile-hotkey">SPC / 1</span>
+              <div class="tile-icon-large" id="slot1-icon">⚔️</div>
+              <div>
+                <div class="tile-action-name" id="slot1-title">Strike</div>
+                <div class="tile-action-sub" id="slot1-sub">+4 • 1d8+3</div>
+              </div>
+            </button>
+
+            <!-- Slot 2: Quick Potion Flask -->
+            <button type="button" class="dm-action-tile" id="action-slot-2" onclick="handleSlot2Click()">
+              <span class="tile-hotkey">2</span>
+              <div class="tile-icon-large" id="slot2-icon">🧪</div>
+              <div>
+                <div class="tile-action-name" id="slot2-title">Drink Potion</div>
+                <div class="tile-action-sub" id="slot2-sub">3 in pack</div>
+              </div>
+            </button>
+
+            <!-- Slot 3: Stance Toggle (Single Dedicated Control) -->
+            <button type="button" class="dm-action-tile" id="action-slot-3" onclick="handleSlot3Click()">
+              <span class="tile-hotkey">3 / R</span>
+              <div class="tile-icon-large" id="slot3-icon">🏹</div>
+              <div>
+                <div class="tile-action-name" id="slot3-title">Swap Stance</div>
+                <div class="tile-action-sub" id="slot3-sub">To Ranged</div>
+              </div>
+            </button>
+
+            <!-- Slot 4: Flee / Bypass / Cleric Heal -->
+            <button type="button" class="dm-action-tile tile-danger" id="action-slot-4" onclick="handleSlot4Click()">
+              <span class="tile-hotkey">4 / F</span>
+              <div class="tile-icon-large" id="slot4-icon">🏃</div>
+              <div>
+                <div class="tile-action-name" id="slot4-title">Retreat</div>
+                <div class="tile-action-sub" id="slot4-sub">Not in Combat</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. First-Person Navigation Pad (Turn Left/Right, Forward/Back, Strafe Left/Right) -->
+        <div class="dm-deck-card dm-movement-deck">
+          <div class="dm-deck-header">
+            <span class="dm-deck-title">🕹️ Navigation</span>
+            <span class="dm-header-status">W/S Step • A/D Turn • Q/E Strafe</span>
+          </div>
+
+          <div class="dm-pad-grid">
+            <!-- Row 1: Turn Left [A] | Move Forward [W] | Turn Right [D] -->
+            <button type="button" class="dm-pad-btn is-turn" id="pad-turn-left" onclick="dispatchTurn('LEFT')" title="Turn 90° Counter-Clockwise [A / Left Arrow]">
+              <span class="pad-key">A / ◀</span>
+              <span class="pad-arrow">↶</span>
+              <span class="pad-label" id="lbl-turn-left">Turn W</span>
+            </button>
+
+            <button type="button" class="dm-pad-btn is-cardinal" id="pad-forward" onclick="dispatchRelativeMove('FORWARD')" title="Move Forward in facing direction [W / Up Arrow]">
+              <span class="pad-key">W / ▲</span>
+              <span class="pad-arrow">▲</span>
+              <span class="pad-label" id="lbl-forward">Forward (N)</span>
+            </button>
+
+            <button type="button" class="dm-pad-btn is-turn" id="pad-turn-right" onclick="dispatchTurn('RIGHT')" title="Turn 90° Clockwise [D / Right Arrow]">
+              <span class="pad-key">D / ▶</span>
+              <span class="pad-arrow">↷</span>
+              <span class="pad-label" id="lbl-turn-right">Turn E</span>
+            </button>
+
+            <!-- Row 2: Strafe Left [Q] | Center Facing Indicator | Strafe Right [E] -->
+            <button type="button" class="dm-pad-btn is-strafe" id="pad-strafe-left" onclick="dispatchRelativeMove('STRAFE_LEFT')" title="Strafe Left [Q]">
+              <span class="pad-key">Q</span>
+              <span class="pad-arrow">◄</span>
+              <span class="pad-label" id="lbl-strafe-left">Strafe (W)</span>
+            </button>
+
+            <div class="dm-pad-center-compass" id="pad-center" title="Current Facing & Tile Coordinates">
+              <span class="pad-center-arrow" id="pad-center-glyph">▲</span>
+              <span class="pad-label" id="pad-center-lbl">NORTH</span>
+            </div>
+
+            <button type="button" class="dm-pad-btn is-strafe" id="pad-strafe-right" onclick="dispatchRelativeMove('STRAFE_RIGHT')" title="Strafe Right [E]">
+              <span class="pad-key">E</span>
+              <span class="pad-arrow">►</span>
+              <span class="pad-label" id="lbl-strafe-right">Strafe (E)</span>
+            </button>
+
+            <!-- Row 3: Decorative Plinth | Move Backward [S] | Decorative Plinth -->
+            <div class="dm-pad-spacer" aria-hidden="true">
+              <span class="spacer-rune">ᛉ</span>
+            </div>
+
+            <button type="button" class="dm-pad-btn is-cardinal" id="pad-backward" onclick="dispatchRelativeMove('BACKWARD')" title="Step Backward [S / Down Arrow]">
+              <span class="pad-key">S / ▼</span>
+              <span class="pad-arrow">▼</span>
+              <span class="pad-label" id="lbl-backward">Back (S)</span>
+            </button>
+
+            <div class="dm-pad-spacer" aria-hidden="true">
+              <span class="spacer-rune">ᛉ</span>
+            </div>
+          </div>
+
+          <!-- Single Grimoire Drawer Strip (No Duplicates) -->
+          <div class="dm-utility-strip">
+            <button type="button" class="dm-util-btn" id="util-btn-hero" onclick="openLabModal('character')" title="Open Champion Sheet [C]">
+              <span>👤 Hero</span>
+              <span class="util-hotkey">C</span>
+            </button>
+            <button type="button" class="dm-util-btn" id="util-btn-pack" onclick="openLabModal('backpack')" title="Open Equipment & Backpack [B]">
+              <span id="util-pack-lbl">🎒 Pack</span>
+              <span class="util-hotkey">B</span>
+            </button>
+            <button type="button" class="dm-util-btn" id="util-btn-market" onclick="openLabModal('market')" title="Open Oakhaven Market [M]">
+              <span>🛒 Market</span>
+              <span class="util-hotkey">M</span>
+            </button>
+            <button type="button" class="dm-util-btn" id="util-btn-board" onclick="openLabModal('bounties')" title="Open The Watcher's Board [J]">
+              <span>🎯 Board</span>
+              <span class="util-hotkey">J</span>
+            </button>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+  </main>
+
+  <!-- =====================================================================
+       MODAL DRAWER SYSTEM (Character, Backpack, Market, Watcher's Board)
+       ===================================================================== -->
+  <div class="lab-modal-backdrop" id="lab-modal-backdrop" hidden onclick="if(event.target===this) closeLabModal()">
+    <div class="lab-modal-card" role="dialog" aria-modal="true" aria-labelledby="lab-modal-title">
+      <div class="lab-modal-header">
+        <h2 id="lab-modal-title" style="font-size: 1.05rem;">Modal</h2>
+        <button type="button" class="btn-action-stone" style="padding: 3px 10px;" onclick="closeLabModal()" title="Close [Esc]">✕</button>
+      </div>
+      <div class="lab-modal-body" id="lab-modal-body"></div>
+    </div>
+  </div>
+
+  <script src="/lab-assets/monster-size-catalog.js"></script>
+  <script src="/lab-assets/action-ui.js"></script>
+</body>
+</html>

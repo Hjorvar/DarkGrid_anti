@@ -23,7 +23,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { getFirebaseCliToken, pushDeltaToFirestoreServer } = require('../src/db/durable-store');
+const { getFirebaseCliToken, pushDeltaToFirestoreServer, pullFromFirestoreServer } = require('../src/db/durable-store');
 const { initializeDatabase } = require('../src/db/connection');
 const { runMigrations, runSeeds } = require('../src/db/migrate');
 const { runBackup } = require('./backup_database');
@@ -459,6 +459,7 @@ async function main() {
   const db = initializeDatabase(dbPath);
   runMigrations(db);
   runSeeds(db);
+  await pullFromFirestoreServer(db, { accessToken: token });
   await pushDeltaToFirestoreServer(db, { forceFull: true, token });
   db.close();
 

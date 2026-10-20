@@ -30,3 +30,9 @@ Thumbs.db
 dist/
 .firebase/
 src/firebase/compiled-templates.js
+
+# Action UI Lab runtime & temporary browser profiles
+action-ui-lab/data/
+action-ui-lab/**/.tmp-edge-profile/
+action-ui-lab/**/chrome_qa_*/
+scratch/

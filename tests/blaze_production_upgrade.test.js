@@ -671,3 +671,50 @@ test('Migration & Firebase Auth Login Bridge: Migrated Spark accounts retain UID
 
   db.close();
 });
+
+test('Firebase Hosting __session Cookie & Cold-Start Login CSRF: Login succeeds when proxy strips non-__session cookies and container cold-starts', async () => {
+  const db = getDb();
+  const suffix = Date.now().toString().slice(-6);
+  const uname = `HostUser_${suffix}`;
+  await registerAndCreateHero(uname, `HostHero_${suffix}`, 'FIGHTER');
+
+  // 1. Fetch GET /login and verify Set-Cookie uses `__session` (the only cookie Firebase Hosting forwards)
+  const getLogin = await fetch(`${baseUrl}/login`);
+  assert.equal(getLogin.status, 200);
+  const rawSetCookie = getLogin.headers.get('set-cookie') || '';
+  assert.ok(rawSetCookie.includes('__session='), 'Session cookie must be named __session for Firebase Hosting compatibility');
+
+  // Simulate Firebase Hosting proxy: strip every cookie except `__session`
+  const allCookies = updateCookies('', getLogin);
+  const onlySessionCookie = allCookies
+    .split(';')
+    .map(c => c.trim())
+    .filter(c => c.startsWith('__session='))
+    .join('; ');
+  assert.ok(onlySessionCookie.startsWith('__session='), 'Must extract __session cookie');
+
+  const loginHtml = await getLogin.text();
+  const csrf = loginHtml.match(/name="_csrf"\s+value="([^"]+)"/)[1];
+
+  // Simulate a Cloud Run cold start between GET /login and POST /login (unauthenticated GET session cleared)
+  db.prepare('DELETE FROM user_sessions WHERE user_id IS NULL').run();
+
+  // 2. Submit POST /login with only the `__session` cookie and the form's `_csrf` token
+  const postLogin = await fetch(`${baseUrl}/login`, {
+    method: 'POST',
+    body: new URLSearchParams({
+      username: uname,
+      password: 'password123',
+      _csrf: csrf
+    }),
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Cookie: onlySessionCookie
+    },
+    redirect: 'manual'
+  });
+
+  assert.equal(postLogin.status, 302, 'POST /login must succeed (302 redirect) without 403 CSRF error');
+  assert.equal(postLogin.headers.get('location'), '/');
+});
+
