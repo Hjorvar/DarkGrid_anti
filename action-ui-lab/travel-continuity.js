@@ -491,6 +491,146 @@ const CORRIDOR_STEP_NARRATIVES = {
     ],
     continuityNote: 'Stepping north through the Fen-Ward South Gate, you leave the damp smell of peat behind and return to Oakhaven Sanctuary.',
     horizonHint: 'Inside Oakhaven Sanctuary [7,7]: Safe within the fortified palisades and central watchfire.'
+  },
+  '7,9->6,9': {
+    corridorKey: 'SOUTHERN_ROTTING_FEN_CORRIDOR',
+    primaryContext: TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE,
+    matchedContexts: [
+      TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE
+    ],
+    continuityNote: 'Bearing west from the southern gate causeway, your boots squelch along a narrow peat embankment between stagnant black mire pools.',
+    horizonHint: 'Ahead South: The half-sunken timber planks and broken lantern post of the Rotting Fen Boardwalk [6,10] emerge from the marsh fog.'
+  },
+  '6,9->6,10': {
+    corridorKey: 'SOUTHERN_ROTTING_FEN_CORRIDOR',
+    primaryContext: TRANSITION_CONTEXT_TYPES.LANDMARK_APPROACH,
+    matchedContexts: [
+      TRANSITION_CONTEXT_TYPES.LANDMARK_APPROACH,
+      TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE
+    ],
+    continuityNote: 'Stepping south onto the creaking oak planks of the Rotting Fen Boardwalk, weeping bog-willows and a tilted iron lantern post frame the drowned causeway.',
+    horizonHint: 'Ahead West: The sunken boardwalk winds westward across the central marsh [5,10] toward the drowned ruins of Deadman’s Mire [4,11].'
+  },
+  '6,10->5,10': {
+    corridorKey: 'SOUTHERN_ROTTING_FEN_CORRIDOR',
+    primaryContext: TRANSITION_CONTEXT_TYPES.LANDMARK_DEPARTURE,
+    matchedContexts: [
+      TRANSITION_CONTEXT_TYPES.LANDMARK_DEPARTURE,
+      TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE
+    ],
+    continuityNote: 'Following the decaying timber causeway west from the lantern post, greenish marsh miasma drifts across the black water channels.',
+    horizonHint: 'Ahead West: The western fen junction [4,10] leads directly south to the sunken Gothic arches of Deadman’s Mire [4,11].'
+  },
+  '5,10->4,10': {
+    corridorKey: 'SOUTHERN_ROTTING_FEN_CORRIDOR',
+    primaryContext: TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE,
+    matchedContexts: [
+      TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE,
+      TRANSITION_CONTEXT_TYPES.LANDMARK_APPROACH
+    ],
+    continuityNote: 'Advancing west to the outer mire approach, tilted stone obelisks and drowned temple masonry begin to loom through the southern swamp fog.',
+    horizonHint: 'Ahead South: The sunken Gothic temple ruins of Deadman’s Mire [4,11] rise from the black bog water just ahead.'
+  },
+  '4,10->4,11': {
+    corridorKey: 'SOUTHERN_ROTTING_FEN_CORRIDOR',
+    primaryContext: TRANSITION_CONTEXT_TYPES.LANDMARK_APPROACH,
+    matchedContexts: [
+      TRANSITION_CONTEXT_TYPES.LANDMARK_APPROACH,
+      TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE
+    ],
+    continuityNote: 'Wading south onto the flooded flagstones of Deadman’s Mire, tilted Gothic arches and half-submerged carved pillars surround you in the stagnant gloom.',
+    horizonHint: 'At Deadman’s Mire [4,11]: Sunken sanctuary ruins; the timber causeway back to Oakhaven runs North and East.'
+  },
+  '4,11->4,10': {
+    corridorKey: 'SOUTHERN_ROTTING_FEN_CORRIDOR',
+    primaryContext: TRANSITION_CONTEXT_TYPES.LANDMARK_DEPARTURE,
+    matchedContexts: [
+      TRANSITION_CONTEXT_TYPES.LANDMARK_DEPARTURE,
+      TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE
+    ],
+    continuityNote: 'Stepping north off the flooded flagstones of Deadman’s Mire, you regain the outer marsh causeway heading back toward the central fen.',
+    horizonHint: 'Ahead East: The sunken timber boardwalk [5,10] leads east toward the Rotting Fen Boardwalk [6,10] and Oakhaven.'
+  },
+  '4,10->5,10': {
+    corridorKey: 'SOUTHERN_ROTTING_FEN_CORRIDOR',
+    primaryContext: TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE,
+    matchedContexts: [
+      TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE
+    ],
+    continuityNote: 'Retracing the marsh causeway east from Deadman’s Mire, the drowned Gothic arches fade into the greenish fog behind you.',
+    horizonHint: 'Ahead East: The tilted lantern post of the Rotting Fen Boardwalk [6,10] marks the turn north toward Oakhaven.'
+  },
+  '5,10->6,10': {
+    corridorKey: 'SOUTHERN_ROTTING_FEN_CORRIDOR',
+    primaryContext: TRANSITION_CONTEXT_TYPES.LANDMARK_APPROACH,
+    matchedContexts: [
+      TRANSITION_CONTEXT_TYPES.LANDMARK_APPROACH,
+      TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE
+    ],
+    continuityNote: 'Returning east onto the Rotting Fen Boardwalk, the familiar weeping bog-willows and broken iron lantern post rise beside the plank path.',
+    horizonHint: 'Ahead North: The northern peat bank [6,9] connects back to the Fen-Ward South Gate causeway [7,8].'
+  },
+  '6,10->6,9': {
+    corridorKey: 'SOUTHERN_ROTTING_FEN_CORRIDOR',
+    primaryContext: TRANSITION_CONTEXT_TYPES.LANDMARK_DEPARTURE,
+    matchedContexts: [
+      TRANSITION_CONTEXT_TYPES.LANDMARK_DEPARTURE,
+      TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE
+    ],
+    continuityNote: 'Leaving the sunken willow boardwalk behind, you climb north onto the firmer peat embankment near the northern edge of the marsh.',
+    horizonHint: 'Ahead East: The southern gate causeway [7,9] leads straight north into Oakhaven’s Fen-Ward South Gate [7,8].'
+  },
+  '6,9->7,9': {
+    corridorKey: 'SOUTHERN_ROTTING_FEN_CORRIDOR',
+    primaryContext: TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE,
+    matchedContexts: [
+      TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE,
+      TRANSITION_CONTEXT_TYPES.LANDMARK_APPROACH
+    ],
+    continuityNote: 'Stepping east onto the main southern causeway, the timber watchtowers and warm braziers of Oakhaven’s Fen-Ward South Gate rise ahead to the north.',
+    horizonHint: 'Ahead North: Oakhaven’s Fen-Ward South Gate [7,8] stands open above the marsh border.'
+  },
+
+  // Western Raven Crags Corridor
+  '5,5->4,5': {
+    corridorKey: 'WESTERN_RAVEN_CRAGS_CORRIDOR',
+    primaryContext: TRANSITION_CONTEXT_TYPES.BIOME_THRESHOLD_CROSSING,
+    matchedContexts: [
+      TRANSITION_CONTEXT_TYPES.BIOME_THRESHOLD_CROSSING,
+      TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE
+    ],
+    continuityNote: 'Leaving the western eaves of Mirkwood behind, the mossy forest floor gives way to shattered grey slate and wind-bent heather ascending into Raven Crags.',
+    horizonHint: 'Ahead West: High on the highland ravine crest stands the dry-stacked Sentinel Cairn of Raven Crags [3,5].'
+  },
+  '4,5->3,5': {
+    corridorKey: 'WESTERN_RAVEN_CRAGS_CORRIDOR',
+    primaryContext: TRANSITION_CONTEXT_TYPES.LANDMARK_APPROACH,
+    matchedContexts: [
+      TRANSITION_CONTEXT_TYPES.LANDMARK_APPROACH,
+      TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE
+    ],
+    continuityNote: 'Climbing the narrow highland slate ravine, you reach the wind-scoured crest beside the ancient Sentinel Cairn of Raven Crags.',
+    horizonHint: 'At Raven Crags Sentinel Cairn [3,5]: Ravens circle the dark slate monument overlooking the western mountain defile.'
+  },
+  '3,5->4,5': {
+    corridorKey: 'WESTERN_RAVEN_CRAGS_CORRIDOR',
+    primaryContext: TRANSITION_CONTEXT_TYPES.LANDMARK_DEPARTURE,
+    matchedContexts: [
+      TRANSITION_CONTEXT_TYPES.LANDMARK_DEPARTURE,
+      TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE
+    ],
+    continuityNote: 'Stepping east away from the Sentinel Cairn, you descend the cracked slate ridge back toward the eastern foothills and Mirkwood.',
+    horizonHint: 'Ahead East: The dark fir and oak eaves of western Mirkwood [5,5] rise below the highland slope.'
+  },
+  '4,5->5,5': {
+    corridorKey: 'WESTERN_RAVEN_CRAGS_CORRIDOR',
+    primaryContext: TRANSITION_CONTEXT_TYPES.BIOME_THRESHOLD_CROSSING,
+    matchedContexts: [
+      TRANSITION_CONTEXT_TYPES.BIOME_THRESHOLD_CROSSING,
+      TRANSITION_CONTEXT_TYPES.SAME_CORRIDOR_ADVANCE
+    ],
+    continuityNote: 'Descending the rocky highland steps from Raven Crags, you cross back beneath the mossy boughs of western Mirkwood.',
+    horizonHint: 'Ahead East: Stonefang Crag [6,5] bars direct eastern passage; detour north or south around the monolith.'
   }
 };
 

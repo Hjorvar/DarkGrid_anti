@@ -6,6 +6,9 @@ const path = require('path');
 const {
   ATMOSPHERE_EFFECT_PROFILES,
   POINTS_OF_INTEREST,
+  CANDIDATE_ART_INVENTORY,
+  setCandidateArtPreviewMode,
+  getCandidateArtPreviewMode,
   buildWorldVisualAtlas
 } = require('../../scene-catalog');
 const {
@@ -39,18 +42,24 @@ function createStateControllers({ db, userId }) {
   }
 
   function getState(req, res) {
+    const prevMode = getCandidateArtPreviewMode();
     try {
+      const wantCandidates = req.query.artPreview === 'candidates' || req.query.artPreview === '1' || req.query.useCandidateArt === '1';
+      if (wantCandidates) setCandidateArtPreviewMode(true);
       const state = buildClientState(db, userId);
       res.json({ ok: true, state });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
+    } finally {
+      setCandidateArtPreviewMode(prevMode);
     }
   }
 
   function getAtlas(req, res) {
     try {
-      const atlas = buildWorldVisualAtlas(db);
-      res.json({ ok: true, ...atlas, atlas });
+      const useCandidateArt = req.query.artPreview === 'candidates' || req.query.artPreview === '1' || req.query.useCandidateArt === '1';
+      const atlas = buildWorldVisualAtlas(db, { useCandidateArt });
+      res.json({ ok: true, ...atlas, atlas, candidateArtInventory: CANDIDATE_ART_INVENTORY });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
     }

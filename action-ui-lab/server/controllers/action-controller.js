@@ -7,6 +7,7 @@
  *   - adventure-scenario-controller.js : SET_ADVENTURE_MODE, START/RESET_EXPEDITION, DISCOVERY actions, LAB_SCENARIO
  */
 const { getLivingCharacterByUserId } = require('../../../src/domain/character/rules');
+const { setCandidateArtPreviewMode } = require('../../scene-catalog');
 const { normalizeFacing } = require('../services/facing-service');
 const { ensureLivingHero } = require('../services/sandbox-db-service');
 const { buildClientState } = require('../services/client-state-service');
@@ -23,6 +24,20 @@ function createActionController({ db, userId, options = {} }) {
     const character = getLivingCharacterByUserId(db, userId);
 
     try {
+      if (action === 'SET_ART_PREVIEW_MODE') {
+        const enabled = Boolean(payload.enabled || payload.useCandidateArt);
+        setCandidateArtPreviewMode(enabled);
+        return res.json({
+          ok: true,
+          artPreviewMode: enabled ? 'CANDIDATES_STAGED' : 'APPROVED_DEFAULT',
+          state: buildClientState(db, userId, {
+            infoMessage: enabled
+              ? 'Candidate Art Preview Mode enabled (REVIEW REQUIRED staging active).'
+              : 'Approved Default Art Mode restored.'
+          })
+        });
+      }
+
       if (action === 'REVIVE') {
         const heroClass = payload.classType || 'FIGHTER';
         ensureLivingHero(db, userId, heroClass);

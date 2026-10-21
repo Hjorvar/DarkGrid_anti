@@ -1,0 +1,46 @@
+{
+  "generatedAt": "2026-10-21T21:50:42.233Z",
+  "screenshotsCaptured": 56,
+  "consoleErrorsCount": 0,
+  "pageErrorsCount": 0,
+  "consoleErrors": [],
+  "pageErrors": [],
+  "resolutionMetrics": [
+    {
+      "viewport": "1920x1080",
+      "windowWidth": 1920,
+      "windowHeight": 1080,
+      "stageWidth": 1526,
+      "stageHeight": 953,
+      "viewportAreaSharePct": 70.1,
+      "hasHorizontalOverflow": false
+    },
+    {
+      "viewport": "1366x768",
+      "windowWidth": 1366,
+      "windowHeight": 768,
+      "stageWidth": 1069,
+      "stageHeight": 655,
+      "viewportAreaSharePct": 66.7,
+      "hasHorizontalOverflow": false
+    },
+    {
+      "viewport": "1280x800",
+      "windowWidth": 1280,
+      "windowHeight": 800,
+      "stageWidth": 1000,
+      "stageHeight": 687,
+      "viewportAreaSharePct": 67.1,
+      "hasHorizontalOverflow": false
+    },
+    {
+      "viewport": "390x844_mobile",
+      "windowWidth": 390,
+      "windowHeight": 844,
+      "stageWidth": 376,
+      "stageHeight": 351,
+      "viewportAreaSharePct": 40.1,
+      "hasHorizontalOverflow": false
+    }
+  ]
+}

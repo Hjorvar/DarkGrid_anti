@@ -30,6 +30,9 @@ function registerStaticAssetsMiddleware(app) {
   app.use('/images', express.static(path.join(LAB_ROOT, '../images')));
   app.use('/base-css', express.static(path.join(LAB_ROOT, '../public/css')));
 
+  // Phase 5: Serve candidate environment art (REVIEW REQUIRED) for staging/preview inspection
+  app.use('/lab-assets/art-candidates', express.static(path.join(LAB_ROOT, 'docs/phase-5/art-candidates')));
+
   app.get('/lab-assets/monster-size-catalog.js', (req, res) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
