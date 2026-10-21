@@ -1,0 +1,202 @@
+{
+  "timestamp": "2026-10-21T11:36:06.827Z",
+  "states": {
+    "exploration": {
+      "mode": "EXPLORATION",
+      "vpClasses": "fp-viewport-frame presence-mode-integrated scale-mode-adaptive scene-mode-C fx-mode-subtle scene-state-exploration"
+    },
+    "discovered": {
+      "mode": "DISCOVERED",
+      "vpClasses": "fp-viewport-frame presence-mode-integrated scale-mode-adaptive scene-mode-C fx-mode-subtle in-discovered scene-state-discovered",
+      "hasShadowApparition": true
+    },
+    "combatEntry": {
+      "mode": "IN_COMBAT",
+      "vpClasses": "fp-viewport-frame presence-mode-integrated scale-mode-adaptive scene-mode-C fx-mode-subtle in-combat scene-state-combat is-effective-integrated env-light-forest",
+      "exchangeBanner": "⚡ Engaged at melee range — press [Space] or click creature to strike"
+    },
+    "activeCombat": {
+      "mode": "IN_COMBAT",
+      "exchangeBanner": "💨 Your attack missed • 🩸 Enemy dealt 7 dmg",
+      "conditionQuote": "“The predator stalks smoothly, muscles taut and ready to snap forward.”"
+    },
+    "victory": {
+      "hasVictory": true,
+      "vpClasses": "fp-viewport-frame presence-mode-integrated scale-mode-adaptive is-effective-integrated shake-damage env-light-forest scene-mode-C fx-mode-subtle scene-state-victory",
+      "hasVictoryRemains": true
+    },
+    "returnExploration": {
+      "mode": "EXPLORATION",
+      "vpClasses": "fp-viewport-frame presence-mode-integrated scale-mode-adaptive is-effective-integrated shake-damage env-light-forest scene-mode-C fx-mode-subtle scene-state-exploration"
+    }
+  },
+  "monsters": [
+    {
+      "name": "Stirge",
+      "expectedCategory": "TINY",
+      "type": "Flying Pest",
+      "env": "Swamp Mire",
+      "pfSize": "TINY",
+      "bodyProfile": "WINGED_TINY_PEST",
+      "groundSurface": "mire-mud",
+      "widthPx": 140,
+      "heightPx": 125,
+      "areaPx": 17500,
+      "isAirborne": true,
+      "contactPatches": 0
+    },
+    {
+      "name": "Goblin",
+      "expectedCategory": "SMALL",
+      "type": "Small Humanoid",
+      "env": "Forest Trail",
+      "pfSize": "SMALL",
+      "bodyProfile": "BIPED_SMALL",
+      "groundSurface": "forest-earth",
+      "widthPx": 164,
+      "heightPx": 195,
+      "areaPx": 31980,
+      "isAirborne": false,
+      "contactPatches": 2
+    },
+    {
+      "name": "Skeletal Champion",
+      "expectedCategory": "MEDIUM",
+      "type": "Medium Humanoid",
+      "env": "Watchpost Ruins",
+      "pfSize": "MEDIUM",
+      "bodyProfile": "BIPED_MEDIUM",
+      "groundSurface": "flagstone",
+      "widthPx": 225,
+      "heightPx": 289,
+      "areaPx": 65025,
+      "isAirborne": false,
+      "contactPatches": 2
+    },
+    {
+      "name": "Wolf",
+      "expectedCategory": "MEDIUM",
+      "type": "Quadruped",
+      "env": "Forest Trail",
+      "pfSize": "MEDIUM",
+      "bodyProfile": "QUADRUPED_LOW",
+      "groundSurface": "forest-earth",
+      "widthPx": 243,
+      "heightPx": 211,
+      "areaPx": 51273,
+      "isAirborne": false,
+      "contactPatches": 3
+    },
+    {
+      "name": "Giant Spider",
+      "expectedCategory": "MEDIUM",
+      "type": "Wide Arachnid",
+      "env": "Swamp Mire",
+      "pfSize": "MEDIUM",
+      "bodyProfile": "ARACHNID_WIDE",
+      "groundSurface": "mire-mud",
+      "widthPx": 268,
+      "heightPx": 181,
+      "areaPx": 48508,
+      "isAirborne": false,
+      "contactPatches": 4
+    },
+    {
+      "name": "Harpy",
+      "expectedCategory": "MEDIUM",
+      "type": "Flying Creature",
+      "env": "Old Stone Bridge",
+      "pfSize": "MEDIUM",
+      "bodyProfile": "WINGED_HOVER_MEDIUM",
+      "groundSurface": "flagstone",
+      "widthPx": 316,
+      "heightPx": 272,
+      "areaPx": 85952,
+      "isAirborne": true,
+      "contactPatches": 0
+    },
+    {
+      "name": "Manticore",
+      "expectedCategory": "LARGE",
+      "type": "Large Winged",
+      "env": "Old Stone Bridge",
+      "pfSize": "LARGE",
+      "bodyProfile": "WINGED_LARGE_PREDATOR",
+      "groundSurface": "flagstone",
+      "widthPx": 458,
+      "heightPx": 375,
+      "areaPx": 171750,
+      "isAirborne": true,
+      "contactPatches": 0
+    },
+    {
+      "name": "Troll",
+      "expectedCategory": "LARGE",
+      "type": "Large Boss Brute",
+      "env": "Forest Trail",
+      "pfSize": "LARGE",
+      "bodyProfile": "BIPED_TALL_BRUTE",
+      "groundSurface": "forest-earth",
+      "widthPx": 367,
+      "heightPx": 447,
+      "areaPx": 164049,
+      "isAirborne": false,
+      "contactPatches": 2
+    },
+    {
+      "name": "Ogre",
+      "expectedCategory": "LARGE",
+      "type": "Large Brute",
+      "env": "Watchpost Ruins",
+      "pfSize": "LARGE",
+      "bodyProfile": "BIPED_TALL_BRUTE",
+      "groundSurface": "flagstone",
+      "widthPx": 339,
+      "heightPx": 414,
+      "areaPx": 140346,
+      "isAirborne": false,
+      "contactPatches": 2
+    }
+  ],
+  "environments": [],
+  "viewports": {
+    "1920x1080": {
+      "viewport": "1920x1080",
+      "scrollWidth": 1920,
+      "scrollHeight": 1080,
+      "monsterWidthPx": 339,
+      "monsterHeightPx": 414,
+      "hudFitsInsideViewport": true,
+      "noPageOverflow": true
+    },
+    "1366x768": {
+      "viewport": "1366x768",
+      "scrollWidth": 1366,
+      "scrollHeight": 768,
+      "monsterWidthPx": 241,
+      "monsterHeightPx": 294,
+      "hudFitsInsideViewport": true,
+      "noPageOverflow": true
+    },
+    "1280x800": {
+      "viewport": "1280x800",
+      "scrollWidth": 1280,
+      "scrollHeight": 800,
+      "monsterWidthPx": 252,
+      "monsterHeightPx": 307,
+      "hudFitsInsideViewport": true,
+      "noPageOverflow": true
+    },
+    "390x844": {
+      "viewport": "390x844",
+      "scrollWidth": 390,
+      "scrollHeight": 844,
+      "monsterWidthPx": 218,
+      "monsterHeightPx": 203,
+      "hudFitsInsideViewport": true,
+      "noPageOverflow": true
+    }
+  },
+  "consoleErrors": [],
+  "pageExceptions": []
+}

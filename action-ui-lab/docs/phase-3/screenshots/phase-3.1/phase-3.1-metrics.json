@@ -1,0 +1,391 @@
+{
+  "resolutions": {},
+  "arenaLineups": {
+    "SIZE_PROGRESSION_5_1920x1080": [
+      {
+        "slug": "stirge",
+        "pfSize": "TINY",
+        "combatW": 140,
+        "combatH": 125,
+        "dispW": 127,
+        "dispH": 113
+      },
+      {
+        "slug": "goblin",
+        "pfSize": "SMALL",
+        "combatW": 164,
+        "combatH": 195,
+        "dispW": 148,
+        "dispH": 177
+      },
+      {
+        "slug": "skeletal_champion",
+        "pfSize": "MEDIUM",
+        "combatW": 225,
+        "combatH": 289,
+        "dispW": 204,
+        "dispH": 262
+      },
+      {
+        "slug": "troll",
+        "pfSize": "LARGE",
+        "combatW": 333,
+        "combatH": 406,
+        "dispW": 302,
+        "dispH": 368
+      },
+      {
+        "slug": "ref_huge_elder_troll",
+        "pfSize": "HUGE",
+        "combatW": 449,
+        "combatH": 499,
+        "dispW": 407,
+        "dispH": 452
+      }
+    ],
+    "ALL_9_PF1E_TIERS_1920x1080": [
+      {
+        "slug": "ref_fine_spore_mite",
+        "pfSize": "FINE",
+        "combatW": 70,
+        "combatH": 67,
+        "dispW": 34,
+        "dispH": 34,
+        "isCutout": true
+      },
+      {
+        "slug": "ref_diminutive_toad",
+        "pfSize": "DIMINUTIVE",
+        "combatW": 97,
+        "combatH": 82,
+        "dispW": 44,
+        "dispH": 37,
+        "isCutout": true
+      },
+      {
+        "slug": "viper",
+        "pfSize": "TINY",
+        "combatW": 126,
+        "combatH": 102,
+        "dispW": 57,
+        "dispH": 46,
+        "isCutout": true
+      },
+      {
+        "slug": "kobold",
+        "pfSize": "SMALL",
+        "combatW": 159,
+        "combatH": 189,
+        "dispW": 72,
+        "dispH": 86,
+        "isCutout": true
+      },
+      {
+        "slug": "wolf",
+        "pfSize": "MEDIUM",
+        "combatW": 243,
+        "combatH": 211,
+        "dispW": 110,
+        "dispH": 96,
+        "isCutout": true
+      },
+      {
+        "slug": "troll",
+        "pfSize": "LARGE",
+        "combatW": 333,
+        "combatH": 406,
+        "dispW": 151,
+        "dispH": 185,
+        "isCutout": true
+      },
+      {
+        "slug": "ref_huge_elder_troll",
+        "pfSize": "HUGE",
+        "combatW": 449,
+        "combatH": 499,
+        "dispW": 204,
+        "dispH": 227,
+        "isCutout": true
+      },
+      {
+        "slug": "ref_gargantuan_wyrm",
+        "pfSize": "GARGANTUAN",
+        "combatW": 487,
+        "combatH": 541,
+        "dispW": 221,
+        "dispH": 246,
+        "isCutout": true
+      },
+      {
+        "slug": "ref_colossal_titan",
+        "pfSize": "COLOSSAL",
+        "combatW": 506,
+        "combatH": 562,
+        "dispW": 230,
+        "dispH": 256,
+        "isCutout": true
+      }
+    ],
+    "SIZE_PROGRESSION_5_1366x768": [
+      {
+        "slug": "stirge",
+        "pfSize": "TINY",
+        "combatW": 100,
+        "combatH": 89,
+        "dispW": 88,
+        "dispH": 78
+      },
+      {
+        "slug": "goblin",
+        "pfSize": "SMALL",
+        "combatW": 117,
+        "combatH": 139,
+        "dispW": 103,
+        "dispH": 122
+      },
+      {
+        "slug": "skeletal_champion",
+        "pfSize": "MEDIUM",
+        "combatW": 161,
+        "combatH": 206,
+        "dispW": 142,
+        "dispH": 181
+      },
+      {
+        "slug": "troll",
+        "pfSize": "LARGE",
+        "combatW": 237,
+        "combatH": 289,
+        "dispW": 208,
+        "dispH": 254
+      },
+      {
+        "slug": "ref_huge_elder_troll",
+        "pfSize": "HUGE",
+        "combatW": 320,
+        "combatH": 355,
+        "dispW": 281,
+        "dispH": 312
+      }
+    ],
+    "ALL_9_PF1E_TIERS_1366x768": [
+      {
+        "slug": "ref_fine_spore_mite",
+        "pfSize": "FINE",
+        "combatW": 50,
+        "combatH": 38,
+        "dispW": 34,
+        "dispH": 34,
+        "isCutout": true
+      },
+      {
+        "slug": "ref_diminutive_toad",
+        "pfSize": "DIMINUTIVE",
+        "combatW": 70,
+        "combatH": 59,
+        "dispW": 34,
+        "dispH": 34,
+        "isCutout": true
+      },
+      {
+        "slug": "viper",
+        "pfSize": "TINY",
+        "combatW": 91,
+        "combatH": 73,
+        "dispW": 39,
+        "dispH": 34,
+        "isCutout": true
+      },
+      {
+        "slug": "kobold",
+        "pfSize": "SMALL",
+        "combatW": 113,
+        "combatH": 134,
+        "dispW": 49,
+        "dispH": 58,
+        "isCutout": true
+      },
+      {
+        "slug": "wolf",
+        "pfSize": "MEDIUM",
+        "combatW": 173,
+        "combatH": 150,
+        "dispW": 74,
+        "dispH": 65,
+        "isCutout": true
+      },
+      {
+        "slug": "troll",
+        "pfSize": "LARGE",
+        "combatW": 237,
+        "combatH": 289,
+        "dispW": 102,
+        "dispH": 124,
+        "isCutout": true
+      },
+      {
+        "slug": "ref_huge_elder_troll",
+        "pfSize": "HUGE",
+        "combatW": 320,
+        "combatH": 355,
+        "dispW": 138,
+        "dispH": 153,
+        "isCutout": true
+      },
+      {
+        "slug": "ref_gargantuan_wyrm",
+        "pfSize": "GARGANTUAN",
+        "combatW": 347,
+        "combatH": 385,
+        "dispW": 149,
+        "dispH": 166,
+        "isCutout": true
+      },
+      {
+        "slug": "ref_colossal_titan",
+        "pfSize": "COLOSSAL",
+        "combatW": 360,
+        "combatH": 400,
+        "dispW": 155,
+        "dispH": 172,
+        "isCutout": true
+      }
+    ],
+    "SIZE_PROGRESSION_5_1280x800": [
+      {
+        "slug": "stirge",
+        "pfSize": "TINY",
+        "combatW": 103,
+        "combatH": 92,
+        "dispW": 81,
+        "dispH": 72
+      },
+      {
+        "slug": "goblin",
+        "pfSize": "SMALL",
+        "combatW": 121,
+        "combatH": 144,
+        "dispW": 95,
+        "dispH": 113
+      },
+      {
+        "slug": "skeletal_champion",
+        "pfSize": "MEDIUM",
+        "combatW": 167,
+        "combatH": 214,
+        "dispW": 132,
+        "dispH": 169
+      },
+      {
+        "slug": "troll",
+        "pfSize": "LARGE",
+        "combatW": 247,
+        "combatH": 301,
+        "dispW": 195,
+        "dispH": 237
+      },
+      {
+        "slug": "ref_huge_elder_troll",
+        "pfSize": "HUGE",
+        "combatW": 333,
+        "combatH": 370,
+        "dispW": 262,
+        "dispH": 292
+      }
+    ],
+    "ALL_9_PF1E_TIERS_1280x800": [
+      {
+        "slug": "ref_fine_spore_mite",
+        "pfSize": "FINE",
+        "combatW": 51,
+        "combatH": 50,
+        "dispW": 34,
+        "dispH": 34,
+        "isCutout": true
+      },
+      {
+        "slug": "ref_diminutive_toad",
+        "pfSize": "DIMINUTIVE",
+        "combatW": 72,
+        "combatH": 61,
+        "dispW": 34,
+        "dispH": 34,
+        "isCutout": true
+      },
+      {
+        "slug": "viper",
+        "pfSize": "TINY",
+        "combatW": 94,
+        "combatH": 76,
+        "dispW": 36,
+        "dispH": 34,
+        "isCutout": true
+      },
+      {
+        "slug": "kobold",
+        "pfSize": "SMALL",
+        "combatW": 118,
+        "combatH": 140,
+        "dispW": 45,
+        "dispH": 54,
+        "isCutout": true
+      },
+      {
+        "slug": "wolf",
+        "pfSize": "MEDIUM",
+        "combatW": 179,
+        "combatH": 156,
+        "dispW": 69,
+        "dispH": 60,
+        "isCutout": true
+      },
+      {
+        "slug": "troll",
+        "pfSize": "LARGE",
+        "combatW": 247,
+        "combatH": 301,
+        "dispW": 95,
+        "dispH": 115,
+        "isCutout": true
+      },
+      {
+        "slug": "ref_huge_elder_troll",
+        "pfSize": "HUGE",
+        "combatW": 333,
+        "combatH": 370,
+        "dispW": 128,
+        "dispH": 142,
+        "isCutout": true
+      },
+      {
+        "slug": "ref_gargantuan_wyrm",
+        "pfSize": "GARGANTUAN",
+        "combatW": 361,
+        "combatH": 401,
+        "dispW": 138,
+        "dispH": 154,
+        "isCutout": true
+      },
+      {
+        "slug": "ref_colossal_titan",
+        "pfSize": "COLOSSAL",
+        "combatW": 374,
+        "combatH": 416,
+        "dispW": 143,
+        "dispH": 159,
+        "isCutout": true
+      }
+    ]
+  },
+  "harpyMetrics": {
+    "1920x1080": {
+      "src": "/lab-assets/images/monsters-cutout/harpy.png",
+      "presentation": "integrated",
+      "naturalW": 842,
+      "naturalH": 930,
+      "boxW": 520,
+      "boxH": 431,
+      "isAirborne": false
+    }
+  }
+}

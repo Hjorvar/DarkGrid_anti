@@ -247,6 +247,50 @@ export function buildCombatMonsterActorHtml(monster, state, { isSequenceFrame = 
        </div>
     ` : '');
 
+  const seq = state && state.combatSequence;
+  let exchangeSummaryText = `⚡ Engaged at melee range — press [Space] or click creature to strike`;
+  let exchangeSummaryClass = 'exchange-neutral';
+  if (!isSequenceFrame && seq && Array.isArray(seq.beats) && seq.beats.length > 0) {
+    const heroBeat = seq.beats.find(b => b.actor === 'HERO');
+    const monsterBeat = seq.beats.find(b => b.actor === 'MONSTER');
+    const parts = [];
+    if (heroBeat) {
+      if (heroBeat.outcome === 'CRIT') {
+        parts.push(`💥 Critical Hit (${escapeHtml(heroBeat.popupLabel || 'Crit!')})`);
+        exchangeSummaryClass = 'exchange-crit';
+      } else if (heroBeat.outcome === 'HIT') {
+        parts.push(`⚔️ You hit (${escapeHtml(heroBeat.popupLabel || 'Hit!')})`);
+        exchangeSummaryClass = 'exchange-hit';
+      } else if (heroBeat.outcome === 'MISS') {
+        parts.push(`💨 Your attack missed`);
+        exchangeSummaryClass = 'exchange-miss';
+      } else if (heroBeat.outcome === 'HEAL') {
+        parts.push(`🧪 Restored ${escapeHtml(heroBeat.popupLabel || 'HP')}`);
+        exchangeSummaryClass = 'exchange-hit';
+      } else if (heroBeat.outcome === 'FLEE') {
+        parts.push(`🏃 Retreat attempt failed`);
+        exchangeSummaryClass = 'exchange-damage';
+      }
+    }
+    if (monsterBeat) {
+      if (monsterBeat.outcome === 'HIT' && monsterBeat.hpDelta > 0) {
+        parts.push(`🩸 Enemy dealt ${monsterBeat.hpDelta} dmg`);
+        if (exchangeSummaryClass === 'exchange-miss') exchangeSummaryClass = 'exchange-damage';
+      } else if (monsterBeat.outcome === 'MISS') {
+        parts.push(`🛡️ Evaded counterattack`);
+      }
+    }
+    if (parts.length > 0) {
+      exchangeSummaryText = parts.join(' • ');
+    }
+  }
+
+  const exchangeBannerHtml = `
+    <div class="fp-combat-exchange-banner ${exchangeSummaryClass}" id="seq-exchange-banner">
+      ${exchangeSummaryText}
+    </div>
+  `;
+
   const tacticalReadoutHtml = `
     <div class="fp-combat-tactical-strip">
       <span class="fp-tactical-chip">⚔️ Round ${roundNum}</span>
@@ -293,6 +337,7 @@ export function buildCombatMonsterActorHtml(monster, state, { isSequenceFrame = 
           ${techScaleBadgeHtml}
         </div>
         ${conditionBlockHtml}
+        ${exchangeBannerHtml}
         ${tacticalReadoutHtml}
       </div>
     </div>

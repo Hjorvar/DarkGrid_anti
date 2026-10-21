@@ -797,7 +797,9 @@ describe('Phase D — Independent End-to-End & Headless Browser QA Suite (15 Are
         combatW: Number(el.getAttribute('data-combat-w')),
         combatH: Number(el.getAttribute('data-combat-h')),
         dispW: Number(el.getAttribute('data-disp-w')),
-        dispH: Number(el.getAttribute('data-disp-h'))
+        dispH: Number(el.getAttribute('data-disp-h')),
+        demoProxy: el.getAttribute('data-demo-proxy') === 'true',
+        proxyBadgeText: el.querySelector('.sizelab-demo-proxy-badge')?.textContent?.trim() || null
       }));
       return {
         itemCount: items.length,
@@ -813,6 +815,14 @@ describe('Phase D — Independent End-to-End & Headless Browser QA Suite (15 Are
       );
     }
     qaMetrics.scaleArenaDomOrder = arenaDom.items;
+    for (const item of arenaDom.items) {
+      if (item.slug.startsWith('ref_')) {
+        assert.equal(item.demoProxy, true, `${item.slug} must be flagged as Demo Proxy`);
+        assert.equal(item.proxyBadgeText, 'Demo Proxy', `${item.slug} must render Demo Proxy badge`);
+      } else {
+        assert.equal(item.demoProxy, false, `${item.slug} must not be flagged as Demo Proxy`);
+      }
+    }
 
     await captureScreenshot('10_area10_size_comparison_arena.png');
     await evalInPage(`toggleMonsterSizeComparisonLab(false)`);

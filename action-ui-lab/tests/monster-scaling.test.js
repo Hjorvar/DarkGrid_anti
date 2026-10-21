@@ -557,4 +557,35 @@ describe('Track 3 — Pathfinder 1e Monster Size, Perspective & Scene Integratio
     assert.equal(lookupMonsterSizeEntry('displacer_beast').hasCutout, true);
     assert.equal(lookupMonsterSizeEntry('choker').hasCutout, false);
   });
+
+  it('11. Phase 3 — Synthesizes deterministic fallback size and body profile metadata when uncataloged or partial monster data is passed', () => {
+    const tinyFlier = computeAdaptiveMonsterVisualScale({
+      name: 'Shadow Batling',
+      size: 'Tiny',
+      movement_type: 'FLYING'
+    }, { viewportWidth: 1920, viewportHeight: 1080 });
+    assert.equal(tinyFlier.isFallbackMetadata, true);
+    assert.equal(tinyFlier.pfSizeCategory, 'TINY');
+    assert.equal(tinyFlier.visualBodyProfile, 'FLYING_SMALL_PEST');
+    assert.equal(tinyFlier.positioning.isAirborne, true);
+    assert.equal(tinyFlier.presentationMode, 'CARD');
+
+    const hugeBrute = computeAdaptiveMonsterVisualScale({
+      name: 'Frost Behemoth',
+      height: 24,
+      type: 'Giant'
+    }, { viewportWidth: 1920, viewportHeight: 1080 });
+    assert.equal(hugeBrute.isFallbackMetadata, true);
+    assert.equal(hugeBrute.pfSizeCategory, 'HUGE');
+    assert.equal(hugeBrute.visualBodyProfile, 'BIPED_LARGE_BRUTE');
+    assert.equal(hugeBrute.positioning.isAirborne, false);
+    assert.ok(hugeBrute.visibleHeightPx > tinyFlier.visibleHeightPx * 2.2);
+
+    const unknownDefault = computeAdaptiveMonsterVisualScale({
+      name: 'Mysterious Outcast'
+    }, { viewportWidth: 1920, viewportHeight: 1080 });
+    assert.equal(unknownDefault.isFallbackMetadata, true);
+    assert.equal(unknownDefault.pfSizeCategory, 'MEDIUM');
+    assert.equal(unknownDefault.visualBodyProfile, 'BIPED_MEDIUM');
+  });
 });

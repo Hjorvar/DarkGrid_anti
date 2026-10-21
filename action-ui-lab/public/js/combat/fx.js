@@ -15,12 +15,13 @@ export function triggerWeaponStrikeEffect(isCrit = false) {
   const svg = document.getElementById('fp-slash-svg');
   const actor = document.getElementById('fp-monster-actor');
   if (svg) {
-    svg.classList.remove('is-striking');
+    svg.classList.remove('is-striking', 'is-crit-striking');
     void svg.offsetWidth;
     svg.classList.add('is-striking');
+    if (isCrit) svg.classList.add('is-crit-striking');
   }
   if (actor) {
-    actor.classList.remove('anim-monster-hit', 'anim-monster-crit-hit', 'anim-monster-dodge');
+    actor.classList.remove('anim-monster-hit', 'anim-monster-crit-hit', 'anim-monster-dodge', 'anim-monster-defeat');
     void actor.offsetWidth;
     actor.classList.add(isCrit ? 'anim-monster-crit-hit' : 'anim-monster-hit');
   }
@@ -29,7 +30,7 @@ export function triggerWeaponStrikeEffect(isCrit = false) {
 export function triggerMonsterDodgeEffect() {
   const actor = document.getElementById('fp-monster-actor');
   if (actor) {
-    actor.classList.remove('anim-monster-hit', 'anim-monster-crit-hit', 'anim-monster-dodge');
+    actor.classList.remove('anim-monster-hit', 'anim-monster-crit-hit', 'anim-monster-dodge', 'anim-monster-defeat');
     void actor.offsetWidth;
     actor.classList.add('anim-monster-dodge');
   }
@@ -41,6 +42,15 @@ export function triggerMonsterLungeEffect() {
     actor.classList.remove('anim-monster-lunge');
     void actor.offsetWidth;
     actor.classList.add('anim-monster-lunge');
+  }
+}
+
+export function triggerMonsterDefeatEffect() {
+  const actor = document.getElementById('fp-monster-actor');
+  if (actor) {
+    actor.classList.remove('anim-monster-hit', 'anim-monster-crit-hit', 'anim-monster-dodge', 'anim-monster-lunge');
+    void actor.offsetWidth;
+    actor.classList.add('anim-monster-defeat');
   }
 }
 

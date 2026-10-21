@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-21T10:42:21.466Z",
+  "generatedAt": "2026-10-21T18:05:13.448Z",
   "areasVerified": 15,
   "screenshots": [
     "01_area01_world_travel_continuity.png",
@@ -64,8 +64,8 @@
       "bodyProfile": "WINGED_TINY_PEST",
       "presentation": "integrated",
       "imgSrc": "/lab-assets/images/monsters-cutout/stirge.png",
-      "naturalWidth": 688,
-      "naturalHeight": 807,
+      "naturalWidth": 753,
+      "naturalHeight": 746,
       "boxWidthPx": 140,
       "boxHeightPx": 125,
       "boxAreaPx": 17500,
@@ -80,8 +80,8 @@
       "bodyProfile": "BIPED_SMALL",
       "presentation": "integrated",
       "imgSrc": "/lab-assets/images/monsters-cutout/goblin.png",
-      "naturalWidth": 701,
-      "naturalHeight": 873,
+      "naturalWidth": 697,
+      "naturalHeight": 855,
       "boxWidthPx": 164,
       "boxHeightPx": 195,
       "boxAreaPx": 31980,
@@ -96,8 +96,8 @@
       "bodyProfile": "ARACHNID_WIDE",
       "presentation": "integrated",
       "imgSrc": "/lab-assets/images/monsters-cutout/rust_monster.png",
-      "naturalWidth": 812,
-      "naturalHeight": 852,
+      "naturalWidth": 818,
+      "naturalHeight": 848,
       "boxWidthPx": 277,
       "boxHeightPx": 187,
       "boxAreaPx": 51799,
@@ -112,8 +112,8 @@
       "bodyProfile": "BIPED_HEAVY_MEDIUM",
       "presentation": "integrated",
       "imgSrc": "/lab-assets/images/monsters-cutout/bugbear.png",
-      "naturalWidth": 668,
-      "naturalHeight": 916,
+      "naturalWidth": 737,
+      "naturalHeight": 947,
       "boxWidthPx": 294,
       "boxHeightPx": 334,
       "boxAreaPx": 98196,
@@ -128,8 +128,8 @@
       "bodyProfile": "BIPED_TALL_BRUTE",
       "presentation": "integrated",
       "imgSrc": "/lab-assets/images/monsters-cutout/ogre.png",
-      "naturalWidth": 840,
-      "naturalHeight": 993,
+      "naturalWidth": 854,
+      "naturalHeight": 983,
       "boxWidthPx": 339,
       "boxHeightPx": 414,
       "boxAreaPx": 140346,
@@ -145,47 +145,57 @@
       "pfSize": "TINY",
       "combatW": 140,
       "combatH": 125,
-      "dispW": 108,
-      "dispH": 97
+      "dispW": 127,
+      "dispH": 113,
+      "demoProxy": false,
+      "proxyBadgeText": null
     },
     {
       "slug": "goblin",
       "pfSize": "SMALL",
       "combatW": 164,
       "combatH": 195,
-      "dispW": 127,
-      "dispH": 151
+      "dispW": 148,
+      "dispH": 177,
+      "demoProxy": false,
+      "proxyBadgeText": null
     },
     {
       "slug": "skeletal_champion",
       "pfSize": "MEDIUM",
       "combatW": 225,
       "combatH": 289,
-      "dispW": 174,
-      "dispH": 223
+      "dispW": 204,
+      "dispH": 262,
+      "demoProxy": false,
+      "proxyBadgeText": null
     },
     {
       "slug": "troll",
       "pfSize": "LARGE",
-      "combatW": 367,
-      "combatH": 447,
-      "dispW": 284,
-      "dispH": 346
+      "combatW": 333,
+      "combatH": 406,
+      "dispW": 302,
+      "dispH": 368,
+      "demoProxy": false,
+      "proxyBadgeText": null
     },
     {
       "slug": "ref_huge_elder_troll",
       "pfSize": "HUGE",
-      "combatW": 501,
-      "combatH": 472,
-      "dispW": 387,
-      "dispH": 365
+      "combatW": 449,
+      "combatH": 499,
+      "dispW": 407,
+      "dispH": 452,
+      "demoProxy": true,
+      "proxyBadgeText": "Demo Proxy"
     }
   ],
   "performanceMetrics": {
-    "JSHeapUsedSizeMB": 1.96,
-    "JSHeapTotalSizeMB": 4,
-    "Nodes": 1992,
-    "JSEventListeners": 76
+    "JSHeapUsedSizeMB": 2.15,
+    "JSHeapTotalSizeMB": 3.5,
+    "Nodes": 2628,
+    "JSEventListeners": 84
   },
   "consoleErrorsCount": 0,
   "pageExceptionsCount": 0,

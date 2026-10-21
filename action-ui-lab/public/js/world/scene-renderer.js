@@ -5,7 +5,7 @@ import { store, FACING_META } from '../state/store.js';
 import { escapeHtml, isReducedMotionPreferred, seededUnit, sanitizePlayerContinuityText, buildRevisitBadgeHtml } from '../ui/utils.js';
 import { syncAtmosphericEffects, stopAtmosphericParticleLoop } from './atmosphere.js';
 import { applyFlankClass, buildMapConnectedSceneSvg } from './legacy-svg.js';
-import { buildSizeComparisonArenaHtml } from '../combat/size-arena.js';
+import { buildSizeComparisonArenaHtml, computeClientMonsterVisualScale } from '../combat/size-arena.js';
 import { buildCombatMonsterActorHtml } from '../combat/combat-ui.js';
 
 export function syncSceneModeButtons(mode) {
@@ -467,9 +467,28 @@ export function renderViewportScene(state) {
 
 export function renderViewportCenterStage(state) {
   const stage = document.getElementById('fp-center-stage');
+  const vp = document.getElementById('fp-viewport');
   const enc = state.encounter;
   const victory = state.victory;
   const adv = state.adventure || null;
+
+  if (vp) {
+    vp.classList.remove(
+      'scene-state-exploration',
+      'scene-state-discovered',
+      'scene-state-combat',
+      'scene-state-victory'
+    );
+    if (victory) {
+      vp.classList.add('scene-state-victory');
+    } else if (enc && enc.status === 'IN_COMBAT') {
+      vp.classList.add('scene-state-combat');
+    } else if (enc && enc.status === 'DISCOVERED') {
+      vp.classList.add('scene-state-discovered');
+    } else {
+      vp.classList.add('scene-state-exploration');
+    }
+  }
 
   // CASE 0: PATHFINDER 1E MONSTER SIZE & BODY-PROFILE VISUAL COMPARISON ARENA (Phase 4)
   if (store.isSizeComparisonLabOpen) {
@@ -487,16 +506,34 @@ export function renderViewportCenterStage(state) {
     const returnBearingLabel = (FACING_META[returnBearingDir] && FACING_META[returnBearingDir].label) || returnBearingDir;
     const returnPlaceName = (combatRet && combatRet.tileName) || (state.currentTile && state.currentTile.name) || 'the trail';
 
+    const catEntry = (typeof window !== 'undefined' && window.MonsterSizeCatalog)
+      ? window.MonsterSizeCatalog.lookupMonsterSizeEntry(victory.cleanMonsterName || victory.monsterName)
+      : null;
+    const wantsIntegrated = store.currentPresenceMode === 'integrated';
+    const hasCutout = Boolean(catEntry && catEntry.hasCutout && catEntry.cutoutImagePath);
+    const useIntegratedVictory = wantsIntegrated && hasCutout;
+    const victoryImgSrc = useIntegratedVictory
+      ? catEntry.cutoutImagePath
+      : (victory.imageUrl || '/images/monsters/assassin_vine.png');
+    const victoryAdaptive = computeClientMonsterVisualScale(catEntry || victory, state, useIntegratedVictory);
+    const vicW = victoryAdaptive ? Math.round(victoryAdaptive.visibleWidthPx * 0.78) : 165;
+    const vicH = victoryAdaptive ? Math.round(victoryAdaptive.visibleHeightPx * 0.78) : 165;
+    const vicActorClass = useIntegratedVictory
+      ? 'fp-monster-actor is-integrated-monster is-adaptive-scale is-victory-remains'
+      : 'fp-monster-actor is-card-monster is-adaptive-scale is-victory-remains';
+
     stage.innerHTML = `
-      <div class="fp-monster-actor" onclick="dispatchAction('DISMISS_VICTORY')" title="Step [W/S/Q/E] to keep moving, or click / press [Space] to clear">
-        <div class="fp-monster-portrait-box" style="width: clamp(110px, 18vh, 175px); height: clamp(110px, 18vh, 175px); opacity: 0.75; filter: grayscale(0.45);">
-          <span class="fp-corner-bracket tl"></span>
-          <span class="fp-corner-bracket tr"></span>
-          <span class="fp-corner-bracket bl"></span>
-          <span class="fp-corner-bracket br"></span>
-          <img src="${escapeHtml(victory.imageUrl)}" alt="Defeated ${escapeHtml(victory.cleanMonsterName)}" class="fp-monster-img">
+      <div class="${vicActorClass}" style="--monster-vis-w:${vicW}px; --monster-vis-h:${vicH}px;" onclick="dispatchAction('DISMISS_VICTORY')" title="Step [W/S/Q/E] to keep moving, or click / press [Space] to clear">
+        <div class="fp-monster-stage-figure">
+          <div class="fp-monster-portrait-box">
+            <span class="fp-corner-bracket tl"></span>
+            <span class="fp-corner-bracket tr"></span>
+            <span class="fp-corner-bracket bl"></span>
+            <span class="fp-corner-bracket br"></span>
+            <img src="${escapeHtml(victoryImgSrc)}" data-fallback-src="${escapeHtml(victory.imageUrl || '/images/monsters/assassin_vine.png')}" onerror="handleMonsterImageError(this)" alt="Defeated ${escapeHtml(victory.cleanMonsterName)}" class="fp-monster-img">
+          </div>
+          <div class="fp-monster-ground-shadow"></div>
         </div>
-        <div class="fp-monster-ground-shadow"></div>
         <div class="fp-monster-hud-plate" style="border-color: var(--border-gold-solid);">
           <div class="fp-monster-title-row" style="color: var(--accent-gold-bright);">
             <span>🏆 VICTORY — ${escapeHtml(victory.cleanMonsterName)} Slain!</span>

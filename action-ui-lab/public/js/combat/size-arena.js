@@ -8,6 +8,23 @@ function renderViewportCenterStage(state) {
   return uiCallbacks.renderViewportCenterStage(state);
 }
 
+export function isDemoProxySpecimen(spec) {
+  if (!spec) return false;
+  if (spec.isDemoProxy || spec.isReferenceSpecimen || String(spec.slug || '').startsWith('ref_')) return true;
+  const imgPath = String(spec.cutoutImagePath || spec.imagePath || '');
+  const baseFile = imgPath.split('/').pop().replace(/\.[a-z0-9]+$/i, '').toLowerCase();
+  const slug = String(spec.slug || '').trim().toLowerCase();
+  return Boolean(baseFile && slug && baseFile !== slug);
+}
+
+function resolveProxyArtworkLabel(spec) {
+  if (!spec) return 'Demo Proxy';
+  if (spec.proxyArtworkSource) return `Demo Proxy (${spec.proxyArtworkSource} Art)`;
+  const imgPath = String(spec.cutoutImagePath || spec.imagePath || '');
+  const baseFile = imgPath.split('/').pop().replace(/\.[a-z0-9]+$/i, '').replace(/_/g, ' ');
+  return baseFile ? `Demo Proxy (${baseFile} art)` : 'Demo Proxy';
+}
+
 export function setMonsterScaleMode(mode) {
   const norm = String(mode || 'adaptive').toLowerCase().trim() === 'legacy' ? 'legacy' : 'adaptive';
   store.currentMonsterScaleMode = norm;
@@ -125,9 +142,12 @@ export function buildSizeComparisonArenaHtml(state) {
       { slug: 'troll',                label: 'Troll (Large Brute • 14 ft)' },
       { slug: 'manticore',            label: 'Manticore (Large Winged • 16 ft span)' },
       { slug: 'ochre_jelly',          label: 'Ochre Jelly (Large Ooze • 10 ft wide)' },
-      { slug: 'ref_huge_elder_troll', label: 'Ancient Troll (Huge Ref • 24 ft)' }
+      { slug: 'displacer_beast',      label: 'Displacer Beast (Large Card Fallback • 9 ft)' },
+      { slug: 'ref_huge_elder_troll', label: 'Ancient Troll (Huge • Demo Proxy • 24 ft)' }
     ];
     const entry = cat.lookupMonsterSizeEntry(store.selectedBeforeAfterSpecimen);
+    const isProxy = isDemoProxySpecimen(entry);
+    const proxyTitle = resolveProxyArtworkLabel(entry);
     const useCut = wantsCutout && Boolean(entry.hasCutout && entry.cutoutImagePath);
     const imgSrc = useCut ? entry.cutoutImagePath : entry.imagePath;
     const sc = cat.computeAdaptiveMonsterVisualScale(entry, {
@@ -148,7 +168,7 @@ export function buildSizeComparisonArenaHtml(state) {
     const afterH = Math.round(sc.visibleHeightPx * splitFit);
     const deltaSign = sc.legacyComparison.heightDeltaPct >= 0 ? '+' : '';
 
-    subtitleText = `${entry.name} — PF1e ${sc.pfSizeLabel} (${sc.pfSpaceFt} ft space) • ${sc.visualBodyProfileLabel} • Shared 12-ft Virtual Distance`;
+    subtitleText = `${entry.name} — PF1e ${sc.pfSizeLabel} (${sc.pfSpaceFt} ft space) • ${sc.visualBodyProfileLabel}${isProxy ? ` • ${proxyTitle}` : ''} • Shared 12-ft Virtual Distance`;
 
     const selectorPills = specimenChoices.map(c => `
       <button type="button"
@@ -161,11 +181,13 @@ export function buildSizeComparisonArenaHtml(state) {
     bodyHtml = `
       <div class="sizelab-subbar">${selectorPills}</div>
       <div class="sizelab-split-stage" id="sizelab-split-stage">
-        <div class="sizelab-split-col is-before-col" data-col="before">
+        <div class="sizelab-split-col is-before-col" data-col="before" data-demo-proxy="${isProxy ? 'true' : 'false'}">
           <div class="sizelab-col-badge badge-before">BEFORE — Legacy Uniform Box (23vh Square)</div>
           <div class="sizelab-figure-floor">
+            ${isProxy ? `<span class="sizelab-demo-proxy-badge" title="${escapeHtml(proxyTitle)}">Demo Proxy</span>` : ''}
             <div class="sizelab-specimen-box ${useCut ? 'is-cutout' : 'is-card'} is-legacy-box"
                  style="width:${beforeW}px; height:${beforeH}px;">
+              ${!useCut ? '<span class="sizelab-card-fallback-badge">CARD FALLBACK</span>' : ''}
               <img src="${escapeHtml(imgSrc)}" alt="Before ${escapeHtml(entry.name)}" class="sizelab-specimen-img">
             </div>
             <div class="sizelab-ground-shadow" style="width:${Math.round(beforeW * 0.78)}px; height:16px; opacity:0.68;"></div>
@@ -173,15 +195,17 @@ export function buildSizeComparisonArenaHtml(state) {
           <div class="sizelab-specimen-caption">
             <strong>${escapeHtml(entry.name)} (Legacy)</strong>
             <span>1:1 Combat Box: <code>${sc.legacyComparison.legacyBoxPx}×${sc.legacyComparison.legacyBoxPx}px</code> (1.00:1)</span>
-            <span>Ignores PF1e size, body profile &amp; margin padding</span>
+            <span>${isProxy ? `<b class="sizelab-inline-proxy">Demo Proxy</b> • ` : ''}Ignores PF1e size, body profile &amp; margin padding</span>
           </div>
         </div>
 
-        <div class="sizelab-split-col is-after-col" data-col="after">
+        <div class="sizelab-split-col is-after-col" data-col="after" data-demo-proxy="${isProxy ? 'true' : 'false'}">
           <div class="sizelab-col-badge badge-after">AFTER — PF1e Adaptive (${escapeHtml(sc.pfSizeLabel)} • ${deltaSign}${sc.legacyComparison.heightDeltaPct}% Height)</div>
           <div class="sizelab-figure-floor ${sc.positioning.isAirborne ? 'is-airborne-specimen' : ''}">
+            ${isProxy ? `<span class="sizelab-demo-proxy-badge" title="${escapeHtml(proxyTitle)}">Demo Proxy</span>` : ''}
             <div class="sizelab-specimen-box ${useCut ? 'is-cutout' : 'is-card'} is-adaptive-box"
                  style="width:${afterW}px; height:${afterH}px; --trim-scale:${sc.transparencyCompensation.imageTrimScale};">
+              ${!useCut ? '<span class="sizelab-card-fallback-badge">CARD FALLBACK</span>' : ''}
               <img src="${escapeHtml(imgSrc)}" alt="After ${escapeHtml(entry.name)}" class="sizelab-specimen-img">
             </div>
             <div class="sizelab-ground-shadow" style="width:${Math.round(afterW * (sc.shadow.shadowWidthPct / 100))}px; height:${Math.max(10, Math.round(sc.shadow.shadowHeightPx * splitFit * 0.65))}px; opacity:${sc.shadow.shadowOpacity}; filter:blur(${Math.round(sc.shadow.shadowBlurPx * 0.45)}px);"></div>
@@ -189,7 +213,7 @@ export function buildSizeComparisonArenaHtml(state) {
           <div class="sizelab-specimen-caption">
             <strong>${escapeHtml(entry.name)} (${escapeHtml(sc.pfSizeLabel)})</strong>
             <span>1:1 Combat Box: <code>${sc.visibleWidthPx}×${sc.visibleHeightPx}px</code> (Aspect ${sc.aspectRatio}:1)</span>
-            <span>Profile: ${escapeHtml(sc.visualBodyProfile)} • Trim ×${sc.transparencyCompensation.imageTrimScale}${sc.clamping.wasClamped ? ' • 🛡️ UI Clamped' : ''}</span>
+            <span>${isProxy ? `<b class="sizelab-inline-proxy">Demo Proxy</b> • ` : ''}Profile: ${escapeHtml(sc.visualBodyProfile)} • Trim ×${sc.transparencyCompensation.imageTrimScale}${sc.clamping.wasClamped ? ' • 🛡️ UI Clamped' : ''}</span>
           </div>
         </div>
       </div>
@@ -201,8 +225,8 @@ export function buildSizeComparisonArenaHtml(state) {
 
     // Compute a uniform lineup fit factor so all specimens fit side-by-side at current resolution
     // while preserving 100% of their relative height and width proportions!
-    const availStageW = Math.max(540, Math.round(vpW * 0.62) - (specimens.length * 22));
-    const availStageH = Math.max(155, Math.round(vpH * 0.37));
+    const availStageW = Math.max(560, Math.round(vpW * 0.66) - (specimens.length * 16));
+    const availStageH = Math.max(170, Math.round(vpH * 0.42));
 
     const totalRawW = specimens.reduce((sum, s) => {
       const w = isAdaptive ? s.adaptive.visibleWidthPx : s.adaptive.legacyComparison.legacyBoxPx;
@@ -219,6 +243,8 @@ export function buildSizeComparisonArenaHtml(state) {
 
     const cardsHtml = specimens.map(spec => {
       const sc = spec.adaptive;
+      const isProxy = isDemoProxySpecimen(spec);
+      const proxyTitle = resolveProxyArtworkLabel(spec);
       const useCut = wantsCutout && Boolean(spec.hasCutout && spec.cutoutImagePath);
       const imgSrc = useCut ? spec.cutoutImagePath : spec.imagePath;
       const rawW = isAdaptive ? sc.visibleWidthPx : sc.legacyComparison.legacyBoxPx;
@@ -234,13 +260,16 @@ export function buildSizeComparisonArenaHtml(state) {
              data-slug="${escapeHtml(spec.slug)}"
              data-pf-size="${escapeHtml(sc.pfSizeCategory)}"
              data-body-profile="${escapeHtml(sc.visualBodyProfile)}"
+             data-demo-proxy="${isProxy ? 'true' : 'false'}"
              data-combat-w="${rawW}"
              data-combat-h="${rawH}"
              data-disp-w="${dispW}"
              data-disp-h="${dispH}">
           <div class="sizelab-figure-floor">
+            ${isProxy ? `<span class="sizelab-demo-proxy-badge" title="${escapeHtml(proxyTitle)}">Demo Proxy</span>` : ''}
             <div class="sizelab-specimen-box ${useCut ? 'is-cutout' : 'is-card'} ${isAdaptive ? 'is-adaptive-box' : 'is-legacy-box'}"
                  style="width:${dispW}px; height:${dispH}px; --trim-scale:${isAdaptive ? sc.transparencyCompensation.imageTrimScale : 1};">
+              ${!useCut ? '<span class="sizelab-card-fallback-badge">CARD</span>' : ''}
               <img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(spec.name)}" class="sizelab-specimen-img">
             </div>
             <div class="sizelab-ground-shadow"
@@ -252,7 +281,7 @@ export function buildSizeComparisonArenaHtml(state) {
             </div>
             <strong class="sizelab-mon-name">${escapeHtml(spec.name.replace(/\s*\(.*?\)/g, ''))}</strong>
             <span class="sizelab-mon-dims"><code>${rawW}×${rawH}px</code> (${deltaSign}${sc.legacyComparison.heightDeltaPct}%)</span>
-            <span class="sizelab-mon-prof">${escapeHtml(sc.bodyProportions.approxHeightFt)}ft • ${escapeHtml(sc.visualBodyProfile.replace(/_/g, ' '))}${sc.clamping.wasClamped ? ' • 🛡️Clamp' : ''}</span>
+            <span class="sizelab-mon-prof" title="${escapeHtml(proxyTitle)}">${isProxy ? '<b class="sizelab-inline-proxy">Demo Proxy</b> • ' : ''}${escapeHtml(sc.bodyProportions.approxHeightFt)}ft • ${escapeHtml(sc.visualBodyProfile.replace(/_/g, ' '))}${sc.clamping.wasClamped ? ' • 🛡️Clamp' : ''}</span>
           </div>
         </div>
       `;

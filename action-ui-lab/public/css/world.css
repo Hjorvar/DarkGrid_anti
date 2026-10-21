@@ -40,7 +40,37 @@
   inset: 0;
   z-index: 1;
   overflow: hidden;
-  transform-origin: center 55%;
+  transform-origin: center 58%;
+  transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Phase 3 — State-Aware Environment vs. Monster Balance */
+.fp-viewport-frame.scene-state-exploration .fp-scene-backdrop {
+  transform: scale(1) translateY(0);
+}
+
+.fp-viewport-frame.scene-state-discovered .fp-scene-backdrop {
+  transform: scale(1.015) translateY(-0.5%);
+}
+
+.fp-viewport-frame.scene-state-combat .fp-scene-backdrop {
+  transform: scale(1.038) translateY(-1.2%);
+}
+
+.fp-viewport-frame.scene-state-victory .fp-scene-backdrop {
+  transform: scale(1.01) translateY(0);
+}
+
+.fp-viewport-frame.scene-state-discovered .fp-atmosphere-layer {
+  box-shadow: inset 0 0 72px rgba(5, 7, 12, 0.48);
+}
+
+.fp-viewport-frame.scene-state-combat .fp-atmosphere-layer {
+  box-shadow: inset 0 0 96px rgba(4, 6, 10, 0.62);
+}
+
+.fp-viewport-frame.scene-state-victory .fp-atmosphere-layer {
+  box-shadow: inset 0 0 68px rgba(197, 160, 89, 0.16);
 }
 
 .fp-terrain-img,

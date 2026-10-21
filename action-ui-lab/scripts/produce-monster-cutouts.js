@@ -1160,12 +1160,13 @@ function runPipeline() {
     const src = path.join(PUBLIC_MONSTERS_DIR, `${slug}.png`);
     const dst = path.join(CUTOUT_DIR, `${slug}.png`);
     if (fs.existsSync(src) && !EXISTING_APPROVED_SLUGS.has(slug)) {
+      if (fs.existsSync(dst) && validateCutoutRgbaBuffer(fs.readFileSync(dst)).passed) continue;
       tasks.push({ slug, src, dst, spec });
     }
   }
 
   console.log(`[Track 4] Extracting ${tasks.length} Priority Tier 1 RGBA monster cutouts...`);
-  runBatchPythonCutoutExtraction(tasks);
+  if (tasks.length > 0) runBatchPythonCutoutExtraction(tasks);
 
   const inventoryEntries = [];
   let existingApprovedCount = 0;

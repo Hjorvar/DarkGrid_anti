@@ -7,6 +7,7 @@ import {
   triggerWeaponStrikeEffect,
   triggerMonsterDodgeEffect,
   triggerMonsterLungeEffect,
+  triggerMonsterDefeatEffect,
   spawnFloatingPopup,
   flashViewportOverlay
 } from './fx.js';
@@ -65,8 +66,8 @@ export function renderCombatStagingFrame(state, seq) {
   const vp = document.getElementById('fp-viewport');
   if (!stage || !vp) return;
 
-  vp.classList.add('in-combat');
-  vp.classList.remove('in-discovered');
+  vp.classList.add('in-combat', 'scene-state-combat');
+  vp.classList.remove('in-discovered', 'scene-state-exploration', 'scene-state-discovered', 'scene-state-victory');
 
   const monster = (state.encounter && state.encounter.status === 'IN_COMBAT')
     ? state.encounter
@@ -145,11 +146,18 @@ export function executeCombatBeatVisual(state, seq, beat, displayedLogs) {
     }
   }
 
-  // 4. Trigger Actor Choreography & Floating Callout
+  // 4. Trigger Actor Choreography, Exchange Banner & Floating Callout
+  const exchEl = document.getElementById('seq-exchange-banner');
   if (beat.actor === 'HERO') {
     if (beat.outcome === 'CRIT' || beat.outcome === 'HIT') {
       triggerWeaponStrikeEffect(beat.outcome === 'CRIT');
       spawnFloatingPopup(beat.popupLabel || 'Hit!', beat.outcome === 'CRIT' ? 'pop-crit' : 'pop-strike');
+      if (exchEl) {
+        exchEl.className = `fp-combat-exchange-banner ${beat.outcome === 'CRIT' ? 'exchange-crit' : 'exchange-hit'}`;
+        exchEl.textContent = beat.outcome === 'CRIT'
+          ? `💥 Critical Hit (${beat.popupLabel || 'Crit!'})`
+          : `⚔️ You struck (${beat.popupLabel || 'Hit!'})`;
+      }
     } else if (beat.outcome === 'MISS') {
       const svg = document.getElementById('fp-slash-svg');
       if (svg) {
@@ -159,26 +167,50 @@ export function executeCombatBeatVisual(state, seq, beat, displayedLogs) {
       }
       triggerMonsterDodgeEffect();
       spawnFloatingPopup('Miss', 'pop-miss');
+      if (exchEl) {
+        exchEl.className = 'fp-combat-exchange-banner exchange-miss';
+        exchEl.textContent = '💨 Your attack missed — enemy evaded!';
+      }
     } else if (beat.outcome === 'HEAL') {
       flashViewportOverlay('heal');
       spawnFloatingPopup(beat.popupLabel || '+HP', 'pop-heal');
+      if (exchEl) {
+        exchEl.className = 'fp-combat-exchange-banner exchange-hit';
+        exchEl.textContent = `🧪 Potion consumed (${beat.popupLabel || '+HP'})`;
+      }
     } else if (beat.outcome === 'FLEE') {
       spawnFloatingPopup('🏃 Retreating...', 'pop-miss');
+      if (exchEl) {
+        exchEl.className = 'fp-combat-exchange-banner exchange-miss';
+        exchEl.textContent = '🏃 Attempting to break away from melee...';
+      }
     }
   } else if (beat.actor === 'MONSTER') {
     triggerMonsterLungeEffect();
     if (beat.outcome === 'HIT') {
       flashViewportOverlay('blood');
       spawnFloatingPopup(beat.popupLabel || `-${beat.hpDelta} HP`, 'pop-damage');
+      if (exchEl) {
+        exchEl.className = 'fp-combat-exchange-banner exchange-damage';
+        exchEl.textContent = `${exchEl.textContent ? exchEl.textContent + ' • ' : ''}🩸 Enemy struck for ${beat.hpDelta || 0} dmg`;
+      }
     } else if (beat.outcome === 'MISS') {
       spawnFloatingPopup('Miss', 'pop-miss');
+      if (exchEl) {
+        exchEl.textContent = `${exchEl.textContent ? exchEl.textContent + ' • ' : ''}🛡️ Evaded enemy counterattack`;
+      }
     } else {
       if (beat.hpDelta > 0) flashViewportOverlay('blood');
       spawnFloatingPopup(beat.popupLabel || '⚡ Status', 'pop-damage');
     }
   } else if (beat.actor === 'OUTCOME') {
     if (beat.outcome === 'VICTORY') {
+      triggerMonsterDefeatEffect();
       spawnFloatingPopup('🏆 VICTORY!', 'pop-crit');
+      if (exchEl) {
+        exchEl.className = 'fp-combat-exchange-banner exchange-crit';
+        exchEl.textContent = '🏆 Foe slain — victory achieved!';
+      }
     } else if (beat.outcome === 'DEFEAT') {
       flashViewportOverlay('blood');
       spawnFloatingPopup('💀 FALLEN', 'pop-damage');

@@ -501,7 +501,7 @@ const VISUAL_BODY_PROFILES = {
     "key": "BEHEMOTH_HUGE_COLOSSAL",
     "label": "Huge / Gargantuan / Colossal Apex Behemoth",
     "heightFactor": 1.04,
-    "aspectRatio": 1.06,
+    "aspectRatio": 0.90,
     "groundingMode": "GROUNDED_HEAVY_BIPED",
     "airborneLiftPx": 0,
     "shadowWidthPct": 92,
@@ -735,7 +735,7 @@ const MONSTER_SIZE_CATALOG = [
       "approxHeightFt": 14,
       "approxLengthFt": 6,
       "approxWeightLbs": 1000,
-      "statureMultiplier": 1.08
+      "statureMultiplier": 0.98
     },
     "imagePath": "/images/monsters/troll.png",
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/troll.png",
@@ -1112,18 +1112,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/rust_monster.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 812,
-      "height": 852,
+      "width": 818,
+      "height": 848,
       "minX": 12,
       "minY": 12,
-      "maxX": 799,
-      "maxY": 839,
-      "contentWidthRatio": 0.9704,
-      "contentHeightRatio": 0.9718,
-      "topPadRatio": 0.0141,
-      "bottomPadRatio": 0.0141,
-      "leftPadRatio": 0.0148,
-      "rightPadRatio": 0.0148
+      "maxX": 805,
+      "maxY": 835,
+      "contentWidthRatio": 0.9707,
+      "contentHeightRatio": 0.9717,
+      "topPadRatio": 0.0142,
+      "bottomPadRatio": 0.0142,
+      "leftPadRatio": 0.0147,
+      "rightPadRatio": 0.0147
     },
     "cardContentBounds": {
       "width": 1024,
@@ -1140,18 +1140,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 812,
-      "height": 852,
+      "width": 818,
+      "height": 848,
       "minX": 12,
       "minY": 12,
-      "maxX": 799,
-      "maxY": 839,
-      "contentWidthRatio": 0.9704,
-      "contentHeightRatio": 0.9718,
-      "topPadRatio": 0.0141,
-      "bottomPadRatio": 0.0141,
-      "leftPadRatio": 0.0148,
-      "rightPadRatio": 0.0148
+      "maxX": 805,
+      "maxY": 835,
+      "contentWidthRatio": 0.9707,
+      "contentHeightRatio": 0.9717,
+      "topPadRatio": 0.0142,
+      "bottomPadRatio": 0.0142,
+      "leftPadRatio": 0.0147,
+      "rightPadRatio": 0.0147
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -1165,16 +1165,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 0.646,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 812,
-      "height": 852,
+      "width": 818,
+      "height": 848,
       "colorType": 6,
-      "transparentPixelRatio": 0.58,
-      "opaqueCoreRatio": 0.3521,
-      "semiTransparentRatio": 0.0924,
+      "transparentPixelRatio": 0.6166,
+      "opaqueCoreRatio": 0.3736,
+      "semiTransparentRatio": 0.0141,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.4719,
-        "y": 0.5201
+        "x": 0.505,
+        "y": 0.503
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -1314,18 +1314,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/kobold.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 599,
-      "height": 620,
+      "width": 622,
+      "height": 653,
       "minX": 12,
       "minY": 12,
-      "maxX": 586,
-      "maxY": 607,
-      "contentWidthRatio": 0.9599,
-      "contentHeightRatio": 0.9613,
-      "topPadRatio": 0.0194,
-      "bottomPadRatio": 0.0194,
-      "leftPadRatio": 0.02,
-      "rightPadRatio": 0.02
+      "maxX": 609,
+      "maxY": 640,
+      "contentWidthRatio": 0.9614,
+      "contentHeightRatio": 0.9632,
+      "topPadRatio": 0.0184,
+      "bottomPadRatio": 0.0184,
+      "leftPadRatio": 0.0193,
+      "rightPadRatio": 0.0193
     },
     "cardContentBounds": {
       "width": 1024,
@@ -1342,18 +1342,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 599,
-      "height": 620,
+      "width": 622,
+      "height": 653,
       "minX": 12,
       "minY": 12,
-      "maxX": 586,
-      "maxY": 607,
-      "contentWidthRatio": 0.9599,
-      "contentHeightRatio": 0.9613,
-      "topPadRatio": 0.0194,
-      "bottomPadRatio": 0.0194,
-      "leftPadRatio": 0.02,
-      "rightPadRatio": 0.02
+      "maxX": 609,
+      "maxY": 640,
+      "contentWidthRatio": 0.9614,
+      "contentHeightRatio": 0.9632,
+      "topPadRatio": 0.0184,
+      "bottomPadRatio": 0.0184,
+      "leftPadRatio": 0.0193,
+      "rightPadRatio": 0.0193
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -1367,16 +1367,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 0.652,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 599,
-      "height": 620,
+      "width": 622,
+      "height": 653,
       "colorType": 6,
-      "transparentPixelRatio": 0.6164,
-      "opaqueCoreRatio": 0.308,
-      "semiTransparentRatio": 0.111,
+      "transparentPixelRatio": 0.5963,
+      "opaqueCoreRatio": 0.394,
+      "semiTransparentRatio": 0.0138,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.5725,
-        "y": 0.5006
+        "x": 0.5608,
+        "y": 0.5204
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -1415,18 +1415,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/goblin.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 701,
-      "height": 873,
+      "width": 697,
+      "height": 855,
       "minX": 12,
       "minY": 12,
-      "maxX": 688,
-      "maxY": 860,
-      "contentWidthRatio": 0.9658,
-      "contentHeightRatio": 0.9725,
-      "topPadRatio": 0.0137,
-      "bottomPadRatio": 0.0137,
-      "leftPadRatio": 0.0171,
-      "rightPadRatio": 0.0171
+      "maxX": 684,
+      "maxY": 842,
+      "contentWidthRatio": 0.9656,
+      "contentHeightRatio": 0.9719,
+      "topPadRatio": 0.014,
+      "bottomPadRatio": 0.014,
+      "leftPadRatio": 0.0172,
+      "rightPadRatio": 0.0172
     },
     "cardContentBounds": {
       "width": 1024,
@@ -1443,18 +1443,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 701,
-      "height": 873,
+      "width": 697,
+      "height": 855,
       "minX": 12,
       "minY": 12,
-      "maxX": 688,
-      "maxY": 860,
-      "contentWidthRatio": 0.9658,
-      "contentHeightRatio": 0.9725,
-      "topPadRatio": 0.0137,
-      "bottomPadRatio": 0.0137,
-      "leftPadRatio": 0.0171,
-      "rightPadRatio": 0.0171
+      "maxX": 684,
+      "maxY": 842,
+      "contentWidthRatio": 0.9656,
+      "contentHeightRatio": 0.9719,
+      "topPadRatio": 0.014,
+      "bottomPadRatio": 0.014,
+      "leftPadRatio": 0.0172,
+      "rightPadRatio": 0.0172
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -1468,16 +1468,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 0.672,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 701,
-      "height": 873,
+      "width": 697,
+      "height": 855,
       "colorType": 6,
-      "transparentPixelRatio": 0.6123,
-      "opaqueCoreRatio": 0.3348,
-      "semiTransparentRatio": 0.0751,
+      "transparentPixelRatio": 0.5922,
+      "opaqueCoreRatio": 0.3992,
+      "semiTransparentRatio": 0.0123,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.6052,
-        "y": 0.4593
+        "x": 0.5903,
+        "y": 0.451
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -1516,18 +1516,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/human_skeleton.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 779,
-      "height": 919,
+      "width": 761,
+      "height": 918,
       "minX": 12,
       "minY": 12,
-      "maxX": 766,
-      "maxY": 906,
-      "contentWidthRatio": 0.9692,
+      "maxX": 748,
+      "maxY": 905,
+      "contentWidthRatio": 0.9685,
       "contentHeightRatio": 0.9739,
       "topPadRatio": 0.0131,
       "bottomPadRatio": 0.0131,
-      "leftPadRatio": 0.0154,
-      "rightPadRatio": 0.0154
+      "leftPadRatio": 0.0158,
+      "rightPadRatio": 0.0158
     },
     "cardContentBounds": {
       "width": 1024,
@@ -1544,18 +1544,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 779,
-      "height": 919,
+      "width": 761,
+      "height": 918,
       "minX": 12,
       "minY": 12,
-      "maxX": 766,
-      "maxY": 906,
-      "contentWidthRatio": 0.9692,
+      "maxX": 748,
+      "maxY": 905,
+      "contentWidthRatio": 0.9685,
       "contentHeightRatio": 0.9739,
       "topPadRatio": 0.0131,
       "bottomPadRatio": 0.0131,
-      "leftPadRatio": 0.0154,
-      "rightPadRatio": 0.0154
+      "leftPadRatio": 0.0158,
+      "rightPadRatio": 0.0158
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -1569,16 +1569,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 0.98,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 779,
-      "height": 919,
+      "width": 761,
+      "height": 918,
       "colorType": 6,
-      "transparentPixelRatio": 0.7658,
-      "opaqueCoreRatio": 0.1729,
-      "semiTransparentRatio": 0.0852,
+      "transparentPixelRatio": 0.7685,
+      "opaqueCoreRatio": 0.2202,
+      "semiTransparentRatio": 0.0157,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.6169,
-        "y": 0.4527
+        "x": 0.6075,
+        "y": 0.4608
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -1686,15 +1686,15 @@ const MONSTER_SIZE_CATALOG = [
     "hasCutout": true,
     "imageContentBounds": {
       "width": 618,
-      "height": 896,
+      "height": 905,
       "minX": 12,
       "minY": 12,
       "maxX": 605,
-      "maxY": 883,
+      "maxY": 892,
       "contentWidthRatio": 0.9612,
-      "contentHeightRatio": 0.9732,
-      "topPadRatio": 0.0134,
-      "bottomPadRatio": 0.0134,
+      "contentHeightRatio": 0.9735,
+      "topPadRatio": 0.0133,
+      "bottomPadRatio": 0.0133,
       "leftPadRatio": 0.0194,
       "rightPadRatio": 0.0194
     },
@@ -1714,15 +1714,15 @@ const MONSTER_SIZE_CATALOG = [
     },
     "cutoutContentBounds": {
       "width": 618,
-      "height": 896,
+      "height": 905,
       "minX": 12,
       "minY": 12,
       "maxX": 605,
-      "maxY": 883,
+      "maxY": 892,
       "contentWidthRatio": 0.9612,
-      "contentHeightRatio": 0.9732,
-      "topPadRatio": 0.0134,
-      "bottomPadRatio": 0.0134,
+      "contentHeightRatio": 0.9735,
+      "topPadRatio": 0.0133,
+      "bottomPadRatio": 0.0133,
       "leftPadRatio": 0.0194,
       "rightPadRatio": 0.0194
     },
@@ -1739,15 +1739,15 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
       "width": 618,
-      "height": 896,
+      "height": 905,
       "colorType": 6,
-      "transparentPixelRatio": 0.649,
-      "opaqueCoreRatio": 0.2812,
-      "semiTransparentRatio": 0.0952,
+      "transparentPixelRatio": 0.6719,
+      "opaqueCoreRatio": 0.3184,
+      "semiTransparentRatio": 0.0131,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.4237,
-        "y": 0.4862
+        "x": 0.4292,
+        "y": 0.4438
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -1922,18 +1922,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/lizardfolk.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 883,
-      "height": 906,
+      "width": 803,
+      "height": 880,
       "minX": 12,
       "minY": 12,
-      "maxX": 870,
-      "maxY": 893,
-      "contentWidthRatio": 0.9728,
-      "contentHeightRatio": 0.9735,
-      "topPadRatio": 0.0132,
-      "bottomPadRatio": 0.0132,
-      "leftPadRatio": 0.0136,
-      "rightPadRatio": 0.0136
+      "maxX": 790,
+      "maxY": 867,
+      "contentWidthRatio": 0.9701,
+      "contentHeightRatio": 0.9727,
+      "topPadRatio": 0.0136,
+      "bottomPadRatio": 0.0136,
+      "leftPadRatio": 0.0149,
+      "rightPadRatio": 0.0149
     },
     "cardContentBounds": {
       "width": 1024,
@@ -1950,18 +1950,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 883,
-      "height": 906,
+      "width": 803,
+      "height": 880,
       "minX": 12,
       "minY": 12,
-      "maxX": 870,
-      "maxY": 893,
-      "contentWidthRatio": 0.9728,
-      "contentHeightRatio": 0.9735,
-      "topPadRatio": 0.0132,
-      "bottomPadRatio": 0.0132,
-      "leftPadRatio": 0.0136,
-      "rightPadRatio": 0.0136
+      "maxX": 790,
+      "maxY": 867,
+      "contentWidthRatio": 0.9701,
+      "contentHeightRatio": 0.9727,
+      "topPadRatio": 0.0136,
+      "bottomPadRatio": 0.0136,
+      "leftPadRatio": 0.0149,
+      "rightPadRatio": 0.0149
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -1975,16 +1975,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 1.113,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 883,
-      "height": 906,
+      "width": 803,
+      "height": 880,
       "colorType": 6,
-      "transparentPixelRatio": 0.5186,
-      "opaqueCoreRatio": 0.3896,
-      "semiTransparentRatio": 0.1239,
+      "transparentPixelRatio": 0.5397,
+      "opaqueCoreRatio": 0.4512,
+      "semiTransparentRatio": 0.0129,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.5431,
-        "y": 0.5212
+        "x": 0.5654,
+        "y": 0.4672
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -2091,18 +2091,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/gnoll.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 878,
-      "height": 905,
+      "width": 721,
+      "height": 916,
       "minX": 12,
       "minY": 12,
-      "maxX": 865,
-      "maxY": 892,
-      "contentWidthRatio": 0.9727,
-      "contentHeightRatio": 0.9735,
-      "topPadRatio": 0.0133,
-      "bottomPadRatio": 0.0133,
-      "leftPadRatio": 0.0137,
-      "rightPadRatio": 0.0137
+      "maxX": 708,
+      "maxY": 903,
+      "contentWidthRatio": 0.9667,
+      "contentHeightRatio": 0.9738,
+      "topPadRatio": 0.0131,
+      "bottomPadRatio": 0.0131,
+      "leftPadRatio": 0.0166,
+      "rightPadRatio": 0.0166
     },
     "cardContentBounds": {
       "width": 1024,
@@ -2119,18 +2119,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 878,
-      "height": 905,
+      "width": 721,
+      "height": 916,
       "minX": 12,
       "minY": 12,
-      "maxX": 865,
-      "maxY": 892,
-      "contentWidthRatio": 0.9727,
-      "contentHeightRatio": 0.9735,
-      "topPadRatio": 0.0133,
-      "bottomPadRatio": 0.0133,
-      "leftPadRatio": 0.0137,
-      "rightPadRatio": 0.0137
+      "maxX": 708,
+      "maxY": 903,
+      "contentWidthRatio": 0.9667,
+      "contentHeightRatio": 0.9738,
+      "topPadRatio": 0.0131,
+      "bottomPadRatio": 0.0131,
+      "leftPadRatio": 0.0166,
+      "rightPadRatio": 0.0166
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -2144,16 +2144,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 1.134,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 878,
-      "height": 905,
+      "width": 721,
+      "height": 916,
       "colorType": 6,
-      "transparentPixelRatio": 0.481,
-      "opaqueCoreRatio": 0.4689,
-      "semiTransparentRatio": 0.0671,
+      "transparentPixelRatio": 0.4649,
+      "opaqueCoreRatio": 0.5271,
+      "semiTransparentRatio": 0.0113,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.5602,
-        "y": 0.5185
+        "x": 0.4776,
+        "y": 0.4679
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -2396,18 +2396,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/bugbear.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 668,
-      "height": 916,
+      "width": 737,
+      "height": 947,
       "minX": 12,
       "minY": 12,
-      "maxX": 655,
-      "maxY": 903,
-      "contentWidthRatio": 0.9641,
-      "contentHeightRatio": 0.9738,
-      "topPadRatio": 0.0131,
-      "bottomPadRatio": 0.0131,
-      "leftPadRatio": 0.018,
-      "rightPadRatio": 0.018
+      "maxX": 724,
+      "maxY": 934,
+      "contentWidthRatio": 0.9674,
+      "contentHeightRatio": 0.9747,
+      "topPadRatio": 0.0127,
+      "bottomPadRatio": 0.0127,
+      "leftPadRatio": 0.0163,
+      "rightPadRatio": 0.0163
     },
     "cardContentBounds": {
       "width": 1024,
@@ -2424,18 +2424,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 668,
-      "height": 916,
+      "width": 737,
+      "height": 947,
       "minX": 12,
       "minY": 12,
-      "maxX": 655,
-      "maxY": 903,
-      "contentWidthRatio": 0.9641,
-      "contentHeightRatio": 0.9738,
-      "topPadRatio": 0.0131,
-      "bottomPadRatio": 0.0131,
-      "leftPadRatio": 0.018,
-      "rightPadRatio": 0.018
+      "maxX": 724,
+      "maxY": 934,
+      "contentWidthRatio": 0.9674,
+      "contentHeightRatio": 0.9747,
+      "topPadRatio": 0.0127,
+      "bottomPadRatio": 0.0127,
+      "leftPadRatio": 0.0163,
+      "rightPadRatio": 0.0163
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -2449,16 +2449,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 1.156,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 668,
-      "height": 916,
+      "width": 737,
+      "height": 947,
       "colorType": 6,
-      "transparentPixelRatio": 0.3926,
-      "opaqueCoreRatio": 0.5419,
-      "semiTransparentRatio": 0.0953,
+      "transparentPixelRatio": 0.4732,
+      "opaqueCoreRatio": 0.5189,
+      "semiTransparentRatio": 0.0113,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.4729,
-        "y": 0.4795
+        "x": 0.5211,
+        "y": 0.4699
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -2633,18 +2633,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/giant_crab.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 767,
-      "height": 810,
+      "width": 880,
+      "height": 837,
       "minX": 12,
       "minY": 12,
-      "maxX": 754,
-      "maxY": 797,
-      "contentWidthRatio": 0.9687,
-      "contentHeightRatio": 0.9704,
-      "topPadRatio": 0.0148,
-      "bottomPadRatio": 0.0148,
-      "leftPadRatio": 0.0156,
-      "rightPadRatio": 0.0156
+      "maxX": 867,
+      "maxY": 824,
+      "contentWidthRatio": 0.9727,
+      "contentHeightRatio": 0.9713,
+      "topPadRatio": 0.0143,
+      "bottomPadRatio": 0.0143,
+      "leftPadRatio": 0.0136,
+      "rightPadRatio": 0.0136
     },
     "cardContentBounds": {
       "width": 1024,
@@ -2661,18 +2661,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 767,
-      "height": 810,
+      "width": 880,
+      "height": 837,
       "minX": 12,
       "minY": 12,
-      "maxX": 754,
-      "maxY": 797,
-      "contentWidthRatio": 0.9687,
-      "contentHeightRatio": 0.9704,
-      "topPadRatio": 0.0148,
-      "bottomPadRatio": 0.0148,
-      "leftPadRatio": 0.0156,
-      "rightPadRatio": 0.0156
+      "maxX": 867,
+      "maxY": 824,
+      "contentWidthRatio": 0.9727,
+      "contentHeightRatio": 0.9713,
+      "topPadRatio": 0.0143,
+      "bottomPadRatio": 0.0143,
+      "leftPadRatio": 0.0136,
+      "rightPadRatio": 0.0136
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -2686,16 +2686,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 0.598,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 767,
-      "height": 810,
+      "width": 880,
+      "height": 837,
       "colorType": 6,
-      "transparentPixelRatio": 0.5705,
-      "opaqueCoreRatio": 0.3509,
-      "semiTransparentRatio": 0.1211,
+      "transparentPixelRatio": 0.564,
+      "opaqueCoreRatio": 0.4243,
+      "semiTransparentRatio": 0.0165,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.4945,
-        "y": 0.453
+        "x": 0.502,
+        "y": 0.4527
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -2870,18 +2870,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/ankheg.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 683,
-      "height": 865,
+      "width": 684,
+      "height": 830,
       "minX": 12,
       "minY": 12,
-      "maxX": 670,
-      "maxY": 852,
+      "maxX": 671,
+      "maxY": 817,
       "contentWidthRatio": 0.9649,
-      "contentHeightRatio": 0.9723,
-      "topPadRatio": 0.0139,
-      "bottomPadRatio": 0.0139,
-      "leftPadRatio": 0.0176,
-      "rightPadRatio": 0.0176
+      "contentHeightRatio": 0.9711,
+      "topPadRatio": 0.0145,
+      "bottomPadRatio": 0.0145,
+      "leftPadRatio": 0.0175,
+      "rightPadRatio": 0.0175
     },
     "cardContentBounds": {
       "width": 1024,
@@ -2898,18 +2898,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 683,
-      "height": 865,
+      "width": 684,
+      "height": 830,
       "minX": 12,
       "minY": 12,
-      "maxX": 670,
-      "maxY": 852,
+      "maxX": 671,
+      "maxY": 817,
       "contentWidthRatio": 0.9649,
-      "contentHeightRatio": 0.9723,
-      "topPadRatio": 0.0139,
-      "bottomPadRatio": 0.0139,
-      "leftPadRatio": 0.0176,
-      "rightPadRatio": 0.0176
+      "contentHeightRatio": 0.9711,
+      "topPadRatio": 0.0145,
+      "bottomPadRatio": 0.0145,
+      "leftPadRatio": 0.0175,
+      "rightPadRatio": 0.0175
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -2923,16 +2923,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 1.014,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 683,
-      "height": 865,
+      "width": 684,
+      "height": 830,
       "colorType": 6,
-      "transparentPixelRatio": 0.396,
-      "opaqueCoreRatio": 0.5215,
-      "semiTransparentRatio": 0.1203,
+      "transparentPixelRatio": 0.6241,
+      "opaqueCoreRatio": 0.36,
+      "semiTransparentRatio": 0.0232,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.4844,
-        "y": 0.6004
+        "x": 0.4887,
+        "y": 0.4894
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -2971,18 +2971,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/ogre.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 840,
-      "height": 993,
+      "width": 854,
+      "height": 983,
       "minX": 12,
       "minY": 12,
-      "maxX": 827,
-      "maxY": 980,
-      "contentWidthRatio": 0.9714,
-      "contentHeightRatio": 0.9758,
-      "topPadRatio": 0.0121,
-      "bottomPadRatio": 0.0121,
-      "leftPadRatio": 0.0143,
-      "rightPadRatio": 0.0143
+      "maxX": 841,
+      "maxY": 970,
+      "contentWidthRatio": 0.9719,
+      "contentHeightRatio": 0.9756,
+      "topPadRatio": 0.0122,
+      "bottomPadRatio": 0.0122,
+      "leftPadRatio": 0.0141,
+      "rightPadRatio": 0.0141
     },
     "cardContentBounds": {
       "width": 1024,
@@ -2999,18 +2999,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 840,
-      "height": 993,
+      "width": 854,
+      "height": 983,
       "minX": 12,
       "minY": 12,
-      "maxX": 827,
-      "maxY": 980,
-      "contentWidthRatio": 0.9714,
-      "contentHeightRatio": 0.9758,
-      "topPadRatio": 0.0121,
-      "bottomPadRatio": 0.0121,
-      "leftPadRatio": 0.0143,
-      "rightPadRatio": 0.0143
+      "maxX": 841,
+      "maxY": 970,
+      "contentWidthRatio": 0.9719,
+      "contentHeightRatio": 0.9756,
+      "topPadRatio": 0.0122,
+      "bottomPadRatio": 0.0122,
+      "leftPadRatio": 0.0141,
+      "rightPadRatio": 0.0141
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -3024,16 +3024,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 1.426,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 840,
-      "height": 993,
+      "width": 854,
+      "height": 983,
       "colorType": 6,
-      "transparentPixelRatio": 0.5286,
-      "opaqueCoreRatio": 0.4262,
-      "semiTransparentRatio": 0.0634,
+      "transparentPixelRatio": 0.5325,
+      "opaqueCoreRatio": 0.4592,
+      "semiTransparentRatio": 0.0115,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.4455,
-        "y": 0.4797
+        "x": 0.4545,
+        "y": 0.4743
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -3072,18 +3072,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/shadow.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 378,
-      "height": 764,
+      "width": 531,
+      "height": 838,
       "minX": 12,
       "minY": 12,
-      "maxX": 365,
-      "maxY": 751,
-      "contentWidthRatio": 0.9365,
-      "contentHeightRatio": 0.9686,
-      "topPadRatio": 0.0157,
-      "bottomPadRatio": 0.0157,
-      "leftPadRatio": 0.0317,
-      "rightPadRatio": 0.0317
+      "maxX": 518,
+      "maxY": 825,
+      "contentWidthRatio": 0.9548,
+      "contentHeightRatio": 0.9714,
+      "topPadRatio": 0.0143,
+      "bottomPadRatio": 0.0143,
+      "leftPadRatio": 0.0226,
+      "rightPadRatio": 0.0226
     },
     "cardContentBounds": {
       "width": 1024,
@@ -3100,18 +3100,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 378,
-      "height": 764,
+      "width": 531,
+      "height": 838,
       "minX": 12,
       "minY": 12,
-      "maxX": 365,
-      "maxY": 751,
-      "contentWidthRatio": 0.9365,
-      "contentHeightRatio": 0.9686,
-      "topPadRatio": 0.0157,
-      "bottomPadRatio": 0.0157,
-      "leftPadRatio": 0.0317,
-      "rightPadRatio": 0.0317
+      "maxX": 518,
+      "maxY": 825,
+      "contentWidthRatio": 0.9548,
+      "contentHeightRatio": 0.9714,
+      "topPadRatio": 0.0143,
+      "bottomPadRatio": 0.0143,
+      "leftPadRatio": 0.0226,
+      "rightPadRatio": 0.0226
     },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
@@ -3125,16 +3125,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 1.02,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 378,
-      "height": 764,
+      "width": 531,
+      "height": 838,
       "colorType": 6,
-      "transparentPixelRatio": 0.6366,
-      "opaqueCoreRatio": 0.2222,
-      "semiTransparentRatio": 0.1775,
+      "transparentPixelRatio": 0.6074,
+      "opaqueCoreRatio": 0.3798,
+      "semiTransparentRatio": 0.0184,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.4669,
-        "y": 0.4502
+        "x": 0.5057,
+        "y": 0.4802
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -3173,18 +3173,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/owlbear.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 695,
-      "height": 850,
+      "width": 773,
+      "height": 867,
       "minX": 12,
       "minY": 12,
-      "maxX": 682,
-      "maxY": 837,
-      "contentWidthRatio": 0.9655,
-      "contentHeightRatio": 0.9718,
-      "topPadRatio": 0.0141,
-      "bottomPadRatio": 0.0141,
-      "leftPadRatio": 0.0173,
-      "rightPadRatio": 0.0173
+      "maxX": 760,
+      "maxY": 854,
+      "contentWidthRatio": 0.969,
+      "contentHeightRatio": 0.9723,
+      "topPadRatio": 0.0138,
+      "bottomPadRatio": 0.0138,
+      "leftPadRatio": 0.0155,
+      "rightPadRatio": 0.0155
     },
     "cardContentBounds": {
       "width": 1024,
@@ -3201,18 +3201,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 695,
-      "height": 850,
+      "width": 773,
+      "height": 867,
       "minX": 12,
       "minY": 12,
-      "maxX": 682,
-      "maxY": 837,
-      "contentWidthRatio": 0.9655,
-      "contentHeightRatio": 0.9718,
-      "topPadRatio": 0.0141,
-      "bottomPadRatio": 0.0141,
-      "leftPadRatio": 0.0173,
-      "rightPadRatio": 0.0173
+      "maxX": 760,
+      "maxY": 854,
+      "contentWidthRatio": 0.969,
+      "contentHeightRatio": 0.9723,
+      "topPadRatio": 0.0138,
+      "bottomPadRatio": 0.0138,
+      "leftPadRatio": 0.0155,
+      "rightPadRatio": 0.0155
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -3226,16 +3226,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 1.158,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 695,
-      "height": 850,
+      "width": 773,
+      "height": 867,
       "colorType": 6,
-      "transparentPixelRatio": 0.3855,
-      "opaqueCoreRatio": 0.5233,
-      "semiTransparentRatio": 0.135,
+      "transparentPixelRatio": 0.4172,
+      "opaqueCoreRatio": 0.5765,
+      "semiTransparentRatio": 0.0089,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.521,
-        "y": 0.5038
+        "x": 0.5027,
+        "y": 0.5005
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -3274,18 +3274,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/minotaur.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 803,
-      "height": 925,
+      "width": 823,
+      "height": 943,
       "minX": 12,
       "minY": 12,
-      "maxX": 790,
-      "maxY": 912,
-      "contentWidthRatio": 0.9701,
-      "contentHeightRatio": 0.9741,
-      "topPadRatio": 0.013,
-      "bottomPadRatio": 0.013,
-      "leftPadRatio": 0.0149,
-      "rightPadRatio": 0.0149
+      "maxX": 810,
+      "maxY": 930,
+      "contentWidthRatio": 0.9708,
+      "contentHeightRatio": 0.9745,
+      "topPadRatio": 0.0127,
+      "bottomPadRatio": 0.0127,
+      "leftPadRatio": 0.0146,
+      "rightPadRatio": 0.0146
     },
     "cardContentBounds": {
       "width": 1024,
@@ -3302,18 +3302,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 803,
-      "height": 925,
+      "width": 823,
+      "height": 943,
       "minX": 12,
       "minY": 12,
-      "maxX": 790,
-      "maxY": 912,
-      "contentWidthRatio": 0.9701,
-      "contentHeightRatio": 0.9741,
-      "topPadRatio": 0.013,
-      "bottomPadRatio": 0.013,
-      "leftPadRatio": 0.0149,
-      "rightPadRatio": 0.0149
+      "maxX": 810,
+      "maxY": 930,
+      "contentWidthRatio": 0.9708,
+      "contentHeightRatio": 0.9745,
+      "topPadRatio": 0.0127,
+      "bottomPadRatio": 0.0127,
+      "leftPadRatio": 0.0146,
+      "rightPadRatio": 0.0146
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -3327,16 +3327,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 1.397,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 803,
-      "height": 925,
+      "width": 823,
+      "height": 943,
       "colorType": 6,
-      "transparentPixelRatio": 0.4502,
-      "opaqueCoreRatio": 0.4702,
-      "semiTransparentRatio": 0.1125,
+      "transparentPixelRatio": 0.4967,
+      "opaqueCoreRatio": 0.4933,
+      "semiTransparentRatio": 0.014,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.4253,
-        "y": 0.5072
+        "x": 0.4785,
+        "y": 0.4966
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -3443,18 +3443,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/gargoyle.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 793,
-      "height": 903,
+      "width": 764,
+      "height": 835,
       "minX": 12,
       "minY": 12,
-      "maxX": 780,
-      "maxY": 890,
-      "contentWidthRatio": 0.9697,
-      "contentHeightRatio": 0.9734,
-      "topPadRatio": 0.0133,
-      "bottomPadRatio": 0.0133,
-      "leftPadRatio": 0.0151,
-      "rightPadRatio": 0.0151
+      "maxX": 751,
+      "maxY": 822,
+      "contentWidthRatio": 0.9686,
+      "contentHeightRatio": 0.9713,
+      "topPadRatio": 0.0144,
+      "bottomPadRatio": 0.0144,
+      "leftPadRatio": 0.0157,
+      "rightPadRatio": 0.0157
     },
     "cardContentBounds": {
       "width": 1024,
@@ -3471,18 +3471,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 793,
-      "height": 903,
+      "width": 764,
+      "height": 835,
       "minX": 12,
       "minY": 12,
-      "maxX": 780,
-      "maxY": 890,
-      "contentWidthRatio": 0.9697,
-      "contentHeightRatio": 0.9734,
-      "topPadRatio": 0.0133,
-      "bottomPadRatio": 0.0133,
-      "leftPadRatio": 0.0151,
-      "rightPadRatio": 0.0151
+      "maxX": 751,
+      "maxY": 822,
+      "contentWidthRatio": 0.9686,
+      "contentHeightRatio": 0.9713,
+      "topPadRatio": 0.0144,
+      "bottomPadRatio": 0.0144,
+      "leftPadRatio": 0.0157,
+      "rightPadRatio": 0.0157
     },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
@@ -3496,16 +3496,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 0.979,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 793,
-      "height": 903,
+      "width": 764,
+      "height": 835,
       "colorType": 6,
-      "transparentPixelRatio": 0.2939,
-      "opaqueCoreRatio": 0.6495,
-      "semiTransparentRatio": 0.0718,
+      "transparentPixelRatio": 0.458,
+      "opaqueCoreRatio": 0.5328,
+      "semiTransparentRatio": 0.013,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.484,
-        "y": 0.5256
+        "x": 0.4971,
+        "y": 0.4822
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -3544,18 +3544,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/basilisk.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 871,
-      "height": 583,
+      "width": 749,
+      "height": 576,
       "minX": 12,
       "minY": 12,
-      "maxX": 858,
-      "maxY": 570,
-      "contentWidthRatio": 0.9724,
-      "contentHeightRatio": 0.9588,
-      "topPadRatio": 0.0206,
-      "bottomPadRatio": 0.0206,
-      "leftPadRatio": 0.0138,
-      "rightPadRatio": 0.0138
+      "maxX": 736,
+      "maxY": 563,
+      "contentWidthRatio": 0.968,
+      "contentHeightRatio": 0.9583,
+      "topPadRatio": 0.0208,
+      "bottomPadRatio": 0.0208,
+      "leftPadRatio": 0.016,
+      "rightPadRatio": 0.016
     },
     "cardContentBounds": {
       "width": 1024,
@@ -3572,18 +3572,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 871,
-      "height": 583,
+      "width": 749,
+      "height": 576,
       "minX": 12,
       "minY": 12,
-      "maxX": 858,
-      "maxY": 570,
-      "contentWidthRatio": 0.9724,
-      "contentHeightRatio": 0.9588,
-      "topPadRatio": 0.0206,
-      "bottomPadRatio": 0.0206,
-      "leftPadRatio": 0.0138,
-      "rightPadRatio": 0.0138
+      "maxX": 736,
+      "maxY": 563,
+      "contentWidthRatio": 0.968,
+      "contentHeightRatio": 0.9583,
+      "topPadRatio": 0.0208,
+      "bottomPadRatio": 0.0208,
+      "leftPadRatio": 0.016,
+      "rightPadRatio": 0.016
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -3597,16 +3597,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 0.73,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 871,
-      "height": 583,
+      "width": 749,
+      "height": 576,
       "colorType": 6,
-      "transparentPixelRatio": 0.4884,
-      "opaqueCoreRatio": 0.4648,
-      "semiTransparentRatio": 0.0686,
+      "transparentPixelRatio": 0.5204,
+      "opaqueCoreRatio": 0.4705,
+      "semiTransparentRatio": 0.013,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.5194,
-        "y": 0.519
+        "x": 0.475,
+        "y": 0.479
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -3645,18 +3645,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/mummy.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 726,
-      "height": 930,
+      "width": 709,
+      "height": 928,
       "minX": 12,
       "minY": 12,
-      "maxX": 713,
-      "maxY": 917,
-      "contentWidthRatio": 0.9669,
-      "contentHeightRatio": 0.9742,
+      "maxX": 696,
+      "maxY": 915,
+      "contentWidthRatio": 0.9661,
+      "contentHeightRatio": 0.9741,
       "topPadRatio": 0.0129,
       "bottomPadRatio": 0.0129,
-      "leftPadRatio": 0.0165,
-      "rightPadRatio": 0.0165
+      "leftPadRatio": 0.0169,
+      "rightPadRatio": 0.0169
     },
     "cardContentBounds": {
       "width": 1024,
@@ -3673,18 +3673,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 726,
-      "height": 930,
+      "width": 709,
+      "height": 928,
       "minX": 12,
       "minY": 12,
-      "maxX": 713,
-      "maxY": 917,
-      "contentWidthRatio": 0.9669,
-      "contentHeightRatio": 0.9742,
+      "maxX": 696,
+      "maxY": 915,
+      "contentWidthRatio": 0.9661,
+      "contentHeightRatio": 0.9741,
       "topPadRatio": 0.0129,
       "bottomPadRatio": 0.0129,
-      "leftPadRatio": 0.0165,
-      "rightPadRatio": 0.0165
+      "leftPadRatio": 0.0169,
+      "rightPadRatio": 0.0169
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -3698,16 +3698,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 1,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 726,
-      "height": 930,
+      "width": 709,
+      "height": 928,
       "colorType": 6,
-      "transparentPixelRatio": 0.6478,
-      "opaqueCoreRatio": 0.2869,
-      "semiTransparentRatio": 0.0873,
+      "transparentPixelRatio": 0.6788,
+      "opaqueCoreRatio": 0.3111,
+      "semiTransparentRatio": 0.0138,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.4651,
-        "y": 0.4645
+        "x": 0.4551,
+        "y": 0.4263
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -3746,18 +3746,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/ochre_jelly.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 956,
-      "height": 803,
+      "width": 928,
+      "height": 714,
       "minX": 12,
       "minY": 12,
-      "maxX": 943,
-      "maxY": 790,
-      "contentWidthRatio": 0.9749,
-      "contentHeightRatio": 0.9701,
-      "topPadRatio": 0.0149,
-      "bottomPadRatio": 0.0149,
-      "leftPadRatio": 0.0126,
-      "rightPadRatio": 0.0126
+      "maxX": 915,
+      "maxY": 701,
+      "contentWidthRatio": 0.9741,
+      "contentHeightRatio": 0.9664,
+      "topPadRatio": 0.0168,
+      "bottomPadRatio": 0.0168,
+      "leftPadRatio": 0.0129,
+      "rightPadRatio": 0.0129
     },
     "cardContentBounds": {
       "width": 1024,
@@ -3774,18 +3774,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 956,
-      "height": 803,
+      "width": 928,
+      "height": 714,
       "minX": 12,
       "minY": 12,
-      "maxX": 943,
-      "maxY": 790,
-      "contentWidthRatio": 0.9749,
-      "contentHeightRatio": 0.9701,
-      "topPadRatio": 0.0149,
-      "bottomPadRatio": 0.0149,
-      "leftPadRatio": 0.0126,
-      "rightPadRatio": 0.0126
+      "maxX": 915,
+      "maxY": 701,
+      "contentWidthRatio": 0.9741,
+      "contentHeightRatio": 0.9664,
+      "topPadRatio": 0.0168,
+      "bottomPadRatio": 0.0168,
+      "leftPadRatio": 0.0129,
+      "rightPadRatio": 0.0129
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -3799,16 +3799,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 0.844,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 956,
-      "height": 803,
+      "width": 928,
+      "height": 714,
       "colorType": 6,
-      "transparentPixelRatio": 0.3602,
-      "opaqueCoreRatio": 0.5497,
-      "semiTransparentRatio": 0.1202,
+      "transparentPixelRatio": 0.5367,
+      "opaqueCoreRatio": 0.4534,
+      "semiTransparentRatio": 0.0146,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.4855,
-        "y": 0.6086
+        "x": 0.5097,
+        "y": 0.5191
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -3847,18 +3847,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/winter_wolf.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 844,
-      "height": 791,
+      "width": 831,
+      "height": 776,
       "minX": 12,
       "minY": 12,
-      "maxX": 831,
-      "maxY": 778,
-      "contentWidthRatio": 0.9716,
-      "contentHeightRatio": 0.9697,
-      "topPadRatio": 0.0152,
-      "bottomPadRatio": 0.0152,
-      "leftPadRatio": 0.0142,
-      "rightPadRatio": 0.0142
+      "maxX": 818,
+      "maxY": 763,
+      "contentWidthRatio": 0.9711,
+      "contentHeightRatio": 0.9691,
+      "topPadRatio": 0.0155,
+      "bottomPadRatio": 0.0155,
+      "leftPadRatio": 0.0144,
+      "rightPadRatio": 0.0144
     },
     "cardContentBounds": {
       "width": 1024,
@@ -3875,18 +3875,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 844,
-      "height": 791,
+      "width": 831,
+      "height": 776,
       "minX": 12,
       "minY": 12,
-      "maxX": 831,
-      "maxY": 778,
-      "contentWidthRatio": 0.9716,
-      "contentHeightRatio": 0.9697,
-      "topPadRatio": 0.0152,
-      "bottomPadRatio": 0.0152,
-      "leftPadRatio": 0.0142,
-      "rightPadRatio": 0.0142
+      "maxX": 818,
+      "maxY": 763,
+      "contentWidthRatio": 0.9711,
+      "contentHeightRatio": 0.9691,
+      "topPadRatio": 0.0155,
+      "bottomPadRatio": 0.0155,
+      "leftPadRatio": 0.0144,
+      "rightPadRatio": 0.0144
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -3900,16 +3900,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 1.09,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 844,
-      "height": 791,
+      "width": 831,
+      "height": 776,
       "colorType": 6,
-      "transparentPixelRatio": 0.4924,
-      "opaqueCoreRatio": 0.4193,
-      "semiTransparentRatio": 0.1257,
+      "transparentPixelRatio": 0.51,
+      "opaqueCoreRatio": 0.483,
+      "semiTransparentRatio": 0.0099,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.5779,
-        "y": 0.4199
+        "x": 0.5443,
+        "y": 0.4258
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -3948,18 +3948,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/stirge.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 688,
-      "height": 807,
+      "width": 753,
+      "height": 746,
       "minX": 12,
       "minY": 12,
-      "maxX": 675,
-      "maxY": 794,
-      "contentWidthRatio": 0.9651,
-      "contentHeightRatio": 0.9703,
-      "topPadRatio": 0.0149,
-      "bottomPadRatio": 0.0149,
-      "leftPadRatio": 0.0174,
-      "rightPadRatio": 0.0174
+      "maxX": 740,
+      "maxY": 733,
+      "contentWidthRatio": 0.9681,
+      "contentHeightRatio": 0.9678,
+      "topPadRatio": 0.0161,
+      "bottomPadRatio": 0.0161,
+      "leftPadRatio": 0.0159,
+      "rightPadRatio": 0.0159
     },
     "cardContentBounds": {
       "width": 1024,
@@ -3976,18 +3976,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 688,
-      "height": 807,
+      "width": 753,
+      "height": 746,
       "minX": 12,
       "minY": 12,
-      "maxX": 675,
-      "maxY": 794,
-      "contentWidthRatio": 0.9651,
-      "contentHeightRatio": 0.9703,
-      "topPadRatio": 0.0149,
-      "bottomPadRatio": 0.0149,
-      "leftPadRatio": 0.0174,
-      "rightPadRatio": 0.0174
+      "maxX": 740,
+      "maxY": 733,
+      "contentWidthRatio": 0.9681,
+      "contentHeightRatio": 0.9678,
+      "topPadRatio": 0.0161,
+      "bottomPadRatio": 0.0161,
+      "leftPadRatio": 0.0159,
+      "rightPadRatio": 0.0159
     },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
@@ -4001,16 +4001,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 0.428,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 688,
-      "height": 807,
+      "width": 753,
+      "height": 746,
       "colorType": 6,
-      "transparentPixelRatio": 0.6929,
-      "opaqueCoreRatio": 0.2235,
-      "semiTransparentRatio": 0.1144,
+      "transparentPixelRatio": 0.7095,
+      "opaqueCoreRatio": 0.2814,
+      "semiTransparentRatio": 0.0131,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.4967,
-        "y": 0.4343
+        "x": 0.492,
+        "y": 0.4213
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -4049,18 +4049,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/dire_rat.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 842,
-      "height": 658,
+      "width": 856,
+      "height": 722,
       "minX": 12,
       "minY": 12,
-      "maxX": 829,
-      "maxY": 645,
-      "contentWidthRatio": 0.9715,
-      "contentHeightRatio": 0.9635,
-      "topPadRatio": 0.0182,
-      "bottomPadRatio": 0.0182,
-      "leftPadRatio": 0.0143,
-      "rightPadRatio": 0.0143
+      "maxX": 843,
+      "maxY": 709,
+      "contentWidthRatio": 0.972,
+      "contentHeightRatio": 0.9668,
+      "topPadRatio": 0.0166,
+      "bottomPadRatio": 0.0166,
+      "leftPadRatio": 0.014,
+      "rightPadRatio": 0.014
     },
     "cardContentBounds": {
       "width": 1024,
@@ -4077,18 +4077,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 842,
-      "height": 658,
+      "width": 856,
+      "height": 722,
       "minX": 12,
       "minY": 12,
-      "maxX": 829,
-      "maxY": 645,
-      "contentWidthRatio": 0.9715,
-      "contentHeightRatio": 0.9635,
-      "topPadRatio": 0.0182,
-      "bottomPadRatio": 0.0182,
-      "leftPadRatio": 0.0143,
-      "rightPadRatio": 0.0143
+      "maxX": 843,
+      "maxY": 709,
+      "contentWidthRatio": 0.972,
+      "contentHeightRatio": 0.9668,
+      "topPadRatio": 0.0166,
+      "bottomPadRatio": 0.0166,
+      "leftPadRatio": 0.014,
+      "rightPadRatio": 0.014
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -4102,16 +4102,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 0.479,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 842,
-      "height": 658,
+      "width": 856,
+      "height": 722,
       "colorType": 6,
-      "transparentPixelRatio": 0.4688,
-      "opaqueCoreRatio": 0.4589,
-      "semiTransparentRatio": 0.0937,
+      "transparentPixelRatio": 0.5801,
+      "opaqueCoreRatio": 0.4124,
+      "semiTransparentRatio": 0.0109,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.4896,
-        "y": 0.4564
+        "x": 0.4695,
+        "y": 0.4093
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -4150,18 +4150,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/viper.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 807,
-      "height": 857,
+      "width": 850,
+      "height": 851,
       "minX": 12,
       "minY": 12,
-      "maxX": 794,
-      "maxY": 844,
-      "contentWidthRatio": 0.9703,
-      "contentHeightRatio": 0.972,
-      "topPadRatio": 0.014,
-      "bottomPadRatio": 0.014,
-      "leftPadRatio": 0.0149,
-      "rightPadRatio": 0.0149
+      "maxX": 837,
+      "maxY": 838,
+      "contentWidthRatio": 0.9718,
+      "contentHeightRatio": 0.9718,
+      "topPadRatio": 0.0141,
+      "bottomPadRatio": 0.0141,
+      "leftPadRatio": 0.0141,
+      "rightPadRatio": 0.0141
     },
     "cardContentBounds": {
       "width": 1024,
@@ -4178,18 +4178,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 807,
-      "height": 857,
+      "width": 850,
+      "height": 851,
       "minX": 12,
       "minY": 12,
-      "maxX": 794,
-      "maxY": 844,
-      "contentWidthRatio": 0.9703,
-      "contentHeightRatio": 0.972,
-      "topPadRatio": 0.014,
-      "bottomPadRatio": 0.014,
-      "leftPadRatio": 0.0149,
-      "rightPadRatio": 0.0149
+      "maxX": 837,
+      "maxY": 838,
+      "contentWidthRatio": 0.9718,
+      "contentHeightRatio": 0.9718,
+      "topPadRatio": 0.0141,
+      "bottomPadRatio": 0.0141,
+      "leftPadRatio": 0.0141,
+      "rightPadRatio": 0.0141
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -4203,16 +4203,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 0.352,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 807,
-      "height": 857,
+      "width": 850,
+      "height": 851,
       "colorType": 6,
-      "transparentPixelRatio": 0.4895,
-      "opaqueCoreRatio": 0.448,
-      "semiTransparentRatio": 0.1379,
+      "transparentPixelRatio": 0.455,
+      "opaqueCoreRatio": 0.5395,
+      "semiTransparentRatio": 0.0077,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.5269,
-        "y": 0.588
+        "x": 0.5173,
+        "y": 0.5663
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -4692,18 +4692,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/orc.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 666,
-      "height": 906,
+      "width": 684,
+      "height": 904,
       "minX": 12,
       "minY": 12,
-      "maxX": 653,
-      "maxY": 893,
-      "contentWidthRatio": 0.964,
+      "maxX": 671,
+      "maxY": 891,
+      "contentWidthRatio": 0.9649,
       "contentHeightRatio": 0.9735,
-      "topPadRatio": 0.0132,
-      "bottomPadRatio": 0.0132,
-      "leftPadRatio": 0.018,
-      "rightPadRatio": 0.018
+      "topPadRatio": 0.0133,
+      "bottomPadRatio": 0.0133,
+      "leftPadRatio": 0.0175,
+      "rightPadRatio": 0.0175
     },
     "cardContentBounds": {
       "width": 1024,
@@ -4720,18 +4720,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 666,
-      "height": 906,
+      "width": 684,
+      "height": 904,
       "minX": 12,
       "minY": 12,
-      "maxX": 653,
-      "maxY": 893,
-      "contentWidthRatio": 0.964,
+      "maxX": 671,
+      "maxY": 891,
+      "contentWidthRatio": 0.9649,
       "contentHeightRatio": 0.9735,
-      "topPadRatio": 0.0132,
-      "bottomPadRatio": 0.0132,
-      "leftPadRatio": 0.018,
-      "rightPadRatio": 0.018
+      "topPadRatio": 0.0133,
+      "bottomPadRatio": 0.0133,
+      "leftPadRatio": 0.0175,
+      "rightPadRatio": 0.0175
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -4745,16 +4745,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 1.091,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 666,
-      "height": 906,
+      "width": 684,
+      "height": 904,
       "colorType": 6,
-      "transparentPixelRatio": 0.3322,
-      "opaqueCoreRatio": 0.5763,
-      "semiTransparentRatio": 0.1303,
+      "transparentPixelRatio": 0.4233,
+      "opaqueCoreRatio": 0.5704,
+      "semiTransparentRatio": 0.0087,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.4945,
-        "y": 0.4791
+        "x": 0.4784,
+        "y": 0.4852
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -4861,18 +4861,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/harpy.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 832,
-      "height": 894,
+      "width": 842,
+      "height": 930,
       "minX": 12,
       "minY": 12,
-      "maxX": 819,
-      "maxY": 881,
-      "contentWidthRatio": 0.9712,
-      "contentHeightRatio": 0.9732,
-      "topPadRatio": 0.0134,
-      "bottomPadRatio": 0.0134,
-      "leftPadRatio": 0.0144,
-      "rightPadRatio": 0.0144
+      "maxX": 829,
+      "maxY": 917,
+      "contentWidthRatio": 0.9715,
+      "contentHeightRatio": 0.9742,
+      "topPadRatio": 0.0129,
+      "bottomPadRatio": 0.0129,
+      "leftPadRatio": 0.0143,
+      "rightPadRatio": 0.0143
     },
     "cardContentBounds": {
       "width": 1024,
@@ -4889,18 +4889,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 832,
-      "height": 894,
+      "width": 842,
+      "height": 930,
       "minX": 12,
       "minY": 12,
-      "maxX": 819,
-      "maxY": 881,
-      "contentWidthRatio": 0.9712,
-      "contentHeightRatio": 0.9732,
-      "topPadRatio": 0.0134,
-      "bottomPadRatio": 0.0134,
-      "leftPadRatio": 0.0144,
-      "rightPadRatio": 0.0144
+      "maxX": 829,
+      "maxY": 917,
+      "contentWidthRatio": 0.9715,
+      "contentHeightRatio": 0.9742,
+      "topPadRatio": 0.0129,
+      "bottomPadRatio": 0.0129,
+      "leftPadRatio": 0.0143,
+      "rightPadRatio": 0.0143
     },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
@@ -4914,16 +4914,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 0.941,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 832,
-      "height": 894,
+      "width": 842,
+      "height": 930,
       "colorType": 6,
-      "transparentPixelRatio": 0.4013,
-      "opaqueCoreRatio": 0.4994,
-      "semiTransparentRatio": 0.1582,
+      "transparentPixelRatio": 0.5744,
+      "opaqueCoreRatio": 0.4162,
+      "semiTransparentRatio": 0.0136,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.5372,
-        "y": 0.4767
+        "x": 0.5308,
+        "y": 0.4084
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -5030,18 +5030,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/griffon.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 812,
-      "height": 870,
+      "width": 825,
+      "height": 824,
       "minX": 12,
       "minY": 12,
-      "maxX": 799,
-      "maxY": 857,
-      "contentWidthRatio": 0.9704,
-      "contentHeightRatio": 0.9724,
-      "topPadRatio": 0.0138,
-      "bottomPadRatio": 0.0138,
-      "leftPadRatio": 0.0148,
-      "rightPadRatio": 0.0148
+      "maxX": 812,
+      "maxY": 811,
+      "contentWidthRatio": 0.9709,
+      "contentHeightRatio": 0.9709,
+      "topPadRatio": 0.0146,
+      "bottomPadRatio": 0.0146,
+      "leftPadRatio": 0.0145,
+      "rightPadRatio": 0.0145
     },
     "cardContentBounds": {
       "width": 1024,
@@ -5058,18 +5058,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 812,
-      "height": 870,
+      "width": 825,
+      "height": 824,
       "minX": 12,
       "minY": 12,
-      "maxX": 799,
-      "maxY": 857,
-      "contentWidthRatio": 0.9704,
-      "contentHeightRatio": 0.9724,
-      "topPadRatio": 0.0138,
-      "bottomPadRatio": 0.0138,
-      "leftPadRatio": 0.0148,
-      "rightPadRatio": 0.0148
+      "maxX": 812,
+      "maxY": 811,
+      "contentWidthRatio": 0.9709,
+      "contentHeightRatio": 0.9709,
+      "topPadRatio": 0.0146,
+      "bottomPadRatio": 0.0146,
+      "leftPadRatio": 0.0145,
+      "rightPadRatio": 0.0145
     },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
@@ -5083,16 +5083,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 1.267,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 812,
-      "height": 870,
+      "width": 825,
+      "height": 824,
       "colorType": 6,
-      "transparentPixelRatio": 0.339,
-      "opaqueCoreRatio": 0.5568,
-      "semiTransparentRatio": 0.1438,
+      "transparentPixelRatio": 0.5027,
+      "opaqueCoreRatio": 0.4886,
+      "semiTransparentRatio": 0.012,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.4985,
-        "y": 0.4994
+        "x": 0.4551,
+        "y": 0.4579
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -5131,18 +5131,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/giant_scorpion.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 842,
-      "height": 895,
+      "width": 881,
+      "height": 837,
       "minX": 12,
       "minY": 12,
-      "maxX": 829,
-      "maxY": 882,
-      "contentWidthRatio": 0.9715,
-      "contentHeightRatio": 0.9732,
-      "topPadRatio": 0.0134,
-      "bottomPadRatio": 0.0134,
-      "leftPadRatio": 0.0143,
-      "rightPadRatio": 0.0143
+      "maxX": 868,
+      "maxY": 824,
+      "contentWidthRatio": 0.9728,
+      "contentHeightRatio": 0.9713,
+      "topPadRatio": 0.0143,
+      "bottomPadRatio": 0.0143,
+      "leftPadRatio": 0.0136,
+      "rightPadRatio": 0.0136
     },
     "cardContentBounds": {
       "width": 1024,
@@ -5159,18 +5159,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 842,
-      "height": 895,
+      "width": 881,
+      "height": 837,
       "minX": 12,
       "minY": 12,
-      "maxX": 829,
-      "maxY": 882,
-      "contentWidthRatio": 0.9715,
-      "contentHeightRatio": 0.9732,
-      "topPadRatio": 0.0134,
-      "bottomPadRatio": 0.0134,
-      "leftPadRatio": 0.0143,
-      "rightPadRatio": 0.0143
+      "maxX": 868,
+      "maxY": 824,
+      "contentWidthRatio": 0.9728,
+      "contentHeightRatio": 0.9713,
+      "topPadRatio": 0.0143,
+      "bottomPadRatio": 0.0143,
+      "leftPadRatio": 0.0136,
+      "rightPadRatio": 0.0136
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -5184,16 +5184,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 1.035,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 842,
-      "height": 895,
+      "width": 881,
+      "height": 837,
       "colorType": 6,
-      "transparentPixelRatio": 0.3214,
-      "opaqueCoreRatio": 0.6283,
-      "semiTransparentRatio": 0.0647,
+      "transparentPixelRatio": 0.7072,
+      "opaqueCoreRatio": 0.2835,
+      "semiTransparentRatio": 0.0133,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.5013,
-        "y": 0.5996
+        "x": 0.5289,
+        "y": 0.5041
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -5368,18 +5368,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/wraith.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 752,
-      "height": 905,
+      "width": 723,
+      "height": 972,
       "minX": 12,
       "minY": 12,
-      "maxX": 739,
-      "maxY": 892,
-      "contentWidthRatio": 0.9681,
-      "contentHeightRatio": 0.9735,
-      "topPadRatio": 0.0133,
-      "bottomPadRatio": 0.0133,
-      "leftPadRatio": 0.016,
-      "rightPadRatio": 0.016
+      "maxX": 710,
+      "maxY": 969,
+      "contentWidthRatio": 0.9668,
+      "contentHeightRatio": 0.9856,
+      "topPadRatio": 0.0123,
+      "bottomPadRatio": 0.0021,
+      "leftPadRatio": 0.0166,
+      "rightPadRatio": 0.0166
     },
     "cardContentBounds": {
       "width": 1024,
@@ -5396,18 +5396,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 752,
-      "height": 905,
+      "width": 723,
+      "height": 972,
       "minX": 12,
       "minY": 12,
-      "maxX": 739,
-      "maxY": 892,
-      "contentWidthRatio": 0.9681,
-      "contentHeightRatio": 0.9735,
-      "topPadRatio": 0.0133,
-      "bottomPadRatio": 0.0133,
-      "leftPadRatio": 0.016,
-      "rightPadRatio": 0.016
+      "maxX": 710,
+      "maxY": 969,
+      "contentWidthRatio": 0.9668,
+      "contentHeightRatio": 0.9856,
+      "topPadRatio": 0.0123,
+      "bottomPadRatio": 0.0021,
+      "leftPadRatio": 0.0166,
+      "rightPadRatio": 0.0166
     },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
@@ -5421,16 +5421,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 1.04,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 752,
-      "height": 905,
+      "width": 723,
+      "height": 972,
       "colorType": 6,
-      "transparentPixelRatio": 0.2297,
-      "opaqueCoreRatio": 0.7151,
-      "semiTransparentRatio": 0.0704,
+      "transparentPixelRatio": 0.5828,
+      "opaqueCoreRatio": 0.4028,
+      "semiTransparentRatio": 0.0206,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.4994,
-        "y": 0.5167
+        "x": 0.4695,
+        "y": 0.4861
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -6421,18 +6421,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/blood_hawk.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 750,
-      "height": 749,
+      "width": 877,
+      "height": 834,
       "minX": 12,
       "minY": 12,
-      "maxX": 737,
-      "maxY": 736,
-      "contentWidthRatio": 0.968,
-      "contentHeightRatio": 0.968,
-      "topPadRatio": 0.016,
-      "bottomPadRatio": 0.016,
-      "leftPadRatio": 0.016,
-      "rightPadRatio": 0.016
+      "maxX": 864,
+      "maxY": 821,
+      "contentWidthRatio": 0.9726,
+      "contentHeightRatio": 0.9712,
+      "topPadRatio": 0.0144,
+      "bottomPadRatio": 0.0144,
+      "leftPadRatio": 0.0137,
+      "rightPadRatio": 0.0137
     },
     "cardContentBounds": {
       "width": 1024,
@@ -6449,18 +6449,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 750,
-      "height": 749,
+      "width": 877,
+      "height": 834,
       "minX": 12,
       "minY": 12,
-      "maxX": 737,
-      "maxY": 736,
-      "contentWidthRatio": 0.968,
-      "contentHeightRatio": 0.968,
-      "topPadRatio": 0.016,
-      "bottomPadRatio": 0.016,
-      "leftPadRatio": 0.016,
-      "rightPadRatio": 0.016
+      "maxX": 864,
+      "maxY": 821,
+      "contentWidthRatio": 0.9726,
+      "contentHeightRatio": 0.9712,
+      "topPadRatio": 0.0144,
+      "bottomPadRatio": 0.0144,
+      "leftPadRatio": 0.0137,
+      "rightPadRatio": 0.0137
     },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
@@ -6474,16 +6474,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 0.48,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 750,
-      "height": 749,
+      "width": 877,
+      "height": 834,
       "colorType": 6,
-      "transparentPixelRatio": 0.6155,
-      "opaqueCoreRatio": 0.3104,
-      "semiTransparentRatio": 0.1158,
+      "transparentPixelRatio": 0.593,
+      "opaqueCoreRatio": 0.3981,
+      "semiTransparentRatio": 0.0124,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.5377,
-        "y": 0.4154
+        "x": 0.5294,
+        "y": 0.4476
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -7270,18 +7270,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/will_o_wisp.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 603,
-      "height": 606,
-      "minX": 12,
-      "minY": 12,
-      "maxX": 590,
-      "maxY": 593,
-      "contentWidthRatio": 0.9602,
-      "contentHeightRatio": 0.9604,
-      "topPadRatio": 0.0198,
-      "bottomPadRatio": 0.0198,
+      "width": 654,
+      "height": 619,
+      "minX": 13,
+      "minY": 15,
+      "maxX": 636,
+      "maxY": 605,
+      "contentWidthRatio": 0.9541,
+      "contentHeightRatio": 0.9548,
+      "topPadRatio": 0.0242,
+      "bottomPadRatio": 0.021,
       "leftPadRatio": 0.0199,
-      "rightPadRatio": 0.0199
+      "rightPadRatio": 0.026
     },
     "cardContentBounds": {
       "width": 1024,
@@ -7298,18 +7298,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 603,
-      "height": 606,
-      "minX": 12,
-      "minY": 12,
-      "maxX": 590,
-      "maxY": 593,
-      "contentWidthRatio": 0.9602,
-      "contentHeightRatio": 0.9604,
-      "topPadRatio": 0.0198,
-      "bottomPadRatio": 0.0198,
+      "width": 654,
+      "height": 619,
+      "minX": 13,
+      "minY": 15,
+      "maxX": 636,
+      "maxY": 605,
+      "contentWidthRatio": 0.9541,
+      "contentHeightRatio": 0.9548,
+      "topPadRatio": 0.0242,
+      "bottomPadRatio": 0.021,
       "leftPadRatio": 0.0199,
-      "rightPadRatio": 0.0199
+      "rightPadRatio": 0.026
     },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
@@ -7323,16 +7323,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 0.452,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 603,
-      "height": 606,
+      "width": 654,
+      "height": 619,
       "colorType": 6,
-      "transparentPixelRatio": 0.2817,
-      "opaqueCoreRatio": 0.5471,
-      "semiTransparentRatio": 0.2059,
+      "transparentPixelRatio": 0.4153,
+      "opaqueCoreRatio": 0.4148,
+      "semiTransparentRatio": 0.218,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.5052,
-        "y": 0.5084
+        "x": 0.4509,
+        "y": 0.5561
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -7983,18 +7983,18 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutImagePath": "/lab-assets/images/monsters-cutout/wyvern.png",
     "hasCutout": true,
     "imageContentBounds": {
-      "width": 944,
-      "height": 953,
+      "width": 905,
+      "height": 934,
       "minX": 12,
       "minY": 12,
-      "maxX": 931,
-      "maxY": 940,
-      "contentWidthRatio": 0.9746,
-      "contentHeightRatio": 0.9748,
-      "topPadRatio": 0.0126,
-      "bottomPadRatio": 0.0126,
-      "leftPadRatio": 0.0127,
-      "rightPadRatio": 0.0127
+      "maxX": 892,
+      "maxY": 921,
+      "contentWidthRatio": 0.9735,
+      "contentHeightRatio": 0.9743,
+      "topPadRatio": 0.0128,
+      "bottomPadRatio": 0.0128,
+      "leftPadRatio": 0.0133,
+      "rightPadRatio": 0.0133
     },
     "cardContentBounds": {
       "width": 1024,
@@ -8011,18 +8011,18 @@ const MONSTER_SIZE_CATALOG = [
       "rightPadRatio": 0.027
     },
     "cutoutContentBounds": {
-      "width": 944,
-      "height": 953,
+      "width": 905,
+      "height": 934,
       "minX": 12,
       "minY": 12,
-      "maxX": 931,
-      "maxY": 940,
-      "contentWidthRatio": 0.9746,
-      "contentHeightRatio": 0.9748,
-      "topPadRatio": 0.0126,
-      "bottomPadRatio": 0.0126,
-      "leftPadRatio": 0.0127,
-      "rightPadRatio": 0.0127
+      "maxX": 892,
+      "maxY": 921,
+      "contentWidthRatio": 0.9735,
+      "contentHeightRatio": 0.9743,
+      "topPadRatio": 0.0128,
+      "bottomPadRatio": 0.0128,
+      "leftPadRatio": 0.0133,
+      "rightPadRatio": 0.0133
     },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
@@ -8036,16 +8036,16 @@ const MONSTER_SIZE_CATALOG = [
     "proposedScaleFactor": 1.369,
     "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
     "cutoutValidationMetrics": {
-      "width": 944,
-      "height": 953,
+      "width": 905,
+      "height": 934,
       "colorType": 6,
-      "transparentPixelRatio": 0.5343,
-      "opaqueCoreRatio": 0.4117,
-      "semiTransparentRatio": 0.0698,
+      "transparentPixelRatio": 0.5901,
+      "opaqueCoreRatio": 0.4007,
+      "semiTransparentRatio": 0.013,
       "borderTransparencyRatio": 1,
       "centerOfMass": {
-        "x": 0.4981,
-        "y": 0.4502
+        "x": 0.4731,
+        "y": 0.4311
       },
       "checks": {
         "isTrueRgbaPng": true,
@@ -8410,6 +8410,8 @@ const PF1E_SIZE_REFERENCE_SPECIMENS = [
     id: 99001,
     isReferenceSpecimen: true,
     name: 'Spore Mite (Fine PF1e Reference)',
+    isDemoProxy: true,
+    proxyArtworkSource: 'Giant Spider',
     slug: 'ref_fine_spore_mite',
     symbol: 'f',
     color: '#a3e635',
@@ -8427,9 +8429,9 @@ const PF1E_SIZE_REFERENCE_SPECIMENS = [
     imagePath: '/images/monsters/giant_spider.png',
     cutoutImagePath: '/lab-assets/images/monsters-cutout/giant_spider.png',
     hasCutout: true,
-    imageContentBounds: {"width":860,"height":570,"minX":3,"minY":4,"maxX":856,"maxY":564,"contentWidthRatio":0.993,"contentHeightRatio":0.984,"topPadRatio":0.007,"bottomPadRatio":0.009,"leftPadRatio":0.003,"rightPadRatio":0.003},
+    imageContentBounds: {"width":860,"height":570,"minX":3,"minY":4,"maxX":856,"maxY":565,"contentWidthRatio":0.993,"contentHeightRatio":0.986,"topPadRatio":0.007,"bottomPadRatio":0.007,"leftPadRatio":0.0035,"rightPadRatio":0.0035},
     cardContentBounds: {"width":1024,"height":1024,"minX":24,"minY":24,"maxX":996,"maxY":996,"contentWidthRatio":0.949,"contentHeightRatio":0.949,"topPadRatio":0.023,"bottomPadRatio":0.027,"leftPadRatio":0.023,"rightPadRatio":0.027},
-    cutoutContentBounds: {"width":860,"height":570,"minX":3,"minY":4,"maxX":856,"maxY":564,"contentWidthRatio":0.993,"contentHeightRatio":0.984,"topPadRatio":0.007,"bottomPadRatio":0.009,"leftPadRatio":0.003,"rightPadRatio":0.003},
+    cutoutContentBounds: {"width":860,"height":570,"minX":3,"minY":4,"maxX":856,"maxY":565,"contentWidthRatio":0.993,"contentHeightRatio":0.986,"topPadRatio":0.007,"bottomPadRatio":0.007,"leftPadRatio":0.0035,"rightPadRatio":0.0035},
     proposedScaleFactor: 0.24,
     positioningMode: 'GROUNDED',
     isAirborne: false,
@@ -8441,6 +8443,8 @@ const PF1E_SIZE_REFERENCE_SPECIMENS = [
     id: 99002,
     isReferenceSpecimen: true,
     name: 'Cave Toad (Diminutive PF1e Reference)',
+    isDemoProxy: true,
+    proxyArtworkSource: 'Giant Crab',
     slug: 'ref_diminutive_toad',
     symbol: 'd',
     color: '#84cc16',
@@ -8453,25 +8457,27 @@ const PF1E_SIZE_REFERENCE_SPECIMENS = [
     pfSizeLabel: 'Diminutive',
     pfSpaceFt: 1.0,
     visualBodyProfile: 'REPTILIAN_TINY_LOW',
-    visualBodyProfileLabel: 'Diminutive Amphibian (6–12 in.)',
+    visualBodyProfileLabel: 'Diminutive Crustacean / Amphibian (6–12 in.)',
     bodyProportions: { approxHeightFt: 0.6, approxLengthFt: 0.8, approxWeightLbs: 0.5, statureMultiplier: 0.95 },
-    imagePath: '/images/monsters/giant_frog.png',
-    cutoutImagePath: null,
-    hasCutout: false,
-    imageContentBounds: {"width":1024,"height":1024,"minX":24,"minY":116,"maxX":996,"maxY":996,"contentWidthRatio":0.949,"contentHeightRatio":0.859,"topPadRatio":0.113,"bottomPadRatio":0.027,"leftPadRatio":0.023,"rightPadRatio":0.027},
+    imagePath: '/images/monsters/giant_crab.png',
+    cutoutImagePath: '/lab-assets/images/monsters-cutout/giant_crab.png',
+    hasCutout: true,
+    imageContentBounds: {"width":880,"height":837,"minX":12,"minY":12,"maxX":867,"maxY":824,"contentWidthRatio":0.9727,"contentHeightRatio":0.9713,"topPadRatio":0.0143,"bottomPadRatio":0.0143,"leftPadRatio":0.0136,"rightPadRatio":0.0136},
     cardContentBounds: {"width":1024,"height":1024,"minX":24,"minY":116,"maxX":996,"maxY":996,"contentWidthRatio":0.949,"contentHeightRatio":0.859,"topPadRatio":0.113,"bottomPadRatio":0.027,"leftPadRatio":0.023,"rightPadRatio":0.027},
-    cutoutContentBounds: null,
+    cutoutContentBounds: {"width":880,"height":837,"minX":12,"minY":12,"maxX":867,"maxY":824,"contentWidthRatio":0.9727,"contentHeightRatio":0.9713,"topPadRatio":0.0143,"bottomPadRatio":0.0143,"leftPadRatio":0.0136,"rightPadRatio":0.0136},
     proposedScaleFactor: 0.34,
     positioningMode: 'GROUNDED',
     isAirborne: false,
     verificationStatus: 'REFERENCE_PF1E_TIER',
     manualOverrideFlag: null,
-    auditNotes: 'Official Pathfinder 1e Toad is Diminutive Animal (1-ft space).'
+    auditNotes: 'Official Pathfinder 1e Diminutive reference (1-ft space) using verified RGBA cutout.'
   },
   {
     id: 99007,
     isReferenceSpecimen: true,
     name: 'Ancient Treant / Giant Troll (Huge PF1e Reference)',
+    isDemoProxy: true,
+    proxyArtworkSource: 'Ogre',
     slug: 'ref_huge_elder_troll',
     symbol: 'H',
     color: '#ef4444',
@@ -8485,24 +8491,26 @@ const PF1E_SIZE_REFERENCE_SPECIMENS = [
     pfSpaceFt: 15.0,
     visualBodyProfile: 'BEHEMOTH_HUGE_COLOSSAL',
     visualBodyProfileLabel: 'Huge Towering Behemoth (16–32 ft.)',
-    bodyProportions: { approxHeightFt: 24.0, approxLengthFt: 12.0, approxWeightLbs: 9000, statureMultiplier: 1.02 },
-    imagePath: '/images/monsters/troll.png',
-    cutoutImagePath: '/lab-assets/images/monsters-cutout/troll.png',
+    bodyProportions: { approxHeightFt: 24.0, approxLengthFt: 12.0, approxWeightLbs: 9000, statureMultiplier: 1.04 },
+    imagePath: '/images/monsters/ogre.png',
+    cutoutImagePath: '/lab-assets/images/monsters-cutout/ogre.png',
     hasCutout: true,
-    imageContentBounds: {"width":643,"height":860,"minX":3,"minY":3,"maxX":639,"maxY":856,"contentWidthRatio":0.991,"contentHeightRatio":0.993,"topPadRatio":0.003,"bottomPadRatio":0.003,"leftPadRatio":0.005,"rightPadRatio":0.005},
+    imageContentBounds: {"width":854,"height":983,"minX":12,"minY":12,"maxX":841,"maxY":970,"contentWidthRatio":0.9719,"contentHeightRatio":0.9756,"topPadRatio":0.0122,"bottomPadRatio":0.0122,"leftPadRatio":0.0141,"rightPadRatio":0.0141},
     cardContentBounds: {"width":1024,"height":1024,"minX":24,"minY":32,"maxX":996,"maxY":996,"contentWidthRatio":0.949,"contentHeightRatio":0.941,"topPadRatio":0.031,"bottomPadRatio":0.027,"leftPadRatio":0.023,"rightPadRatio":0.027},
-    cutoutContentBounds: {"width":643,"height":860,"minX":3,"minY":3,"maxX":639,"maxY":856,"contentWidthRatio":0.991,"contentHeightRatio":0.993,"topPadRatio":0.003,"bottomPadRatio":0.003,"leftPadRatio":0.005,"rightPadRatio":0.005},
+    cutoutContentBounds: {"width":854,"height":983,"minX":12,"minY":12,"maxX":841,"maxY":970,"contentWidthRatio":0.9719,"contentHeightRatio":0.9756,"topPadRatio":0.0122,"bottomPadRatio":0.0122,"leftPadRatio":0.0141,"rightPadRatio":0.0141},
     proposedScaleFactor: 1.78,
     positioningMode: 'GROUNDED',
     isAirborne: false,
     verificationStatus: 'REFERENCE_PF1E_TIER',
     manualOverrideFlag: 'UI_SAFE_CLAMP_CANDIDATE',
-    auditNotes: 'Pathfinder 1e Huge size showcase (16–32 ft tall, 15-ft space). Since the 98 DB rows top out at Large, this specimen demonstrates Huge scaling and UI clamping.'
+    auditNotes: 'Pathfinder 1e Huge size showcase (16–32 ft tall, 15-ft space) using towering club-brute verified RGBA cutout.'
   },
   {
     id: 99008,
     isReferenceSpecimen: true,
     name: 'Deep Crag Wyrm (Gargantuan PF1e Reference)',
+    isDemoProxy: true,
+    proxyArtworkSource: 'Wyvern',
     slug: 'ref_gargantuan_wyrm',
     symbol: 'G',
     color: '#c084fc',
@@ -8516,24 +8524,26 @@ const PF1E_SIZE_REFERENCE_SPECIMENS = [
     pfSpaceFt: 20.0,
     visualBodyProfile: 'BEHEMOTH_HUGE_COLOSSAL',
     visualBodyProfileLabel: 'Gargantuan Behemoth (32–64 ft.)',
-    bodyProportions: { approxHeightFt: 42.0, approxLengthFt: 55.0, approxWeightLbs: 40000, statureMultiplier: 1.04 },
+    bodyProportions: { approxHeightFt: 42.0, approxLengthFt: 55.0, approxWeightLbs: 40000, statureMultiplier: 1.08 },
     imagePath: '/images/monsters/wyvern.png',
-    cutoutImagePath: null,
-    hasCutout: false,
-    imageContentBounds: {"width":1024,"height":1024,"minX":24,"minY":52,"maxX":996,"maxY":996,"contentWidthRatio":0.949,"contentHeightRatio":0.922,"topPadRatio":0.051,"bottomPadRatio":0.027,"leftPadRatio":0.023,"rightPadRatio":0.027},
+    cutoutImagePath: '/lab-assets/images/monsters-cutout/wyvern.png',
+    hasCutout: true,
+    imageContentBounds: {"width":905,"height":934,"minX":12,"minY":12,"maxX":892,"maxY":921,"contentWidthRatio":0.9735,"contentHeightRatio":0.9743,"topPadRatio":0.0128,"bottomPadRatio":0.0128,"leftPadRatio":0.0133,"rightPadRatio":0.0133},
     cardContentBounds: {"width":1024,"height":1024,"minX":24,"minY":52,"maxX":996,"maxY":996,"contentWidthRatio":0.949,"contentHeightRatio":0.922,"topPadRatio":0.051,"bottomPadRatio":0.027,"leftPadRatio":0.023,"rightPadRatio":0.027},
-    cutoutContentBounds: null,
+    cutoutContentBounds: {"width":905,"height":934,"minX":12,"minY":12,"maxX":892,"maxY":921,"contentWidthRatio":0.9735,"contentHeightRatio":0.9743,"topPadRatio":0.0128,"bottomPadRatio":0.0128,"leftPadRatio":0.0133,"rightPadRatio":0.0133},
     proposedScaleFactor: 1.98,
     positioningMode: 'GROUNDED',
     isAirborne: false,
     verificationStatus: 'REFERENCE_PF1E_TIER',
     manualOverrideFlag: 'UI_SAFE_CLAMP_CANDIDATE',
-    auditNotes: 'Pathfinder 1e Gargantuan size showcase (32–64 ft, 20-ft space).'
+    auditNotes: 'Pathfinder 1e Gargantuan size showcase (32–64 ft, 20-ft space) using verified Wyvern RGBA cutout.'
   },
   {
     id: 99009,
     isReferenceSpecimen: true,
     name: 'World-Root Titan (Colossal PF1e Reference)',
+    isDemoProxy: true,
+    proxyArtworkSource: 'Assassin Vine',
     slug: 'ref_colossal_titan',
     symbol: 'C',
     color: '#f43f5e',
@@ -8547,13 +8557,13 @@ const PF1E_SIZE_REFERENCE_SPECIMENS = [
     pfSpaceFt: 30.0,
     visualBodyProfile: 'BEHEMOTH_HUGE_COLOSSAL',
     visualBodyProfileLabel: 'Colossal Titan (64+ ft.)',
-    bodyProportions: { approxHeightFt: 70.0, approxLengthFt: 65.0, approxWeightLbs: 260000, statureMultiplier: 1.06 },
+    bodyProportions: { approxHeightFt: 70.0, approxLengthFt: 65.0, approxWeightLbs: 260000, statureMultiplier: 1.12 },
     imagePath: '/images/monsters/assassin_vine.png',
     cutoutImagePath: '/lab-assets/images/monsters-cutout/assassin_vine.png',
     hasCutout: true,
-    imageContentBounds: {"width":796,"height":885,"minX":12,"minY":12,"maxX":783,"maxY":872,"contentWidthRatio":0.97,"contentHeightRatio":0.973,"topPadRatio":0.014,"bottomPadRatio":0.014,"leftPadRatio":0.015,"rightPadRatio":0.015},
+    imageContentBounds: {"width":796,"height":885,"minX":12,"minY":12,"maxX":783,"maxY":872,"contentWidthRatio":0.9698,"contentHeightRatio":0.9729,"topPadRatio":0.0136,"bottomPadRatio":0.0136,"leftPadRatio":0.0151,"rightPadRatio":0.0151},
     cardContentBounds: {"width":1024,"height":1024,"minX":24,"minY":24,"maxX":996,"maxY":996,"contentWidthRatio":0.949,"contentHeightRatio":0.949,"topPadRatio":0.023,"bottomPadRatio":0.027,"leftPadRatio":0.023,"rightPadRatio":0.027},
-    cutoutContentBounds: {"width":796,"height":885,"minX":12,"minY":12,"maxX":783,"maxY":872,"contentWidthRatio":0.97,"contentHeightRatio":0.973,"topPadRatio":0.014,"bottomPadRatio":0.014,"leftPadRatio":0.015,"rightPadRatio":0.015},
+    cutoutContentBounds: {"width":796,"height":885,"minX":12,"minY":12,"maxX":783,"maxY":872,"contentWidthRatio":0.9698,"contentHeightRatio":0.9729,"topPadRatio":0.0136,"bottomPadRatio":0.0136,"leftPadRatio":0.0151,"rightPadRatio":0.0151},
     proposedScaleFactor: 2.15,
     positioningMode: 'GROUNDED',
     isAirborne: false,
@@ -8952,6 +8962,172 @@ const CUTOUT_ASSET_CONTRACT = {
   fallbackPresentationMode: 'CARD'
 };
 
+function inferPfSizeFromDimensionsOrText(rawSize, heightFt, lengthFt, textHint = '') {
+  if (rawSize) {
+    const clean = String(rawSize).trim().toUpperCase().replace(/[^A-Z]/g, '');
+    if (PF1E_SIZE_CATEGORIES[clean]) return clean;
+  }
+  const majorDim = Math.max(Number(heightFt) || 0, Number(lengthFt) || 0);
+  if (majorDim > 0) {
+    if (majorDim < 0.5) return 'FINE';
+    if (majorDim < 1.0) return 'DIMINUTIVE';
+    if (majorDim < 2.2) return 'TINY';
+    if (majorDim < 4.2) return 'SMALL';
+    if (majorDim <= 8.2) return 'MEDIUM';
+    if (majorDim <= 16.5) return 'LARGE';
+    if (majorDim <= 32.5) return 'HUGE';
+    if (majorDim <= 64.5) return 'GARGANTUAN';
+    return 'COLOSSAL';
+  }
+  const lower = String(textHint || '').toLowerCase();
+  if (/\b(colossal|titan|leviathan)\b/.test(lower)) return 'COLOSSAL';
+  if (/\b(gargantuan|ancient wyrm|purple worm)\b/.test(lower)) return 'GARGANTUAN';
+  if (/\b(huge|treant|elder|behemoth)\b/.test(lower)) return 'HUGE';
+  if (/\b(large|giant|troll|ogre|minotaur|owlbear|wyvern|manticore|ettin|centaur|griffon|hydra)\b/.test(lower)) return 'LARGE';
+  if (/\b(tiny|stirge|viper|bat|rat|raven|toad|sprite|pixie)\b/.test(lower)) return 'TINY';
+  if (/\b(small|goblin|kobold|mite|gnome|halfling|imp|choker)\b/.test(lower)) return 'SMALL';
+  return 'MEDIUM';
+}
+
+function inferVisualBodyProfileForFallback(pfSizeCategory, objOrText = {}) {
+  const obj = (objOrText && typeof objOrText === 'object') ? objOrText : {};
+  const explicitProfile = String(obj.visualBodyProfile || obj.visual_profile || '').trim().toUpperCase();
+  if (explicitProfile && VISUAL_BODY_PROFILES[explicitProfile]) {
+    return explicitProfile;
+  }
+
+  const sizeCat = PF1E_SIZE_CATEGORIES[pfSizeCategory] || PF1E_SIZE_CATEGORIES.MEDIUM;
+  const sizeOrder = sizeCat.order;
+  const text = [
+    typeof objOrText === 'string' ? objOrText : '',
+    obj.name,
+    obj.monsterName,
+    obj.baseMonsterName,
+    obj.slug,
+    obj.monsterSlug,
+    obj.type,
+    obj.creatureType,
+    obj.movement_type,
+    obj.movementType
+  ].filter(Boolean).join(' ').toLowerCase();
+
+  const isFlying = Boolean(
+    obj.isAirborne ||
+    obj.is_flying ||
+    String(obj.movement_type || obj.movementType || '').toUpperCase() === 'FLYING' ||
+    /\b(bat|stirge|harpy|manticore|wyvern|gargoyle|griffon|cockatrice|pegasus|hawk|eagle|owl|vulture|wasp|hornet|fly|moth|drake|dragon)\b/.test(text)
+  );
+  if (isFlying) {
+    if (sizeOrder <= 4) return 'FLYING_SMALL_PEST';
+    if (sizeOrder >= 6) return 'WINGED_LARGE_PREDATOR';
+    return 'WINGED_HARPY_FLIER';
+  }
+
+  if (/\b(orb|wisp|sphere|floating eye)\b/.test(text)) {
+    return 'FLOATING_ORB';
+  }
+  if (/\b(spider|scorpion|crab|beetle|centipede|tick|mite|arachnid|vermin)\b/.test(text)) {
+    if (sizeOrder <= 4) return 'ARACHNID_SMALL_SKIMMER';
+    if (sizeOrder >= 6) return 'ARACHNID_CHITIN_LARGE';
+    return 'ARACHNID_WIDE';
+  }
+  if (/\b(snake|viper|cobra|constrictor|serpent|worm|naga)\b/.test(text)) {
+    if (sizeOrder <= 4) return 'SERPENT_TINY_COIL';
+    return 'SERPENT_CONSTRICTOR_LARGE';
+  }
+  if (/\b(ooze|jelly|slime|pudding|amoeba|cube)\b/.test(text)) {
+    if (sizeOrder >= 6) return 'AMORPHOUS_LARGE_OOZE';
+    return 'AMORPHOUS_MEDIUM_OOZE';
+  }
+  if (/\b(vine|plant|treant|mushroom|fungus|shambling|briar|thorns)\b/.test(text)) {
+    return 'PLANT_MASS_LARGE';
+  }
+  if (/\b(wolf|hound|dog|worg|cat|lion|tiger|leopard|panther|boar|stag|elk|horse|bear|hyena|jackal|rat|weasel|badger|lizard|basilisk|bulette|ankheg|displacer)\b/.test(text)) {
+    if (sizeOrder <= 3) return 'QUADRUPED_TINY_LOW';
+    if (sizeOrder === 4) return 'QUADRUPED_SMALL_LOW';
+    if (sizeOrder >= 6) return 'QUADRUPED_MASSIVE';
+    return 'QUADRUPED_LOW';
+  }
+
+  if (sizeOrder <= 4) return 'BIPED_SMALL';
+  if (sizeOrder >= 6) return 'BIPED_LARGE_BRUTE';
+  return 'BIPED_MEDIUM';
+}
+
+function synthesizeFallbackMonsterSizeEntry(monsterOrKey) {
+  const isObj = monsterOrKey && typeof monsterOrKey === 'object';
+  const rawName = isObj
+    ? String(monsterOrKey.baseMonsterName || monsterOrKey.monsterName || monsterOrKey.cleanMonsterName || monsterOrKey.name || monsterOrKey.slug || 'Unknown Creature').trim()
+    : String(monsterOrKey || 'Unknown Creature').trim();
+  const cleanSlug = rawName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'unknown_creature';
+  const rawSize = isObj ? (monsterOrKey.pfSizeCategory || monsterOrKey.size_category || monsterOrKey.sizeCategory || monsterOrKey.size) : null;
+  const rawHeight = isObj ? (monsterOrKey.height || monsterOrKey.heightFt || (monsterOrKey.bodyProportions && monsterOrKey.bodyProportions.heightFt)) : null;
+  const rawLength = isObj ? (monsterOrKey.length || monsterOrKey.lengthFt || (monsterOrKey.bodyProportions && monsterOrKey.bodyProportions.lengthFt)) : null;
+
+  const pfSizeCategory = inferPfSizeFromDimensionsOrText(rawSize, rawHeight, rawLength, rawName);
+  const sizeCat = PF1E_SIZE_CATEGORIES[pfSizeCategory] || PF1E_SIZE_CATEGORIES.MEDIUM;
+  const visualBodyProfile = inferVisualBodyProfileForFallback(pfSizeCategory, monsterOrKey);
+  const bodyProf = VISUAL_BODY_PROFILES[visualBodyProfile] || VISUAL_BODY_PROFILES.BIPED_MEDIUM;
+  const isAirborne = Boolean(
+    (isObj && (monsterOrKey.isAirborne || monsterOrKey.is_flying || String(monsterOrKey.movement_type || '').toUpperCase() === 'FLYING')) ||
+    bodyProf.groundingMode.startsWith('AIRBORNE') ||
+    visualBodyProfile === 'FLOATING_ORB'
+  );
+
+  const defaultHeightsBySize = {
+    FINE: 0.4, DIMINUTIVE: 0.8, TINY: 1.5, SMALL: 3.2,
+    MEDIUM: 6.0, LARGE: 11.5, HUGE: 22.0, GARGANTUAN: 40.0, COLOSSAL: 72.0
+  };
+  const heightFt = Number(rawHeight) || defaultHeightsBySize[pfSizeCategory] || 6.0;
+  const lengthFt = Number(rawLength) || +(heightFt * bodyProf.aspectRatio).toFixed(1);
+
+  return {
+    id: (isObj && Number(monsterOrKey.id || monsterOrKey.monster_id || monsterOrKey.monsterId)) || 999,
+    catalogOrder: 999,
+    catalogBatch: 'FALLBACK_SYNTHESIZED',
+    isFallbackMetadata: true,
+    slug: cleanSlug,
+    name: rawName,
+    creatureType: (isObj && (monsterOrKey.creatureType || monsterOrKey.type)) || 'Beast',
+    challengeRating: (isObj && Number(monsterOrKey.challengeRating || monsterOrKey.challenge_rating || monsterOrKey.level)) || 1,
+    pfSizeCategory,
+    pfSizeLabel: sizeCat.label,
+    pfSizeOrder: sizeCat.order,
+    pfSpaceFt: sizeCat.pfSpaceFt,
+    visualBodyProfile,
+    visualBodyProfileLabel: bodyProf.label,
+    bodyProportions: {
+      heightFt,
+      lengthFt,
+      weightLbs: sizeCat.order >= 6 ? 800 : (sizeCat.order <= 4 ? 30 : 160),
+      statureMultiplier: 1.0,
+      primaryAxis: bodyProf.aspectRatio >= 1.18 ? 'HORIZONTAL_WIDE' : 'VERTICAL'
+    },
+    proposedScaleFactor: +(sizeCat.baseViewportHeightVh / 28.5).toFixed(2),
+    isAirborne,
+    imagePath: (isObj && (monsterOrKey.imagePath || monsterOrKey.image_path)) || `/images/monsters/${cleanSlug}.png`,
+    hasCutout: false,
+    cutoutImagePath: null,
+    cardContentBounds: {
+      width: 1024, height: 1024,
+      minX: 40, minY: 40, maxX: 984, maxY: 984,
+      contentWidthRatio: 0.92, contentHeightRatio: 0.92,
+      topPadRatio: 0.04, bottomPadRatio: 0.04, leftPadRatio: 0.04, rightPadRatio: 0.04
+    },
+    cutoutContentBounds: null,
+    imageContentBounds: {
+      width: 1024, height: 1024,
+      minX: 40, minY: 40, maxX: 984, maxY: 984,
+      contentWidthRatio: 0.92, contentHeightRatio: 0.92,
+      topPadRatio: 0.04, bottomPadRatio: 0.04, leftPadRatio: 0.04, rightPadRatio: 0.04
+    },
+    verificationStatus: 'FALLBACK_DEFAULT',
+    manualOverrideFlag: null,
+    sourceUrl: null,
+    auditNotes: 'Synthesized deterministic fallback size entry for uncataloged creature.'
+  };
+}
+
 function lookupMonsterSizeEntry(monsterOrKey) {
   if (!monsterOrKey) return BY_SLUG.get('wolf');
   if (typeof monsterOrKey === 'number') {
@@ -8959,8 +9135,9 @@ function lookupMonsterSizeEntry(monsterOrKey) {
   }
   if (typeof monsterOrKey === 'string') {
     const clean = monsterOrKey.trim().toLowerCase();
+    if (!clean) return BY_SLUG.get('wolf');
     const slug = clean.replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-    return BY_SLUG.get(slug) || BY_NAME.get(clean) || BY_ID.get(Number(clean)) || BY_CATALOG_ORDER.get(Number(clean)) || BY_SLUG.get('wolf');
+    return BY_SLUG.get(slug) || BY_NAME.get(clean) || BY_ID.get(Number(clean)) || BY_CATALOG_ORDER.get(Number(clean)) || synthesizeFallbackMonsterSizeEntry(monsterOrKey);
   }
   if (typeof monsterOrKey === 'object') {
     if (monsterOrKey.pfSizeCategory && monsterOrKey.visualBodyProfile && monsterOrKey.bodyProportions) {
@@ -8973,10 +9150,11 @@ function lookupMonsterSizeEntry(monsterOrKey) {
     if (monsterOrKey.sizeMetadata && monsterOrKey.sizeMetadata.pfSizeCategory) {
       return monsterOrKey.sizeMetadata;
     }
-    const id = Number(monsterOrKey.monster_id || monsterOrKey.monsterId || (!monsterOrKey.monsterName && !monsterOrKey.monsterSlug ? monsterOrKey.id : 0) || 0);
+    const id = Number(monsterOrKey.monster_id || monsterOrKey.monsterId || (!monsterOrKey.monsterName && !monsterOrKey.monsterSlug && !monsterOrKey.name ? monsterOrKey.id : 0) || 0);
     if (id && (BY_ID.has(id) || BY_CATALOG_ORDER.has(id))) {
       return BY_ID.get(id) || BY_CATALOG_ORDER.get(id);
     }
+    return synthesizeFallbackMonsterSizeEntry(monsterOrKey);
   }
   return BY_SLUG.get('wolf');
 }
@@ -9080,8 +9258,8 @@ function computeAdaptiveMonsterVisualScale(monsterOrKey, options = {}) {
 
   // 2. UI Safety Clamping (Soft-Knee Asymptotic Clamp) so Huge/Gargantuan/Colossal never break HUD
   // while preserving strict monotonic visual ordering (Fine < Diminutive < Tiny < Small < Medium < Large < Huge < Gargantuan < Colossal)
-  const kneeSafeHeightPx = Math.round(clamp(vpH * 0.415, 165, 450));
-  const maxSafeHeightPx = Math.round(clamp(vpH * 0.495, 195, 535));
+  const kneeSafeHeightPx = Math.round(clamp(vpH * 0.405, 165, 438));
+  const maxSafeHeightPx = Math.round(clamp(vpH * 0.545, 210, 588));
   const maxSafeWidthPx = Math.round(clamp(vpW * sceneCalibration.corridorWidthClampRatio, 210, 620));
   const minSafeHeightPx = Math.round(clamp(vpH * 0.062, 48, 88));
 
@@ -9095,7 +9273,7 @@ function computeAdaptiveMonsterVisualScale(monsterOrKey, options = {}) {
   if (rawVisibleHeightPx > kneeSafeHeightPx) {
     const excessH = rawVisibleHeightPx - kneeSafeHeightPx;
     const headroomH = Math.max(16, maxSafeHeightPx - kneeSafeHeightPx);
-    targetClampedH = kneeSafeHeightPx + Math.round(headroomH * (1 - Math.exp(-excessH / (vpH * 0.18))));
+    targetClampedH = kneeSafeHeightPx + Math.round(headroomH * (1 - Math.exp(-excessH / (vpH * 0.145))));
   }
 
   const heightClampRatio = targetClampedH / Math.max(1, rawVisibleHeightPx);
@@ -9368,6 +9546,7 @@ function computeAdaptiveMonsterVisualScale(monsterOrKey, options = {}) {
       heightDeltaPct,
       areaDeltaPct
     },
+    isFallbackMetadata: Boolean(entry.isFallbackMetadata),
     verificationStatus: entry.verificationStatus,
     manualOverrideFlag: entry.manualOverrideFlag || null
   };
@@ -10224,6 +10403,8 @@ function getMonsterAssetManifest(options = {}) {
       catalogOrder: m.catalogOrder || null,
       catalogBatch: m.catalogBatch || (m.isReferenceSpecimen ? 'REFERENCE_SPECIMEN' : 'CORE_68'),
       isReferenceSpecimen: Boolean(m.isReferenceSpecimen),
+      isDemoProxy: Boolean(m.isDemoProxy || m.isReferenceSpecimen),
+      proxyArtworkSource: m.proxyArtworkSource || null,
       slug: m.slug,
       name: m.name,
       creatureType: m.creatureType,
@@ -10344,6 +10525,7 @@ const MonsterSizeCatalogApi = {
   ENCOUNTER_DISTANCE_BANDS,
   CUTOUT_ASSET_CONTRACT,
   lookupMonsterSizeEntry,
+  synthesizeFallbackMonsterSizeEntry,
   resolveScenePerspectiveCalibration,
   resolveEncounterDistanceFt,
   classifyEncounterDistanceBand,

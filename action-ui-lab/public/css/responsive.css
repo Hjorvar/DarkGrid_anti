@@ -147,5 +147,121 @@
   }
 }
 
+/* ==========================================================================
+   17. PHASE 3: 1366x768 COMPACT LAPTOP & MOBILE VIEWPORT (<768px) SUPPORT
+   ========================================================================== */
+@media (max-width: 1380px) and (max-height: 800px) {
+  .fp-monster-hud-plate {
+    padding: 3px 10px;
+    max-width: 480px;
+  }
+  .fp-monster-title-row {
+    font-size: 0.86rem;
+    gap: 6px;
+  }
+  .fp-monster-condition-quote {
+    font-size: 0.72rem;
+    margin-top: 1px;
+  }
+  .fp-combat-exchange-banner {
+    font-size: 0.61rem;
+    padding: 1px 6px;
+    margin-top: 2px;
+  }
+  .fp-combat-tactical-strip {
+    margin-top: 2px;
+    padding-top: 2px;
+    gap: 4px;
+  }
+  .fp-tactical-chip {
+    font-size: 0.60rem;
+    padding: 1px 5px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dm-shell {
+    padding: 3px 5px;
+    gap: 3px;
+  }
+  .dm-top-deck {
+    grid-template-columns: 1fr;
+    padding: 3px 6px;
+    gap: 2px;
+  }
+  .dm-hero-identity,
+  .dm-top-context-col {
+    display: none;
+  }
+  .dm-main-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 4px;
+  }
+  .dm-right-deck {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    max-height: 28vh;
+    overflow: hidden;
+  }
+  .dm-deck-card.dm-minimap-deck,
+  .dm-deck-card.dm-utility-deck,
+  .dm-deck-card.dm-movement-deck.is-combat-locked {
+    display: none;
+  }
+  .fp-top-hud {
+    padding: 4px 6px;
+  }
+  .fp-location-plaque {
+    padding: 3px 7px;
+    max-width: 58%;
+  }
+  .fp-location-title {
+    font-size: 0.74rem;
+  }
+  .fp-location-sub,
+  .fp-scene-caption-line,
+  .fp-fov-strip,
+  .fp-expedition-pill-wrap {
+    display: none !important;
+  }
+  .fp-state-banner {
+    font-size: 0.60rem;
+    padding: 2px 6px;
+  }
+  .fp-monster-actor.is-adaptive-scale .fp-monster-portrait-box,
+  .fp-monster-actor.is-integrated-monster.is-adaptive-scale .fp-monster-portrait-box,
+  .fp-monster-actor.is-card-monster.is-adaptive-scale .fp-monster-portrait-box {
+    max-width: 56vw !important;
+    max-height: 24vh !important;
+  }
+  .fp-monster-hud-plate {
+    max-width: 96%;
+    padding: 3px 8px;
+  }
+  .fp-monster-title-row {
+    font-size: 0.80rem;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .fp-monster-condition-quote {
+    font-size: 0.68rem;
+  }
+  .fp-combat-exchange-banner {
+    font-size: 0.58rem;
+    padding: 1px 5px;
+  }
+  .fp-tactical-chip {
+    font-size: 0.56rem;
+    padding: 1px 4px;
+  }
+  .fp-bottom-chronicle {
+    height: 44px;
+    padding: 2px 8px;
+  }
+}
+
+
 
 

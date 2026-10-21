@@ -213,12 +213,22 @@
 }
 
 /* ==========================================================================
-   MODE 1: CARD (DEFAULT) — Preserves framed monster card with original art
+   MODE 1: CARD (DEFAULT) — Preserves framed monster card anchored to scene floor
    ========================================================================== */
+.fp-monster-actor.is-card-monster {
+  justify-content: flex-end;
+  margin-top: auto;
+  margin-bottom: 2px;
+  padding-top: 0;
+  transform: translateX(var(--stage-shift-x, 0%));
+}
+
 .presence-mode-card .fp-monster-actor.is-card-monster .fp-monster-portrait-box,
 .presence-mode-hybrid .fp-monster-actor.is-card-monster .fp-monster-portrait-box,
 .fp-monster-actor.is-card-monster .fp-monster-portrait-box {
   border-radius: 8px;
+  border: 1px solid rgba(197, 160, 89, 0.36);
+  border-bottom: 2px solid rgba(197, 160, 89, 0.62);
   background: radial-gradient(circle at 50% 50%, rgba(13, 17, 24, 0.55) 20%, rgba(7, 9, 12, 0.85) 100%);
   box-shadow:
     0 18px 40px rgba(0, 0, 0, 0.92),
@@ -528,8 +538,18 @@
   animation: monsterDodgeSidestep 0.34s ease;
 }
 
+@keyframes monsterDefeatCollapse {
+  0%   { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); }
+  45%  { opacity: 0.78; transform: scale(0.92) translateY(10px) rotate(-3deg); }
+  100% { opacity: 0.56; transform: scale(0.84) translateY(18px) rotate(-5deg); }
+}
+
 .fp-monster-actor.anim-monster-lunge .fp-monster-portrait-box {
   animation: monsterAttackLunge 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fp-monster-actor.anim-monster-defeat .fp-monster-portrait-box {
+  animation: monsterDefeatCollapse 0.44s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .fp-combat-fx-layer {
@@ -555,8 +575,19 @@
   100% { opacity: 0; transform: scale(1.15) rotate(4deg); }
 }
 
+@keyframes slashCritStrikeAnim {
+  0% { opacity: 0; transform: scale(0.55) rotate(-18deg); }
+  20% { opacity: 1; transform: scale(1.24) rotate(2deg); }
+  70% { opacity: 0.94; transform: scale(1.10) rotate(-3deg); }
+  100% { opacity: 0; transform: scale(1.28) rotate(5deg); }
+}
+
 .slash-svg.is-striking {
   animation: slashStrikeAnim 0.36s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.slash-svg.is-crit-striking {
+  animation: slashCritStrikeAnim 0.46s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .fp-monster-hud-plate {
@@ -703,15 +734,15 @@
    ========================================================================== */
 
 /* ==========================================================================
-   14. PHASE 5: MONSTER COMBAT EMERGENCE POLISH
+   14. PHASE 5: MONSTER COMBAT EMERGENCE POLISH (GPU-Safe Transform & Opacity)
    ========================================================================== */
 @keyframes monsterEmergeFromMist {
-  0%   { opacity: 0; transform: translateX(var(--stage-shift-x, 0%)) translateY(var(--approach-start-y, 10px)) scale(var(--approach-start-scale, 0.92)); filter: brightness(0.45) blur(3px); }
-  100% { opacity: 1; transform: translateX(var(--stage-shift-x, 0%)) translateY(0) scale(1); filter: brightness(1) blur(0); }
+  0%   { opacity: 0; transform: translateX(var(--stage-shift-x, 0%)) translateY(var(--approach-start-y, -16px)) scale(var(--approach-start-scale, 0.86)); }
+  100% { opacity: 1; transform: translateX(var(--stage-shift-x, 0%)) translateY(0) scale(1); }
 }
 
 .fp-monster-actor.anim-monster-emerge {
-  animation: monsterEmergeFromMist var(--approach-duration, 0.34s) cubic-bezier(0.22, 1, 0.36, 1);
+  animation: monsterEmergeFromMist var(--approach-duration, 0.38s) cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .fp-monster-actor.is-integrated-monster.grounding-grounded_boots .fp-monster-portrait-box,
@@ -720,6 +751,39 @@
   margin-bottom: 2px;
 }
 
+/* Last-Exchange Readability Banner inside Monster Plate */
+.fp-combat-exchange-banner {
+  margin-top: 3px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(15, 21, 31, 0.86);
+  border: 1px solid rgba(197, 160, 89, 0.28);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: #f8fafc;
+  line-height: 1.25;
+}
+
+.fp-combat-exchange-banner.exchange-crit {
+  border-color: rgba(250, 204, 21, 0.62);
+  background: rgba(66, 32, 6, 0.55);
+  color: #fef08a;
+}
+
+.fp-combat-exchange-banner.exchange-hit {
+  border-color: rgba(74, 222, 128, 0.45);
+  color: #dcfce7;
+}
+
+.fp-combat-exchange-banner.exchange-miss {
+  border-color: rgba(148, 163, 184, 0.38);
+  color: #cbd5e1;
+}
+
+.fp-combat-exchange-banner.exchange-damage {
+  border-color: rgba(248, 113, 113, 0.55);
+  color: #fecaca;
+}
 
 /* Combat Tactical Readout Strip inside Monster Plate */
 .fp-combat-tactical-strip {
@@ -777,6 +841,16 @@
   aspect-ratio: auto !important;
 }
 
+/* Transparency & Grounding Compensation in Integrated Cutout Mode */
+.fp-monster-actor.is-integrated-monster.is-adaptive-scale:not(.grounding-airborne_hover) .fp-monster-img {
+  transform-origin: center bottom;
+  transform: translate(var(--monster-img-shift-x, 0%), calc(var(--monster-img-shift-y, 0%) + clamp(0px, calc(var(--monster-offset-y, 0px) * 0.35), 9px))) scale(var(--monster-img-trim-scale, 1));
+}
+
+.fp-monster-actor.is-integrated-monster.is-adaptive-scale.grounding-airborne_hover .fp-monster-portrait-box {
+  margin-bottom: clamp(22px, calc(20px - var(--monster-offset-y, -28px) * 0.45), 42px);
+}
+
 /* Transparency & Vignette Margin Compensation in Card Mode */
 .fp-monster-actor.is-card-monster.is-adaptive-scale .fp-monster-img {
   object-fit: cover;
@@ -789,11 +863,19 @@
   width: var(--shadow-width-px, 220px);
   height: var(--shadow-height-px, 24px);
   opacity: var(--shadow-opacity, 0.75);
+  filter: blur(var(--shadow-blur, 6px));
 }
 
 /* Airborne lift in Card Mode when Adaptive Scale is active */
 .fp-monster-actor.is-card-monster.is-adaptive-scale.grounding-airborne_hover .fp-monster-portrait-box {
   margin-bottom: 24px;
+}
+
+/* Post-Combat Defeated Monster Remains Presentation */
+.fp-monster-actor.is-victory-remains .fp-monster-portrait-box {
+  opacity: 0.74;
+  filter: grayscale(0.52) brightness(0.78) contrast(1.04);
+  transform: scale(0.92) translateY(6px);
 }
 
 /* ==========================================================================
@@ -936,6 +1018,16 @@
   padding-bottom: 2px;
 }
 
+.sizelab-lineup-stage::before {
+  content: '';
+  position: absolute;
+  inset: 4% 1% 54px 1%;
+  background: radial-gradient(ellipse 88% 72% at 52% 48%, rgba(28, 42, 54, 0.56) 0%, rgba(12, 18, 26, 0.68) 65%, rgba(6, 9, 14, 0.35) 100%);
+  border-radius: 10px;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .sizelab-horizon-reference-line {
   position: absolute;
   left: 2%;
@@ -1038,7 +1130,53 @@
 }
 
 .sizelab-specimen-box.is-cutout .sizelab-specimen-img {
-  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.68));
+  filter: drop-shadow(0 0 2px rgba(226, 232, 240, 0.42)) drop-shadow(0 0 12px rgba(148, 184, 168, 0.22)) drop-shadow(0 5px 10px rgba(0, 0, 0, 0.85));
+}
+
+.sizelab-lineup-item[data-pf-size="COLOSSAL"] .sizelab-specimen-box.is-cutout .sizelab-specimen-img {
+  filter: drop-shadow(0 0 3px rgba(215, 245, 225, 0.65)) drop-shadow(0 0 18px rgba(134, 239, 172, 0.32)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.90));
+}
+
+.sizelab-demo-proxy-badge {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  font-family: var(--font-mono);
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(192, 132, 252, 0.78);
+  color: #e9d5ff;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+}
+
+.sizelab-inline-proxy {
+  color: #e9d5ff;
+  font-weight: 700;
+}
+
+.sizelab-card-fallback-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 5;
+  font-family: var(--font-mono);
+  font-size: 0.50rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(245, 158, 11, 0.75);
+  color: #fde68a;
+  pointer-events: none;
 }
 
 .sizelab-ground-shadow {
@@ -1063,6 +1201,7 @@
 }
 
 .sizelab-size-pill {
+  white-space: nowrap;
   font-family: var(--font-mono);
   font-size: 0.56rem;
   font-weight: 700;
@@ -1086,6 +1225,7 @@
 }
 
 .sizelab-mon-dims {
+  white-space: nowrap;
   font-family: var(--font-mono);
   font-size: 0.58rem;
   color: #e2e8f0;
