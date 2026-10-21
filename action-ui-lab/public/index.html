@@ -4,88 +4,118 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DARKGRID — Action Viewport Prototype</title>
+  <link rel="icon" href="data:,">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/lab-assets/action-ui.css">
+  <link rel="stylesheet" href="/lab-assets/css/base.css">
+  <link rel="stylesheet" href="/lab-assets/css/layout.css">
+  <link rel="stylesheet" href="/lab-assets/css/character.css">
+  <link rel="stylesheet" href="/lab-assets/css/world.css">
+  <link rel="stylesheet" href="/lab-assets/css/combat.css">
+  <link rel="stylesheet" href="/lab-assets/css/inventory.css">
+  <link rel="stylesheet" href="/lab-assets/css/components.css">
+  <link rel="stylesheet" href="/lab-assets/css/responsive.css">
 </head>
-<body>
+<body class="ui-mode-town dev-mode-collapsed">
 
   <!-- =====================================================================
-       LAB DIRECTOR BAR (Experience Mode Toggle, Scene/Monster/FX & Dev Tools)
+       SLIM HEADER & PROGRESSIVE DISCLOSURE LAB TOOLS BAR
+       Default Player Mode: Clean brand, active mode badge, Journal [L], Controls [?], and Lab Tools [`] toggle.
+       Developer Mode (Expanded): Reveals Experience, Scene, Monster, FX, Scale, Director, Atlas & QA controls.
        ===================================================================== -->
-  <header class="lab-director-bar">
-    <div class="lab-brand">
-      <span>⚔️ DARKGRID</span>
-      <span class="lab-badge">ADVENTURE LAB</span>
+  <header class="lab-director-bar" id="lab-director-bar" role="banner">
+    <div class="lab-header-primary">
+      <div class="lab-brand">
+        <span>⚔️ DARKGRID</span>
+        <span class="lab-badge" id="header-lab-badge">ADVENTURE LAB</span>
+      </div>
+      <span class="lab-mode-indicator mode-town" id="header-mode-indicator" role="status" aria-live="polite" title="Current Gameplay Context">
+        🛡️ Sanctuary
+      </span>
     </div>
 
-    <!-- Phase 3 (4.1): Current vs. Adventure Experience Toggle -->
-    <div class="lab-controls-group lab-experience-group" role="group" aria-label="Experience Mode">
-      <span class="lab-group-label">Experience:</span>
-      <button type="button" class="lab-pill" id="exp-mode-btn-current" onclick="setAdventureExperienceMode(false)" title="Current Experience (Baseline): Standard visual exploration without experimental discoveries, choices, or tension cues">
-        Current
-      </button>
-      <button type="button" class="lab-pill is-active lab-pill-adventure" id="exp-mode-btn-adventure" onclick="setAdventureExperienceMode(true)" title="Adventure Experience — Experimental: Enables environmental discoveries, 3-tier tension cues, contextual choices, Mirkwood Expedition & Journal">
-        Adventure ★
-      </button>
+    <!-- Progressive Disclosure Developer Controls Drawer (Collapsed by default in Player View; all IDs preserved in DOM) -->
+    <div class="lab-devtools-drawer" id="lab-devtools-drawer" role="region" aria-label="Developer and Visual Lab Controls">
+      <!-- Phase 3 (4.1): Current vs. Adventure Experience Toggle -->
+      <div class="lab-controls-group lab-experience-group" role="group" aria-label="Experience Mode">
+        <span class="lab-group-label">Experience:</span>
+        <button type="button" class="lab-pill" id="exp-mode-btn-current" onclick="setAdventureExperienceMode(false)" title="Current Experience (Baseline): Standard visual exploration without experimental discoveries, choices, or tension cues">
+          Current
+        </button>
+        <button type="button" class="lab-pill is-active lab-pill-adventure" id="exp-mode-btn-adventure" onclick="setAdventureExperienceMode(true)" title="Adventure Experience — Experimental: Enables environmental discoveries, 3-tier tension cues, contextual choices, Mirkwood Expedition & Journal">
+          Adventure ★
+        </button>
+      </div>
+
+      <!-- Primary Comparison Switcher: Scene Mode C (Default) vs A vs B vs Legacy -->
+      <div class="lab-controls-group lab-scene-mode-group" role="group" aria-label="Viewport Scene Mode">
+        <span class="lab-group-label">Scene:</span>
+        <button type="button" class="lab-pill is-active" id="scene-btn-C" onclick="setSceneMode('C')" title="Scene Mode C (First-Person POV — Default): Eye-level first-person perspective views with 5-tier POV-first fallback">
+          C: POV ★
+        </button>
+        <button type="button" class="lab-pill" id="scene-btn-A" onclick="setSceneMode('A')" title="Scene Mode A (Single Scene): One cohesive painting anchored to current location, terrain variant & landmarks">
+          A
+        </button>
+        <button type="button" class="lab-pill" id="scene-btn-B" onclick="setSceneMode('B')" title="Scene Mode B (Directional Scene): One cohesive painting showing the vista & landmarks in the direction you face">
+          B
+        </button>
+        <button type="button" class="lab-pill" id="scene-btn-LEGACY" onclick="setSceneMode('LEGACY')" title="Original Prototype: Blended radial ahead-portal + procedural SVG road/props/obstacles">
+          Legacy
+        </button>
+      </div>
+
+      <!-- Monster Presentation Mode: Integrated (Default) vs Card -->
+      <div class="lab-controls-group" role="group" aria-label="Monster Presentation Mode">
+        <span class="lab-group-label">Monster:</span>
+        <button type="button" class="lab-pill" id="blend-btn-card" onclick="setMonsterPresenceMode('card')" title="Card: Preserves the framed monster card presentation with original artwork">
+          Card
+        </button>
+        <button type="button" class="lab-pill is-active" id="blend-btn-integrated" onclick="setMonsterPresenceMode('integrated')" title="Integrated (Default): True alpha-cutout monster grounded directly inside the eye-level POV environment with contact shadows & lighting match">
+          Integrated ★
+        </button>
+        <button type="button" class="lab-pill" id="blend-btn-blend" onclick="setMonsterPresenceMode('blend')" title="Legacy Soft Radial Feather Blend">
+          Blend
+        </button>
+        <button type="button" class="lab-pill" id="blend-btn-framed" onclick="setMonsterPresenceMode('framed')" title="Crisp 1:1 antique-bronze relic frame over the scene">
+          Frame
+        </button>
+      </div>
+
+      <!-- Phase 3: Living Environment Atmospheric Effects Intensity -->
+      <div class="lab-controls-group" role="group" aria-label="Atmospheric Effects Intensity">
+        <span class="lab-group-label">FX:</span>
+        <button type="button" class="lab-pill" id="fx-btn-off" onclick="setAtmosphericEffectsMode('off')" title="Effects Off: Static paintings without moving mist or particles">
+          Off
+        </button>
+        <button type="button" class="lab-pill is-active" id="fx-btn-subtle" onclick="setAtmosphericEffectsMode('subtle')" title="Subtle (Default): Gentle, restrained mist drift, light breathing & rare motes">
+          Subtle ★
+        </button>
+        <button type="button" class="lab-pill" id="fx-btn-full" onclick="setAtmosphericEffectsMode('full')" title="Full: Enhanced atmospheric depth, mist layers & particles">
+          Full
+        </button>
+      </div>
+
+      <!-- Developer Inspection & Staging Tools -->
+      <div class="lab-controls-group lab-dev-tools-group" role="group" aria-label="Developer Staging and QA Tools">
+        <button type="button" class="lab-pill lab-pill-sizelab" id="btn-toggle-sizelab" onclick="toggleMonsterSizeComparisonLab()" title="Toggle Pathfinder 1e Monster Size & Body-Profile Comparison Arena in Viewport [Z]">⚖️ Scale</button>
+        <button type="button" class="lab-pill lab-pill-director" id="btn-open-director" onclick="openLabModal('director')" title="Open Gameplay Experiment Director (Expeditions, Scenarios, Monsters, Seed & State Inspector) [G]">🎬 Director</button>
+        <button type="button" class="lab-pill lab-pill-atlas" id="btn-open-atlas" onclick="openLabModal('atlas')" title="Open Interactive World Visual Atlas (All 225 tiles & 4-direction POV inspection) [V]">🗺️ Atlas</button>
+        <button type="button" class="lab-pill lab-pill-qa" id="btn-open-qa" onclick="openLabModal('qa')" title="Open Visual QA & Coverage Dashboard">📊 QA</button>
+      </div>
     </div>
 
-    <!-- Primary Comparison Switcher: Scene Mode C (Default) vs A vs B vs Legacy -->
-    <div class="lab-controls-group lab-scene-mode-group" role="group" aria-label="Viewport Scene Mode">
-      <span class="lab-group-label">Scene:</span>
-      <button type="button" class="lab-pill is-active" id="scene-btn-C" onclick="setSceneMode('C')" title="Scene Mode C (First-Person POV — Default): Eye-level first-person perspective views with 5-tier POV-first fallback">
-        C: POV ★
+    <!-- Always-Visible Player Header Actions + Lab Tools Progressive Disclosure Toggle -->
+    <div class="lab-header-actions" role="group" aria-label="Player Journal, Help, and Lab Tools Toggle">
+      <button type="button" class="lab-pill lab-pill-journal" id="btn-open-journal" onclick="openLabModal('journal')" title="Open Expedition Journal & Exploration Progress [L]" aria-label="Open Expedition Journal [L]">
+        📖 Journal <kbd class="pill-kbd">L</kbd>
       </button>
-      <button type="button" class="lab-pill" id="scene-btn-A" onclick="setSceneMode('A')" title="Scene Mode A (Single Scene): One cohesive painting anchored to current location, terrain variant & landmarks">
-        A
+      <button type="button" class="lab-pill lab-pill-help" id="btn-open-help" onclick="openLabModal('help')" title="Open Keyboard Shortcuts & Tactical Guide [?]" aria-label="Open Controls Help [?]">
+        ❓ Controls <kbd class="pill-kbd">?</kbd>
       </button>
-      <button type="button" class="lab-pill" id="scene-btn-B" onclick="setSceneMode('B')" title="Scene Mode B (Directional Scene): One cohesive painting showing the vista & landmarks in the direction you face">
-        B
+      <button type="button" class="lab-pill lab-pill-devtools-toggle" id="btn-toggle-devtools" onclick="toggleDevToolsDrawer()" aria-expanded="false" aria-controls="lab-devtools-drawer" title="Toggle Developer & Lab Tools Drawer [Backquote / `]">
+        🛠️ <span id="lbl-toggle-devtools">Lab Tools</span> <kbd class="pill-kbd">`</kbd>
       </button>
-      <button type="button" class="lab-pill" id="scene-btn-LEGACY" onclick="setSceneMode('LEGACY')" title="Original Prototype: Blended radial ahead-portal + procedural SVG road/props/obstacles">
-        Legacy
-      </button>
-    </div>
-
-    <!-- Monster Presentation Mode: Integrated (Default) vs Card -->
-    <div class="lab-controls-group" role="group" aria-label="Monster Presentation Mode">
-      <span class="lab-group-label">Monster:</span>
-      <button type="button" class="lab-pill" id="blend-btn-card" onclick="setMonsterPresenceMode('card')" title="Card: Preserves the framed monster card presentation with original artwork">
-        Card
-      </button>
-      <button type="button" class="lab-pill is-active" id="blend-btn-integrated" onclick="setMonsterPresenceMode('integrated')" title="Integrated (Default): True alpha-cutout monster grounded directly inside the eye-level POV environment with contact shadows & lighting match">
-        Integrated ★
-      </button>
-      <button type="button" class="lab-pill" id="blend-btn-blend" onclick="setMonsterPresenceMode('blend')" title="Legacy Soft Radial Feather Blend">
-        Blend
-      </button>
-      <button type="button" class="lab-pill" id="blend-btn-framed" onclick="setMonsterPresenceMode('framed')" title="Crisp 1:1 antique-bronze relic frame over the scene">
-        Frame
-      </button>
-    </div>
-
-    <!-- Phase 3: Living Environment Atmospheric Effects Intensity -->
-    <div class="lab-controls-group" role="group" aria-label="Atmospheric Effects Intensity">
-      <span class="lab-group-label">FX:</span>
-      <button type="button" class="lab-pill" id="fx-btn-off" onclick="setAtmosphericEffectsMode('off')" title="Effects Off: Static paintings without moving mist or particles">
-        Off
-      </button>
-      <button type="button" class="lab-pill is-active" id="fx-btn-subtle" onclick="setAtmosphericEffectsMode('subtle')" title="Subtle (Default): Gentle, restrained mist drift, light breathing & rare motes">
-        Subtle ★
-      </button>
-      <button type="button" class="lab-pill" id="fx-btn-full" onclick="setAtmosphericEffectsMode('full')" title="Full: Enhanced atmospheric depth, mist layers & particles">
-        Full
-      </button>
-    </div>
-
-    <!-- Quick Expedition, Journal, Director, Atlas & QA Tools -->
-    <div class="lab-controls-group lab-dev-tools-group">
-      <button type="button" class="lab-pill lab-pill-sizelab" id="btn-toggle-sizelab" onclick="toggleMonsterSizeComparisonLab()" title="Toggle Pathfinder 1e Monster Size & Body-Profile Comparison Arena in Viewport [Z]">⚖️ Scale</button>
-      <button type="button" class="lab-pill lab-pill-journal" id="btn-open-journal" onclick="openLabModal('journal')" title="Open Expedition Journal & Exploration Progress [L]">📖 Journal</button>
-      <button type="button" class="lab-pill lab-pill-director" id="btn-open-director" onclick="openLabModal('director')" title="Open Gameplay Experiment Director (Expeditions, Scenarios, Monsters, Seed & State Inspector) [G]">🎬 Director</button>
-      <button type="button" class="lab-pill lab-pill-atlas" id="btn-open-atlas" onclick="openLabModal('atlas')" title="Open Interactive World Visual Atlas (All 225 tiles & 4-direction POV inspection) [V]">🗺️ Atlas</button>
-      <button type="button" class="lab-pill lab-pill-qa" id="btn-open-qa" onclick="openLabModal('qa')" title="Open Visual QA & Coverage Dashboard">📊 QA</button>
     </div>
 
     <!-- Preserved DOM hooks for automated test scripts (also rendered inside Gameplay Experiment Director modal) -->
@@ -107,17 +137,20 @@
   <!-- =====================================================================
        MAIN DUNGEON-MASTER / GRIMROCK INSPIRED ACTION SHELL
        ===================================================================== -->
-  <main class="dm-shell">
+  <main class="dm-shell ui-mode-town dev-mode-collapsed" id="dm-shell">
 
     <!-- -------------------------------------------------------------------
          A. TOP CHAMPION STATUS & HANDS BAR
          ------------------------------------------------------------------- -->
-    <section class="dm-top-deck" aria-label="Champion Status and Hands">
-      <!-- Hero Identity -->
-      <div class="dm-hero-identity">
+    <section class="dm-top-deck" id="dm-top-deck" aria-label="Champion Status and Hands">
+      <!-- Hero Identity (Clickable to inspect Champion Sheet [C]) -->
+      <div class="dm-hero-identity" id="hud-hero-card" role="button" tabindex="0" onclick="openLabModal('character')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openLabModal('character');}" title="Inspect Champion Record & Ability Scores [C]">
         <div class="dm-class-crest" id="hud-class-crest" title="Champion Class">⚔️</div>
         <div class="dm-hero-meta">
-          <div class="dm-hero-name" id="hud-hero-name">Loading...</div>
+          <div class="dm-hero-name-row">
+            <div class="dm-hero-name" id="hud-hero-name">Loading...</div>
+            <span class="dm-hero-sheet-hint" aria-hidden="true">[C]</span>
+          </div>
           <div class="dm-hero-sub">
             <span id="hud-hero-class-lvl">FIGHTER • LVL 1</span>
             <span id="hud-status-pills"></span>
@@ -125,14 +158,17 @@
         </div>
       </div>
 
-      <!-- Left Hand & Right Hand Slots + DM Vertical Pillars -->
+      <!-- Left Hand & Right Hand Slots + Quick Equipment Actions + DM Vertical Pillars -->
       <div class="dm-hands-and-bars">
-        <div class="dm-hands-pair">
+        <div class="dm-hands-pair" role="group" aria-label="Equipped Hand Armaments">
           <!-- Main Hand Slot -->
           <button type="button" class="dm-hand-slot is-active-hand" id="slot-main-hand" onclick="handleMainHandClick()" title="Active Main-Hand Armament">
             <div class="hand-icon-box" id="main-hand-icon">🗡️</div>
             <div class="hand-details">
-              <span class="hand-label" id="main-hand-label">Right Hand (Active)</span>
+              <div class="hand-label-row">
+                <span class="hand-label" id="main-hand-label">Right Hand (Active)</span>
+                <span class="hand-state-tag is-ready" id="main-hand-state-tag">READY</span>
+              </div>
               <span class="hand-item-name" id="main-hand-name">Longsword</span>
               <span class="hand-item-stats" id="main-hand-stats">Atk +4 • 1d8+3</span>
             </div>
@@ -142,15 +178,32 @@
           <button type="button" class="dm-hand-slot" id="slot-off-hand" onclick="handleOffHandClick()" title="Off-Hand / Secondary Armament">
             <div class="hand-icon-box" id="off-hand-icon">🛡️</div>
             <div class="hand-details">
-              <span class="hand-label" id="off-hand-label">Left Hand (Defense)</span>
+              <div class="hand-label-row">
+                <span class="hand-label" id="off-hand-label">Left Hand (Defense)</span>
+                <span class="hand-state-tag" id="off-hand-state-tag">GUARD</span>
+              </div>
               <span class="hand-item-name" id="off-hand-name">Light Steel Shield</span>
               <span class="hand-item-stats" id="off-hand-stats">+1 Shield AC</span>
             </div>
           </button>
         </div>
 
+        <!-- Quick Loadout & Pack Access Strip -->
+        <div class="dm-equip-quick-actions" role="group" aria-label="Quick Stance and Pack Access">
+          <button type="button" class="dm-quick-equip-btn" id="btn-quick-stance" onclick="handleSlot3Click()" title="Toggle between Melee and Ranged Weapon Stance [3 / R]">
+            <span class="qe-icon" id="hud-quick-stance-icon">🏹</span>
+            <span class="qe-text" id="hud-quick-stance-lbl">Stance</span>
+            <kbd class="qe-kbd">R</kbd>
+          </button>
+          <button type="button" class="dm-quick-equip-btn" id="btn-quick-pack" onclick="openLabModal('backpack')" title="Open Equipment & Backpack [B]">
+            <span class="qe-icon">🎒</span>
+            <span class="qe-text" id="hud-quick-pack-lbl">Pack</span>
+            <kbd class="qe-kbd">B</kbd>
+          </button>
+        </div>
+
         <!-- Iconic Dungeon Master 3 Vertical Status Bars (HP / AC / XP) -->
-        <div class="dm-vertical-pillars" title="Vitality (HP), Armor Class (AC), and Experience (XP) Pillars">
+        <div class="dm-vertical-pillars" title="Vitality (HP), Armor Class (AC), and Experience (XP) Pillars" aria-hidden="true">
           <div class="dm-pillar">
             <div class="dm-pillar-track">
               <div class="dm-pillar-fill hp-pillar healthy" id="pillar-hp" style="height: 100%;"></div>
@@ -176,26 +229,29 @@
       <div class="dm-vitals-readout">
         <div class="dm-hp-Readout-box">
           <div class="dm-hp-top-row">
-            <span class="dm-hp-title">Vitality</span>
+            <div class="dm-hp-title-group">
+              <span class="dm-hp-title">Vitality</span>
+              <span class="dm-hp-state-pill healthy" id="hud-hp-state-pill">Healthy</span>
+            </div>
             <span class="dm-hp-numbers" id="hud-hp-text">12 / 12</span>
           </div>
-          <div class="dm-hp-bar-outer">
+          <div class="dm-hp-bar-outer" role="progressbar" aria-label="Champion Vitality" aria-valuemin="0" aria-valuemax="12" aria-valuenow="12" id="hud-hp-progressbar">
             <div class="dm-hp-bar-inner healthy" id="hud-hp-bar" style="width: 100%;"></div>
           </div>
         </div>
 
         <div class="dm-stat-badges">
-          <div class="dm-stat-chip" title="Armor Class">
+          <div class="dm-stat-chip" title="Total Armor Class (AC)">
             <span class="dm-stat-chip-lbl">Armor (AC)</span>
             <span class="dm-stat-chip-val" id="hud-ac-val">16</span>
           </div>
-          <div class="dm-stat-chip" title="Gold in Purse">
+          <div class="dm-stat-chip" title="Gold Coins in Purse">
             <span class="dm-stat-chip-lbl">Gold</span>
             <span class="dm-stat-chip-val" id="hud-gold-val">180</span>
           </div>
-          <div class="dm-stat-chip" title="Healing Potions in Pack">
+          <div class="dm-stat-chip dm-stat-chip-btn is-potion-chip" id="hud-potion-chip" onclick="handleSlot2Click()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();handleSlot2Click();}" title="Healing Potions in Pack — Click or press [2] to drink">
             <span class="dm-stat-chip-lbl">Potions</span>
-            <span class="dm-stat-chip-val" id="hud-potions-val" style="color: #7ce;">3</span>
+            <span class="dm-stat-chip-val" id="hud-potions-val">3</span>
           </div>
         </div>
       </div>
@@ -211,7 +267,7 @@
            ================================================================= -->
       <section class="fp-viewport-frame scene-mode-C presence-mode-integrated fx-mode-subtle" id="fp-viewport" aria-label="First-Person World Viewport">
 
-        <!-- Layer 1: Cohesive Environment Backdrop (Single Scene A / Directional B / Legacy) -->
+        <!-- Layer 1: Cohesive Environment Backdrop (Single Scene A / Directional B / First-Person C / Legacy) -->
         <div class="fp-scene-backdrop" id="fp-scene-backdrop">
           <!-- Outgoing Scene Crossfade Buffer (Smooth transitions between full scenes) -->
           <img src="/images/terrain/terrain_city_oakhaven.webp" alt="" aria-hidden="true" class="fp-terrain-img-prev" id="fp-terrain-img-prev">
@@ -227,7 +283,7 @@
             <div class="fp-mist-band fp-mist-band-front" id="fp-mist-band-front"></div>
           </div>
 
-          <!-- Legacy Only: Forward Horizon Portal (Disabled in Modes A & B) -->
+          <!-- Legacy Only: Forward Horizon Portal (Disabled in Modes A, B & C) -->
           <div class="fp-ahead-portal" id="fp-ahead-portal">
             <img src="/images/terrain/terrain_town_gates.webp" alt="Ahead Horizon Vista" class="fp-ahead-img" id="fp-ahead-img">
           </div>
@@ -236,18 +292,18 @@
           <div class="fp-flank-layer fp-flank-left" id="fp-flank-left"></div>
           <div class="fp-flank-layer fp-flank-right" id="fp-flank-right"></div>
 
-          <!-- Legacy Only: Procedural SVG Overlay (Disabled in Modes A & B) -->
+          <!-- Legacy Only: Procedural SVG Overlay (Disabled in Modes A, B & C) -->
           <div class="fp-scene-svg-wrap" id="fp-scene-svg-wrap"></div>
         </div>
 
         <div class="fp-scene-vignette"></div>
         <div class="fp-scene-mist" id="fp-scene-mist"></div>
         <div class="fp-fx-flash" id="fp-fx-flash"></div>
-        <div id="fp-floating-pop-container"></div>
+        <div id="fp-floating-pop-container" aria-live="assertive" aria-atomic="true"></div>
 
         <!-- Layer 2: Top Viewport HUD (Area Title, Coords, Facing Compass, FOV & POI Inspect) -->
         <div class="fp-top-hud">
-          <div class="fp-location-plaque">
+          <div class="fp-location-plaque" id="fp-location-plaque">
             <div class="fp-location-top-row">
               <div class="fp-location-title" id="fp-area-title">Oakhaven</div>
               <span class="fp-facing-pill" id="fp-facing-pill" title="Current Hero Facing Direction">🧭 N ▲</span>
@@ -256,13 +312,13 @@
               <span class="fp-coord-tag" id="fp-area-coords">[X: 7, Y: 7]</span>
               <span>•</span>
               <span id="fp-area-terrain">CITY</span>
-              <span>•</span>
-              <span class="fp-scene-mode-tag" id="fp-scene-mode-tag">Scene C • Tier 1 Exact POV</span>
+              <span class="dev-only-sep" aria-hidden="true">•</span>
+              <span class="fp-scene-mode-tag dev-only-badge" id="fp-scene-mode-tag">Scene C • Tier 1 Exact POV</span>
             </div>
             <div class="fp-scene-caption-line" id="fp-scene-caption-line">
               Oakhaven Sanctuary
             </div>
-            <div class="fp-fov-strip" id="fp-fov-strip">
+            <div class="fp-fov-strip" id="fp-fov-strip" aria-label="Adjacent Horizons">
               <span id="fp-fov-left">◀ W: Plains</span>
               <span>•</span>
               <span id="fp-fov-ahead" class="fov-ahead-tag">▲ N: North Gate</span>
@@ -272,7 +328,7 @@
           </div>
 
           <div class="fp-top-hud-right">
-            <div class="fp-state-banner state-safe" id="fp-state-banner">
+            <div class="fp-state-banner state-safe" id="fp-state-banner" role="status" aria-live="polite">
               🛡️ Safe Haven Sanctuary
             </div>
             <div id="fp-poi-trigger-wrap" class="fp-poi-trigger-wrap"></div>
@@ -292,14 +348,17 @@
         <div class="fp-discovery-layer" id="fp-discovery-layer" hidden></div>
 
         <!-- Layer 4: Bottom Viewport Chronicle & Combat Ticker -->
-        <div class="fp-bottom-chronicle" id="fp-bottom-chronicle">
+        <div class="fp-bottom-chronicle" id="fp-bottom-chronicle" role="region" aria-label="Realm Chronicle and Battle Record">
           <div class="fp-chronicle-header">
             <span id="fp-chronicle-title">📖 Realm Chronicle</span>
             <span id="fp-chronicle-hint" class="fp-hotkey-legend">
-              [W/S] Step • [A/D] Turn 90° • [Q/E] Strafe • [Space/1] Action • [I] Inspect • [L] Journal • [V] Atlas
+              [W/S] Step • [A/D] Turn 90° • [Q/E] Strafe • [Space/1] Action • [I] Inspect • [L] Journal • [?] Help
             </span>
+            <button type="button" class="btn-chronicle-toggle" id="btn-toggle-chronicle" onclick="toggleChronicleHistory()" aria-expanded="false" aria-controls="fp-chronicle-lines" title="Expand or collapse Chronicle & Battle Log History [H]">
+              <span id="chronicle-toggle-lbl">📜 History</span> <kbd>[H]</kbd>
+            </button>
           </div>
-          <div class="fp-chronicle-lines" id="fp-chronicle-lines">
+          <div class="fp-chronicle-lines" id="fp-chronicle-lines" role="log" aria-live="polite">
             <div class="fp-log-line">Initializing Darkgrid Action Viewport...</div>
           </div>
         </div>
@@ -311,14 +370,16 @@
       <aside class="dm-right-deck" aria-label="Tactical Controls and Navigation">
 
         <!-- 1. Compact 5x5 Minimap (North Up + Rotating Hero Arrow) & Compass Rose -->
-        <div class="dm-deck-card">
+        <div class="dm-deck-card dm-minimap-card" id="dm-minimap-card">
           <div class="dm-deck-header">
             <span class="dm-deck-title">🧭 Tactical Minimap (North ▲)</span>
             <span class="dm-header-status" id="minimap-Lock-indicator">Ready</span>
           </div>
           <div class="dm-minimap-wrap">
-            <div class="dm-minimap-grid" id="dm-minimap-grid" aria-label="5 by 5 Tactical Minimap">
-              <!-- 5x5 cells rendered by JS -->
+            <div class="dm-minimap-frame">
+              <div class="dm-minimap-grid" id="dm-minimap-grid" role="grid" aria-label="5 by 5 Tactical Minimap (North is Up)">
+                <!-- 5x5 cells rendered by JS -->
+              </div>
             </div>
             <div class="dm-compass-widget">
               <div class="compass-rose-ring" id="compass-rose-ring" title="Compass Rose (North is Up)">
@@ -337,14 +398,14 @@
         </div>
 
         <!-- 2. The 4-Column Tactical Action Deck -->
-        <div class="dm-deck-card">
+        <div class="dm-deck-card dm-action-deck-card" id="dm-action-deck-card">
           <div class="dm-deck-header">
-            <span class="dm-deck-title">⚔️ Tactical Action Deck</span>
+            <span class="dm-deck-title" id="action-deck-heading">⚔️ Tactical Action Deck</span>
             <span class="dm-header-status" id="deck-stance-indicator" style="color: var(--accent-gold);">Melee Stance</span>
           </div>
 
-          <div class="dm-action-columns">
-            <!-- Slot 1: Primary Strike / Engage / Sanctuary Rest -->
+          <div class="dm-action-columns" role="group" aria-label="Tactical Actions">
+            <!-- Slot 1: Primary Strike / Engage / Sanctuary Rest / Inspect Landmark -->
             <button type="button" class="dm-action-tile tile-primary-strike" id="action-slot-1" onclick="handleSlot1Click()">
               <span class="tile-hotkey">SPC / 1</span>
               <div class="tile-icon-large" id="slot1-icon">⚔️</div>
@@ -387,45 +448,50 @@
         </div>
 
         <!-- 3. First-Person Navigation Pad (Turn Left/Right, Forward/Back, Strafe Left/Right) -->
-        <div class="dm-deck-card dm-movement-deck">
+        <div class="dm-deck-card dm-movement-deck" id="dm-movement-deck">
           <div class="dm-deck-header">
             <span class="dm-deck-title">🕹️ Navigation</span>
-            <span class="dm-header-status">W/S Step • A/D Turn • Q/E Strafe</span>
+            <span class="dm-header-status" id="nav-deck-status-lbl">W/S Step • A/D Turn • Q/E Strafe</span>
           </div>
 
-          <div class="dm-pad-grid">
+          <!-- Contextual Combat Lock Notice (Shown when engaged in Stage 2 Melee or Ambush) -->
+          <div class="dm-nav-combat-banner" id="dm-nav-combat-banner" hidden role="status" aria-live="polite">
+            ⚔️ Engaged in Melee — Use Tactical Actions [1–4] or Flee [4/F]
+          </div>
+
+          <div class="dm-pad-grid" role="group" aria-label="First-Person Movement and Turning Pad">
             <!-- Row 1: Turn Left [A] | Move Forward [W] | Turn Right [D] -->
-            <button type="button" class="dm-pad-btn is-turn" id="pad-turn-left" onclick="dispatchTurn('LEFT')" title="Turn 90° Counter-Clockwise [A / Left Arrow]">
+            <button type="button" class="dm-pad-btn is-turn" id="pad-turn-left" onclick="dispatchTurn('LEFT')" title="Turn 90° Counter-Clockwise [A / Left Arrow]" aria-label="Turn Left">
               <span class="pad-key">A / ◀</span>
               <span class="pad-arrow">↶</span>
               <span class="pad-label" id="lbl-turn-left">Turn W</span>
             </button>
 
-            <button type="button" class="dm-pad-btn is-cardinal" id="pad-forward" onclick="dispatchRelativeMove('FORWARD')" title="Move Forward in facing direction [W / Up Arrow]">
+            <button type="button" class="dm-pad-btn is-cardinal" id="pad-forward" onclick="dispatchRelativeMove('FORWARD')" title="Move Forward in facing direction [W / Up Arrow]" aria-label="Move Forward">
               <span class="pad-key">W / ▲</span>
               <span class="pad-arrow">▲</span>
               <span class="pad-label" id="lbl-forward">Forward (N)</span>
             </button>
 
-            <button type="button" class="dm-pad-btn is-turn" id="pad-turn-right" onclick="dispatchTurn('RIGHT')" title="Turn 90° Clockwise [D / Right Arrow]">
+            <button type="button" class="dm-pad-btn is-turn" id="pad-turn-right" onclick="dispatchTurn('RIGHT')" title="Turn 90° Clockwise [D / Right Arrow]" aria-label="Turn Right">
               <span class="pad-key">D / ▶</span>
               <span class="pad-arrow">↷</span>
               <span class="pad-label" id="lbl-turn-right">Turn E</span>
             </button>
 
             <!-- Row 2: Strafe Left [Q] | Center Facing Indicator | Strafe Right [E] -->
-            <button type="button" class="dm-pad-btn is-strafe" id="pad-strafe-left" onclick="dispatchRelativeMove('STRAFE_LEFT')" title="Strafe Left [Q]">
+            <button type="button" class="dm-pad-btn is-strafe" id="pad-strafe-left" onclick="dispatchRelativeMove('STRAFE_LEFT')" title="Strafe Left [Q]" aria-label="Strafe Left">
               <span class="pad-key">Q</span>
               <span class="pad-arrow">◄</span>
               <span class="pad-label" id="lbl-strafe-left">Strafe (W)</span>
             </button>
 
-            <div class="dm-pad-center-compass" id="pad-center" title="Current Facing & Tile Coordinates">
+            <div class="dm-pad-center-compass" id="pad-center" title="Current Facing & Tile Coordinates" aria-live="polite">
               <span class="pad-center-arrow" id="pad-center-glyph">▲</span>
               <span class="pad-label" id="pad-center-lbl">NORTH</span>
             </div>
 
-            <button type="button" class="dm-pad-btn is-strafe" id="pad-strafe-right" onclick="dispatchRelativeMove('STRAFE_RIGHT')" title="Strafe Right [E]">
+            <button type="button" class="dm-pad-btn is-strafe" id="pad-strafe-right" onclick="dispatchRelativeMove('STRAFE_RIGHT')" title="Strafe Right [E]" aria-label="Strafe Right">
               <span class="pad-key">E</span>
               <span class="pad-arrow">►</span>
               <span class="pad-label" id="lbl-strafe-right">Strafe (E)</span>
@@ -436,7 +502,7 @@
               <span class="spacer-rune">ᛉ</span>
             </div>
 
-            <button type="button" class="dm-pad-btn is-cardinal" id="pad-backward" onclick="dispatchRelativeMove('BACKWARD')" title="Step Backward [S / Down Arrow]">
+            <button type="button" class="dm-pad-btn is-cardinal" id="pad-backward" onclick="dispatchRelativeMove('BACKWARD')" title="Step Backward [S / Down Arrow]" aria-label="Move Backward">
               <span class="pad-key">S / ▼</span>
               <span class="pad-arrow">▼</span>
               <span class="pad-label" id="lbl-backward">Back (S)</span>
@@ -448,7 +514,7 @@
           </div>
 
           <!-- Single Grimoire Drawer Strip (No Duplicates) -->
-          <div class="dm-utility-strip">
+          <div class="dm-utility-strip" role="group" aria-label="Grimoire and Sanctuary Drawers">
             <button type="button" class="dm-util-btn" id="util-btn-hero" onclick="openLabModal('character')" title="Open Champion Sheet [C]">
               <span>👤 Hero</span>
               <span class="util-hotkey">C</span>
@@ -473,19 +539,19 @@
   </main>
 
   <!-- =====================================================================
-       MODAL DRAWER SYSTEM (Character, Backpack, Market, Watcher's Board)
+       MODAL DRAWER SYSTEM (Character, Backpack, Market, Watcher's Board, Journal, Help, Dev)
        ===================================================================== -->
   <div class="lab-modal-backdrop" id="lab-modal-backdrop" hidden onclick="if(event.target===this) closeLabModal()">
     <div class="lab-modal-card" role="dialog" aria-modal="true" aria-labelledby="lab-modal-title">
       <div class="lab-modal-header">
         <h2 id="lab-modal-title" style="font-size: 1.05rem;">Modal</h2>
-        <button type="button" class="btn-action-stone" style="padding: 3px 10px;" onclick="closeLabModal()" title="Close [Esc]">✕</button>
+        <button type="button" class="btn-action-stone" style="padding: 3px 10px;" onclick="closeLabModal()" title="Close [Esc]" aria-label="Close Modal">✕</button>
       </div>
       <div class="lab-modal-body" id="lab-modal-body"></div>
     </div>
   </div>
 
   <script src="/lab-assets/monster-size-catalog.js"></script>
-  <script src="/lab-assets/action-ui.js"></script>
+  <script type="module" src="/lab-assets/js/app.js"></script>
 </body>
 </html>

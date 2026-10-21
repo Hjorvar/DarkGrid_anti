@@ -1,0 +1,2117 @@
+{
+  "generatedAt": "2026-10-21T10:44:17.723Z",
+  "resolutions": [
+    "1920x1080",
+    "1600x960",
+    "1280x720"
+  ],
+  "matrix": [
+    {
+      "scenarioId": "01_oakhaven_7_7_N",
+      "title": "1. Oakhaven [7,7] NORTH",
+      "resolution": "1920x1080",
+      "file": "screenshots/01_oakhaven_7_7_N_1920x1080.png",
+      "coords": [
+        7,
+        7
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/oakhaven_7_7_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 167,
+        "y": 102,
+        "width": 1219,
+        "height": 992
+      },
+      "backdropRect": {
+        "x": 196,
+        "y": 125,
+        "width": 1161,
+        "height": 945
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 50.92,
+          "nonBlackRatio": 0.999
+        },
+        "topCenter": {
+          "avgLuma": 73.32,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 57.11,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 89.31,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 65.44,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    },
+    {
+      "scenarioId": "02_mirkwood_7_5_N",
+      "title": "2. Mirkwood [7,5] NORTH",
+      "resolution": "1920x1080",
+      "file": "screenshots/02_mirkwood_7_5_N_1920x1080.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 167,
+        "y": 102,
+        "width": 1219,
+        "height": 992
+      },
+      "backdropRect": {
+        "x": 196,
+        "y": 125,
+        "width": 1161,
+        "height": 945
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 27.1,
+          "nonBlackRatio": 0.975
+        },
+        "topCenter": {
+          "avgLuma": 53.35,
+          "nonBlackRatio": 0.996
+        },
+        "topRight": {
+          "avgLuma": 34.69,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 53.08,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 46.7,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": {
+        "baselineFile": "02_world_crossroads_7_5_N_1920x1080.png",
+        "diffPixels": 44930,
+        "diffRatio": 0.02167
+      }
+    },
+    {
+      "scenarioId": "03_mirkwood_7_5_E",
+      "title": "3. Mirkwood [7,5] EAST",
+      "resolution": "1920x1080",
+      "file": "screenshots/03_mirkwood_7_5_E_1920x1080.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "EAST",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_east.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 167,
+        "y": 102,
+        "width": 1219,
+        "height": 992
+      },
+      "backdropRect": {
+        "x": 196,
+        "y": 125,
+        "width": 1161,
+        "height": 945
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 57.11,
+          "nonBlackRatio": 0.996
+        },
+        "topCenter": {
+          "avgLuma": 146.79,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 63.48,
+          "nonBlackRatio": 0.998
+        },
+        "center": {
+          "avgLuma": 127.66,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 53.72,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": {
+        "baselineFile": "03_turn_crossroads_7_5_E_1920x1080.png",
+        "diffPixels": 900995,
+        "diffRatio": 0.43451
+      }
+    },
+    {
+      "scenarioId": "04_mirkwood_7_5_S",
+      "title": "4. Mirkwood [7,5] SOUTH",
+      "resolution": "1920x1080",
+      "file": "screenshots/04_mirkwood_7_5_S_1920x1080.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "SOUTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_south.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 167,
+        "y": 102,
+        "width": 1219,
+        "height": 992
+      },
+      "backdropRect": {
+        "x": 196,
+        "y": 125,
+        "width": 1161,
+        "height": 945
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 28.65,
+          "nonBlackRatio": 0.995
+        },
+        "topCenter": {
+          "avgLuma": 64.42,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 45.53,
+          "nonBlackRatio": 0.999
+        },
+        "center": {
+          "avgLuma": 80.61,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 47.06,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    },
+    {
+      "scenarioId": "05_mirkwood_7_5_W",
+      "title": "5. Mirkwood [7,5] WEST",
+      "resolution": "1920x1080",
+      "file": "screenshots/05_mirkwood_7_5_W_1920x1080.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "WEST",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_west.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 167,
+        "y": 102,
+        "width": 1219,
+        "height": 992
+      },
+      "backdropRect": {
+        "x": 196,
+        "y": 125,
+        "width": 1161,
+        "height": 945
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 46.04,
+          "nonBlackRatio": 0.999
+        },
+        "topCenter": {
+          "avgLuma": 42.47,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 31.74,
+          "nonBlackRatio": 0.999
+        },
+        "center": {
+          "avgLuma": 52.77,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 59.29,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    },
+    {
+      "scenarioId": "06_blackwater_river_8_4_E",
+      "title": "6. Blackwater River [8,4] EAST",
+      "resolution": "1920x1080",
+      "file": "screenshots/06_blackwater_river_8_4_E_1920x1080.png",
+      "coords": [
+        8,
+        4
+      ],
+      "facing": "EAST",
+      "src": "/lab-assets/images/perspective/barrier_blackwater_bank_pov.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 167,
+        "y": 102,
+        "width": 1219,
+        "height": 992
+      },
+      "backdropRect": {
+        "x": 196,
+        "y": 125,
+        "width": 1161,
+        "height": 945
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 70.91,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 56.83,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 32.46,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 86.06,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 52.59,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    },
+    {
+      "scenarioId": "07_character_modal",
+      "title": "7. Character Modal",
+      "resolution": "1920x1080",
+      "file": "screenshots/07_character_modal_1920x1080.png",
+      "coords": [
+        7,
+        7
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/oakhaven_7_7_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 167,
+        "y": 102,
+        "width": 1219,
+        "height": 992
+      },
+      "backdropRect": {
+        "x": 196,
+        "y": 125,
+        "width": 1161,
+        "height": 945
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 14.87,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 22.25,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 17.64,
+          "nonBlackRatio": 0.999
+        },
+        "center": {
+          "avgLuma": 22.74,
+          "nonBlackRatio": 0.955
+        },
+        "bottomCenter": {
+          "avgLuma": 16.99,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": {
+        "baselineFile": "07_modal_character_1920x1080.png",
+        "diffPixels": 2499,
+        "diffRatio": 0.00121
+      }
+    },
+    {
+      "scenarioId": "08_stage1_encounter",
+      "title": "8. Stage 1 Encounter",
+      "resolution": "1920x1080",
+      "file": "screenshots/08_stage1_encounter_1920x1080.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 167,
+        "y": 102,
+        "width": 1219,
+        "height": 992
+      },
+      "backdropRect": {
+        "x": 196,
+        "y": 125,
+        "width": 1161,
+        "height": 945
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 27.16,
+          "nonBlackRatio": 0.975
+        },
+        "topCenter": {
+          "avgLuma": 54.92,
+          "nonBlackRatio": 0.996
+        },
+        "topRight": {
+          "avgLuma": 34.74,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 53.95,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 42.42,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": {
+        "baselineFile": "05_stage1_encounter_7_5_N_1920x1080.png",
+        "diffPixels": 807885,
+        "diffRatio": 0.38961
+      }
+    },
+    {
+      "scenarioId": "09_stage2_combat",
+      "title": "9. Stage 2 Combat",
+      "resolution": "1920x1080",
+      "file": "screenshots/09_stage2_combat_1920x1080.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 167,
+        "y": 102,
+        "width": 1219,
+        "height": 992
+      },
+      "backdropRect": {
+        "x": 196,
+        "y": 125,
+        "width": 1161,
+        "height": 945
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 26.29,
+          "nonBlackRatio": 0.968
+        },
+        "topCenter": {
+          "avgLuma": 53.83,
+          "nonBlackRatio": 0.995
+        },
+        "topRight": {
+          "avgLuma": 32.78,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 53.99,
+          "nonBlackRatio": 0.986
+        },
+        "bottomCenter": {
+          "avgLuma": 45.64,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    },
+    {
+      "scenarioId": "10_rapid_movement_crossfade_stress",
+      "title": "10. Rapid Movement / Crossfade Stress Test",
+      "resolution": "1920x1080",
+      "file": "screenshots/10_rapid_movement_crossfade_stress_1920x1080.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 167,
+        "y": 102,
+        "width": 1219,
+        "height": 992
+      },
+      "backdropRect": {
+        "x": 196,
+        "y": 125,
+        "width": 1161,
+        "height": 945
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 27.16,
+          "nonBlackRatio": 0.975
+        },
+        "topCenter": {
+          "avgLuma": 53.82,
+          "nonBlackRatio": 0.996
+        },
+        "topRight": {
+          "avgLuma": 34.75,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 54.36,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 50.5,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    },
+    {
+      "scenarioId": "01_oakhaven_7_7_N",
+      "title": "1. Oakhaven [7,7] NORTH",
+      "resolution": "1600x960",
+      "file": "screenshots/01_oakhaven_7_7_N_1600x960.png",
+      "coords": [
+        7,
+        7
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/oakhaven_7_7_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 7,
+        "y": 100,
+        "width": 1219,
+        "height": 872
+      },
+      "backdropRect": {
+        "x": 36,
+        "y": 120,
+        "width": 1161,
+        "height": 831
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 49.62,
+          "nonBlackRatio": 0.998
+        },
+        "topCenter": {
+          "avgLuma": 72.92,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 53.05,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 88.41,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 60.79,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    },
+    {
+      "scenarioId": "02_mirkwood_7_5_N",
+      "title": "2. Mirkwood [7,5] NORTH",
+      "resolution": "1600x960",
+      "file": "screenshots/02_mirkwood_7_5_N_1600x960.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 7,
+        "y": 100,
+        "width": 1219,
+        "height": 872
+      },
+      "backdropRect": {
+        "x": 36,
+        "y": 120,
+        "width": 1161,
+        "height": 831
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 26.39,
+          "nonBlackRatio": 0.961
+        },
+        "topCenter": {
+          "avgLuma": 54.26,
+          "nonBlackRatio": 0.999
+        },
+        "topRight": {
+          "avgLuma": 34.61,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 52.52,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 44.03,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": {
+        "baselineFile": "02_world_crossroads_7_5_N_1600x960.png",
+        "diffPixels": 37591,
+        "diffRatio": 0.02447
+      }
+    },
+    {
+      "scenarioId": "03_mirkwood_7_5_E",
+      "title": "3. Mirkwood [7,5] EAST",
+      "resolution": "1600x960",
+      "file": "screenshots/03_mirkwood_7_5_E_1600x960.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "EAST",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_east.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 7,
+        "y": 100,
+        "width": 1219,
+        "height": 872
+      },
+      "backdropRect": {
+        "x": 36,
+        "y": 120,
+        "width": 1161,
+        "height": 831
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 53.01,
+          "nonBlackRatio": 0.993
+        },
+        "topCenter": {
+          "avgLuma": 143.79,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 59.43,
+          "nonBlackRatio": 0.997
+        },
+        "center": {
+          "avgLuma": 124.94,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 52.57,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": {
+        "baselineFile": "03_turn_crossroads_7_5_E_1600x960.png",
+        "diffPixels": 785054,
+        "diffRatio": 0.5111
+      }
+    },
+    {
+      "scenarioId": "04_mirkwood_7_5_S",
+      "title": "4. Mirkwood [7,5] SOUTH",
+      "resolution": "1600x960",
+      "file": "screenshots/04_mirkwood_7_5_S_1600x960.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "SOUTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_south.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 7,
+        "y": 100,
+        "width": 1219,
+        "height": 872
+      },
+      "backdropRect": {
+        "x": 36,
+        "y": 120,
+        "width": 1161,
+        "height": 831
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 28.39,
+          "nonBlackRatio": 0.992
+        },
+        "topCenter": {
+          "avgLuma": 64.21,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 40.9,
+          "nonBlackRatio": 0.998
+        },
+        "center": {
+          "avgLuma": 79.01,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 45.91,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    },
+    {
+      "scenarioId": "05_mirkwood_7_5_W",
+      "title": "5. Mirkwood [7,5] WEST",
+      "resolution": "1600x960",
+      "file": "screenshots/05_mirkwood_7_5_W_1600x960.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "WEST",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_west.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 7,
+        "y": 100,
+        "width": 1219,
+        "height": 872
+      },
+      "backdropRect": {
+        "x": 36,
+        "y": 120,
+        "width": 1161,
+        "height": 831
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 42,
+          "nonBlackRatio": 0.988
+        },
+        "topCenter": {
+          "avgLuma": 43.09,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 29.6,
+          "nonBlackRatio": 0.998
+        },
+        "center": {
+          "avgLuma": 52.69,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 56.67,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    },
+    {
+      "scenarioId": "06_blackwater_river_8_4_E",
+      "title": "6. Blackwater River [8,4] EAST",
+      "resolution": "1600x960",
+      "file": "screenshots/06_blackwater_river_8_4_E_1600x960.png",
+      "coords": [
+        8,
+        4
+      ],
+      "facing": "EAST",
+      "src": "/lab-assets/images/perspective/barrier_blackwater_bank_pov.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 7,
+        "y": 100,
+        "width": 1219,
+        "height": 872
+      },
+      "backdropRect": {
+        "x": 36,
+        "y": 120,
+        "width": 1161,
+        "height": 831
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 72.04,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 56.3,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 31.71,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 86.7,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 49.39,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    },
+    {
+      "scenarioId": "07_character_modal",
+      "title": "7. Character Modal",
+      "resolution": "1600x960",
+      "file": "screenshots/07_character_modal_1600x960.png",
+      "coords": [
+        7,
+        7
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/oakhaven_7_7_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 7,
+        "y": 100,
+        "width": 1219,
+        "height": 872
+      },
+      "backdropRect": {
+        "x": 36,
+        "y": 120,
+        "width": 1161,
+        "height": 831
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 14.66,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 23.48,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 18.09,
+          "nonBlackRatio": 0.992
+        },
+        "center": {
+          "avgLuma": 23.55,
+          "nonBlackRatio": 0.943
+        },
+        "bottomCenter": {
+          "avgLuma": 16.08,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": {
+        "baselineFile": "07_modal_character_1600x960.png",
+        "diffPixels": 2527,
+        "diffRatio": 0.00165
+      }
+    },
+    {
+      "scenarioId": "08_stage1_encounter",
+      "title": "8. Stage 1 Encounter",
+      "resolution": "1600x960",
+      "file": "screenshots/08_stage1_encounter_1600x960.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 7,
+        "y": 100,
+        "width": 1219,
+        "height": 872
+      },
+      "backdropRect": {
+        "x": 36,
+        "y": 120,
+        "width": 1161,
+        "height": 831
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 26.35,
+          "nonBlackRatio": 0.961
+        },
+        "topCenter": {
+          "avgLuma": 55.49,
+          "nonBlackRatio": 0.999
+        },
+        "topRight": {
+          "avgLuma": 34.59,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 51.97,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 41.33,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": {
+        "baselineFile": "05_stage1_encounter_7_5_N_1600x960.png",
+        "diffPixels": 58485,
+        "diffRatio": 0.03808
+      }
+    },
+    {
+      "scenarioId": "09_stage2_combat",
+      "title": "9. Stage 2 Combat",
+      "resolution": "1600x960",
+      "file": "screenshots/09_stage2_combat_1600x960.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 7,
+        "y": 100,
+        "width": 1219,
+        "height": 872
+      },
+      "backdropRect": {
+        "x": 36,
+        "y": 120,
+        "width": 1161,
+        "height": 831
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 25.58,
+          "nonBlackRatio": 0.952
+        },
+        "topCenter": {
+          "avgLuma": 54.34,
+          "nonBlackRatio": 0.998
+        },
+        "topRight": {
+          "avgLuma": 32.57,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 52.19,
+          "nonBlackRatio": 0.987
+        },
+        "bottomCenter": {
+          "avgLuma": 42.6,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    },
+    {
+      "scenarioId": "10_rapid_movement_crossfade_stress",
+      "title": "10. Rapid Movement / Crossfade Stress Test",
+      "resolution": "1600x960",
+      "file": "screenshots/10_rapid_movement_crossfade_stress_1600x960.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 7,
+        "y": 100,
+        "width": 1219,
+        "height": 872
+      },
+      "backdropRect": {
+        "x": 36,
+        "y": 120,
+        "width": 1161,
+        "height": 831
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 26.44,
+          "nonBlackRatio": 0.961
+        },
+        "topCenter": {
+          "avgLuma": 54.67,
+          "nonBlackRatio": 0.999
+        },
+        "topRight": {
+          "avgLuma": 34.65,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 53.88,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 49.15,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    },
+    {
+      "scenarioId": "01_oakhaven_7_7_N",
+      "title": "1. Oakhaven [7,7] NORTH",
+      "resolution": "1280x720",
+      "file": "screenshots/01_oakhaven_7_7_N_1280x720.png",
+      "coords": [
+        7,
+        7
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/oakhaven_7_7_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": -14,
+        "y": 92,
+        "width": 1003,
+        "height": 637
+      },
+      "backdropRect": {
+        "x": 10,
+        "y": 107,
+        "width": 955,
+        "height": 607
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 48.33,
+          "nonBlackRatio": 0.999
+        },
+        "topCenter": {
+          "avgLuma": 67.13,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 50.27,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 91.05,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 61.95,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    },
+    {
+      "scenarioId": "02_mirkwood_7_5_N",
+      "title": "2. Mirkwood [7,5] NORTH",
+      "resolution": "1280x720",
+      "file": "screenshots/02_mirkwood_7_5_N_1280x720.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": -14,
+        "y": 92,
+        "width": 1003,
+        "height": 637
+      },
+      "backdropRect": {
+        "x": 10,
+        "y": 107,
+        "width": 955,
+        "height": 607
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 27.07,
+          "nonBlackRatio": 0.947
+        },
+        "topCenter": {
+          "avgLuma": 53.21,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 33.22,
+          "nonBlackRatio": 0.999
+        },
+        "center": {
+          "avgLuma": 52.89,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 44.58,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": {
+        "baselineFile": "02_world_crossroads_7_5_N_1280x720.png",
+        "diffPixels": 58279,
+        "diffRatio": 0.06324
+      }
+    },
+    {
+      "scenarioId": "03_mirkwood_7_5_E",
+      "title": "3. Mirkwood [7,5] EAST",
+      "resolution": "1280x720",
+      "file": "screenshots/03_mirkwood_7_5_E_1280x720.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "EAST",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_east.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": -14,
+        "y": 92,
+        "width": 1003,
+        "height": 637
+      },
+      "backdropRect": {
+        "x": 10,
+        "y": 107,
+        "width": 955,
+        "height": 607
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 50.2,
+          "nonBlackRatio": 0.993
+        },
+        "topCenter": {
+          "avgLuma": 131.94,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 55.46,
+          "nonBlackRatio": 0.993
+        },
+        "center": {
+          "avgLuma": 122.22,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 53.26,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": {
+        "baselineFile": "03_turn_crossroads_7_5_E_1280x720.png",
+        "diffPixels": 460910,
+        "diffRatio": 0.50012
+      }
+    },
+    {
+      "scenarioId": "04_mirkwood_7_5_S",
+      "title": "4. Mirkwood [7,5] SOUTH",
+      "resolution": "1280x720",
+      "file": "screenshots/04_mirkwood_7_5_S_1280x720.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "SOUTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_south.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": -14,
+        "y": 92,
+        "width": 1003,
+        "height": 637
+      },
+      "backdropRect": {
+        "x": 10,
+        "y": 107,
+        "width": 955,
+        "height": 607
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 29.57,
+          "nonBlackRatio": 0.98
+        },
+        "topCenter": {
+          "avgLuma": 60.04,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 37.69,
+          "nonBlackRatio": 0.995
+        },
+        "center": {
+          "avgLuma": 77.28,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 48.69,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    },
+    {
+      "scenarioId": "05_mirkwood_7_5_W",
+      "title": "5. Mirkwood [7,5] WEST",
+      "resolution": "1280x720",
+      "file": "screenshots/05_mirkwood_7_5_W_1280x720.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "WEST",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_west.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": -14,
+        "y": 92,
+        "width": 1003,
+        "height": 637
+      },
+      "backdropRect": {
+        "x": 10,
+        "y": 107,
+        "width": 955,
+        "height": 607
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 40.79,
+          "nonBlackRatio": 0.988
+        },
+        "topCenter": {
+          "avgLuma": 39.92,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 28.33,
+          "nonBlackRatio": 0.99
+        },
+        "center": {
+          "avgLuma": 50.66,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 57.86,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    },
+    {
+      "scenarioId": "06_blackwater_river_8_4_E",
+      "title": "6. Blackwater River [8,4] EAST",
+      "resolution": "1280x720",
+      "file": "screenshots/06_blackwater_river_8_4_E_1280x720.png",
+      "coords": [
+        8,
+        4
+      ],
+      "facing": "EAST",
+      "src": "/lab-assets/images/perspective/barrier_blackwater_bank_pov.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": -14,
+        "y": 92,
+        "width": 1003,
+        "height": 637
+      },
+      "backdropRect": {
+        "x": 10,
+        "y": 107,
+        "width": 955,
+        "height": 607
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 66.83,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 50.28,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 31.73,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 87.3,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 51.07,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    },
+    {
+      "scenarioId": "07_character_modal",
+      "title": "7. Character Modal",
+      "resolution": "1280x720",
+      "file": "screenshots/07_character_modal_1280x720.png",
+      "coords": [
+        7,
+        7
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/oakhaven_7_7_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": -14,
+        "y": 92,
+        "width": 1003,
+        "height": 637
+      },
+      "backdropRect": {
+        "x": 10,
+        "y": 107,
+        "width": 955,
+        "height": 607
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 14.46,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 28.46,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 21.4,
+          "nonBlackRatio": 0.992
+        },
+        "center": {
+          "avgLuma": 26.84,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 13.7,
+          "nonBlackRatio": 0.933
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": {
+        "baselineFile": "07_modal_character_1280x720.png",
+        "diffPixels": 1492,
+        "diffRatio": 0.00162
+      }
+    },
+    {
+      "scenarioId": "08_stage1_encounter",
+      "title": "8. Stage 1 Encounter",
+      "resolution": "1280x720",
+      "file": "screenshots/08_stage1_encounter_1280x720.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": -14,
+        "y": 92,
+        "width": 1003,
+        "height": 637
+      },
+      "backdropRect": {
+        "x": 10,
+        "y": 107,
+        "width": 955,
+        "height": 607
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 27.07,
+          "nonBlackRatio": 0.947
+        },
+        "topCenter": {
+          "avgLuma": 55.81,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 33.24,
+          "nonBlackRatio": 0.999
+        },
+        "center": {
+          "avgLuma": 53.31,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 47.42,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": {
+        "baselineFile": "05_stage1_encounter_7_5_N_1280x720.png",
+        "diffPixels": 52971,
+        "diffRatio": 0.05748
+      }
+    },
+    {
+      "scenarioId": "09_stage2_combat",
+      "title": "9. Stage 2 Combat",
+      "resolution": "1280x720",
+      "file": "screenshots/09_stage2_combat_1280x720.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": -14,
+        "y": 92,
+        "width": 1003,
+        "height": 637
+      },
+      "backdropRect": {
+        "x": 10,
+        "y": 107,
+        "width": 955,
+        "height": 607
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 26.27,
+          "nonBlackRatio": 0.932
+        },
+        "topCenter": {
+          "avgLuma": 55.31,
+          "nonBlackRatio": 0.999
+        },
+        "topRight": {
+          "avgLuma": 31.3,
+          "nonBlackRatio": 0.998
+        },
+        "center": {
+          "avgLuma": 51.05,
+          "nonBlackRatio": 0.993
+        },
+        "bottomCenter": {
+          "avgLuma": 42.82,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    },
+    {
+      "scenarioId": "10_rapid_movement_crossfade_stress",
+      "title": "10. Rapid Movement / Crossfade Stress Test",
+      "resolution": "1280x720",
+      "file": "screenshots/10_rapid_movement_crossfade_stress_1280x720.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": -14,
+        "y": 92,
+        "width": 1003,
+        "height": 637
+      },
+      "backdropRect": {
+        "x": 10,
+        "y": 107,
+        "width": 955,
+        "height": 607
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 27.06,
+          "nonBlackRatio": 0.947
+        },
+        "topCenter": {
+          "avgLuma": 53.14,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 33.22,
+          "nonBlackRatio": 0.999
+        },
+        "center": {
+          "avgLuma": 52.71,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 51.12,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true,
+      "baselineDiff": null
+    }
+  ],
+  "timingProbes": [
+    {
+      "probe": "Immediate after state update (0ms)",
+      "file": "timing/probe_01_immediate_0ms_7_5_N.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 167,
+        "y": 102,
+        "width": 1219,
+        "height": 992
+      },
+      "backdropRect": {
+        "x": 196,
+        "y": 125,
+        "width": 1161,
+        "height": 945
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 27.81,
+          "nonBlackRatio": 0.987
+        },
+        "topCenter": {
+          "avgLuma": 58.73,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 34.8,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 56.26,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 46.97,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true
+    },
+    {
+      "probe": "Mid-crossfade (~80ms)",
+      "file": "timing/probe_02_mid_crossfade_80ms_7_5_N.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 167,
+        "y": 102,
+        "width": 1219,
+        "height": 992
+      },
+      "backdropRect": {
+        "x": 196,
+        "y": 125,
+        "width": 1161,
+        "height": 945
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 27.17,
+          "nonBlackRatio": 0.975
+        },
+        "topCenter": {
+          "avgLuma": 53.85,
+          "nonBlackRatio": 0.996
+        },
+        "topRight": {
+          "avgLuma": 34.75,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 54.49,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 46.1,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true
+    },
+    {
+      "probe": "Post-transition (~280ms)",
+      "file": "timing/probe_03_post_transition_280ms_7_5_N.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 167,
+        "y": 102,
+        "width": 1219,
+        "height": 992
+      },
+      "backdropRect": {
+        "x": 196,
+        "y": 125,
+        "width": 1161,
+        "height": 945
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 27.17,
+          "nonBlackRatio": 0.975
+        },
+        "topCenter": {
+          "avgLuma": 53.88,
+          "nonBlackRatio": 0.996
+        },
+        "topRight": {
+          "avgLuma": 34.75,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 54.76,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 46.09,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true
+    },
+    {
+      "probe": "Deterministic Ready (__waitForSceneReady)",
+      "file": "timing/probe_04_deterministic_ready_7_5_N.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 167,
+        "y": 102,
+        "width": 1219,
+        "height": 992
+      },
+      "backdropRect": {
+        "x": 196,
+        "y": 125,
+        "width": 1161,
+        "height": 945
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 27.17,
+          "nonBlackRatio": 0.975
+        },
+        "topCenter": {
+          "avgLuma": 53.88,
+          "nonBlackRatio": 0.996
+        },
+        "topRight": {
+          "avgLuma": 34.75,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 54.75,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 46.09,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true
+    }
+  ],
+  "cacheProbes": [
+    {
+      "mode": "Cold Cache (Network.setCacheDisabled=true)",
+      "file": "timing/probe_05_cold_cache_7_5_N.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 167,
+        "y": 102,
+        "width": 1219,
+        "height": 992
+      },
+      "backdropRect": {
+        "x": 196,
+        "y": 125,
+        "width": 1161,
+        "height": 945
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 27.13,
+          "nonBlackRatio": 0.975
+        },
+        "topCenter": {
+          "avgLuma": 53.51,
+          "nonBlackRatio": 0.996
+        },
+        "topRight": {
+          "avgLuma": 34.73,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 53.32,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 46.71,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true
+    },
+    {
+      "mode": "Warm Cache",
+      "file": "timing/probe_06_warm_cache_7_5_N.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "NORTH",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 167,
+        "y": 102,
+        "width": 1219,
+        "height": 992
+      },
+      "backdropRect": {
+        "x": 196,
+        "y": 125,
+        "width": 1161,
+        "height": 945
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 27.14,
+          "nonBlackRatio": 0.975
+        },
+        "topCenter": {
+          "avgLuma": 53.49,
+          "nonBlackRatio": 0.996
+        },
+        "topRight": {
+          "avgLuma": 34.73,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 53.35,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 50.62,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true
+    },
+    {
+      "mode": "Throttled Asset Loading (45ms latency, 1.5MB/s, cold cache)",
+      "file": "timing/probe_07_throttled_network_7_5_W.png",
+      "coords": [
+        7,
+        5
+      ],
+      "facing": "WEST",
+      "src": "/lab-assets/images/perspective/crossroads_7_5_west.jpg",
+      "complete": true,
+      "naturalWidth": 1376,
+      "naturalHeight": 768,
+      "imgRect": {
+        "x": 167,
+        "y": 102,
+        "width": 1219,
+        "height": 992
+      },
+      "backdropRect": {
+        "x": 196,
+        "y": 125,
+        "width": 1161,
+        "height": 945
+      },
+      "coversViewportCompletely": true,
+      "objectFit": "cover",
+      "terrainOpacity": "1",
+      "prevOpacity": "0",
+      "isCrossfading": false,
+      "zones": {
+        "topLeft": {
+          "avgLuma": 46.04,
+          "nonBlackRatio": 0.999
+        },
+        "topCenter": {
+          "avgLuma": 42.48,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 31.74,
+          "nonBlackRatio": 0.999
+        },
+        "center": {
+          "avgLuma": 52.82,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 59.31,
+          "nonBlackRatio": 1
+        }
+      },
+      "allZonesValid": true
+    }
+  ],
+  "baselineComparisons": [],
+  "consoleErrors": [],
+  "pageExceptions": [],
+  "failedImageRequests": []
+}

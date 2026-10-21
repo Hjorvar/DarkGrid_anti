@@ -1,0 +1,447 @@
+/* ==========================================================================
+
+   DARKGRID ADVENTURE LAB — TOP CHAMPION DECK, HANDS & VITALS (character.css)
+
+   ========================================================================== */
+
+/* ==========================================================================
+   3. TOP CHAMPION STATUS & HANDS BAR
+   ========================================================================== */
+.dm-top-deck {
+  display: grid;
+  grid-template-columns: minmax(175px, 235px) 1fr minmax(240px, 325px);
+  gap: 8px;
+  background: linear-gradient(180deg, #161b26 0%, #10141d 100%);
+  border: 1px solid var(--border-gold);
+  border-radius: 6px;
+  padding: clamp(4px, 0.65vh, 7px) 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dm-hero-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-right: 1px solid var(--border-subtle);
+  padding-right: 10px;
+  min-width: 0;
+}
+
+.dm-class-crest {
+  width: clamp(32px, 4.4vh, 40px);
+  height: clamp(32px, 4.4vh, 40px);
+  border-radius: 6px;
+  background: radial-gradient(circle at 50% 35%, #252e42 0%, #0b0e14 100%);
+  border: 1px solid var(--border-gold-solid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.05rem, 2vh, 1.3rem);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8), 0 0 12px rgba(197, 160, 89, 0.2);
+  flex-shrink: 0;
+}
+
+.dm-hero-meta {
+  min-width: 0;
+}
+
+.dm-hero-name {
+  font-family: var(--font-serif);
+  font-size: clamp(0.88rem, 1.5vh, 1rem);
+  font-weight: 700;
+  color: var(--text-heading);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+  line-height: 1.15;
+}
+
+.dm-hero-sub {
+  font-size: 0.68rem;
+  color: var(--accent-gold);
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.dm-hands-and-bars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.dm-hands-pair {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.dm-hand-slot {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--bg-surface-sunken);
+  border: 1px solid var(--border-medium);
+  border-radius: 5px;
+  padding: clamp(3px, 0.5vh, 5px) 8px;
+  min-width: clamp(140px, 13vw, 180px);
+  position: relative;
+  transition: all 0.18s ease;
+  text-align: left;
+  color: var(--text-body);
+  cursor: pointer;
+}
+
+.dm-hand-slot:hover:not(:disabled) {
+  border-color: var(--accent-gold-bright);
+  transform: translateY(-1px);
+}
+
+.dm-hand-slot.is-active-hand {
+  border-color: var(--border-gold-solid);
+  background: linear-gradient(180deg, rgba(197, 160, 89, 0.14) 0%, rgba(9, 12, 16, 0.95) 100%);
+  box-shadow: 0 0 14px rgba(197, 160, 89, 0.22), inset 0 0 8px rgba(197, 160, 89, 0.08);
+}
+
+.dm-hand-slot.is-disabled-hand {
+  opacity: 0.55;
+  filter: grayscale(0.4);
+}
+
+.hand-icon-box {
+  width: clamp(26px, 3.6vh, 32px);
+  height: clamp(26px, 3.6vh, 32px);
+  border-radius: 4px;
+  background: #141923;
+  border: 1px solid #2b3548;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.95rem, 1.7vh, 1.15rem);
+  flex-shrink: 0;
+}
+
+.dm-hand-slot.is-active-hand .hand-icon-box {
+  border-color: var(--accent-gold);
+  background: #1f2430;
+}
+
+.hand-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.hand-label {
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.hand-item-name {
+  font-family: var(--font-serif);
+  font-size: clamp(0.72rem, 1.25vh, 0.8rem);
+  font-weight: 700;
+  color: var(--text-heading);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hand-item-stats {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--accent-gold-bright);
+  white-space: nowrap;
+}
+
+/* Iconic Dungeon Master Vertical Pillars */
+.dm-vertical-pillars {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px;
+  background: var(--bg-surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  height: clamp(34px, 4.6vh, 44px);
+  flex-shrink: 0;
+}
+
+.dm-pillar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  height: 100%;
+  justify-content: flex-end;
+  width: 12px;
+}
+
+.dm-pillar-track {
+  width: 9px;
+  flex: 1;
+  background: #12161f;
+  border: 1px solid #263042;
+  border-radius: 2px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  padding: 1px;
+}
+
+.dm-pillar-fill {
+  width: 100%;
+  border-radius: 1px;
+  transition: height 0.3s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s ease;
+}
+
+.dm-pillar-fill.hp-pillar.healthy { background: linear-gradient(180deg, #4ade80 0%, #1f7a4c 100%); }
+.dm-pillar-fill.hp-pillar.wounded { background: linear-gradient(180deg, #f59e0b 0%, #92400e 100%); }
+.dm-pillar-fill.hp-pillar.critical { background: linear-gradient(180deg, #ef4444 0%, #7f1d1d 100%); }
+.dm-pillar-fill.ac-pillar { background: linear-gradient(180deg, #e6be6e 0%, #7c6238 100%); }
+.dm-pillar-fill.xp-pillar { background: linear-gradient(180deg, #93c5fd 0%, #1e40af 100%); }
+
+.dm-pillar-lbl {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.dm-vitals-readout {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  border-left: 1px solid var(--border-subtle);
+  padding-left: 10px;
+  min-width: 0;
+}
+
+.dm-hp-Readout-box {
+  flex: 1;
+  min-width: 110px;
+}
+
+.dm-hp-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 2px;
+}
+
+.dm-hp-title {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-family: var(--font-serif);
+}
+
+.dm-hp-numbers {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.dm-hp-bar-outer {
+  height: 8px;
+  background: #07090c;
+  border: 1px solid #2d374a;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.dm-hp-bar-inner {
+  height: 100%;
+  transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s;
+}
+
+.dm-hp-bar-inner.healthy { background: linear-gradient(90deg, #276749 0%, #4ade80 100%); }
+.dm-hp-bar-inner.wounded { background: linear-gradient(90deg, #975a16 0%, #f59e0b 100%); }
+.dm-hp-bar-inner.critical { background: linear-gradient(90deg, #822727 0%, #ef4444 100%); }
+
+.dm-stat-badges {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.dm-stat-chip {
+  background: var(--bg-surface-sunken);
+  border: 1px solid var(--border-medium);
+  border-radius: 5px;
+  padding: 2px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 48px;
+  line-height: 1.15;
+}
+
+.dm-stat-chip-lbl {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.dm-stat-chip-val {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+}
+
+
+/* 15.2 Top Champion Deck & Hand Slot Enhancements */
+.dm-hero-identity {
+  cursor: pointer;
+  border-radius: 5px;
+  padding: 2px 10px 2px 4px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.dm-hero-identity:hover {
+  background: rgba(197, 160, 89, 0.08);
+}
+
+.dm-hero-sheet-hint {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  padding: 0 4px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.hand-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+}
+
+.hand-state-tag {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 700;
+  padding: 0 4px;
+  border-radius: 2px;
+  background: rgba(197, 160, 89, 0.18);
+  border: 1px solid rgba(197, 160, 89, 0.42);
+  color: var(--accent-gold-bright);
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.dm-hand-slot.is-disabled-hand .hand-state-tag {
+  background: rgba(148, 163, 184, 0.12);
+  border-color: rgba(148, 163, 184, 0.28);
+  color: var(--text-muted);
+}
+
+.dm-equip-quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.dm-quick-equip-btn {
+  background: var(--bg-surface-sunken);
+  border: 1px solid var(--border-medium);
+  color: var(--text-body);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 0.62rem;
+  font-family: var(--font-sans);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.14s ease;
+}
+
+.dm-quick-equip-btn:hover:not(:disabled) {
+  border-color: var(--accent-gold-bright);
+  color: var(--text-heading);
+  background: #171d29;
+}
+
+.dm-quick-equip-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dm-quick-equip-btn kbd {
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  color: var(--accent-gold);
+}
+
+
+
+.dm-hp-state-pill {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0 5px;
+  border-radius: 3px;
+  letter-spacing: 0.04em;
+}
+
+.dm-hp-state-pill.state-healthy {
+  background: rgba(74, 222, 128, 0.14);
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  color: #86efac;
+}
+
+.dm-hp-state-pill.state-wounded {
+  background: rgba(245, 158, 11, 0.16);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #fcd34d;
+}
+
+.dm-hp-state-pill.state-critical {
+  background: rgba(239, 68, 68, 0.22);
+  border: 1px solid rgba(239, 68, 68, 0.55);
+  color: #fca5a5;
+}
+
+.dm-stat-chip-btn {
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.dm-stat-chip-btn:hover {
+  border-color: var(--accent-gold-bright);
+  transform: translateY(-1px);
+}
+
+.dm-stat-chip-btn.no-potions {
+  opacity: 0.65;
+}
+

@@ -801,17 +801,21 @@ describe('Darkgrid Action UI Lab — First-Person Facing, Map Viewport, Encounte
       }
     }
 
-    // Step to (7,4) Mirkwood Forest facing NORTH (toward (7,3)):
-    // Not in Tier 1, not a landmark tile (Tier 2), and NORTH is not East/Barrier (Tier 3) -> resolves via Tier 4 (GENERIC_TERRAIN_POV)!
+    // Step to (7,4) Mirkwood Forest facing NORTH (toward (7,3) Primeval Black Oak):
+    // Resolves via Tier 1 bespoke Oak approach (fp_mirkwood_trail_7_4_north), then turning EAST resolves via Tier 4 (GENERIC_TERRAIN_POV)!
     await apiAction('LAB_SCENARIO', { scenario: 'WILDERNESS' });
     let state = await apiAction('MOVE', { relative: 'FORWARD' }); // (7,4) facing NORTH
     assert.equal(state.currentTile.x, 7);
     assert.equal(state.currentTile.y, 4);
+    assert.equal(state.viewportScene.scenes.C.povTier, 1);
+    assert.equal(state.viewportScene.scenes.C.variantKey, 'fp_mirkwood_trail_7_4_north');
+    state = await apiAction('TURN', { direction: 'RIGHT' }); // (7,4) facing EAST -> Tier 4
     const sceneC74 = state.viewportScene.scenes.C;
     assert.equal(sceneC74.povTier, 4);
     assert.equal(sceneC74.povTierKey, 'GENERIC_TERRAIN_POV');
     assert.equal(sceneC74.cameraType, 'POV');
     assert.notEqual(sceneC74.variantKey, 'forest_monolith_clearing', 'Tier 4 must never pick landmark-locked Waystone Monolith');
+    assert.notEqual(sceneC74.variantKey, 'forest_crossroads_lateral_pov', 'Tier 4 must never pick landmark-locked Crossroads signpost');
   });
 
   it('17. Supports Card vs. Integrated monster cutout presentation for Manticore, Ghoul, Assassin/Creeping Vine, and Wolf, plus safe Card fallback and Bridge combat stabilization', async () => {
@@ -851,12 +855,17 @@ describe('Darkgrid Action UI Lab — First-Person Facing, Map Viewport, Encounte
       assert.equal(state.encounter.integratedProfile.groundingMode, item.grounding);
     }
 
-    // 3. Test safe fallback to Card when a monster lacks a cutout (e.g., Rust Monster)
+    // 3. Test newly integrated Track 4/5 cutout (Rust Monster) AND safe fallback to Card when a monster lacks a cutout (e.g., Choker)
     const rustState = await apiAction('LAB_SCENARIO', { scenario: 'STAGE2_COMBAT', monsterName: 'Rust Monster' });
     assert.equal(rustState.encounter.status, 'IN_COMBAT');
-    assert.equal(rustState.encounter.hasIntegratedCutout, false);
-    assert.equal(rustState.encounter.cutoutImageUrl, null);
-    assert.equal(rustState.encounter.integratedProfile.fallbackPresentation, 'CARD');
+    assert.equal(rustState.encounter.hasIntegratedCutout, true);
+    assert.equal(rustState.encounter.cutoutImageUrl, '/lab-assets/images/monsters-cutout/rust_monster.png');
+
+    const chokerState = await apiAction('LAB_SCENARIO', { scenario: 'STAGE2_COMBAT', monsterName: 'Choker' });
+    assert.equal(chokerState.encounter.status, 'IN_COMBAT');
+    assert.equal(chokerState.encounter.hasIntegratedCutout, false);
+    assert.equal(chokerState.encounter.cutoutImageUrl, null);
+    assert.equal(chokerState.encounter.integratedProfile.fallbackPresentation, 'CARD');
 
     // 4. Test Combat Stage Stabilization on The Old Stone Bridge (8,7):
     // Even if the hero turns NORTH toward the Blackwater River during active combat on the bridge,
@@ -960,7 +969,7 @@ describe('Darkgrid Action UI Lab — First-Person Facing, Map Viewport, Encounte
     assert.equal(qaRes.status, 200);
     const qa = await qaRes.json();
     assert.equal(qa.status, 'OK');
-    assert.equal(qa.integratedMonsters.length, 7);
+    assert.equal(qa.integratedMonsters.length, 37);
     assert.ok(qa.pointsOfInterest.length >= 10);
     assert.ok(qa.atmosphereProfiles.length >= 8);
   });

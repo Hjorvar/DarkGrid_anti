@@ -14,7 +14,27 @@
  *    vs Mode C ("First-Person POV") vs Mode LEGACY
  */
 
+const {
+  TRANSITION_CONTEXT_TYPES,
+  REVISIT_STATUS_TYPES,
+  WORLD_LANDMARKS,
+  NAMED_CORRIDORS,
+  initTravelContinuityTables,
+  resolveBoundaryGuidance,
+  getBoundaryGuidance,
+  computeDirectionalCompassContext,
+  resolveBiomePersistence,
+  evaluateTransitionContinuity
+} = require('./travel-continuity');
+
 const SCENE_MODES = ['A', 'B', 'C', 'LEGACY'];
+
+let isBuildingAtlas = false;
+let latestLiveViewportContext = null;
+
+function getLatestSceneViewportContext() {
+  return latestLiveViewportContext;
+}
 
 const POV_TIERS = {
   EXACT_POV: {
@@ -54,19 +74,47 @@ function normalizeSceneMode(mode) {
 
 /**
  * Deterministic spatial variant index for a tile at (x, y) given a pool of `count` variants.
+ * When `facing` is supplied (Mode C Tier 4 directional selection), guarantees that
+ * adjacent 90° turns (`N -> E -> S -> W -> N`) and `NORTH` vs `WEST` never collide
+ * due to modulo-3 periodicity.
  */
-function computeDeterministicVariantIndex(x, y, count) {
+function computeDeterministicVariantIndex(x, y, count, facing = null) {
   const n = Number(count || 1);
   if (n <= 1) return 0;
   const ix = Math.abs(Math.trunc(Number(x || 0)));
   const iy = Math.abs(Math.trunc(Number(y || 0)));
+
+  if (facing !== null && facing !== undefined) {
+    const fIdx = typeof facing === 'number'
+      ? ((Math.trunc(facing) % 4) + 4) % 4
+      : ({ NORTH: 0, EAST: 1, SOUTH: 2, WEST: 3 }[String(facing).toUpperCase().trim()] ?? 0);
+    if (n >= 4) {
+      const perms = [
+        [0, 1, 2, 3],
+        [1, 2, 3, 0],
+        [2, 3, 0, 1],
+        [3, 0, 1, 2]
+      ];
+      const perm = perms[((ix + iy * 2) % 4 + 4) % 4];
+      return (perm[fIdx] + Math.floor((ix + iy) / 4)) % n;
+    }
+    if (n === 3) {
+      const tileShift = (ix * 2 + iy + Math.floor(ix / 2) + Math.floor(iy / 2)) % 3;
+      const dirOffsets = ((ix + iy) & 1) ? [0, 1, 0, 2] : [0, 1, 2, 1];
+      return (tileShift + dirOffsets[fIdx]) % 3;
+    }
+    if (n === 2) {
+      return (ix + iy + fIdx) % 2;
+    }
+  }
+
   if (n === 4) {
     return (ix & 1) ? (iy & 1) : (3 - (iy & 1));
   }
   if (n === 2) {
     return (ix + iy + 1) % 2;
   }
-  return (ix + iy * 2) % n;
+  return (ix * 7 + iy * 13 + Math.floor(ix / 2) * 5 + Math.floor(iy / 2) * 11) % n;
 }
 
 const DEFAULT_SCENE_VARIANTS = [
@@ -252,9 +300,9 @@ const DEFAULT_SCENE_VARIANTS = [
     tile_id: null,
     variant_index: 3,
     variant_key: 'forest_tangled_canopy',
-    image_path: '/images/terrain/terrain_jungle.webp',
+    image_path: '/lab-assets/images/perspective/ancient_oak_7_3_south.jpg',
     title: 'Mirkwood — Tangled Old-Growth',
-    subtitle: 'Dense primeval canopy where hanging vines and ancient trunks blot out the sky',
+    subtitle: 'Dense primeval oak canopy where overarching mossy root-arches and ancient trunks blot out the sky',
     atmosphere_profile: 'forest-canopy',
     lighting_tint: 'rgba(38, 72, 48, 0.14)',
     mist_style: 'deep-forest',
@@ -537,7 +585,7 @@ const DEFAULT_SCENE_VARIANTS = [
     tile_id: null,
     variant_index: 0,
     variant_key: 'river_blackwater',
-    image_path: '/images/terrain/terrain_coast.webp',
+    image_path: '/lab-assets/images/perspective/barrier_blackwater_bank_pov.jpg',
     title: 'Blackwater River — Churning Waters',
     subtitle: 'Deep, swift-running black waters crashing against jagged stone banks',
     atmosphere_profile: 'water-barrier',
@@ -846,10 +894,10 @@ const DEFAULT_SCENE_VARIANTS = [
     focal_y: 62,
     camera_type: 'POV',
     environment_scope: 'OUTDOOR',
-    view_category: 'GENERIC_TERRAIN',
-    directionality: 'OMNIDIRECTIONAL',
-    has_directional_landmark: 0,
-    safe_for_pov_fallback: 1
+    view_category: 'LANDMARK',
+    directionality: 'LANDMARK_LOCKED',
+    has_directional_landmark: 1,
+    safe_for_pov_fallback: 0
   }
 ];
 
@@ -1233,6 +1281,22 @@ const DEFAULT_PERSPECTIVE_VIEWS = [
     focal_x: 50,
     focal_y: 62
   },
+  {
+    tile_x: 7,
+    tile_y: 9,
+    facing: 'NORTH',
+    view_key: 'fp_fen_7_9_north',
+    image_path: '/lab-assets/images/perspective/south_gate_7_8_north.jpg',
+    view_title: 'In the Rotting Fen — Looking North Toward Oakhaven South Gate',
+    view_subtitle: 'Standing on the half-sunken timber causeway in the marsh, looking North toward the wooden watchtowers and arched gatehouse of Oakhaven South Gate',
+    landmarks_visible: 'Sunken Marsh Causeway (Foreground), Oakhaven South Gate & Timber Palisade (Ahead North)',
+    atmosphere_profile: 'swamp-mire',
+    lighting_tint: 'rgba(88, 108, 74, 0.10)',
+    mist_style: 'swamp-fog',
+    horizon_glow: 'warm-sanctuary',
+    focal_x: 50,
+    focal_y: 62
+  },
 
   // F. Bridge East Watchpost (9,7) — 4-Direction Ruined Toll-Keep Continuity
   {
@@ -1335,15 +1399,47 @@ const DEFAULT_PERSPECTIVE_VIEWS = [
   },
   {
     tile_x: 7,
+    tile_y: 4,
+    facing: 'NORTH',
+    view_key: 'fp_mirkwood_trail_7_4_north',
+    image_path: '/lab-assets/images/perspective/forest_7_4_north_oak_approach.jpg',
+    view_title: 'Mirkwood Trail — Approaching the Primeval Black Oak',
+    view_subtitle: 'Looking North along the root-woven Mirkwood trail as the colossal amber-veined root arch of the Primeval Black Oak looms ahead through the mist',
+    landmarks_visible: 'Mossy Root Trail (Foreground), Colossal Primeval Black Oak of (7,3) Looming Ahead (North)',
+    atmosphere_profile: 'ancient-oak',
+    lighting_tint: 'rgba(145, 125, 68, 0.10)',
+    mist_style: 'deep-forest',
+    horizon_glow: 'none',
+    focal_x: 50,
+    focal_y: 62
+  },
+  {
+    tile_x: 7,
+    tile_y: 4,
+    facing: 'SOUTH',
+    view_key: 'fp_mirkwood_trail_7_4_south',
+    image_path: '/lab-assets/images/perspective/crossroads_7_5_lateral.jpg',
+    view_title: 'Mirkwood Trail — Looking South Toward Mirkwood Crossroads',
+    view_subtitle: 'Turned 180° on the northern Mirkwood trail looking South back toward the weathered signpost and boundary stones of Mirkwood Crossroads',
+    landmarks_visible: 'Root-Strewn Mirkwood Trail (Foreground), Crossroads Signpost & Boundary Stones of (7,5) (Ahead South)',
+    atmosphere_profile: 'forest-deep',
+    lighting_tint: 'rgba(46, 82, 58, 0.10)',
+    mist_style: 'deep-forest',
+    horizon_glow: 'none',
+    focal_x: 50,
+    focal_y: 62
+  },
+  {
+    tile_x: 7,
     tile_y: 3,
     facing: 'EAST',
     view_key: 'fp_ancient_oak_7_3_east',
-    image_path: '/lab-assets/images/perspective/forest_7_4_north_oak_approach.jpg',
-    view_title: 'Heart of the Mirkwood — Eastern Root-Woven Boughs',
-    view_subtitle: 'Looking East through the sprawling, amber-veined root arches of the Heart of the Mirkwood into the deep forest',
-    landmarks_visible: 'Gnarled Ancient Oak Root Arches & Eastern Mirkwood Trail',
+    image_path: '/lab-assets/images/terrain/forest_pine_ravine.jpg',
+    view_title: 'Heart of the Mirkwood — Eastern Ravine Flank',
+    view_subtitle: 'Looking East from the Primeval Black Oak hollow into a shadowed pine-and-boulder ravine descending toward the eastern woods',
+    landmarks_visible: 'Mossy Ravine Boulders & Fallen Timber (Foreground), Eastern Mirkwood Fir Ravine (Ahead East)',
     atmosphere_profile: 'ancient-oak',
-    lighting_tint: 'rgba(145, 125, 68, 0.10)',
+    lighting_tint: 'rgba(95, 115, 88, 0.10)',
     mist_style: 'deep-forest',
     horizon_glow: 'none',
     focal_x: 50,
@@ -1354,12 +1450,12 @@ const DEFAULT_PERSPECTIVE_VIEWS = [
     tile_y: 3,
     facing: 'WEST',
     view_key: 'fp_ancient_oak_7_3_west',
-    image_path: '/lab-assets/images/perspective/forest_7_4_north_oak_approach.jpg',
-    view_title: 'Heart of the Mirkwood — Western Root-Woven Boughs',
-    view_subtitle: 'Looking West through the sprawling, amber-veined root arches of the Heart of the Mirkwood into the deep forest',
-    landmarks_visible: 'Gnarled Ancient Oak Root Arches & Western Mirkwood Trail',
+    image_path: '/images/terrain/terrain_forest.webp',
+    view_title: 'Heart of the Mirkwood — Western Deep Boughs',
+    view_subtitle: 'Looking West from beneath the Primeval Black Oak into the sprawling moss-draped trunks and creeping ground mist of western Mirkwood',
+    landmarks_visible: 'Sprawling Moss-Covered Oak Roots (Foreground), Western Mirkwood Boughs (Ahead West)',
     atmosphere_profile: 'ancient-oak',
-    lighting_tint: 'rgba(145, 125, 68, 0.10)',
+    lighting_tint: 'rgba(85, 110, 72, 0.10)',
     mist_style: 'deep-forest',
     horizon_glow: 'none',
     focal_x: 50,
@@ -1404,12 +1500,44 @@ const DEFAULT_PERSPECTIVE_VIEWS = [
     tile_y: 11,
     facing: 'SOUTH',
     view_key: 'fp_deadmans_mire_4_11_south',
-    image_path: '/lab-assets/images/perspective/deadmans_mire_4_11_ruins.jpg',
-    view_title: 'At Deadman’s Mire — Sunken Sanctuary Arches (South)',
-    view_subtitle: 'Looking South across the drowned stone sanctuary arches and weeping bog willows of Deadman’s Mire',
-    landmarks_visible: 'Flooded Flagstones & Sunken Temple Arches in the Mire',
+    image_path: '/lab-assets/images/perspective/swamp_approach_mire_ruins.jpg',
+    view_title: 'At Deadman’s Mire — Looking South Across the Drowned Colonnades',
+    view_subtitle: 'Looking South from the sunken temple flagstones along a decaying plank causeway past outer ruined arches into the southern mire pools',
+    landmarks_visible: 'Rotting Mire Boardwalk (Foreground), Outer Sunken Colonnades & Southern Fen Pools (Ahead South)',
     atmosphere_profile: 'swamp-mire',
     lighting_tint: 'rgba(68, 98, 66, 0.12)',
+    mist_style: 'swamp-fog',
+    horizon_glow: 'none',
+    focal_x: 50,
+    focal_y: 62
+  },
+  {
+    tile_x: 4,
+    tile_y: 11,
+    facing: 'EAST',
+    view_key: 'fp_deadmans_mire_4_11_east',
+    image_path: '/lab-assets/images/terrain/swamp_willow_boardwalk_pov.jpg',
+    view_title: 'At Deadman’s Mire — Looking East Along the Willow Causeway',
+    view_subtitle: 'Looking East from the drowned temple ruins along a half-sunken timber plank boardwalk winding through weeping bog-willows toward the central fen',
+    landmarks_visible: 'Sunken Timber Causeway & Iron Lantern Posts (Foreground), Rotting Fen Willow Bog (Ahead East)',
+    atmosphere_profile: 'swamp-mire',
+    lighting_tint: 'rgba(66, 94, 62, 0.13)',
+    mist_style: 'swamp-fog',
+    horizon_glow: 'none',
+    focal_x: 50,
+    focal_y: 62
+  },
+  {
+    tile_x: 4,
+    tile_y: 11,
+    facing: 'WEST',
+    view_key: 'fp_deadmans_mire_4_11_west',
+    image_path: '/images/terrain/terrain_swamp.webp',
+    view_title: 'At Deadman’s Mire — Looking West Into the Drowned Backwaters',
+    view_subtitle: 'Looking West from the sunken masonry into stagnant black bog channels, drowned cypress roots, and drifting marsh miasma',
+    landmarks_visible: 'Drowned Roots & Stagnant Black Water Channel (Foreground), Western Rotting Fen (Ahead West)',
+    atmosphere_profile: 'swamp-mire',
+    lighting_tint: 'rgba(72, 96, 64, 0.14)',
     mist_style: 'swamp-fog',
     horizon_glow: 'none',
     focal_x: 50,
@@ -1554,10 +1682,10 @@ const DEFAULT_PERSPECTIVE_VIEWS = [
     tile_y: 4,
     facing: 'EAST',
     view_key: 'fp_windblown_heath_12_4_east',
-    image_path: '/lab-assets/images/terrain/plains_windblown_heath_pov.jpg',
-    view_title: 'At Windblown Heath — Looking East Toward the Sea-Wind Moor',
-    view_subtitle: 'Looking East past the mossy boundary stones across the pale windblown heath toward the distant coast',
-    landmarks_visible: 'Mossy Standing Stones & Windswept Frontier Heath (Ahead East)',
+    image_path: '/images/terrain/terrain_plains.webp',
+    view_title: 'At Windblown Heath — Looking East Across the Open Frontier',
+    view_subtitle: 'Looking East past the standing stones along a windswept grassland wagon track toward the eastern coast',
+    landmarks_visible: 'Windswept Grassland Track & Boulders (Foreground), Eastern Frontier Moor (Ahead East)',
     atmosphere_profile: 'plains-open',
     lighting_tint: 'rgba(135, 148, 162, 0.09)',
     mist_style: 'moor-mist',
@@ -1900,17 +2028,17 @@ const DEFAULT_POV_CONTEXT_RULES = [
     to_terrain: 'RIVER_LAKE',
     to_passable: 0,
     facing: null,
-    image_path: '/lab-assets/images/terrain/forest_pine_ravine.jpg',
-    view_title: 'Mirkwood — Forested Riverbank & Ravine',
-    view_subtitle: 'Standing at eye-level among mossy boulders and evergreens where cold dark water blocks passage ahead',
-    landmarks_visible: 'Forest Boulders & Evergreens (Foreground), Cold River Ravine (Ahead)',
-    atmosphere_profile: 'forest-ravine',
-    lighting_tint: 'rgba(58, 86, 104, 0.12)',
+    image_path: '/lab-assets/images/perspective/barrier_blackwater_bank_pov.jpg',
+    view_title: 'Mirkwood Riverbank — Churning Blackwater River Ahead',
+    view_subtitle: 'Standing at the forest edge on a muddy, reed-lined bank where the wide, furiously churning rapids of the Blackwater River block passage ahead',
+    landmarks_visible: 'Forest Riverbank, Stones & Reeds (Foreground), Impassable Blackwater River Rapids (Ahead)',
+    atmosphere_profile: 'water-barrier',
+    lighting_tint: 'rgba(58, 112, 150, 0.13)',
     mist_style: 'river-mist',
     horizon_glow: 'cold-water',
     camera_type: 'POV',
     environment_scope: 'OUTDOOR',
-    view_category: 'SUBBIOME',
+    view_category: 'BARRIER',
     directionality: 'DIRECTIONAL',
     priority: 88
   },
@@ -2107,10 +2235,10 @@ const DEFAULT_POV_CONTEXT_RULES = [
     to_terrain: 'PLAINS',
     to_passable: 1,
     facing: null,
-    image_path: '/lab-assets/images/perspective/transition_plains_to_swamp_pov.jpg',
-    view_title: 'Fen Border — Climbing Out of the Marsh',
-    view_subtitle: 'Looking along the muddy causeway where the stagnant willow bogs give way to drier lowland plains ahead',
-    landmarks_visible: 'Marsh Edge Causeway & Lowland Plains Transition',
+    image_path: '/lab-assets/images/terrain/swamp_willow_boardwalk_pov.jpg',
+    view_title: 'Fen Border — Climbing the Timber Causeway Out of the Marsh',
+    view_subtitle: 'Standing on the half-sunken timber causeway in the willow mire, looking toward the drier lowland border ahead',
+    landmarks_visible: 'Sunken Marsh Boardwalk & Willow Fen Edge (Foreground), Lowland Border Ahead',
     atmosphere_profile: 'swamp-mire',
     lighting_tint: 'rgba(88, 108, 74, 0.10)',
     mist_style: 'swamp-fog',
@@ -2153,11 +2281,11 @@ const DEFAULT_POV_CONTEXT_RULES = [
     to_terrain: 'FOREST',
     to_passable: 1,
     facing: null,
-    image_path: '/lab-assets/images/perspective/transition_plains_to_forest_pov.jpg',
-    view_title: 'Highland Descent — Entering Mirkwood Forest',
-    view_subtitle: 'Descending from the rocky slopes of Raven Crags along a stone-strewn path straight into the dark boughs of Mirkwood Forest ahead',
-    landmarks_visible: 'Rocky Descent Trail (Foreground), Mirkwood Forest Canopy (Ahead)',
-    atmosphere_profile: 'forest-deep',
+    image_path: '/lab-assets/images/terrain/forest_pine_ravine.jpg',
+    view_title: 'Highland Descent — Ravine Into Mirkwood Forest',
+    view_subtitle: 'Descending between jagged highland boulders and mossy ravine ledges straight into the dark firs and pines of Mirkwood ahead',
+    landmarks_visible: 'Rocky Highland Ravine Ledges (Foreground), Dark Fir & Pine Canopy of Mirkwood (Ahead)',
+    atmosphere_profile: 'forest-ravine',
     lighting_tint: 'rgba(68, 96, 76, 0.10)',
     mist_style: 'deep-forest',
     horizon_glow: 'none',
@@ -2176,10 +2304,10 @@ const DEFAULT_POV_CONTEXT_RULES = [
     to_terrain: 'HILLS',
     to_passable: 1,
     facing: null,
-    image_path: '/lab-assets/images/perspective/transition_forest_to_hills_pov.jpg',
+    image_path: '/lab-assets/images/terrain/hills_highland_ridge_pov.jpg',
     view_title: 'Western Foothills — Ascending Toward Raven Crags',
-    view_subtitle: 'The lowland path climbs onto weathered slate steps winding up into the mist-swept crags of the western highlands',
-    landmarks_visible: 'Foothill Trail & Ascending Slate Crags Ahead',
+    view_subtitle: 'The open grassy track climbs onto cracked grey flagstones winding up along the windswept highland ridge of Raven Crags',
+    landmarks_visible: 'Grassy Foothill Flagstones (Foreground), Windswept Highland Ridge of Raven Crags (Ahead)',
     atmosphere_profile: 'hills-crag',
     lighting_tint: 'rgba(110, 118, 128, 0.10)',
     mist_style: 'moor-mist',
@@ -2199,10 +2327,10 @@ const DEFAULT_POV_CONTEXT_RULES = [
     to_terrain: 'PLAINS',
     to_passable: 1,
     facing: null,
-    image_path: '/lab-assets/images/perspective/transition_forest_to_plains_pov.jpg',
-    view_title: 'Eastern Foothills — Overlooking the Verdant Plains',
-    view_subtitle: 'Looking down from the highland pass as the trail opens out into the wide grasslands of the Verdant Plains',
-    landmarks_visible: 'Foothill Outcrop (Foreground), Open Verdant Plains (Ahead)',
+    image_path: '/images/terrain/terrain_plains.webp',
+    view_title: 'Eastern Foothills — Descending Onto the Verdant Plains',
+    view_subtitle: 'Looking past rocky foothill boulders as the highland track opens out into the wide windswept grasslands of the Verdant Plains',
+    landmarks_visible: 'Rocky Foothill Boulders (Foreground), Open Windswept Grasslands (Ahead)',
     atmosphere_profile: 'plains-open',
     lighting_tint: 'rgba(135, 142, 125, 0.09)',
     mist_style: 'light-haze',
@@ -2212,6 +2340,52 @@ const DEFAULT_POV_CONTEXT_RULES = [
     view_category: 'SUBBIOME',
     directionality: 'DIRECTIONAL',
     priority: 84
+  },
+  {
+    pov_tier: 3,
+    tier_key: 'SUBBIOME_CONTEXT_POV',
+    rule_key: 'pov_transition_hills_to_swamp',
+    from_terrain: 'HILLS',
+    from_feature: null,
+    to_terrain: 'SWAMP',
+    to_passable: 1,
+    facing: null,
+    image_path: '/lab-assets/images/perspective/transition_plains_to_swamp_pov.jpg',
+    view_title: 'Southern Crags — Descending Into the Rotting Fen',
+    view_subtitle: 'Looking South down the rocky highland slope as dry stone gives way to stagnant marsh water, crooked bog willows, and drifting green fen mist ahead',
+    landmarks_visible: 'Rocky Foothill Slope (Foreground), Stagnant Waters & Willows of the Rotting Fen (Ahead)',
+    atmosphere_profile: 'swamp-mire',
+    lighting_tint: 'rgba(78, 104, 68, 0.11)',
+    mist_style: 'swamp-fog',
+    horizon_glow: 'none',
+    camera_type: 'POV',
+    environment_scope: 'OUTDOOR',
+    view_category: 'SUBBIOME',
+    directionality: 'DIRECTIONAL',
+    priority: 85
+  },
+  {
+    pov_tier: 3,
+    tier_key: 'SUBBIOME_CONTEXT_POV',
+    rule_key: 'pov_transition_swamp_to_hills',
+    from_terrain: 'SWAMP',
+    from_feature: null,
+    to_terrain: 'HILLS',
+    to_passable: 1,
+    facing: null,
+    image_path: '/lab-assets/images/terrain/hills_highland_ridge_pov.jpg',
+    view_title: 'Northern Fen Border — Ascending Toward Raven Crags',
+    view_subtitle: 'Looking North from the marsh edge as the soggy track climbs onto cracked grey flagstones and rugged highland ridges rising into Raven Crags',
+    landmarks_visible: 'Marsh Edge & Flagstone Climb (Foreground), Rugged Highland Ridge of Raven Crags (Ahead)',
+    atmosphere_profile: 'hills-crag',
+    lighting_tint: 'rgba(104, 114, 122, 0.10)',
+    mist_style: 'moor-mist',
+    horizon_glow: 'none',
+    camera_type: 'POV',
+    environment_scope: 'OUTDOOR',
+    view_category: 'SUBBIOME',
+    directionality: 'DIRECTIONAL',
+    priority: 85
   },
   {
     pov_tier: 3,
@@ -2442,6 +2616,7 @@ function initSceneCatalogTables(db) {
   `);
 
   ensureSceneVariantMetadataColumns(db);
+  db.exec('UPDATE lab_scene_variants SET is_active = 0;');
 
   const insertVariant = db.prepare(`
     INSERT INTO lab_scene_variants (
@@ -2585,6 +2760,40 @@ function initSceneCatalogTables(db) {
       r.priority
     );
   }
+
+  initTravelContinuityTables(db);
+}
+
+function buildSceneContinuityMetadata(db, current, ahead1, left1, right1, facing, behindOverride = null) {
+  const compassContext = computeDirectionalCompassContext(current, {
+    ahead: ahead1,
+    left: left1,
+    right: right1,
+    behind: behindOverride || undefined
+  }, facing);
+  const biomePersistence = resolveBiomePersistence(current, ahead1, null, facing, 1);
+  const boundaryGuidance = resolveBoundaryGuidance(current, ahead1, facing);
+  const transitionContinuity = evaluateTransitionContinuity(null, current, {
+    facing,
+    previousFacing: facing,
+    aheadTile: ahead1,
+    leftTile: left1,
+    rightTile: right1,
+    behindTile: compassContext.behind
+  });
+
+  return {
+    transitionContext: transitionContinuity.transitionContext,
+    matchedContexts: transitionContinuity.matchedContexts,
+    continuityNote: transitionContinuity.continuityNote,
+    horizonHint: transitionContinuity.horizonHint,
+    behindHint: transitionContinuity.behindHint,
+    corridorKey: transitionContinuity.corridorKey,
+    compassContext,
+    relativeVistas: compassContext.relativeVistas,
+    biomePersistence,
+    boundaryGuidance
+  };
 }
 
 function formatVariantRow(row, matchSource = 'TERRAIN_VARIANT', poolSize = 1) {
@@ -2853,6 +3062,7 @@ function resolveSceneModeA(db, current, ahead1, left1, right1, facing, seed, inA
   }
 
   const framing = buildAtmosphereAndFraming(chosenVariant, current, ahead1, left1, right1, facing, seed);
+  const continuityMeta = buildSceneContinuityMetadata(db, current, ahead1, left1, right1, facing);
 
   return {
     mode: 'A',
@@ -2875,7 +3085,8 @@ function resolveSceneModeA(db, current, ahead1, left1, right1, facing, seed, inA
     blockedObstacleTerrain: (ahead1 && !ahead1.isPassable) ? ahead1.terrain : null,
     useAheadPortal: false,
     useLegacySvg: false,
-    ...framing
+    ...framing,
+    ...continuityMeta
   };
 }
 
@@ -2883,6 +3094,7 @@ function resolveSceneModeA(db, current, ahead1, left1, right1, facing, seed, inA
  * MODE B — Directional Scene (Forward-Vista-Centric Cohesive Scene)
  */
 function resolveSceneModeB(db, current, ahead1, left1, right1, facing, seed) {
+  const continuityMeta = buildSceneContinuityMetadata(db, current, ahead1, left1, right1, facing);
   const currentVariant = current.variant || resolveTileVariant(db, current);
   const aheadVariant = ahead1.variant || resolveTileVariant(db, ahead1);
 
@@ -2936,7 +3148,8 @@ function resolveSceneModeB(db, current, ahead1, left1, right1, facing, seed) {
       blockedObstacleTerrain: (ahead1 && !ahead1.isPassable) ? ahead1.terrain : null,
       useAheadPortal: false,
       useLegacySvg: false,
-      ...framing
+      ...framing,
+      ...continuityMeta
     };
   }
 
@@ -2963,7 +3176,8 @@ function resolveSceneModeB(db, current, ahead1, left1, right1, facing, seed) {
       blockedObstacleTerrain: ahead1.terrain,
       useAheadPortal: false,
       useLegacySvg: false,
-      ...framing
+      ...framing,
+      ...continuityMeta
     };
   }
 
@@ -2991,7 +3205,8 @@ function resolveSceneModeB(db, current, ahead1, left1, right1, facing, seed) {
     blockedObstacleTerrain: null,
     useAheadPortal: false,
     useLegacySvg: false,
-    ...framing
+    ...framing,
+    ...continuityMeta
   };
 }
 
@@ -3038,7 +3253,7 @@ function inferWeatherEffect(atmosphereProfile) {
  *  roadway (`fp_bridge_8_7_east` / `fp_bridge_8_7_west`) so monsters always stand on the solid bridge deck
  *  and never float on top of the river water.
  */
-function resolveSceneModeC(db, current, ahead1, left1, right1, facing, seed, inActiveCombat = false) {
+function resolveSceneModeCCore(db, current, ahead1, left1, right1, facing, seed, inActiveCombat = false) {
   const { flankLeftHint, flankRightHint } = computeFlankHints(left1, right1);
   const isBlocked = Boolean(ahead1 && !ahead1.isPassable);
   const aheadName = ahead1 ? ahead1.name : 'the horizon';
@@ -3176,7 +3391,7 @@ function resolveSceneModeC(db, current, ahead1, left1, right1, facing, seed, inA
   const aheadTerrain = ahead1 ? (ahead1.terrain || '') : '';
 
   for (const tierNum of [2, 3]) {
-    const contextRule = db.prepare(`
+    const candidateRules = db.prepare(`
       SELECT * FROM lab_pov_context_rules
       WHERE is_active = 1
         AND pov_tier = ?
@@ -3186,8 +3401,7 @@ function resolveSceneModeC(db, current, ahead1, left1, right1, facing, seed, inA
         AND (to_passable IS NULL OR to_passable = ?)
         AND (facing IS NULL OR facing = ?)
       ORDER BY priority DESC, id ASC
-      LIMIT 1
-    `).get(
+    `).all(
       tierNum,
       current.terrain || '',
       current.feature || '',
@@ -3195,6 +3409,15 @@ function resolveSceneModeC(db, current, ahead1, left1, right1, facing, seed, inA
       aheadPassableInt,
       facing
     );
+    const contextRule = candidateRules.find(rule => {
+      if (rule.rule_key === 'pov_forest_track_east') {
+        return Number(current.x) === 7 && Number(current.y) === 5;
+      }
+      if (rule.rule_key === 'pov_forest_facing_crag_wall') {
+        return Boolean(ahead1 && Number(ahead1.x) === 6 && Number(ahead1.y) === 5);
+      }
+      return true;
+    }) || null;
 
     if (contextRule) {
       const tierMeta = tierNum === 2 ? POV_TIERS.LANDMARK_DIRECTIONAL_POV : POV_TIERS.SUBBIOME_CONTEXT_POV;
@@ -3269,13 +3492,88 @@ function resolveSceneModeC(db, current, ahead1, left1, right1, facing, seed, inA
   `).all(current.terrain || '');
 
   if (povPool && povPool.length > 0) {
-    const facingIndexShift = { NORTH: 0, EAST: 1, SOUTH: 2, WEST: 3 }[facing] || 0;
     const chosenIdx = computeDeterministicVariantIndex(
-      Number(current.x || 0) + facingIndexShift,
+      Number(current.x || 0),
       Number(current.y || 0),
-      povPool.length
+      povPool.length,
+      facing
     );
-    const chosenRow = povPool[chosenIdx] || povPool[0];
+    let chosenRow = povPool[chosenIdx] || povPool[0];
+    if (povPool.length > 1) {
+      const adjacentContextImages = new Set();
+      for (const adjTile of [left1, right1]) {
+        if (!adjTile) continue;
+        const adjPassable = adjTile.isPassable ? 1 : 0;
+        const adjRules = db.prepare(`
+          SELECT rule_key, image_path FROM lab_pov_context_rules
+          WHERE is_active = 1
+            AND (from_terrain IS NULL OR from_terrain = ?)
+            AND (from_feature IS NULL OR from_feature = ?)
+            AND (to_terrain IS NULL OR to_terrain = ?)
+            AND (to_passable IS NULL OR to_passable = ?)
+          ORDER BY pov_tier ASC, priority DESC, id ASC
+        `).all(
+          current.terrain || '',
+          current.feature || '',
+          adjTile.terrain || '',
+          adjPassable
+        );
+        const matchedAdj = adjRules.find(r => {
+          if (r.rule_key === 'pov_forest_track_east') {
+            return Number(current.x) === 7 && Number(current.y) === 5;
+          }
+          if (r.rule_key === 'pov_forest_facing_crag_wall') {
+            return Number(adjTile.x) === 6 && Number(adjTile.y) === 5;
+          }
+          return true;
+        });
+        if (matchedAdj && matchedAdj.image_path) {
+          adjacentContextImages.add(matchedAdj.image_path);
+        }
+      }
+      if (adjacentContextImages.has(chosenRow.image_path)) {
+        const adjFacings = {
+          NORTH: ['WEST', 'EAST'],
+          EAST: ['NORTH', 'SOUTH'],
+          SOUTH: ['EAST', 'WEST'],
+          WEST: ['SOUTH', 'NORTH']
+        }[facing] || [];
+        const adjacentTier4Images = new Set();
+        const adjTiles = [left1, right1];
+        for (let i = 0; i < adjFacings.length; i++) {
+          const adjF = adjFacings[i];
+          const adjIdx = computeDeterministicVariantIndex(
+            Number(current.x || 0),
+            Number(current.y || 0),
+            povPool.length,
+            adjF
+          );
+          if (povPool[adjIdx] && povPool[adjIdx].image_path) {
+            adjacentTier4Images.add(povPool[adjIdx].image_path);
+          }
+        }
+        let bestAlt = null;
+        for (let offset = 1; offset < povPool.length; offset++) {
+          const altRow = povPool[(chosenIdx + offset) % povPool.length];
+          if (altRow && !adjacentContextImages.has(altRow.image_path) && !adjacentTier4Images.has(altRow.image_path)) {
+            bestAlt = altRow;
+            break;
+          }
+        }
+        if (!bestAlt) {
+          for (let offset = 1; offset < povPool.length; offset++) {
+            const altRow = povPool[(chosenIdx + offset) % povPool.length];
+            if (altRow && !adjacentContextImages.has(altRow.image_path)) {
+              bestAlt = altRow;
+              break;
+            }
+          }
+        }
+        if (bestAlt) {
+          chosenRow = bestAlt;
+        }
+      }
+    }
     const genericPov = formatVariantRow(chosenRow, 'GENERIC_TERRAIN_POV', povPool.length);
 
     return {
@@ -3387,6 +3685,31 @@ function resolveSceneModeC(db, current, ahead1, left1, right1, facing, seed, inA
       isBlocked
     )
   };
+}
+
+function resolveSceneModeC(db, current, ahead1, left1, right1, facing, seed, inActiveCombat = false, behindOverride = null) {
+  const baseScene = resolveSceneModeCCore(db, current, ahead1, left1, right1, facing, seed, inActiveCombat);
+  const continuityMeta = buildSceneContinuityMetadata(db, current, ahead1, left1, right1, facing, behindOverride);
+  const finalScene = {
+    ...baseScene,
+    ...continuityMeta
+  };
+
+  if (!isBuildingAtlas && current && typeof current.x === 'number' && typeof current.y === 'number') {
+    latestLiveViewportContext = {
+      db,
+      current,
+      ahead1,
+      left1,
+      right1,
+      behind1: continuityMeta.compassContext ? continuityMeta.compassContext.behind : null,
+      facing,
+      inActiveCombat: Boolean(inActiveCombat),
+      scene: finalScene
+    };
+  }
+
+  return finalScene;
 }
 
 /**
@@ -3673,10 +3996,11 @@ const ATMOSPHERE_EFFECT_PROFILES = {
 function resolveAtmosphereEffectProfile(atmosphereProfile, currentTile = null, aheadTile = null, facing = 'NORTH') {
   const rawKey = String(atmosphereProfile || '').toLowerCase();
   const terrain = String((currentTile && currentTile.terrain) || '').toUpperCase();
+  const biomePersistence = resolveBiomePersistence(currentTile, aheadTile, null);
 
-  // Location-specific overrides
+  let baseProfile = ATMOSPHERE_EFFECT_PROFILES['plains-open'];
   if (currentTile && currentTile.x === 4 && currentTile.y === 11) {
-    return {
+    baseProfile = {
       ...ATMOSPHERE_EFFECT_PROFILES['swamp-mire'],
       profileKey: 'deadmans-mire-override',
       label: 'Deadman’s Mire Ghostly Wisps & Bog Fog',
@@ -3684,27 +4008,43 @@ function resolveAtmosphereEffectProfile(atmosphereProfile, currentTile = null, a
       particleCountSubtle: 12,
       particleCountFull: 26
     };
-  }
-  if (currentTile && currentTile.x === 7 && currentTile.y === 3) {
-    return ATMOSPHERE_EFFECT_PROFILES['ancient-oak'];
+  } else if (currentTile && currentTile.x === 7 && currentTile.y === 3) {
+    baseProfile = ATMOSPHERE_EFFECT_PROFILES['ancient-oak'];
+  } else if (ATMOSPHERE_EFFECT_PROFILES[rawKey]) {
+    baseProfile = ATMOSPHERE_EFFECT_PROFILES[rawKey];
+  } else if (rawKey.startsWith('forest')) {
+    baseProfile = ATMOSPHERE_EFFECT_PROFILES['forest-deep'];
+  } else if (rawKey.startsWith('swamp')) {
+    baseProfile = ATMOSPHERE_EFFECT_PROFILES['swamp-mire'];
+  } else if (rawKey.startsWith('hills')) {
+    baseProfile = ATMOSPHERE_EFFECT_PROFILES['hills-crag'];
+  } else if (rawKey.startsWith('plains')) {
+    baseProfile = ATMOSPHERE_EFFECT_PROFILES['plains-open'];
+  } else if (rawKey.startsWith('ruins')) {
+    baseProfile = ATMOSPHERE_EFFECT_PROFILES['ruins-exterior'];
+  } else if (terrain === 'CITY') {
+    baseProfile = ATMOSPHERE_EFFECT_PROFILES['sanctuary'];
+  } else if (terrain === 'BRIDGE') {
+    baseProfile = ATMOSPHERE_EFFECT_PROFILES['bridge'];
+  } else if (terrain === 'FOREST') {
+    baseProfile = ATMOSPHERE_EFFECT_PROFILES['forest-deep'];
+  } else if (terrain === 'SWAMP') {
+    baseProfile = ATMOSPHERE_EFFECT_PROFILES['swamp-mire'];
+  } else if (terrain === 'JUNGLE') {
+    baseProfile = ATMOSPHERE_EFFECT_PROFILES['jungle'];
+  } else if (terrain === 'HILLS' || terrain === 'MOUNTAINS') {
+    baseProfile = ATMOSPHERE_EFFECT_PROFILES['hills-crag'];
   }
 
-  if (ATMOSPHERE_EFFECT_PROFILES[rawKey]) {
-    return ATMOSPHERE_EFFECT_PROFILES[rawKey];
-  }
-  if (rawKey.startsWith('forest')) return ATMOSPHERE_EFFECT_PROFILES['forest-deep'];
-  if (rawKey.startsWith('swamp')) return ATMOSPHERE_EFFECT_PROFILES['swamp-mire'];
-  if (rawKey.startsWith('hills')) return ATMOSPHERE_EFFECT_PROFILES['hills-crag'];
-  if (rawKey.startsWith('plains')) return ATMOSPHERE_EFFECT_PROFILES['plains-open'];
-  if (rawKey.startsWith('ruins')) return ATMOSPHERE_EFFECT_PROFILES['ruins-exterior'];
-
-  if (terrain === 'CITY') return ATMOSPHERE_EFFECT_PROFILES['sanctuary'];
-  if (terrain === 'BRIDGE') return ATMOSPHERE_EFFECT_PROFILES['bridge'];
-  if (terrain === 'FOREST') return ATMOSPHERE_EFFECT_PROFILES['forest-deep'];
-  if (terrain === 'SWAMP') return ATMOSPHERE_EFFECT_PROFILES['swamp-mire'];
-  if (terrain === 'JUNGLE') return ATMOSPHERE_EFFECT_PROFILES['jungle'];
-  if (terrain === 'HILLS' || terrain === 'MOUNTAINS') return ATMOSPHERE_EFFECT_PROFILES['hills-crag'];
-  return ATMOSPHERE_EFFECT_PROFILES['plains-open'];
+  return {
+    ...baseProfile,
+    subBiomeKey: biomePersistence.subBiomeKey,
+    subBiomeLabel: biomePersistence.subBiomeLabel,
+    persistedBiome: biomePersistence.persistedBiome,
+    approachingThreshold: biomePersistence.approachingThreshold,
+    thresholdHint: biomePersistence.thresholdHint,
+    facing: String(facing || 'NORTH').toUpperCase()
+  };
 }
 
 /**
@@ -4178,6 +4518,17 @@ function classifyViewCoverageQuality(sceneC, currentTile, aheadTile) {
     };
   }
 
+  if (tier === 4 && (sceneC.corridorKey || (aheadTile && aheadTile.feature))) {
+    return {
+      qualityGrade: 'B',
+      qualityLabel: COVERAGE_QUALITY_GRADES.B.label,
+      isBespoke: false,
+      neighborConsistent: true,
+      visuallyAppropriate: true,
+      needsArtwork: false
+    };
+  }
+
   return {
     qualityGrade: 'C',
     qualityLabel: COVERAGE_QUALITY_GRADES.C.label,
@@ -4201,10 +4552,10 @@ function buildWorldVisualAtlas(db) {
   }
 
   const dirVectors = {
-    NORTH: { dx: 0, dy: -1, left: 'WEST', right: 'EAST' },
-    EAST:  { dx: 1, dy: 0,  left: 'NORTH', right: 'SOUTH' },
-    SOUTH: { dx: 0, dy: 1,  left: 'EAST', right: 'WEST' },
-    WEST:  { dx: -1, dy: 0, left: 'SOUTH', right: 'NORTH' }
+    NORTH: { dx: 0, dy: -1, left: 'WEST', right: 'EAST', behind: 'SOUTH' },
+    EAST:  { dx: 1, dy: 0,  left: 'NORTH', right: 'SOUTH', behind: 'WEST' },
+    SOUTH: { dx: 0, dy: 1,  left: 'EAST', right: 'WEST', behind: 'NORTH' },
+    WEST:  { dx: -1, dy: 0, left: 'SOUTH', right: 'NORTH', behind: 'EAST' }
   };
 
   function getNeighbor(x, y, dir) {
@@ -4230,24 +4581,27 @@ function buildWorldVisualAtlas(db) {
   const biomeBreakdown = {};
 
   const atlasTiles = [];
-  for (const t of rawTiles) {
-    const current = {
-      ...t,
-      isPassable: t.is_passable === 1,
-      isSafe: t.is_safe === 1,
-      exists: true
-    };
-    const views = {};
-    const gradesOnTile = [];
+  isBuildingAtlas = true;
+  try {
+    for (const t of rawTiles) {
+      const current = {
+        ...t,
+        isPassable: t.is_passable === 1,
+        isSafe: t.is_safe === 1,
+        exists: true
+      };
+      const views = {};
+      const gradesOnTile = [];
 
-    for (const facing of ['NORTH', 'EAST', 'SOUTH', 'WEST']) {
-      const vMeta = dirVectors[facing];
-      const ahead1 = getNeighbor(t.x, t.y, facing);
-      const left1 = getNeighbor(t.x, t.y, vMeta.left);
-      const right1 = getNeighbor(t.x, t.y, vMeta.right);
-      const seed = ((t.x * 73856093) ^ (t.y * 19349663)) >>> 0;
+      for (const facing of ['NORTH', 'EAST', 'SOUTH', 'WEST']) {
+        const vMeta = dirVectors[facing];
+        const ahead1 = getNeighbor(t.x, t.y, facing);
+        const left1 = getNeighbor(t.x, t.y, vMeta.left);
+        const right1 = getNeighbor(t.x, t.y, vMeta.right);
+        const behind1 = getNeighbor(t.x, t.y, vMeta.behind);
+        const seed = ((t.x * 73856093) ^ (t.y * 19349663)) >>> 0;
 
-      const sceneC = resolveSceneModeC(db, current, ahead1, left1, right1, facing, seed, false);
+        const sceneC = resolveSceneModeC(db, current, ahead1, left1, right1, facing, seed, false, behind1);
       const quality = classifyViewCoverageQuality(sceneC, current, ahead1);
       const poi = resolvePointOfInterest(current, ahead1, facing);
       const effectProfile = resolveAtmosphereEffectProfile(sceneC.atmosphereProfile, current, ahead1, facing);
@@ -4347,6 +4701,9 @@ function buildWorldVisualAtlas(db) {
       views,
       directions: views
     });
+    }
+  } finally {
+    isBuildingAtlas = false;
   }
 
   const totalTilesCount = rawTiles.length;
@@ -4392,6 +4749,10 @@ module.exports = {
   DEFAULT_SCENE_VARIANTS,
   DEFAULT_PERSPECTIVE_VIEWS,
   DEFAULT_POV_CONTEXT_RULES,
+  TRANSITION_CONTEXT_TYPES,
+  REVISIT_STATUS_TYPES,
+  WORLD_LANDMARKS,
+  NAMED_CORRIDORS,
   normalizeSceneMode,
   computeDeterministicVariantIndex,
   computeSceneStageAnchor,
@@ -4403,5 +4764,11 @@ module.exports = {
   resolveSceneModeA,
   resolveSceneModeB,
   resolveSceneModeC,
-  resolveSceneModeLegacy
+  resolveSceneModeLegacy,
+  getLatestSceneViewportContext,
+  resolveBoundaryGuidance,
+  getBoundaryGuidance,
+  computeDirectionalCompassContext,
+  resolveBiomePersistence,
+  evaluateTransitionContinuity
 };

@@ -1,0 +1,113 @@
+/* ==========================================================================
+
+   DARKGRID ADVENTURE LAB — BASE STYLES, VARIABLES & RESET (base.css)
+
+   ========================================================================== */
+
+/* ==========================================================================
+   DARKGRID — First-Person Action Viewport Stylesheet (Dungeon Master / Grimrock)
+   Strictly adheres to docs/game-ui-style.md palette & typography:
+   Weathered stone, dark iron, burnished antique bronze/gold, crimson blood,
+   and emerald moss. Zero neon colors.
+   ========================================================================== */
+
+:root {
+  --bg-void: #07090c;
+  --bg-main: #0c0f14;
+  --bg-surface: #131720;
+  --bg-surface-elevated: #1a202c;
+  --bg-surface-sunken: #090c10;
+  --bg-overlay: rgba(7, 9, 12, 0.88);
+
+  --border-subtle: #222938;
+  --border-medium: #2d374a;
+  --border-gold: rgba(197, 160, 89, 0.42);
+  --border-gold-solid: #c5a059;
+  --border-crimson: rgba(158, 42, 43, 0.65);
+
+  --text-heading: #f0e6d2;
+  --text-body: #d6dae2;
+  --text-muted: #8792a4;
+  --text-dim: #535e70;
+
+  --accent-gold: #c5a059;
+  --accent-gold-bright: #e6be6e;
+  --accent-gold-dim: #7c6238;
+
+  --accent-crimson: #9e2a2b;
+  --accent-crimson-bright: #c53030;
+  --accent-moss: #3d6e46;
+  --accent-moss-bright: #5fa66d;
+  --accent-toxic: #5c3870;
+  --accent-toxic-bright: #8954a6;
+
+  --hp-healthy: #4ade80;
+  --hp-wounded: #f59e0b;
+  --hp-critical: #ef4444;
+
+  --font-serif: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  --font-display: 'Cinzel Decorative', 'Cinzel', Georgia, serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  background-color: var(--bg-void);
+  background-image:
+    radial-gradient(ellipse at 50% 0%, #161c27 0%, #0c0f14 60%, #07090c 100%);
+  color: var(--text-body);
+  font-family: var(--font-sans);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+
+
+/* ==========================================================================
+   17. PHASE 3: ADVENTURE EXPERIENCE OVERLAYS (Discoveries, Tension & Journal)
+   ========================================================================== */
+.lab-pill-adventure {
+  border-color: rgba(230, 190, 110, 0.55);
+  color: #fde68a;
+}
+
+.lab-pill.is-active-mode {
+  background: linear-gradient(180deg, #7c6238 0%, #4e3c20 100%);
+  border-color: var(--accent-gold-bright);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(197, 160, 89, 0.38);
+}
+
+
+/* 15.6 Keyboard Accessibility Focus States & Help Keycaps */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--accent-gold-bright);
+  outline-offset: 2px;
+}
+
+.help-kbd {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: #141923;
+  border: 1px solid var(--border-gold);
+  color: var(--accent-gold-bright);
+}
+

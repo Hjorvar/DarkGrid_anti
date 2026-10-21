@@ -1,0 +1,384 @@
+/**
+ * DARKGRID ADVENTURE LAB — Combat Actor Presentation, Cutout Rig & Tactical Slot Handlers (ES Module)
+ */
+import { store, uiCallbacks } from '../state/store.js';
+import { escapeHtml, getConditionColor } from '../ui/utils.js';
+import { dispatchAction, triggerInspectPoi } from '../api/client.js';
+import { computeClientMonsterVisualScale } from './size-arena.js';
+
+function renderViewportCenterStage(state) {
+  return uiCallbacks.renderViewportCenterStage(state);
+}
+function renderActionDeckAndPad(state) {
+  return uiCallbacks.renderActionDeckAndPad(state);
+}
+
+export function normalizeMonsterPresenceMode(mode) {
+  const raw = String(mode || 'card').toLowerCase().trim();
+  if (raw === 'hybrid' || raw === 'card' || raw === 'default') return 'card';
+  if (raw === 'integrated' || raw === 'cutout' || raw === 'in-scene') return 'integrated';
+  if (raw === 'blend') return 'blend';
+  if (raw === 'framed' || raw === 'frame') return 'framed';
+  return 'card';
+}
+
+export function setMonsterPresenceMode(mode) {
+  const norm = normalizeMonsterPresenceMode(mode);
+  store.currentPresenceMode = norm;
+  const vp = document.getElementById('fp-viewport');
+  if (vp) {
+    vp.classList.remove(
+      'presence-mode-card',
+      'presence-mode-hybrid',
+      'presence-mode-integrated',
+      'presence-mode-blend',
+      'presence-mode-framed'
+    );
+    vp.classList.add('presence-mode-' + norm);
+    if (norm === 'card') {
+      vp.classList.add('presence-mode-hybrid');
+    }
+  }
+  ['card', 'integrated', 'blend', 'framed'].forEach(m => {
+    const btn = document.getElementById('blend-btn-' + m);
+    if (btn) btn.classList.toggle('is-active', m === norm);
+  });
+
+  if (store.currentState && store.currentState.mode !== 'FALLEN') {
+    renderViewportCenterStage(store.currentState);
+  }
+}
+
+export function handleMonsterImageError(imgEl) {
+  if (!imgEl || imgEl.dataset.fallbackApplied === 'true') return;
+  const fallbackSrc = imgEl.getAttribute('data-fallback-src');
+  if (!fallbackSrc || imgEl.getAttribute('src') === fallbackSrc) return;
+  imgEl.dataset.fallbackApplied = 'true';
+  imgEl.dataset.presentation = 'card';
+  imgEl.setAttribute('src', fallbackSrc);
+  const actor = imgEl.closest('#fp-monster-actor');
+  if (actor) {
+    actor.classList.remove('is-integrated-monster');
+    actor.classList.add('is-card-monster');
+    const rig = actor.querySelector('.fp-integrated-grounding-rig');
+    if (rig) rig.style.display = 'none';
+  }
+  const vp = document.getElementById('fp-viewport');
+  if (vp) {
+    vp.classList.remove('is-effective-integrated');
+    vp.classList.add('is-effective-card');
+  }
+}
+
+export function resolveEnvironmentLightingGroup(state) {
+  const mode = (state && state.sceneMode) || store.currentSceneMode || 'C';
+  const scene = state && state.viewportScene;
+  const activeScene = (scene && scene.scenes && scene.scenes[mode]) || (scene && scene.activeScene) || {};
+  const atmo = String(activeScene.atmosphereProfile || '').toLowerCase();
+  const terrain = String((state && state.currentTile && state.currentTile.terrain) || '').toUpperCase();
+
+  if (atmo.includes('bridge') || atmo.includes('water') || terrain === 'BRIDGE') {
+    return 'bridge';
+  }
+  if (atmo.includes('forest') || atmo.includes('oak') || atmo.includes('swamp') || atmo.includes('jungle') || terrain === 'FOREST') {
+    return 'forest';
+  }
+  if (atmo.includes('sanctuary') || atmo.includes('gatehouse') || terrain === 'CITY') {
+    return 'sanctuary';
+  }
+  return 'wilderness';
+}
+
+export function buildCombatMonsterActorHtml(monster, state, { isSequenceFrame = false, initBracket = null, initCondText = null } = {}) {
+  const bracketKey = initBracket || monster.conditionBracket || '5_uninjured';
+  const condText = initCondText !== null ? initCondText : (monster.conditionText || '');
+  const gemColor = getConditionColor(bracketKey);
+  const isRanged = Boolean(state && state.combatStats && state.combatStats.isRangedActive);
+  const weaponName = (state && state.combatStats && state.combatStats.activeWeapon && state.combatStats.activeWeapon.name) || 'Weapon';
+
+  const wantsIntegrated = store.currentPresenceMode === 'integrated';
+  const canUseIntegrated = Boolean(monster && monster.hasIntegratedCutout && monster.cutoutImageUrl);
+  const isEffectiveIntegrated = wantsIntegrated && canUseIntegrated;
+  const didFallbackToCard = wantsIntegrated && !canUseIntegrated;
+
+  const vp = document.getElementById('fp-viewport');
+  const envGroup = resolveEnvironmentLightingGroup(state);
+  if (vp) {
+    vp.classList.toggle('is-effective-integrated', isEffectiveIntegrated);
+    vp.classList.toggle('is-effective-card', !isEffectiveIntegrated);
+    vp.classList.remove('env-light-bridge', 'env-light-forest', 'env-light-sanctuary', 'env-light-wilderness');
+    vp.classList.add(`env-light-${envGroup}`);
+  }
+
+  const profile = (monster && monster.integratedProfile) || {};
+  const groundingMode = String(profile.groundingMode || (monster && monster.isAirborne ? 'AIRBORNE_HOVER' : 'GROUNDED')).toLowerCase();
+  const sizeCategory = String(profile.sizeCategory || 'MEDIUM').toLowerCase();
+  const scaleMult = Number(profile.scaleMultiplier || 1.0);
+  const verticalOffsetPx = Number(profile.verticalOffsetPx || 0);
+  const shadowWidthPct = Number(profile.shadowWidthPct || 72);
+  const shadowBlurPx = Number(profile.shadowBlurPx || 9);
+  const shadowOpacity = Number(profile.shadowOpacity || 0.64);
+
+  const mode = (state && state.sceneMode) || store.currentSceneMode || 'C';
+  const scene = state && state.viewportScene;
+  const activeScene = (scene && scene.scenes && scene.scenes[mode]) || (scene && scene.activeScene) || {};
+  const stageAnchor = activeScene.stageAnchor || {};
+  const stageCenterX = typeof stageAnchor.stageCenterX === 'number' ? stageAnchor.stageCenterX : 50;
+  const stageShiftX = Number((stageCenterX - 50).toFixed(1));
+  const stageFloorY = typeof stageAnchor.stageFloorY === 'number' ? stageAnchor.stageFloorY : 82;
+  const groundSurfaceType = stageAnchor.groundSurfaceType || 'wilderness-soil';
+  const groundShadowTint = stageAnchor.groundShadowTint || 'rgba(8, 10, 12, 0.72)';
+
+  const imgSrc = isEffectiveIntegrated
+    ? monster.cutoutImageUrl
+    : (monster.imageUrl || '/images/monsters/assassin_vine.png');
+
+  const strikeSvg = isRanged
+    ? `<svg id="fp-slash-svg" class="slash-svg" viewBox="0 0 200 200">
+         <circle cx="100" cy="100" r="46" fill="none" stroke="#e6be6e" stroke-width="3" stroke-dasharray="10 6"/>
+         <line x1="25" y1="175" x2="115" y2="85" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+         <polygon points="122,78 98,86 114,102" fill="#e6be6e"/>
+       </svg>`
+    : `<svg id="fp-slash-svg" class="slash-svg" viewBox="0 0 200 200">
+         <path d="M 25 165 Q 95 85 178 28" fill="none" stroke="#c5a059" stroke-width="10" stroke-linecap="round" opacity="0.65"/>
+         <path d="M 30 160 Q 100 90 175 32" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+       </svg>`;
+
+  const adaptive = computeClientMonsterVisualScale(monster, state, isEffectiveIntegrated);
+  const useAdaptiveScale = store.currentMonsterScaleMode === 'adaptive' && Boolean(adaptive);
+  const pfSizeClass = adaptive ? `pf-size-${String(adaptive.pfSizeCategory || 'MEDIUM').toLowerCase()}` : 'pf-size-medium';
+  const bodyProfClass = adaptive ? `profile-${String(adaptive.visualBodyProfile || 'BIPED_MEDIUM').toLowerCase()}` : 'profile-biped_medium';
+
+  const actorClasses = [
+    'fp-monster-actor',
+    isEffectiveIntegrated ? 'is-integrated-monster' : 'is-card-monster',
+    useAdaptiveScale ? 'is-adaptive-scale' : 'is-legacy-scale',
+    `grounding-${groundingMode}`,
+    `size-${sizeCategory}`,
+    pfSizeClass,
+    bodyProfClass,
+    `env-grade-${envGroup}`,
+    `surface-${groundSurfaceType}`
+  ].join(' ');
+
+  const effVisW = adaptive ? adaptive.visibleWidthPx : 220;
+  const effVisH = adaptive ? adaptive.visibleHeightPx : 220;
+  const trimScale = adaptive ? adaptive.transparencyCompensation.imageTrimScale : 1;
+  const shiftXPct = adaptive ? adaptive.transparencyCompensation.imageShiftXPct : 0;
+  const shiftYPct = adaptive ? adaptive.transparencyCompensation.imageShiftYPct : 0;
+  const effShadowW = adaptive ? adaptive.shadow.shadowWidthPct : shadowWidthPct;
+  const effShadowBlur = adaptive ? adaptive.shadow.shadowBlurPx : shadowBlurPx;
+  const effShadowOp = adaptive ? adaptive.shadow.shadowOpacity : shadowOpacity;
+  const effShadowWPx = adaptive ? adaptive.shadow.shadowWidthPx : 220;
+  const effShadowHPx = adaptive ? adaptive.shadow.shadowHeightPx : 24;
+  const effOffsetY = isEffectiveIntegrated
+    ? verticalOffsetPx
+    : (adaptive ? adaptive.positioning.verticalOffsetPx : 0);
+
+  const distTr = (monster && monster.distanceTransition) || null;
+  const approachVars = distTr && distTr.cssVars
+    ? ` --approach-start-scale:${distTr.cssVars['--approach-start-scale'] || 0.6}; --approach-start-y:${distTr.cssVars['--approach-start-y'] || '-24px'}; --approach-duration:${distTr.cssVars['--approach-duration'] || '440ms'};`
+    : '';
+  const inlineVars = useAdaptiveScale
+    ? `--monster-vis-w:${effVisW}px; --monster-vis-h:${effVisH}px; --monster-img-trim-scale:${trimScale}; --monster-img-shift-x:${shiftXPct}%; --monster-img-shift-y:${shiftYPct}%; --monster-scale:1; --monster-offset-y:${effOffsetY}px; --stage-shift-x:${stageShiftX}%; --stage-floor-y:${stageFloorY}%; --shadow-width:${effShadowW}%; --shadow-width-px:${effShadowWPx}px; --shadow-height-px:${effShadowHPx}px; --shadow-blur:${effShadowBlur}px; --shadow-opacity:${effShadowOp}; --ground-shadow-tint:${groundShadowTint};${approachVars}`
+    : (isEffectiveIntegrated
+      ? `--monster-scale:${scaleMult}; --monster-offset-y:${verticalOffsetPx}px; --stage-shift-x:${stageShiftX}%; --stage-floor-y:${stageFloorY}%; --shadow-width:${shadowWidthPct}%; --shadow-blur:${shadowBlurPx}px; --shadow-opacity:${shadowOpacity}; --ground-shadow-tint:${groundShadowTint};${approachVars}`
+      : '');
+
+  let integratedRigHtml = '';
+  if (isEffectiveIntegrated) {
+    const amb = profile.ambientPatch || {
+      leftPct: 50,
+      topPct: monster.isAirborne ? 115 : 93,
+      widthPct: shadowWidthPct,
+      heightPct: 12,
+      rotateDeg: 0,
+      blurPx: shadowBlurPx,
+      opacity: shadowOpacity * 0.65
+    };
+    const contacts = Array.isArray(profile.contactPatches) ? profile.contactPatches : [];
+    const contactsHtml = contacts.map(cp => `
+      <span class="fp-rig-contact-patch"
+            data-contact-id="${escapeHtml(cp.id || 'pt')}"
+            style="left:${Number(cp.leftPct || 50)}%; top:${Number(cp.topPct || 95)}%; width:${Number(cp.widthPct || 18)}%; height:${Number(cp.heightPct || 5.5)}%; transform:translate(-50%, -50%) rotate(${Number(cp.rotateDeg || 0)}deg); filter:blur(${Number(cp.blurPx || 3)}px); opacity:${Number(cp.opacity || 0.76)};"></span>
+    `).join('');
+
+    integratedRigHtml = `
+      <div class="fp-integrated-grounding-rig surface-${escapeHtml(groundSurfaceType)}" aria-hidden="true">
+        <span class="fp-rig-ambient-patch"
+              style="left:${Number(amb.leftPct)}%; top:${Number(amb.topPct)}%; width:${Number(amb.widthPct)}%; height:${Number(amb.heightPct)}%; transform:translate(-50%, -50%) rotate(${Number(amb.rotateDeg || 0)}deg); filter:blur(${Number(amb.blurPx || 8)}px); opacity:${Number(amb.opacity || 0.44)};"></span>
+        ${contactsHtml}
+      </div>
+    `;
+  }
+
+  const modeBadgeHtml = isEffectiveIntegrated
+    ? `<span class="lab-badge badge-integrated-active dev-only-badge" title="Rendered in-scene with alpha cutout, anatomical ground contact shadows & environment lighting">✦ In-Scene Cutout</span>`
+    : (didFallbackToCard
+      ? `<span class="lab-badge badge-card-fallback dev-only-badge" title="No cutout asset found for this creature — safely fell back to Card mode">🛡️ Card Fallback</span>`
+      : '');
+
+  const bracketLabelMap = {
+    '5_uninjured': 'Uninjured',
+    '6_barely_wounded': 'Barely Wounded',
+    '7_wounded': 'Wounded',
+    '8_badly_wounded': 'Badly Wounded',
+    '9_near_death': 'Near Death',
+    '4_bruised': 'Bruised',
+    '3_wounded': 'Bloodied',
+    '2_critical': 'Grievously Wounded',
+    '1_near_death': 'Near Death'
+  };
+  const bracketLabel = bracketLabelMap[bracketKey] || 'Engaged';
+  const roundNum = Number(monster.combat_round || 1);
+  const atkBonus = isRanged
+    ? ((state && state.combatStats && state.combatStats.rangedAttackBonus) || '+0')
+    : ((state && state.combatStats && state.combatStats.meleeAttackBonus) || '+0');
+
+  const conditionBlockHtml = isSequenceFrame
+    ? `<div class="fp-monster-condition-quote" id="seq-condition-quote">
+         <span class="condition-gem" id="seq-condition-gem" style="background:${gemColor}; color:${gemColor};"></span>
+         <span id="seq-condition-text">“${escapeHtml(condText || 'Engaged in melee!')}”</span>
+       </div>`
+    : (condText ? `
+       <div class="fp-monster-condition-quote">
+         <span class="condition-gem" style="background:${gemColor}; color:${gemColor};"></span>
+         <span>“${escapeHtml(condText)}”</span>
+       </div>
+    ` : '');
+
+  const tacticalReadoutHtml = `
+    <div class="fp-combat-tactical-strip">
+      <span class="fp-tactical-chip">⚔️ Round ${roundNum}</span>
+      <span class="fp-tactical-chip" id="seq-condition-badge" style="color:${gemColor}; border-color:${gemColor}55;">● ${escapeHtml(bracketLabel)}</span>
+      <span class="fp-tactical-chip fp-tactical-hint">${isRanged ? '🏹' : '🗡️'} ${escapeHtml(weaponName)} (${escapeHtml(String(atkBonus))}) • [Space] Strike</span>
+    </div>
+  `;
+
+  const pfSizeBadgeHtml = adaptive
+    ? `<span class="lab-badge badge-pf-size" title="Threat Scale: ${escapeHtml(adaptive.pfSizeLabel)} (${adaptive.pfSpaceFt} ft space)">📏 ${escapeHtml(adaptive.pfSizeLabel)}</span>`
+    : '';
+
+  const techScaleBadgeHtml = adaptive
+    ? `<span class="sizelab-tech-tag dev-only-badge" id="monster-tech-dims" title="Dev Telemetry — Profile: ${escapeHtml(adaptive.visualBodyProfileLabel || adaptive.visualBodyProfile)} • Visible Box: ${adaptive.visibleWidthPx}×${adaptive.visibleHeightPx}px • Trim ×${adaptive.transparencyCompensation.imageTrimScale}">${adaptive.visibleWidthPx}×${adaptive.visibleHeightPx}px • ×${adaptive.transparencyCompensation.imageTrimScale}</span>`
+    : '';
+
+  return `
+    <div class="${actorClasses}" id="fp-monster-actor" data-pf-size="${escapeHtml(adaptive ? adaptive.pfSizeCategory : 'MEDIUM')}" data-body-profile="${escapeHtml(adaptive ? adaptive.visualBodyProfile : 'BIPED_MEDIUM')}" data-vis-w="${effVisW}" data-vis-h="${effVisH}" data-ground-surface="${escapeHtml(groundSurfaceType)}" data-stage-floor-y="${stageFloorY}" style="${inlineVars}" onclick="handleMonsterActorClick()" title="Click creature or press [Space / 1] to strike with ${escapeHtml(weaponName)}!">
+      <div class="fp-monster-stage-figure">
+        <div class="fp-monster-portrait-box">
+          <span class="fp-corner-bracket tl"></span>
+          <span class="fp-corner-bracket tr"></span>
+          <span class="fp-corner-bracket bl"></span>
+          <span class="fp-corner-bracket br"></span>
+          ${integratedRigHtml}
+          <img src="${escapeHtml(imgSrc)}" data-fallback-src="${escapeHtml(monster.imageUrl || '/images/monsters/assassin_vine.png')}" onerror="handleMonsterImageError(this)" alt="${escapeHtml(monster.monsterName || 'Monster')}" class="fp-monster-img" data-presentation="${isEffectiveIntegrated ? 'integrated' : 'card'}">
+          <div class="fp-combat-fx-layer">${strikeSvg}</div>
+        </div>
+        <div class="fp-monster-ground-shadow" aria-hidden="true">
+          <div class="fp-shadow-ambient"></div>
+          <div class="fp-shadow-contact"></div>
+          <div class="fp-shadow-mist-wisp"></div>
+        </div>
+      </div>
+
+      <div class="fp-monster-hud-plate">
+        <div class="fp-monster-title-row">
+          <span style="color: ${escapeHtml(monster.monsterColor || '#c5a059')}; font-family: var(--font-mono);">[${escapeHtml(monster.monsterSymbol || 'M')}]</span>
+          <span>${escapeHtml(monster.monsterName || 'Enemy')}</span>
+          ${pfSizeBadgeHtml}
+          ${monster.isBountyTarget ? '<span class="lab-badge" style="border-color:#ef4444; color:#fca5a5;">🎯 Quarry</span>' : ''}
+          ${monster.isAirborne ? '<span class="lab-badge">🦅 Airborne</span>' : ''}
+          ${modeBadgeHtml}
+          ${techScaleBadgeHtml}
+        </div>
+        ${conditionBlockHtml}
+        ${tacticalReadoutHtml}
+      </div>
+    </div>
+  `;
+}
+
+export function handleMonsterActorClick() {
+  if (!store.currentState) return;
+  const enc = store.currentState.encounter;
+  if (enc && enc.status === 'IN_COMBAT') {
+    dispatchAction('ATTACK');
+  }
+}
+
+export function handleSlot1Click() {
+  if (!store.currentState) return;
+  const enc = store.currentState.encounter;
+  if (enc && enc.status === 'IN_COMBAT') {
+    dispatchAction('ATTACK');
+  } else if (enc && enc.status === 'DISCOVERED') {
+    dispatchAction('INVESTIGATE');
+  } else if (store.currentState.victory) {
+    dispatchAction('DISMISS_VICTORY');
+  } else if (store.currentState.isSafeCity) {
+    dispatchAction('REST');
+  } else if (store.currentState.viewportScene && store.currentState.viewportScene.pointOfInterest) {
+    triggerInspectPoi();
+  }
+}
+
+export function handleSlot2Click() {
+  if (!store.currentState) return;
+  dispatchAction('POTION');
+}
+
+export function handleSlot3Click() {
+  if (!store.currentState || store.currentState.encounter) return;
+  dispatchAction('STANCE');
+}
+
+export function handleSlot4Click() {
+  if (!store.currentState) return;
+  const enc = store.currentState.encounter;
+  if (enc && enc.status === 'IN_COMBAT') {
+    if (!store.fleeConfirmArmed) {
+      store.fleeConfirmArmed = true;
+      renderActionDeckAndPad(store.currentState);
+      clearTimeout(store.fleeConfirmTimer);
+      store.fleeConfirmTimer = setTimeout(() => {
+        store.fleeConfirmArmed = false;
+        if (store.currentState) renderActionDeckAndPad(store.currentState);
+      }, 3500);
+      return;
+    }
+    store.fleeConfirmArmed = false;
+    dispatchAction('FLEE');
+  } else if (enc && enc.status === 'DISCOVERED' && !enc.isAmbush) {
+    dispatchAction('IGNORE');
+  } else if (!enc && store.currentState.character.class === 'CLERIC') {
+    dispatchAction('CLERIC_HEAL');
+  }
+}
+
+export function renderFallenScreen(state) {
+  const stage = document.getElementById('fp-center-stage');
+  const fallen = state.fallen || { name: 'Fallen Hero', class: 'FIGHTER', level: 1, killer_name: 'a lurker in the dark' };
+  stage.innerHTML = `
+    <div class="fp-threat-whisper-plate" style="border-color: var(--accent-crimson-bright); max-width: 520px; padding: 18px 24px;">
+      <div style="font-size: 2.2rem; margin-bottom: 4px;">💀</div>
+      <div style="font-family: var(--font-serif); font-size: 1.2rem; color: #fca5a5; font-weight: 800;">
+        YOU HAVE FALLEN IN BATTLE
+      </div>
+      <p style="font-size: 0.86rem; color: var(--text-body); margin: 8px 0;">
+        <strong>${escapeHtml(fallen.name)}</strong> (${escapeHtml(fallen.class)} • Level ${fallen.level}) was slain by <strong>${escapeHtml(fallen.killer_name || 'an unknown horror')}</strong>.
+      </p>
+      <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+        <button type="button" class="btn-action-gold" onclick="dispatchAction('REVIVE', { classType: 'FIGHTER' })">
+          ⚔️ Rise Again (Fighter)
+        </button>
+        <button type="button" class="btn-action-stone" onclick="dispatchAction('REVIVE', { classType: 'RANGER' })">
+          🏹 Rise Again (Ranger)
+        </button>
+        <button type="button" class="btn-action-stone" onclick="dispatchAction('REVIVE', { classType: 'CLERIC' })">
+          ✨ Rise Again (Cleric)
+        </button>
+      </div>
+    </div>
+  `;
+}

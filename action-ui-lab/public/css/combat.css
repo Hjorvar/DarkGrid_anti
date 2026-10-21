@@ -1,0 +1,1197 @@
+/* ==========================================================================
+
+   DARKGRID ADVENTURE LAB — COMBAT STAGE, MONSTER CUTOUTS & TACTICAL DECK (combat.css)
+
+   ========================================================================== */
+
+/* Blood & Heal Flash Overlays */
+.fp-fx-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 22;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+
+.fp-fx-flash.flash-blood {
+  background: radial-gradient(circle at 50% 50%, transparent 35%, rgba(197, 48, 48, 0.65) 100%);
+  opacity: 1;
+}
+
+.fp-fx-flash.flash-heal {
+  background: radial-gradient(circle at 50% 50%, rgba(95, 166, 109, 0.18) 0%, rgba(197, 160, 89, 0.35) 100%);
+  opacity: 1;
+}
+
+@keyframes fpDamageShake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-8px, 4px); }
+  40% { transform: translate(7px, -5px); }
+  60% { transform: translate(-5px, -3px); }
+  80% { transform: translate(4px, 3px); }
+}
+
+.fp-viewport-frame.shake-damage {
+  animation: fpDamageShake 0.36s ease;
+}
+
+
+/* ==========================================================================
+   6. CENTER STAGE — IN-SCENE THREAT, COMBAT & VICTORY
+   ========================================================================== */
+.fp-center-stage {
+  position: relative;
+  z-index: 10;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 16px;
+}
+
+/* --------------------------------------------------------------------------
+   STAGE 1 (DISCOVERED): IN-SCENE LURKING SHADOW IN THE MIST
+   Replaces the old large central modal card so threat lives inside the vista.
+   -------------------------------------------------------------------------- */
+.fp-inscene-threat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  max-width: 540px;
+  max-height: 100%;
+  min-height: 0;
+  margin-top: auto;
+  margin-bottom: 2px;
+}
+
+.fp-shadow-apparition {
+  position: relative;
+  width: clamp(105px, 16vh, 170px);
+  height: clamp(95px, 14.5vh, 155px);
+  flex-shrink: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-bottom: -8px;
+  z-index: 4;
+  transition: transform 0.22s ease, filter 0.22s ease;
+}
+
+.fp-shadow-apparition:hover {
+  transform: scale(1.05) translateY(-3px);
+  filter: drop-shadow(0 0 18px rgba(197, 160, 89, 0.45));
+}
+
+.fp-shadow-svg,
+.fp-shadow-silhouette-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: shadowLurkFloat 3.2s infinite ease-in-out;
+}
+
+@keyframes shadowLurkFloat {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.9; }
+  50% { transform: translateY(-5px) scale(1.03); opacity: 1; }
+}
+
+.fp-threat-whisper-plate {
+  background: linear-gradient(180deg, rgba(9, 12, 16, 0.84) 0%, rgba(7, 9, 12, 0.94) 100%);
+  border: 1px solid rgba(197, 160, 89, 0.48);
+  border-radius: 6px;
+  padding: clamp(6px, 0.9vh, 10px) 14px;
+  text-align: center;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.88);
+  width: 100%;
+  flex-shrink: 0;
+  z-index: 5;
+}
+
+.fp-threat-whisper-plate.is-ambush {
+  border-color: var(--accent-crimson-bright);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.9), 0 0 20px rgba(197, 48, 48, 0.3);
+}
+
+.fp-threat-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-family: var(--font-serif);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent-gold-bright);
+  letter-spacing: 0.04em;
+}
+
+.fp-mystery-clue {
+  font-size: clamp(0.76rem, 1.35vh, 0.86rem);
+  font-style: italic;
+  color: var(--text-heading);
+  line-height: 1.35;
+  margin: 4px 0 6px;
+}
+
+.fp-stage-cta-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.fp-bypass-hint {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   STAGE 2 (IN_COMBAT): MONSTER STANDING IN THE SCENE
+   -------------------------------------------------------------------------- */
+.fp-monster-actor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-height: 100%;
+  min-height: 0;
+  transition: transform 0.22s ease;
+  cursor: pointer;
+}
+
+.fp-monster-stage-figure {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 0;
+  flex-shrink: 1;
+}
+
+.fp-monster-ground-shadow {
+  position: relative;
+  width: 220px;
+  height: 24px;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.55) 50%, transparent 78%);
+  margin-top: -12px;
+  z-index: 1;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.fp-monster-portrait-box {
+  position: relative;
+  width: clamp(125px, 23vh, 250px);
+  height: clamp(125px, 23vh, 250px);
+  aspect-ratio: 1 / 1;
+  flex-shrink: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  transition: all 0.25s ease;
+}
+
+.fp-monster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.22s ease, filter 0.22s ease;
+}
+
+/* ==========================================================================
+   MODE 1: CARD (DEFAULT) — Preserves framed monster card with original art
+   ========================================================================== */
+.presence-mode-card .fp-monster-actor.is-card-monster .fp-monster-portrait-box,
+.presence-mode-hybrid .fp-monster-actor.is-card-monster .fp-monster-portrait-box,
+.fp-monster-actor.is-card-monster .fp-monster-portrait-box {
+  border-radius: 8px;
+  background: radial-gradient(circle at 50% 50%, rgba(13, 17, 24, 0.55) 20%, rgba(7, 9, 12, 0.85) 100%);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.92),
+    0 0 30px rgba(158, 42, 43, 0.25),
+    inset 0 0 24px rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+}
+
+.presence-mode-card .fp-monster-actor.is-card-monster .fp-monster-img,
+.presence-mode-hybrid .fp-monster-actor.is-card-monster .fp-monster-img {
+  mask-image: radial-gradient(circle at 50% 50%, #000 68%, rgba(0, 0, 0, 0.65) 88%, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 68%, rgba(0, 0, 0, 0.65) 88%, transparent 100%);
+}
+
+/* ==========================================================================
+   MODE 2: INTEGRATED (EXPERIMENTAL CUTOUT IN FIRST-PERSON SCENE)
+   True RGBA alpha cutout, zero card box, anatomical contact shadows & stage grounding
+   ========================================================================== */
+.fp-monster-actor.is-integrated-monster {
+  justify-content: flex-end;
+  margin-top: auto;
+  margin-bottom: 2px;
+  padding-top: 0;
+  transform: translateX(var(--stage-shift-x, 0%));
+}
+
+.fp-monster-actor.is-integrated-monster .fp-corner-bracket {
+  display: none !important;
+}
+
+.fp-monster-actor.is-integrated-monster .fp-monster-portrait-box {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  aspect-ratio: auto;
+  width: clamp(150px, 24.5vh, 255px);
+  height: clamp(142px, 23.5vh, 245px);
+}
+
+/* Species-Specific Scale & Grounding Proportions */
+.fp-monster-actor.is-integrated-monster.size-large_winged .fp-monster-portrait-box {
+  width: clamp(185px, 29.5vh, 315px);
+  height: clamp(158px, 25.5vh, 270px);
+}
+
+.fp-monster-actor.is-integrated-monster.size-medium_humanoid .fp-monster-portrait-box {
+  width: clamp(148px, 24vh, 248px);
+  height: clamp(138px, 22.5vh, 235px);
+}
+
+.fp-monster-actor.is-integrated-monster.size-coiled_plant .fp-monster-portrait-box {
+  width: clamp(152px, 25vh, 260px);
+  height: clamp(152px, 25vh, 260px);
+}
+
+.fp-monster-actor.is-integrated-monster.size-medium_quadruped .fp-monster-portrait-box {
+  width: clamp(150px, 24vh, 252px);
+  height: clamp(138px, 22.5vh, 236px);
+}
+
+.fp-monster-actor.is-integrated-monster.size-large_arachnid .fp-monster-portrait-box {
+  width: clamp(220px, 34vh, 365px);
+  height: clamp(168px, 26vh, 275px);
+}
+
+.fp-monster-actor.is-integrated-monster.size-large_brute .fp-monster-portrait-box {
+  width: clamp(168px, 27vh, 285px);
+  height: clamp(164px, 26.5vh, 278px);
+}
+
+.fp-monster-actor.is-integrated-monster .fp-monster-img {
+  position: relative;
+  z-index: 2;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+/* Environment-Matched Color & Lighting Grading on Cutout Monsters
+   (Without heavy downward drop-shadows that would create fake floating dark bars in mid-air) */
+.fp-monster-actor.is-integrated-monster.env-grade-bridge .fp-monster-img {
+  filter:
+    brightness(0.94)
+    contrast(1.06)
+    saturate(0.93)
+    drop-shadow(0 2px 5px rgba(4, 8, 16, 0.46))
+    drop-shadow(0 0 16px rgba(105, 148, 188, 0.14));
+}
+
+.fp-monster-actor.is-integrated-monster.env-grade-forest .fp-monster-img {
+  filter:
+    brightness(0.92)
+    contrast(1.06)
+    saturate(0.94)
+    sepia(0.04)
+    hue-rotate(4deg)
+    drop-shadow(0 2px 5px rgba(4, 9, 5, 0.48))
+    drop-shadow(0 0 16px rgba(46, 86, 60, 0.14));
+}
+
+.fp-monster-actor.is-integrated-monster.env-grade-sanctuary .fp-monster-img {
+  filter:
+    brightness(0.95)
+    contrast(1.05)
+    sepia(0.06)
+    drop-shadow(0 2px 5px rgba(12, 7, 3, 0.45))
+    drop-shadow(0 0 16px rgba(230, 175, 85, 0.16));
+}
+
+.fp-monster-actor.is-integrated-monster.env-grade-wilderness .fp-monster-img {
+  filter:
+    brightness(0.93)
+    contrast(1.06)
+    saturate(0.93)
+    drop-shadow(0 2px 5px rgba(5, 8, 12, 0.46));
+}
+
+/* Airborne Hovering vs Grounded Stage Placement */
+@keyframes integratedAirborneHover {
+  0%, 100% { transform: translateY(-8px) scale(1); }
+  50%      { transform: translateY(-18px) scale(1.02); }
+}
+
+@keyframes integratedAirborneShadowPulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.38; }
+  50%      { transform: translate(-50%, -50%) scale(0.91); opacity: 0.28; }
+}
+
+.fp-monster-actor.is-integrated-monster.grounding-airborne_hover .fp-monster-portrait-box {
+  margin-bottom: 34px;
+}
+
+.fp-monster-actor.is-integrated-monster.grounding-airborne_hover .fp-monster-img {
+  animation: integratedAirborneHover 2.8s ease-in-out infinite;
+}
+
+.fp-monster-actor.is-integrated-monster.grounding-airborne_hover .fp-rig-ambient-patch {
+  animation: integratedAirborneShadowPulse 2.8s ease-in-out infinite;
+}
+
+.fp-monster-actor.is-integrated-monster.grounding-grounded_crouch .fp-monster-portrait-box,
+.fp-monster-actor.is-integrated-monster.grounding-grounded_rooted .fp-monster-portrait-box,
+.fp-monster-actor.is-integrated-monster.grounding-grounded_paws .fp-monster-portrait-box {
+  margin-bottom: 2px;
+}
+
+/* Hide legacy single-bar shadow container in Integrated Mode; use anatomical rig inside portrait box instead */
+.fp-monster-actor.is-integrated-monster .fp-monster-ground-shadow {
+  display: none !important;
+}
+
+/* Anatomical Multi-Point Grounding Rig (Per-Paw / Per-Foot / Per-Coil Contact Shadows) */
+.fp-integrated-grounding-rig {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: visible;
+}
+
+.fp-rig-ambient-patch {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    var(--ground-shadow-tint, rgba(8, 10, 12, 0.68)) 0%,
+    rgba(6, 8, 10, 0.32) 54%,
+    transparent 78%
+  );
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.fp-rig-contact-patch {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(3, 5, 7, 0.86) 0%,
+    var(--ground-shadow-tint, rgba(8, 10, 12, 0.64)) 46%,
+    transparent 76%
+  );
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.fp-monster-actor.is-integrated-monster .fp-monster-hud-plate {
+  margin-top: 4px;
+  padding: 5px 12px;
+  background: linear-gradient(180deg, rgba(8, 11, 16, 0.78) 0%, rgba(6, 8, 12, 0.90) 100%);
+  border: 1px solid rgba(197, 160, 89, 0.42);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.75);
+}
+
+.badge-integrated-active {
+  background: rgba(34, 197, 94, 0.16) !important;
+  border-color: rgba(74, 222, 128, 0.5) !important;
+  color: #86efac !important;
+}
+
+.badge-card-fallback {
+  background: rgba(245, 158, 11, 0.16) !important;
+  border-color: rgba(251, 191, 36, 0.5) !important;
+  color: #fde68a !important;
+}
+
+.fp-corner-bracket {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--accent-gold);
+  border-style: solid;
+  pointer-events: none;
+  z-index: 12;
+  opacity: 0.9;
+  transition: all 0.2s ease;
+}
+.fp-corner-bracket.tl { top: 0; left: 0; border-width: 2px 0 0 2px; border-top-left-radius: 4px; }
+.fp-corner-bracket.tr { top: 0; right: 0; border-width: 2px 2px 0 0; border-top-right-radius: 4px; }
+.fp-corner-bracket.bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-bottom-left-radius: 4px; }
+.fp-corner-bracket.br { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-bottom-right-radius: 4px; }
+
+.fp-monster-actor:hover .fp-corner-bracket {
+  border-color: var(--accent-gold-bright);
+  width: 26px;
+  height: 26px;
+  filter: drop-shadow(0 0 6px rgba(197, 160, 89, 0.6));
+}
+
+/* MODE B: DEEP SCENE BLEND */
+.presence-mode-blend .fp-monster-portrait-box {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  width: clamp(135px, 25vh, 275px);
+  height: clamp(135px, 25vh, 275px);
+}
+
+.presence-mode-blend .fp-corner-bracket {
+  display: none;
+}
+
+.presence-mode-blend .fp-monster-img {
+  mask-image: radial-gradient(ellipse at 50% 48%, #000 54%, rgba(0, 0, 0, 0.7) 75%, transparent 96%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 48%, #000 54%, rgba(0, 0, 0, 0.7) 75%, transparent 96%);
+  filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.95)) contrast(1.08);
+}
+
+/* MODE C: GRIMOIRE RELIC FRAME */
+.presence-mode-framed .fp-monster-portrait-box {
+  background: #090c10;
+  border: 2px solid var(--border-gold-solid);
+  border-radius: 6px;
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.9),
+    inset 0 0 18px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+}
+
+.presence-mode-framed .fp-corner-bracket {
+  display: none;
+}
+
+/* Monster Hit, Dodge & Lunge Animations */
+@keyframes monsterHitRecoil {
+  0% { transform: scale(1) translate(0, 0); filter: brightness(1); }
+  25% { transform: scale(0.92) translate(10px, -6px); filter: brightness(2.1) sepia(0.45) hue-rotate(-25deg); }
+  55% { transform: scale(1.03) translate(-6px, 3px); filter: brightness(1.25); }
+  100% { transform: scale(1) translate(0, 0); filter: brightness(1); }
+}
+
+@keyframes monsterDodgeSidestep {
+  0% { transform: translateX(0); }
+  35% { transform: translateX(-18px) rotate(-2deg); }
+  75% { transform: translateX(6px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes monsterAttackLunge {
+  0% { transform: scale(1) translateY(0); }
+  35% { transform: scale(1.14) translateY(14px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+@keyframes monsterCritHitRecoil {
+  0% { transform: scale(1) translate(0, 0); filter: brightness(1); }
+  20% { transform: scale(0.86) translate(16px, -10px) rotate(3deg); filter: brightness(2.6) sepia(0.55) hue-rotate(-32deg); }
+  45% { transform: scale(1.06) translate(-10px, 4px) rotate(-2deg); filter: brightness(1.6); }
+  75% { transform: scale(0.97) translate(4px, -2px); filter: brightness(1.2); }
+  100% { transform: scale(1) translate(0, 0); filter: brightness(1); }
+}
+
+.fp-monster-actor.anim-monster-hit .fp-monster-portrait-box {
+  animation: monsterHitRecoil 0.36s ease;
+}
+
+.fp-monster-actor.anim-monster-crit-hit .fp-monster-portrait-box {
+  animation: monsterCritHitRecoil 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fp-monster-actor.anim-monster-dodge .fp-monster-portrait-box {
+  animation: monsterDodgeSidestep 0.34s ease;
+}
+
+.fp-monster-actor.anim-monster-lunge .fp-monster-portrait-box {
+  animation: monsterAttackLunge 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fp-combat-fx-layer {
+  position: absolute;
+  inset: -20px;
+  pointer-events: none;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slash-svg {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+
+@keyframes slashStrikeAnim {
+  0% { opacity: 0; transform: scale(0.6) rotate(-12deg); }
+  25% { opacity: 1; transform: scale(1.08) rotate(0deg); }
+  75% { opacity: 0.85; transform: scale(1.02) rotate(2deg); }
+  100% { opacity: 0; transform: scale(1.15) rotate(4deg); }
+}
+
+.slash-svg.is-striking {
+  animation: slashStrikeAnim 0.36s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.fp-monster-hud-plate {
+  margin-top: 4px;
+  background: rgba(9, 12, 16, 0.88);
+  border: 1px solid var(--border-gold);
+  border-radius: 6px;
+  padding: clamp(4px, 0.7vh, 6px) 14px;
+  text-align: center;
+  max-width: 520px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85);
+  z-index: 12;
+  flex-shrink: 0;
+}
+
+.fp-monster-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-serif);
+  font-size: clamp(0.88rem, 1.5vh, 1rem);
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.fp-monster-condition-quote {
+  font-size: clamp(0.74rem, 1.3vh, 0.82rem);
+  font-style: italic;
+  color: #e2e8f0;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.condition-gem {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px currentColor;
+}
+
+
+/* ==========================================================================
+   9. THE 4-COLUMN TACTICAL ACTION MATRIX
+   ========================================================================== */
+.dm-action-columns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+
+.dm-action-tile {
+  background: linear-gradient(180deg, #1b2230 0%, #10151e 100%);
+  border: 1px solid var(--border-medium);
+  border-radius: 6px;
+  padding: clamp(3px, 0.5vh, 6px) 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-height: clamp(56px, 8.2vh, 82px);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+  color: var(--text-body);
+  text-align: center;
+}
+
+.dm-action-tile:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--accent-gold-bright);
+  background: linear-gradient(180deg, #252f42 0%, #161d2a 100%);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.7), 0 0 14px rgba(197, 160, 89, 0.3);
+}
+
+.dm-action-tile:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.dm-action-tile:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  filter: grayscale(0.45);
+}
+
+.dm-action-tile.tile-primary-strike {
+  border-color: var(--accent-gold);
+  background: linear-gradient(180deg, rgba(124, 98, 56, 0.38) 0%, rgba(20, 25, 35, 0.95) 100%);
+}
+
+.dm-action-tile.tile-primary-strike:hover:not(:disabled) {
+  background: linear-gradient(180deg, #7c6238 0%, #44341c 100%);
+  border-color: var(--accent-gold-bright);
+  box-shadow: 0 0 18px rgba(197, 160, 89, 0.5);
+}
+
+.dm-action-tile.tile-danger {
+  border-color: rgba(158, 42, 43, 0.65);
+}
+
+.tile-hotkey {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  color: var(--accent-gold);
+  background: rgba(7, 9, 12, 0.78);
+  border: 1px solid rgba(197, 160, 89, 0.3);
+  border-radius: 3px;
+  padding: 0 3px;
+}
+
+.tile-icon-large {
+  font-size: clamp(1.1rem, 2vh, 1.45rem);
+  margin-top: 2px;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.8));
+}
+
+.tile-action-name {
+  font-family: var(--font-serif);
+  font-size: clamp(0.64rem, 1.15vh, 0.72rem);
+  font-weight: 700;
+  color: var(--text-heading);
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+}
+
+.tile-action-sub {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--accent-gold-bright);
+  margin-top: 1px;
+}
+
+/* ==========================================================================
+   10. FIRST-PERSON NAVIGATION PAD (3x3 Grid) & SINGLE DRAWER STRIP
+   ========================================================================== */
+
+/* ==========================================================================
+   14. PHASE 5: MONSTER COMBAT EMERGENCE POLISH
+   ========================================================================== */
+@keyframes monsterEmergeFromMist {
+  0%   { opacity: 0; transform: translateX(var(--stage-shift-x, 0%)) translateY(var(--approach-start-y, 10px)) scale(var(--approach-start-scale, 0.92)); filter: brightness(0.45) blur(3px); }
+  100% { opacity: 1; transform: translateX(var(--stage-shift-x, 0%)) translateY(0) scale(1); filter: brightness(1) blur(0); }
+}
+
+.fp-monster-actor.anim-monster-emerge {
+  animation: monsterEmergeFromMist var(--approach-duration, 0.34s) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fp-monster-actor.is-integrated-monster.grounding-grounded_boots .fp-monster-portrait-box,
+.fp-monster-actor.is-integrated-monster.grounding-grounded_arachnid .fp-monster-portrait-box,
+.fp-monster-actor.is-integrated-monster.grounding-grounded_heavy .fp-monster-portrait-box {
+  margin-bottom: 2px;
+}
+
+
+/* Combat Tactical Readout Strip inside Monster Plate */
+.fp-combat-tactical-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(197, 160, 89, 0.22);
+}
+
+.fp-tactical-chip {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(12, 16, 23, 0.85);
+  border: 1px solid rgba(197, 160, 89, 0.32);
+  color: #e2e8f0;
+  white-space: nowrap;
+}
+
+.fp-tactical-chip.fp-tactical-hint {
+  color: var(--accent-gold-bright);
+}
+
+
+
+.lab-pill-sizelab {
+  border-color: rgba(56, 189, 248, 0.5) !important;
+  color: #bae6fd !important;
+  background: rgba(14, 116, 144, 0.22) !important;
+}
+.lab-pill-sizelab.is-active {
+  background: rgba(14, 165, 233, 0.36) !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+}
+
+.badge-pf-size {
+  border-color: rgba(56, 189, 248, 0.55) !important;
+  color: #bae6fd !important;
+  background: rgba(12, 74, 110, 0.35) !important;
+}
+
+/* Adaptive Monster Portrait Box (Applies to both Integrated Cutout and Card Mode) */
+.fp-monster-actor.is-adaptive-scale .fp-monster-portrait-box,
+.fp-monster-actor.is-integrated-monster.is-adaptive-scale .fp-monster-portrait-box,
+.fp-monster-actor.is-card-monster.is-adaptive-scale .fp-monster-portrait-box {
+  width: var(--monster-vis-w, clamp(150px, 24.5vh, 255px)) !important;
+  height: var(--monster-vis-h, clamp(142px, 23.5vh, 245px)) !important;
+  aspect-ratio: auto !important;
+}
+
+/* Transparency & Vignette Margin Compensation in Card Mode */
+.fp-monster-actor.is-card-monster.is-adaptive-scale .fp-monster-img {
+  object-fit: cover;
+  object-position: calc(50% + var(--monster-img-shift-x, 0%)) calc(50% + var(--monster-img-shift-y, 0%));
+  transform: scale(var(--monster-img-trim-scale, 1));
+}
+
+/* Proportional Ground Shadow in Card Mode */
+.fp-monster-actor.is-card-monster.is-adaptive-scale .fp-monster-ground-shadow {
+  width: var(--shadow-width-px, 220px);
+  height: var(--shadow-height-px, 24px);
+  opacity: var(--shadow-opacity, 0.75);
+}
+
+/* Airborne lift in Card Mode when Adaptive Scale is active */
+.fp-monster-actor.is-card-monster.is-adaptive-scale.grounding-airborne_hover .fp-monster-portrait-box {
+  margin-bottom: 24px;
+}
+
+/* ==========================================================================
+   PHASE 4 — IN-VIEWPORT VISUAL SIZE & BODY-PROFILE COMPARISON ARENA
+   ========================================================================== */
+.fp-size-comparison-arena {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 6px 10px 4px;
+  box-sizing: border-box;
+  z-index: 18;
+  pointer-events: auto;
+}
+
+.sizelab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(8, 11, 16, 0.88);
+  border: 1px solid rgba(197, 160, 89, 0.45);
+  border-radius: 6px;
+  padding: 5px 10px;
+  backdrop-filter: blur(6px);
+}
+
+.sizelab-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #38bdf8;
+}
+
+.sizelab-subtitle {
+  font-size: 0.72rem;
+  color: var(--text-body);
+  margin-top: 1px;
+}
+
+.sizelab-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sizelab-mode-toggle {
+  display: inline-flex;
+  background: #090c12;
+  border: 1px solid #283246;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.sizelab-toggle-pill {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.sizelab-toggle-pill.is-active {
+  background: rgba(56, 189, 248, 0.25);
+  color: #e0f2fe;
+  font-weight: 700;
+}
+
+.sizelab-tabs-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.sizelab-tab-btn {
+  background: rgba(12, 16, 23, 0.86);
+  border: 1px solid #2b3548;
+  border-radius: 5px;
+  color: var(--text-body);
+  font-family: var(--font-serif);
+  font-size: 0.70rem;
+  font-weight: 600;
+  padding: 4px 9px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sizelab-tab-btn:hover {
+  border-color: var(--accent-gold);
+  color: var(--text-heading);
+}
+
+.sizelab-tab-btn.is-active {
+  background: rgba(197, 160, 89, 0.24);
+  border-color: var(--accent-gold-bright);
+  color: var(--accent-gold-bright);
+  box-shadow: 0 0 10px rgba(197, 160, 89, 0.25);
+}
+
+.sizelab-subbar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.sizelab-subpill {
+  background: rgba(11, 15, 22, 0.84);
+  border: 1px solid #263144;
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.63rem;
+  padding: 2px 7px;
+  cursor: pointer;
+}
+
+.sizelab-subpill.is-active {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: #38bdf8;
+  color: #f0f9ff;
+}
+
+.sizelab-lineup-stage {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 0;
+  padding-bottom: 2px;
+}
+
+.sizelab-horizon-reference-line {
+  position: absolute;
+  left: 2%;
+  right: 2%;
+  bottom: 52%;
+  border-top: 1px dashed rgba(197, 160, 89, 0.38);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sizelab-horizon-reference-line span {
+  position: absolute;
+  right: 6px;
+  top: -15px;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: rgba(230, 190, 110, 0.85);
+  background: rgba(8, 10, 14, 0.72);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.sizelab-ground-plane-line {
+  position: absolute;
+  left: 3%;
+  right: 3%;
+  bottom: 58px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.45) 15%, rgba(197, 160, 89, 0.65) 50%, rgba(56, 189, 248, 0.45) 85%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sizelab-lineup-row {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sizelab-lineup-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.sizelab-figure-floor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.sizelab-lineup-item.is-airborne-specimen .sizelab-specimen-box,
+.sizelab-figure-floor.is-airborne-specimen .sizelab-specimen-box {
+  transform: translateY(-20px);
+}
+
+.sizelab-specimen-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: width 0.2s ease, height 0.2s ease;
+  z-index: 3;
+}
+
+.sizelab-specimen-box.is-card {
+  border-radius: 6px;
+  border: 1px solid rgba(197, 160, 89, 0.55);
+  background: radial-gradient(circle at 50% 50%, rgba(15, 20, 29, 0.55) 20%, rgba(6, 8, 12, 0.88) 100%);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+}
+
+.sizelab-specimen-box.is-cutout {
+  background: transparent;
+  border: none;
+  overflow: visible;
+}
+
+.sizelab-specimen-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  display: block;
+}
+
+.sizelab-specimen-box.is-card.is-adaptive-box .sizelab-specimen-img {
+  object-fit: cover;
+  object-position: center center;
+  transform: scale(var(--trim-scale, 1));
+}
+
+.sizelab-specimen-box.is-cutout .sizelab-specimen-img {
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.68));
+}
+
+.sizelab-ground-shadow {
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.52) 55%, transparent 78%);
+  margin-top: -6px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.sizelab-specimen-caption {
+  margin-top: 4px;
+  background: rgba(8, 11, 16, 0.90);
+  border: 1px solid rgba(197, 160, 89, 0.38);
+  border-radius: 5px;
+  padding: 3px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 175px;
+}
+
+.sizelab-size-pill {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0px 5px;
+  border-radius: 3px;
+  background: rgba(56, 189, 248, 0.18);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #bae6fd;
+  margin-bottom: 1px;
+}
+
+.sizelab-mon-name {
+  font-family: var(--font-serif);
+  font-size: 0.68rem;
+  color: var(--accent-gold-bright);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 155px;
+}
+
+.sizelab-mon-dims {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: #e2e8f0;
+}
+
+.sizelab-mon-prof {
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+/* Split Before vs After Stage */
+.sizelab-split-stage {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: end;
+  padding: 6px 12px 4px;
+  min-height: 0;
+}
+
+.sizelab-split-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  background: rgba(6, 9, 14, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.sizelab-col-badge {
+  margin-bottom: auto;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.sizelab-col-badge.badge-before {
+  background: rgba(239, 68, 68, 0.22);
+  border: 1px solid rgba(239, 68, 68, 0.55);
+  color: #fecaca;
+}
+
+.sizelab-col-badge.badge-after {
+  background: rgba(34, 197, 94, 0.22);
+  border: 1px solid rgba(34, 197, 94, 0.55);
+  color: #bbf7d0;
+}
+
+
+/* 15.3 Monster Technical Telemetry Tag (Visible only in Dev Mode) & Subdued Vista */
+.sizelab-tech-tag {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  color: #cbd5e1;
+  white-space: nowrap;
+}
+
+
+/* 15.5 Mode-Reactive Right Deck & Combat Lock Banner */
+.ui-mode-combat.ui-combat-stage2 .dm-action-deck,
+.ui-mode-combat.ui-combat-stage2 .dm-action-deck-card {
+  border-color: rgba(239, 68, 68, 0.68);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85), inset 0 0 14px rgba(158, 42, 43, 0.18);
+}
+
+.ui-mode-combat.ui-combat-stage1 .dm-action-deck,
+.ui-mode-combat.ui-combat-stage1 .dm-action-deck-card {
+  border-color: rgba(245, 158, 11, 0.65);
+}
+
+.ui-mode-town .dm-action-deck,
+.ui-mode-town .dm-action-deck-card {
+  border-color: rgba(197, 160, 89, 0.62);
+}
+
+.dm-nav-combat-banner {
+  background: rgba(127, 29, 29, 0.36);
+  border: 1px solid rgba(239, 68, 68, 0.55);
+  color: #fecaca;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-align: center;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.dm-movement-deck.is-combat-locked .dm-fp-nav-layout,
+.dm-movement-deck.is-combat-locked .dm-pad-grid {
+  opacity: 0.48;
+}
+

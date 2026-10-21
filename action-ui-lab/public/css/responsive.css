@@ -1,0 +1,151 @@
+/* ==========================================================================
+
+   DARKGRID ADVENTURE LAB — RESPONSIVE BREAKPOINTS & REDUCED MOTION (responsive.css)
+
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .fp-terrain-img,
+  .fp-terrain-img-prev,
+  .fp-terrain-img.is-crossfading,
+  .fp-scene-backdrop.anim-step-forward,
+  .fp-scene-backdrop.anim-step-backward,
+  .fp-scene-backdrop.anim-strafe-left,
+  .fp-scene-backdrop.anim-strafe-right,
+  .fp-scene-backdrop.anim-turn-left,
+  .fp-scene-backdrop.anim-turn-right,
+  .fp-scene-backdrop.anim-blocked-bump,
+  .fp-scene-backdrop.anim-landmark-arrival::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .fp-atmo-canvas,
+  .fp-mist-band,
+  .fp-light-pulse-layer {
+    display: none !important;
+  }
+}
+
+@media (max-width: 820px) {
+  .dm-top-deck {
+    grid-template-columns: 1fr 1fr;
+  }
+  .dm-hero-identity {
+    display: none;
+  }
+  .dm-main-grid {
+    grid-template-columns: minmax(0, 1fr) 275px;
+  }
+}
+
+/* ==========================================================================
+   16. PHASE 7: RESPONSIVE & HANDHELD PC VIEWPORT POLISH
+   Supports 1920x1080, 1440x900, 1280x800 (Handheld 16:10), and 1280x720
+   ========================================================================== */
+@media (max-width: 1460px), (max-height: 920px) {
+  .lab-director-bar {
+    padding: 2px 8px;
+    gap: 3px 5px;
+    font-size: 0.62rem;
+  }
+  .lab-pill {
+    padding: 1px 5px;
+    font-size: 0.60rem;
+  }
+  .lab-group-label {
+    font-size: 0.56rem;
+  }
+  .dm-shell {
+    padding: 4px 8px;
+    gap: 4px;
+  }
+  .dm-main-grid {
+    grid-template-columns: minmax(0, 1fr) clamp(262px, 23vw, 310px);
+  }
+  .dm-deck-card {
+    padding: 4px 8px;
+  }
+  .dm-header-status {
+    font-size: 0.57rem;
+    max-width: 145px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .dm-util-btn {
+    padding: 3px 4px;
+    font-size: 0.61rem;
+  }
+  .util-hotkey {
+    font-size: 0.50rem;
+    padding: 0 3px;
+  }
+  .atlas-layout {
+    grid-template-columns: 300px minmax(0, 1fr);
+  }
+}
+
+@media (max-height: 760px) {
+  .dm-top-deck {
+    padding: 3px 8px;
+  }
+  .dm-action-tile {
+    min-height: 48px;
+    padding: 2px 3px;
+  }
+  .tile-icon-large {
+    font-size: 1.02rem;
+    margin-top: 0;
+  }
+  .fp-bottom-chronicle {
+    height: 52px;
+    padding: 3px 10px;
+  }
+  .dm-minimap-cell {
+    width: 18px;
+    height: 18px;
+  }
+  .compass-rose-ring {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* Keep Lab Director Bar single-line even at 1280px with the Scale button */
+@media (max-width: 1440px) {
+  .lab-director-bar {
+    gap: 5px;
+    padding: 3px 8px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  .lab-director-bar .lab-pill {
+    padding: 2px 6px;
+    font-size: 0.65rem;
+  }
+  .lab-director-bar .lab-group-label {
+    font-size: 0.62rem;
+  }
+}
+
+@media (max-width: 1380px) {
+  .dm-equip-quick-actions {
+    display: none;
+  }
+}
+
+@media (max-height: 820px) {
+  .fp-bottom-chronicle.is-chronicle-expanded {
+    height: clamp(115px, 20vh, 155px);
+  }
+}
+
+
+

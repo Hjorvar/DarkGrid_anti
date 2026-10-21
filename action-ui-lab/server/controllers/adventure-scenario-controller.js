@@ -1,0 +1,435 @@
+/**
+ * DARKGRID ADVENTURE LAB — Adventure Experience, Expeditions, Discoveries & Lab Scenarios Controller
+ */
+const { getCharacterEquipment } = require('../../../src/domain/character/rules');
+const {
+  getTileById,
+  getTileByCoords
+} = require('../../../src/domain/world/map');
+const { investigateEncounter } = require('../../../src/domain/encounters/engine');
+const {
+  DISCOVERY_CATALOG,
+  EXPEDITION_DEFINITIONS,
+  getOrCreateAdventureState,
+  resetAdventureState,
+  selectDiscoveryForTile,
+  resolveDiscoveryChoice,
+  recordEncounterStart
+} = require('../../adventure-engine');
+const { lookupMonsterSizeEntry } = require('../../monster-size-catalog');
+const { normalizeFacing } = require('../services/facing-service');
+const { ensureLivingHero } = require('../services/sandbox-db-service');
+const { buildClientState } = require('../services/client-state-service');
+
+function handleAdventureScenarioAction({ db, userId, options = {}, action, payload, character, currentFacing, res }) {
+      // 11b. ADVENTURE EXPERIENCE ACTIONS (Isolated Lab-Only Layer — Phases 3, 5, 6, 8, 9)
+      if (action === 'SET_ADVENTURE_MODE') {
+        const currentTile = getTileById(db, character.tile_id);
+        const advState = getOrCreateAdventureState(character.id, currentTile);
+        const nextEnabled = payload.enabled !== undefined ? Boolean(payload.enabled) : !advState.enabled;
+        advState.enabled = nextEnabled;
+        advState.modeLabel = nextEnabled ? 'Adventure Experience — Experimental' : 'Current Experience (Baseline)';
+        if (!nextEnabled) {
+          advState.activeDiscovery = null;
+          advState.activeTensionCue = null;
+        } else if (currentTile && currentTile.is_safe === 0) {
+          advState.activeDiscovery = selectDiscoveryForTile(advState, currentTile);
+        }
+        return res.json({
+          ok: true,
+          state: buildClientState(db, userId, {
+            infoMessage: nextEnabled
+              ? 'Enabled Adventure Experience — Experimental (environmental discoveries, tension cues, choices & expedition journal active).'
+              : 'Switched to Current Experience (baseline Lab exploration without experimental overlays).'
+          })
+        });
+      }
+
+      if (action === 'START_EXPEDITION' || action === 'RESET_EXPEDITION') {
+        const requestedKey = payload.expeditionKey || 'MIRKWOOD_EXPEDITION';
+        const expDef = EXPEDITION_DEFINITIONS[requestedKey] || EXPEDITION_DEFINITIONS.MIRKWOOD_EXPEDITION;
+        const startFacing = normalizeFacing(
+          payload.facing || (action === 'RESET_EXPEDITION' ? 'NORTH' : (expDef.startTile.facing || 'NORTH'))
+        );
+        const startTile = getTileByCoords(db, expDef.startTile.x, expDef.startTile.y);
+
+        db.prepare(`
+          UPDATE encounters SET status = 'ESCAPED'
+          WHERE character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT')
+        `).run(character.id);
+        if (startTile) {
+          db.prepare('UPDATE characters SET tile_id = ?, current_hp = max_hp, facing = ?, pending_victory_encounter_id = NULL WHERE id = ?').run(
+            startTile.id,
+            startFacing,
+            character.id
+          );
+        }
+
+        const currentAdv = getOrCreateAdventureState(character.id, startTile);
+        resetAdventureState(character.id, {
+          enabled: action === 'START_EXPEDITION' ? true : currentAdv.enabled,
+          expeditionKey: expDef.expeditionKey,
+          deterministicSeed: payload.deterministicSeed !== undefined ? Number(payload.deterministicSeed) : currentAdv.deterministicSeed
+        });
+
+        return res.json({
+          ok: true,
+          state: buildClientState(db, userId, {
+            infoMessage: action === 'RESET_EXPEDITION'
+              ? `Expedition reset: returned to Oakhaven Sanctuary [7,7] for ${expDef.title}.`
+              : `${expDef.briefingTitle}: ${expDef.briefingText}`,
+            fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+          })
+        });
+      }
+
+      if (action === 'RESOLVE_DISCOVERY_CHOICE') {
+        const currentTile = getTileById(db, character.tile_id);
+        const result = resolveDiscoveryChoice(
+          character.id,
+          currentTile,
+          payload.discoveryKey || payload.discoveryId,
+          payload.choiceKey || payload.choiceId
+        );
+        if (!result.ok) {
+          throw new Error(result.error || 'Could not resolve discovery choice.');
+        }
+        return res.json({
+          ok: true,
+          state: buildClientState(db, userId, {
+            infoMessage: `${result.outcomeTitle}: ${result.outcomeText}`,
+            fxCue: {
+              type: 'DISCOVERY_RESOLVED',
+              outcomeTitle: result.outcomeTitle,
+              outcomeText: result.outcomeText
+            }
+          })
+        });
+      }
+
+      if (action === 'DISMISS_DISCOVERY') {
+        const currentTile = getTileById(db, character.tile_id);
+        const advState = getOrCreateAdventureState(character.id, currentTile);
+        if (advState.activeDiscovery) {
+          const rec = advState.discoveredMap[advState.activeDiscovery.discoveryKey];
+          if (rec && rec.status === 'DISCOVERED') {
+            rec.status = 'PASSED';
+          }
+          advState.activeDiscovery = null;
+        }
+        return res.json({
+          ok: true,
+          state: buildClientState(db, userId)
+        });
+      }
+
+      if (action === 'FORCE_DISCOVERY') {
+        const currentTile = getTileById(db, character.tile_id);
+        const advState = getOrCreateAdventureState(character.id, currentTile);
+        advState.enabled = true;
+        const forced = selectDiscoveryForTile(advState, currentTile, {
+          forceTrigger: true,
+          discoveryKey: payload.discoveryKey || payload.discoveryId || null
+        });
+        advState.activeDiscovery = forced;
+        return res.json({
+          ok: true,
+          state: buildClientState(db, userId, {
+            infoMessage: forced
+              ? `Director Triggered Discovery: ${forced.title} (${forced.tier}).`
+              : `No eligible wilderness discovery on ${currentTile ? currentTile.name : 'this tile'} (step outside safe sanctuary to trigger).`
+          })
+        });
+      }
+
+      if (action === 'SET_DETERMINISTIC_SEED') {
+        const currentTile = getTileById(db, character.tile_id);
+        const advState = getOrCreateAdventureState(character.id, currentTile);
+        advState.deterministicSeed = Number(payload.seed || 4201);
+        return res.json({
+          ok: true,
+          state: buildClientState(db, userId, {
+            infoMessage: `Deterministic Adventure Seed set to ${advState.deterministicSeed}.`
+          })
+        });
+      }
+
+      // =====================================================================
+      // LAB DIRECTOR ACTIONS (For instant UI testing of any scenario!)
+      // =====================================================================
+      if (action === 'LAB_SCENARIO') {
+        const scenario = payload.scenario;
+
+        // Clear any active encounter and pending victory first
+        db.prepare(`
+          UPDATE encounters SET status = 'ESCAPED'
+          WHERE character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT')
+        `).run(character.id);
+        db.prepare('UPDATE characters SET pending_victory_encounter_id = NULL WHERE id = ?').run(character.id);
+
+        if (scenario === 'TELEPORT') {
+          const tx = Number(payload.x ?? 7);
+          const ty = Number(payload.y ?? 7);
+          const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
+          const targetTile = getTileByCoords(db, tx, ty);
+          if (!targetTile) {
+            throw new Error(`No map tile found at (${tx}, ${ty}).`);
+          }
+          db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(targetTile.id, targetFacing, character.id);
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: `Teleported to ${targetTile.name} [${targetTile.x}, ${targetTile.y}] (Facing ${targetFacing}).`,
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
+        if (scenario === 'CITY') {
+          const cityTile = db.prepare("SELECT id FROM map_tiles WHERE terrain = 'CITY' AND is_safe = 1 LIMIT 1").get();
+          const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
+          if (cityTile) {
+            db.prepare('UPDATE characters SET tile_id = ?, current_hp = max_hp, facing = ? WHERE id = ?').run(cityTile.id, targetFacing, character.id);
+          }
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: `Teleported to Oakhaven Sanctuary (Facing ${targetFacing}).`,
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
+        if (scenario === 'NORTH_GATE' || scenario === 'GATE') {
+          const gateTile = getTileByCoords(db, 7, 6);
+          const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
+          if (gateTile) {
+            db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(gateTile.id, targetFacing, character.id);
+          }
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: `Positioned at Oakhaven North Gate [7, 6] Facing ${targetFacing} (North: Mirkwood Crossroads, South: Oakhaven Sanctuary).`,
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
+        if (scenario === 'BRIDGE') {
+          const bridgeTile = getTileByCoords(db, 8, 7);
+          const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'EAST';
+          if (bridgeTile) {
+            db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(bridgeTile.id, targetFacing, character.id);
+          }
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: `Positioned at The Old Stone Bridge [8, 7] Facing ${targetFacing} (East: Watchpost, West: Oakhaven, N/S: Blackwater River).`,
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
+        if (scenario === 'ANCIENT_OAK' || scenario === 'OAK') {
+          const oakTile = getTileByCoords(db, 7, 3);
+          const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
+          if (oakTile) {
+            db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(oakTile.id, targetFacing, character.id);
+          }
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: `Positioned at The Primeval Black Oak [7, 3] Facing ${targetFacing}.`,
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
+        if (scenario === 'DEADMANS_MIRE' || scenario === 'MIRE') {
+          const mireTile = getTileByCoords(db, 4, 11);
+          const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
+          if (mireTile) {
+            db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(mireTile.id, targetFacing, character.id);
+          }
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: `Positioned at Deadman’s Mire Sunken Ruins [4, 11] Facing ${targetFacing}.`,
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
+        if (scenario === 'RESET_WORLD') {
+          db.prepare("UPDATE monster_instances SET status = 'SLAIN' WHERE status = 'ACTIVE'").run();
+          db.prepare("UPDATE encounters SET status = 'ESCAPED' WHERE status IN ('DISCOVERED', 'IN_COMBAT')").run();
+          const cityTile = db.prepare("SELECT id FROM map_tiles WHERE terrain = 'CITY' AND is_safe = 1 LIMIT 1").get();
+          if (cityTile) {
+            db.prepare("UPDATE characters SET tile_id = ?, current_hp = max_hp, facing = 'NORTH', pending_victory_encounter_id = NULL WHERE id = ?").run(cityTile.id, character.id);
+          }
+          resetAdventureState(character.id);
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: 'Sandbox world reset: cleared persistent monster instances and returned to Oakhaven Sanctuary.',
+              fxCue: { type: 'HEAL' }
+            })
+          });
+        }
+
+        if (scenario === 'WILDERNESS' || scenario === 'TEST_CORRIDOR') {
+          // Place at (7, 5) Mirkwood Forest where:
+          // North = Mirkwood Forest, West = Stonefang Crag (Blocked), South = Oakhaven North Gate, East = Mirkwood Forest (toward River)
+          const wildTile = getTileByCoords(db, 7, 5) || db.prepare("SELECT * FROM map_tiles WHERE terrain = 'FOREST' AND is_safe = 0 AND is_passable = 1 LIMIT 1").get();
+          const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
+          if (wildTile) {
+            db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(wildTile.id, targetFacing, character.id);
+          }
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: `Positioned at Mirkwood Crossroads [7, 5] Facing ${targetFacing} (Ahead: Forest, West: Crag Obstacle, South: Gate).`,
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
+        if (scenario === 'WOUNDED') {
+          const lowHp = Math.max(1, Math.floor((character.max_hp || 12) * 0.25));
+          db.prepare('UPDATE characters SET current_hp = ? WHERE id = ?').run(lowHp, character.id);
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: `Simulated wounded vitality (${lowHp} / ${character.max_hp} HP).`,
+              fxCue: { type: 'DAMAGE' }
+            })
+          });
+        }
+
+        if (scenario === 'HEAL') {
+          db.prepare('UPDATE characters SET current_hp = max_hp WHERE id = ?').run(character.id);
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: 'Restored champion vitality to full.',
+              fxCue: { type: 'HEAL' }
+            })
+          });
+        }
+
+        const effectiveScenario =
+          scenario === 'COMBAT' ? 'STAGE2_COMBAT' :
+          scenario === 'SHADOW' ? 'STAGE1_MYSTERY' :
+          scenario === 'AMBUSH' ? 'STAGE1_AMBUSH' :
+          scenario;
+
+        if (effectiveScenario === 'STAGE1_MYSTERY' || effectiveScenario === 'STAGE1_AMBUSH' || effectiveScenario === 'STAGE2_COMBAT') {
+          // Move to a suitable wilderness tile if currently in a safe tile
+          let tile = getTileById(db, character.tile_id);
+          let relocatedFromSafe = false;
+          if (!tile || tile.is_safe === 1) {
+            relocatedFromSafe = true;
+            tile = getTileByCoords(db, 7, 5) || db.prepare("SELECT * FROM map_tiles WHERE terrain IN ('FOREST', 'SWAMP', 'HILLS') AND is_safe = 0 AND is_passable = 1 LIMIT 1").get();
+          }
+          const liveCharRow = db.prepare('SELECT facing FROM characters WHERE id = ?').get(character.id);
+          const heroFacing = normalizeFacing((liveCharRow && liveCharRow.facing) || character.facing || 'NORTH');
+          let targetFacing = 'NORTH';
+          if (payload.facing) {
+            targetFacing = normalizeFacing(payload.facing);
+          } else if (tile && (tile.terrain === 'BRIDGE' || (tile.x === 8 && tile.y === 7))) {
+            targetFacing = (heroFacing === 'EAST' || heroFacing === 'WEST') ? heroFacing : 'EAST';
+          } else if (payload.preserveFacing && !relocatedFromSafe) {
+            targetFacing = heroFacing;
+          }
+          if (tile) {
+            db.prepare('UPDATE characters SET tile_id = ?, facing = ?, current_hp = max_hp WHERE id = ?').run(tile.id, targetFacing, character.id);
+            // Clear any leftover persistent monster_instances on the test tile so scenario spawn is clean and predictable
+            db.prepare("UPDATE monster_instances SET status = 'SLAIN' WHERE tile_id = ? AND status = 'ACTIVE'").run(tile.id);
+          }
+
+          let monster = null;
+          const requestedMonsterKey = payload.monsterName || payload.monsterSlug || payload.monsterId || payload.monster || null;
+          if (requestedMonsterKey !== null && requestedMonsterKey !== undefined && String(requestedMonsterKey).trim() !== '') {
+            const rawQuery = String(requestedMonsterKey).trim().toLowerCase();
+            const aliasMap = {
+              'creeping vine': 'assassin vine',
+              'creeping_vine': 'assassin vine',
+              'skeleton': 'human skeleton',
+              'zombie': 'human zombie',
+              'giant_rat': 'dire rat',
+              'giant rat': 'dire rat',
+              'will_o_wisp': "will-o'-wisp",
+              'wisp': "will-o'-wisp"
+            };
+            const mappedQuery = aliasMap[rawQuery] || rawQuery.replace(/_/g, ' ');
+            const catalogMatch = lookupMonsterSizeEntry(mappedQuery) || lookupMonsterSizeEntry(rawQuery);
+            monster = db.prepare('SELECT * FROM monsters WHERE LOWER(name) = ? LIMIT 1').get(mappedQuery)
+              || (catalogMatch ? db.prepare('SELECT * FROM monsters WHERE id = ? OR LOWER(name) = ? LIMIT 1').get(catalogMatch.id, String(catalogMatch.name).toLowerCase()) : null)
+              || db.prepare('SELECT * FROM monsters WHERE LOWER(name) LIKE ? LIMIT 1').get(`%${mappedQuery}%`);
+          }
+          if (!monster) {
+            monster = db.prepare("SELECT * FROM monsters WHERE name IN ('Assassin Vine', 'Ghoul', 'Wolf', 'Manticore', 'Giant Spider', 'Rust Monster') ORDER BY RANDOM() LIMIT 1").get()
+              || db.prepare('SELECT * FROM monsters ORDER BY RANDOM() LIMIT 1').get();
+          }
+
+          const isAmbushScenario = effectiveScenario === 'STAGE1_AMBUSH' ? 1 : 0;
+          const spottedByHero = isAmbushScenario ? 0 : 1;
+          const stateJson = isAmbushScenario ? JSON.stringify({ labForcedAmbush: true }) : '{}';
+
+          const ins = db.prepare(`
+            INSERT INTO encounters (
+              character_id, tile_id, monster_id, status,
+              current_monster_hp, monster_max_hp, combat_round,
+              spotted_by_hero, is_ambush, opening_shot_resolved, combat_state_json
+            ) VALUES (?, ?, ?, 'DISCOVERED', ?, ?, 0, ?, ?, 0, ?)
+          `).run(character.id, tile.id, monster.id, monster.base_hp, monster.base_hp, spottedByHero, isAmbushScenario, stateJson);
+
+          const encId = Number(ins.lastInsertRowid);
+          const advState = getOrCreateAdventureState(character.id, tile);
+          if (effectiveScenario === 'STAGE2_COMBAT') {
+            investigateEncounter(db, character.id, encId, character.class, options.rng ? { rng: options.rng } : {});
+            db.prepare("UPDATE encounters SET initiative_winner = 'HERO' WHERE id = ?").run(encId);
+            recordEncounterStart(advState, tile, {
+              status: 'IN_COMBAT',
+              monsterName: monster ? monster.name : 'Hostile Creature'
+            });
+            return res.json({
+              ok: true,
+              state: buildClientState(db, userId, {
+                fxCue: { type: 'REVEAL_MONSTER' }
+              })
+            });
+          }
+
+          recordEncounterStart(advState, tile, {
+            status: 'STAGE1_PRE_COMBAT',
+            monsterName: null
+          });
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              fxCue: { type: 'ENCOUNTER_DISCOVERED' }
+            })
+          });
+        }
+
+        if (scenario === 'SWITCH_CLASS') {
+          const nextClass = payload.classType || 'FIGHTER';
+          db.prepare('UPDATE characters SET is_alive = 0 WHERE id = ?').run(character.id);
+          ensureLivingHero(db, userId, nextClass);
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: `Switched active test champion to ${nextClass}.`,
+              fxCue: { type: 'HEAL' }
+            })
+          });
+        }
+      }
+
+  return false;
+}
+
+module.exports = {
+  handleAdventureScenarioAction
+};

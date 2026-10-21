@@ -1,0 +1,193 @@
+{
+  "generatedAt": "2026-10-21T10:42:21.466Z",
+  "areasVerified": 15,
+  "screenshots": [
+    "01_area01_world_travel_continuity.png",
+    "02_area02_turning_and_relative_movement.png",
+    "03_area03_stage1_secrecy_card.png",
+    "04_area04_stage2_monster_reveal.png",
+    "05_area05_combat_beats_and_chronicle.png",
+    "06_area06_wounded_hero_and_monster_brackets.png",
+    "07_area07_flee_and_exploration_recovery.png",
+    "08_area08_post_reload_persistence.png",
+    "09_area09_expedition_journal_progress.png",
+    "10_area10_size_comparison_arena.png",
+    "11_area11_card_fallback_safety.png",
+    "12a_area12_stirge_tiny_cutout.png",
+    "12b_area12_goblin_small_cutout.png",
+    "12c_area12_rust_monster_medium_cutout.png",
+    "12d_area12_bugbear_medium_cutout.png",
+    "12e_area12_ogre_large_cutout.png",
+    "13a_area13_viewport_1920x1080.png",
+    "13b_area13_viewport_1440x900.png",
+    "13c_area13_viewport_1280x800.png"
+  ],
+  "viewportAudits": {
+    "1920x1080": {
+      "vw": 1920,
+      "vh": 1080,
+      "scrollW": 1920,
+      "scrollH": 1080,
+      "noVerticalOverflow": true,
+      "noHorizontalOverflow": true,
+      "noViewportRightDeckOverlap": true,
+      "topDeckFits": true,
+      "movementDeckFits": true
+    },
+    "1440x900": {
+      "vw": 1440,
+      "vh": 900,
+      "scrollW": 1440,
+      "scrollH": 900,
+      "noVerticalOverflow": true,
+      "noHorizontalOverflow": true,
+      "noViewportRightDeckOverlap": true,
+      "topDeckFits": true,
+      "movementDeckFits": true
+    },
+    "1280x800": {
+      "vw": 1280,
+      "vh": 800,
+      "scrollW": 1280,
+      "scrollH": 800,
+      "noVerticalOverflow": true,
+      "noHorizontalOverflow": true,
+      "noViewportRightDeckOverlap": true,
+      "topDeckFits": true,
+      "movementDeckFits": true
+    }
+  },
+  "monsterCutoutDomChecks": [
+    {
+      "monsterName": "Stirge",
+      "pfSize": "TINY",
+      "bodyProfile": "WINGED_TINY_PEST",
+      "presentation": "integrated",
+      "imgSrc": "/lab-assets/images/monsters-cutout/stirge.png",
+      "naturalWidth": 688,
+      "naturalHeight": 807,
+      "boxWidthPx": 140,
+      "boxHeightPx": 125,
+      "boxAreaPx": 17500,
+      "centerOffsetPx": 0,
+      "hasGroundingRig": true,
+      "hasAmbientPatch": true,
+      "contactCount": 0
+    },
+    {
+      "monsterName": "Goblin",
+      "pfSize": "SMALL",
+      "bodyProfile": "BIPED_SMALL",
+      "presentation": "integrated",
+      "imgSrc": "/lab-assets/images/monsters-cutout/goblin.png",
+      "naturalWidth": 701,
+      "naturalHeight": 873,
+      "boxWidthPx": 164,
+      "boxHeightPx": 195,
+      "boxAreaPx": 31980,
+      "centerOffsetPx": 21,
+      "hasGroundingRig": true,
+      "hasAmbientPatch": true,
+      "contactCount": 2
+    },
+    {
+      "monsterName": "Rust Monster",
+      "pfSize": "MEDIUM",
+      "bodyProfile": "ARACHNID_WIDE",
+      "presentation": "integrated",
+      "imgSrc": "/lab-assets/images/monsters-cutout/rust_monster.png",
+      "naturalWidth": 812,
+      "naturalHeight": 852,
+      "boxWidthPx": 277,
+      "boxHeightPx": 187,
+      "boxAreaPx": 51799,
+      "centerOffsetPx": 0,
+      "hasGroundingRig": true,
+      "hasAmbientPatch": true,
+      "contactCount": 5
+    },
+    {
+      "monsterName": "Bugbear",
+      "pfSize": "MEDIUM",
+      "bodyProfile": "BIPED_HEAVY_MEDIUM",
+      "presentation": "integrated",
+      "imgSrc": "/lab-assets/images/monsters-cutout/bugbear.png",
+      "naturalWidth": 668,
+      "naturalHeight": 916,
+      "boxWidthPx": 294,
+      "boxHeightPx": 334,
+      "boxAreaPx": 98196,
+      "centerOffsetPx": 21,
+      "hasGroundingRig": true,
+      "hasAmbientPatch": true,
+      "contactCount": 2
+    },
+    {
+      "monsterName": "Ogre",
+      "pfSize": "LARGE",
+      "bodyProfile": "BIPED_TALL_BRUTE",
+      "presentation": "integrated",
+      "imgSrc": "/lab-assets/images/monsters-cutout/ogre.png",
+      "naturalWidth": 840,
+      "naturalHeight": 993,
+      "boxWidthPx": 339,
+      "boxHeightPx": 414,
+      "boxAreaPx": 140346,
+      "centerOffsetPx": 0,
+      "hasGroundingRig": true,
+      "hasAmbientPatch": true,
+      "contactCount": 2
+    }
+  ],
+  "scaleArenaDomOrder": [
+    {
+      "slug": "stirge",
+      "pfSize": "TINY",
+      "combatW": 140,
+      "combatH": 125,
+      "dispW": 108,
+      "dispH": 97
+    },
+    {
+      "slug": "goblin",
+      "pfSize": "SMALL",
+      "combatW": 164,
+      "combatH": 195,
+      "dispW": 127,
+      "dispH": 151
+    },
+    {
+      "slug": "skeletal_champion",
+      "pfSize": "MEDIUM",
+      "combatW": 225,
+      "combatH": 289,
+      "dispW": 174,
+      "dispH": 223
+    },
+    {
+      "slug": "troll",
+      "pfSize": "LARGE",
+      "combatW": 367,
+      "combatH": 447,
+      "dispW": 284,
+      "dispH": 346
+    },
+    {
+      "slug": "ref_huge_elder_troll",
+      "pfSize": "HUGE",
+      "combatW": 501,
+      "combatH": 472,
+      "dispW": 387,
+      "dispH": 365
+    }
+  ],
+  "performanceMetrics": {
+    "JSHeapUsedSizeMB": 1.96,
+    "JSHeapTotalSizeMB": 4,
+    "Nodes": 1992,
+    "JSEventListeners": 76
+  },
+  "consoleErrorsCount": 0,
+  "pageExceptionsCount": 0,
+  "failedNetworkRequestsCount": 0
+}

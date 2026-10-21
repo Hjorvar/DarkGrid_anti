@@ -10,8 +10,8 @@ Tilraunaútgáfan er 100% sjálfstæð innan `action-ui-lab/`. Hún notar sinn e
 # Ræsa Action Viewport tilraunaþjóninn á http://localhost:3030
 node action-ui-lab/server.js
 
-# Keyra sjálfvirku prófunarsvítuna fyrir tilraunaútgáfuna
-node --test action-ui-lab/tests/action-lab.test.js
+# Keyra sjálfvirku prófunarsvíturnar fyrir tilraunaútgáfuna (59/59 próf)
+node --test action-ui-lab/tests/action-lab.test.js action-ui-lab/tests/world-travel.test.js action-ui-lab/tests/player-ui.test.js
 ```
 
 Opnaðu í vafra: **http://localhost:3030** (eða sérsniðið port með `ACTION_LAB_PORT`).
@@ -38,17 +38,17 @@ Hetjan hefur sjálfstæða sjónstefnu (`NORTH`, `EAST`, `SOUTH`, `WEST`) sem va
 - **`J`**: The Watcher's Board (*Board*).
 - **`Escape`**: Loka opnum glugga.
 
-## Sjónarhorns- og myndbirtingarhamir (Scene Modes)
-
-Í **Lab Director** stikunni efst í viðmótinu er hægt að skipta samstundis á milli þriggja myndbirtingarhama á sömu staðsetningu og í sömu sjónstefnu:
-
-- **`A: Single Scene ★` (Útfærsla A — Staðarbundin heildstæð sena):** Velur eitt heildstætt málverk út frá núverandi reit, landslagsafbrigði (*deterministic variant*) og sérstökum kennileitum (`MARKETPLACE`, `TOWN_GATES`, `ANCIENT_BRIDGE`, `SUNK_RUIN`, `ANCIENT_OAK`). Ef horft er beint á ófæra hindrun (fjallgarð eða á) birtist heildstæð hindrunarmynd. Engin gagnsæisblöndun tveggja málverka og engin bráðabirgða-SVG lög.
-- **`B: Directional Scene` (Útfærsla B — Stefnumiarið útsýni fram undan):** Velur eitt heildstætt málverk út frá reitapari (`currentTile -> ahead1`) og sjónstefnu (`NORTH`, `EAST`, `SOUTH`, `WEST`), þannig að útsýnið breytist þegar hetjan snýr sér og sýnir hvert ferðinni er heitið.
-- **`Legacy (Blended+SVG)` (Upprunaleg tilraunaútgáfa):** Varðveitir gömlu `ahead-portal` gagnsæisblöndunina og `buildMapConnectedSceneSvg()` línuteikningarnar til hliðarsamanburðar.
-
-Einnig eru flýtihnappar í Lab Director stikunni fyrir **🏰 Town**, **🌲 Forest**, **🌉 Bridge**, **👁️ Stage 1**, **⚔️ Melee**, **🦅 Flying** og **🔄 Reset** (sem hreinsar varanlegar skrímslaleifar og endurstillir prófunarheiminn).
-
 ## Framkvæmda- og samanburðarskýrslur
 Ítarlegar skýrslur ásamt skjáskotum eru í:
-- [`action-ui-lab/docs/viewport-visual-redesign-report.md`](docs/viewport-visual-redesign-report.md) — Endurhönnun myndbirtingar og sjónarhorns (Samanburður á Útfærslu A, Útfærslu B og Legacy).
+- **Phase 2 (World Exploration, Encounter Pacing & Visual Continuity):**
+  - [`action-ui-lab/docs/implementation/phase-2/PHASE-2-IMPLEMENTATION-REPORT.md`](docs/implementation/phase-2/PHASE-2-IMPLEMENTATION-REPORT.md)
+  - [`action-ui-lab/docs/implementation/phase-2/PHASE-2-ENCOUNTER-ANALYSIS.md`](docs/implementation/phase-2/PHASE-2-ENCOUNTER-ANALYSIS.md)
+  - [`action-ui-lab/docs/implementation/phase-2/PHASE-2-VISUAL-QA.md`](docs/implementation/phase-2/PHASE-2-VISUAL-QA.md)
+  - [`action-ui-lab/docs/implementation/phase-2/PHASE-2-ART-BACKLOG.md`](docs/implementation/phase-2/PHASE-2-ART-BACKLOG.md)
+  - [`action-ui-lab/docs/implementation/phase-2/PHASE-2-FOLLOWUP.md`](docs/implementation/phase-2/PHASE-2-FOLLOWUP.md)
+- **Phase 1 (World Continuity & Scene Resolver Repair):**
+  - [`action-ui-lab/docs/implementation/phase-1/PHASE-1-IMPLEMENTATION-REPORT.md`](docs/implementation/phase-1/PHASE-1-IMPLEMENTATION-REPORT.md)
+  - [`action-ui-lab/docs/implementation/phase-1/PHASE-1-VISUAL-QA.md`](docs/implementation/phase-1/PHASE-1-VISUAL-QA.md)
+  - [`action-ui-lab/docs/implementation/phase-1/PHASE-1-FOLLOWUP.md`](docs/implementation/phase-1/PHASE-1-FOLLOWUP.md)
+- [`action-ui-lab/docs/viewport-visual-redesign-report.md`](docs/viewport-visual-redesign-report.md) — Endurhönnun myndbirtingar og sjónarhorns.
 - [`action-ui-lab/docs/action-viewport-implementation-report.md`](docs/action-viewport-implementation-report.md) — Upprunaleg framkvæmdaskýrsla fyrir First-Person Action Viewport.

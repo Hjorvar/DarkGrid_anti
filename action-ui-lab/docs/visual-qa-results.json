@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-20T21:46:30.536Z",
-  "totalChecks": 65,
-  "passedChecks": 65,
+  "generatedAt": "2026-10-21T10:47:39.663Z",
+  "totalChecks": 69,
+  "passedChecks": 69,
   "failedChecks": 0,
   "allPassed": true,
   "screenshotDirectory": "action-ui-lab/docs/screenshots/expedition",
@@ -14,8 +14,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/oakhaven_7_7_north.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 56.02,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 49.5,
+          "nonBlackRatio": 0.998
+        },
+        "topCenter": {
+          "avgLuma": 72.55,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 51.36,
+          "nonBlackRatio": 0.998
+        },
+        "center": {
+          "avgLuma": 88.59,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 58.89,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "01_oakhaven_7_7_north.png"
     },
     {
@@ -26,8 +51,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/oakhaven_7_7_east.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 54.35,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 50.57,
+          "nonBlackRatio": 0.998
+        },
+        "topCenter": {
+          "avgLuma": 78.26,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 50.81,
+          "nonBlackRatio": 0.998
+        },
+        "center": {
+          "avgLuma": 86.1,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 57.35,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "02_oakhaven_7_7_east.png"
     },
     {
@@ -38,8 +88,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/oakhaven_7_7_south.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 47.92,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 53.75,
+          "nonBlackRatio": 0.999
+        },
+        "topCenter": {
+          "avgLuma": 80.46,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 44.37,
+          "nonBlackRatio": 0.999
+        },
+        "center": {
+          "avgLuma": 73.83,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 62.15,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "03_oakhaven_7_7_south.png"
     },
     {
@@ -50,8 +125,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/oakhaven_7_7_west.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 60.46,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 59.23,
+          "nonBlackRatio": 0.998
+        },
+        "topCenter": {
+          "avgLuma": 101.06,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 68.03,
+          "nonBlackRatio": 0.998
+        },
+        "center": {
+          "avgLuma": 83.92,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 55.59,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "04_oakhaven_7_7_west.png"
     },
     {
@@ -62,8 +162,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/north_gate_7_6_north.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 51.88,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 34.96,
+          "nonBlackRatio": 0.984
+        },
+        "topCenter": {
+          "avgLuma": 82.04,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 36.64,
+          "nonBlackRatio": 0.994
+        },
+        "center": {
+          "avgLuma": 76.28,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 54.8,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "05_north_gate_7_6_north.png"
     },
     {
@@ -74,8 +199,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/north_gate_7_6_south.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 53.16,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 37.86,
+          "nonBlackRatio": 0.999
+        },
+        "topCenter": {
+          "avgLuma": 109.07,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 49.7,
+          "nonBlackRatio": 0.999
+        },
+        "center": {
+          "avgLuma": 99.73,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 63.46,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "06_north_gate_7_6_south.png"
     },
     {
@@ -86,8 +236,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/north_gate_7_6_east.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 45.7,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 43.68,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 106.89,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 51.38,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 85.38,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 52.93,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "07_north_gate_7_6_east.png"
     },
     {
@@ -98,8 +273,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/north_gate_7_6_west.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 67.36,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 54.47,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 174.98,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 71.02,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 122.25,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 63.44,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "08_north_gate_7_6_west.png"
     },
     {
@@ -110,8 +310,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/south_gate_7_8_south.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 62.54,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 49.33,
+          "nonBlackRatio": 0.998
+        },
+        "topCenter": {
+          "avgLuma": 107.46,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 58.32,
+          "nonBlackRatio": 0.997
+        },
+        "center": {
+          "avgLuma": 104.7,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 55.76,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "09_south_gate_7_8_south.png"
     },
     {
@@ -122,8 +347,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/south_gate_7_8_north.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 55.96,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 51.1,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 72.07,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 50.12,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 84.35,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 55.57,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "10_south_gate_7_8_north.png"
     },
     {
@@ -134,8 +384,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 37.25,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 26.31,
+          "nonBlackRatio": 0.961
+        },
+        "topCenter": {
+          "avgLuma": 54.6,
+          "nonBlackRatio": 0.999
+        },
+        "topRight": {
+          "avgLuma": 35.64,
+          "nonBlackRatio": 0.998
+        },
+        "center": {
+          "avgLuma": 53.1,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 47.08,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "11_crossroads_7_5_north.png"
     },
     {
@@ -146,8 +421,33 @@
       "povTier": 3,
       "imageUrl": "/lab-assets/images/perspective/crossroads_7_5_east.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 69.56,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 52.91,
+          "nonBlackRatio": 0.993
+        },
+        "topCenter": {
+          "avgLuma": 142.63,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 58.4,
+          "nonBlackRatio": 0.996
+        },
+        "center": {
+          "avgLuma": 123.79,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 55.5,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "12_crossroads_7_5_east.png"
     },
     {
@@ -158,8 +458,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/crossroads_7_5_south.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 33.23,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 28.44,
+          "nonBlackRatio": 0.993
+        },
+        "topCenter": {
+          "avgLuma": 63.79,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 42.53,
+          "nonBlackRatio": 0.991
+        },
+        "center": {
+          "avgLuma": 77.46,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 45.87,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "13_crossroads_7_5_south.png"
     },
     {
@@ -170,8 +495,33 @@
       "povTier": 3,
       "imageUrl": "/lab-assets/images/perspective/crossroads_7_5_west.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 46.86,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 41.63,
+          "nonBlackRatio": 0.988
+        },
+        "topCenter": {
+          "avgLuma": 42.56,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 31.59,
+          "nonBlackRatio": 0.991
+        },
+        "center": {
+          "avgLuma": 51.56,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 54.98,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "14_crossroads_7_5_west.png"
     },
     {
@@ -182,8 +532,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/terrain/forest_ancient_oak.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 55.2,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 56.72,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 43.56,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 55.93,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 59.9,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 51.4,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "15_ancient_oak_7_3_north.png"
     },
     {
@@ -194,8 +569,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/ancient_oak_7_3_south.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 65.13,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 38.8,
+          "nonBlackRatio": 0.997
+        },
+        "topCenter": {
+          "avgLuma": 106.94,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 43.31,
+          "nonBlackRatio": 0.996
+        },
+        "center": {
+          "avgLuma": 108.45,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 61,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "16_ancient_oak_7_3_south.png"
     },
     {
@@ -206,8 +606,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/bridge_8_7_east.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 58.79,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 50.69,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 58.65,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 48.94,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 79.61,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 62.71,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "17_bridge_8_7_east.png"
     },
     {
@@ -218,8 +643,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/bridge_8_7_west.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 56.61,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 52.88,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 71.92,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 58.38,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 89.11,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 62.25,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "18_bridge_8_7_west.png"
     },
     {
@@ -230,8 +680,33 @@
       "povTier": 2,
       "imageUrl": "/lab-assets/images/perspective/bridge_8_7_north.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 63.14,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 65.91,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 79.88,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 50.21,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 75.01,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 47.94,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "19_bridge_8_7_north.png"
     },
     {
@@ -242,8 +717,33 @@
       "povTier": 2,
       "imageUrl": "/lab-assets/images/perspective/bridge_8_7_south.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 63.08,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 65.54,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 85.46,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 74.23,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 83.88,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 48,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "20_bridge_8_7_south.png"
     },
     {
@@ -254,8 +754,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/watchpost_9_7_west.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 40.84,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 41.96,
+          "nonBlackRatio": 0.996
+        },
+        "topCenter": {
+          "avgLuma": 71.32,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 50.23,
+          "nonBlackRatio": 0.998
+        },
+        "center": {
+          "avgLuma": 71.74,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 50.56,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "21_watchpost_9_7_west.png"
     },
     {
@@ -266,8 +791,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/watchpost_9_7_east.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 52.39,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 50.2,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 77.44,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 63.76,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 60.56,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 57.49,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "22_watchpost_9_7_east.png"
     },
     {
@@ -278,8 +828,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/watchpost_9_7_river_flank.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 43.34,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 45.78,
+          "nonBlackRatio": 0.997
+        },
+        "topCenter": {
+          "avgLuma": 73.11,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 37.57,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 67.24,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 53.8,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "23_watchpost_9_7_north.png"
     },
     {
@@ -290,8 +865,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/deadmans_mire_4_11_ruins.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 55.36,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 69.49,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 68.9,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 66.4,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 61.23,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 55.93,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "24_deadmans_mire_4_11_north.png"
     },
     {
@@ -300,10 +900,35 @@
       "passed": true,
       "coords": "[3,5] WEST",
       "povTier": 4,
-      "imageUrl": "/lab-assets/images/terrain/hills_raven_crags_ravine_pov.jpg",
-      "naturalSize": "1376x768",
-      "avgLuma": 57.47,
+      "imageUrl": "/images/terrain/terrain_fallback_v1_scorched.webp",
+      "naturalSize": "1536x864",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
+      "avgLuma": 61.33,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 76.55,
+          "nonBlackRatio": 0.999
+        },
+        "topCenter": {
+          "avgLuma": 97.97,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 60.53,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 94.7,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 50.48,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "25_raven_crags_3_5.png"
     },
     {
@@ -312,10 +937,35 @@
       "passed": true,
       "coords": "[12,4] EAST",
       "povTier": 1,
-      "imageUrl": "/lab-assets/images/terrain/plains_windblown_heath_pov.jpg",
-      "naturalSize": "1376x768",
-      "avgLuma": 88.71,
+      "imageUrl": "/images/terrain/terrain_plains.webp",
+      "naturalSize": "1536x864",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
+      "avgLuma": 72.67,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 62.48,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 81.8,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 74.47,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 83.68,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 66.43,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "26_windblown_heath_12_4.png"
     },
     {
@@ -326,8 +976,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/terrain/swamp_willow_boardwalk_pov.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 47.42,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 41.44,
+          "nonBlackRatio": 0.993
+        },
+        "topCenter": {
+          "avgLuma": 74.39,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 51.96,
+          "nonBlackRatio": 0.999
+        },
+        "center": {
+          "avgLuma": 76.36,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 40.98,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "27_rotting_fen_6_10.png"
     },
     {
@@ -336,10 +1011,35 @@
       "passed": true,
       "coords": "[9,11] EAST",
       "povTier": 4,
-      "imageUrl": "/lab-assets/images/terrain/jungle_venomous_trail_pov.jpg",
-      "naturalSize": "1376x768",
-      "avgLuma": 38.09,
+      "imageUrl": "/images/terrain/terrain_jungle.webp",
+      "naturalSize": "1536x864",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
+      "avgLuma": 38.55,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 44.14,
+          "nonBlackRatio": 0.993
+        },
+        "topCenter": {
+          "avgLuma": 83.67,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 33.32,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 72.82,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 42.29,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "28_venomous_jungle_9_11.png"
     },
     {
@@ -350,8 +1050,33 @@
       "povTier": 3,
       "imageUrl": "/lab-assets/images/perspective/barrier_bottomless_mire_pov.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 58.4,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 53.19,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 75.32,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 52.01,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 52.41,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 42.05,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "29_barrier_bottomless_mire.png"
     },
     {
@@ -362,8 +1087,33 @@
       "povTier": 3,
       "imageUrl": "/lab-assets/images/perspective/barrier_murksea_cliffs_pov.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 69.98,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 55.78,
+          "nonBlackRatio": 1
+        },
+        "topCenter": {
+          "avgLuma": 76.93,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 53.97,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 112.83,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 61.35,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "30_barrier_murksea_cliffs.png"
     },
     {
@@ -374,8 +1124,33 @@
       "povTier": 3,
       "imageUrl": "/lab-assets/images/perspective/barrier_darkmount_crags_pov.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 67.1,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 32.52,
+          "nonBlackRatio": 0.999
+        },
+        "topCenter": {
+          "avgLuma": 60.43,
+          "nonBlackRatio": 1
+        },
+        "topRight": {
+          "avgLuma": 84.12,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 58.76,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 58.16,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": "31_barrier_darkmount_crags.png"
     },
     {
@@ -397,8 +1172,33 @@
       "povTier": 1,
       "imageUrl": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
       "naturalSize": "1376x768",
+      "renderedSize": "1219x852",
+      "coversViewportCompletely": true,
       "avgLuma": 37.25,
       "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "zones": {
+        "topLeft": {
+          "avgLuma": 26.32,
+          "nonBlackRatio": 0.961
+        },
+        "topCenter": {
+          "avgLuma": 54.81,
+          "nonBlackRatio": 0.999
+        },
+        "topRight": {
+          "avgLuma": 35.89,
+          "nonBlackRatio": 0.998
+        },
+        "center": {
+          "avgLuma": 53.78,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 43.75,
+          "nonBlackRatio": 1
+        }
+      },
       "screenshot": null
     },
     {
@@ -496,8 +1296,8 @@
       "name": "Wolf at [3,5] (Integrated Cutout)",
       "passed": true,
       "facing": "WEST",
-      "sceneImageUrl": "/lab-assets/images/terrain/hills_raven_crags_ravine_pov.jpg",
-      "terrainNaturalWidth": 1376,
+      "sceneImageUrl": "/images/terrain/terrain_fallback_v1_scorched.webp",
+      "terrainNaturalWidth": 1536,
       "monsterName": "Wolf",
       "isIntegratedDom": true,
       "isCardDom": false,
@@ -553,18 +1353,33 @@
     },
     {
       "category": "MONSTER_ENCOUNTER",
-      "name": "Rust Monster at [7,5] (Safe Card Fallback)",
+      "name": "Rust Monster at [7,5] (Integrated Cutout)",
       "passed": true,
       "facing": "NORTH",
       "sceneImageUrl": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
       "terrainNaturalWidth": 1376,
       "monsterName": "Rust Monster",
+      "isIntegratedDom": true,
+      "isCardDom": false,
+      "imgSrc": "/lab-assets/images/monsters-cutout/rust_monster.png",
+      "naturalWidth": 812,
+      "contactPatchesDom": 5,
+      "screenshot": "45_monster_rust_integrated.png"
+    },
+    {
+      "category": "MONSTER_ENCOUNTER",
+      "name": "Choker at [7,5] (Safe Card Fallback)",
+      "passed": true,
+      "facing": "NORTH",
+      "sceneImageUrl": "/lab-assets/images/perspective/crossroads_7_5_north.jpg",
+      "terrainNaturalWidth": 1376,
+      "monsterName": "Choker",
       "isIntegratedDom": false,
       "isCardDom": true,
-      "imgSrc": "/images/monsters/rust_monster.png",
+      "imgSrc": "/images/monsters/choker.png",
       "naturalWidth": 1024,
       "contactPatchesDom": 0,
-      "screenshot": "45_monster_rust_card_fallback.png"
+      "screenshot": "45b_monster_choker_card_fallback.png"
     },
     {
       "category": "DEV_TOOLS",
@@ -578,7 +1393,7 @@
       "category": "DEV_TOOLS",
       "name": "Visual QA & Expedition Verification Modal",
       "passed": true,
-      "qaCardCount": 19,
+      "qaCardCount": 49,
       "screenshot": "47_visual_qa_modal.png"
     },
     {
@@ -589,7 +1404,7 @@
       "scrollWidth": 1920,
       "clientHeight": 1080,
       "scrollHeight": 1080,
-      "directorBarHeight": 31,
+      "directorBarHeight": 36,
       "viewportVisible": true,
       "navPadInBounds": true,
       "screenshot": "48_responsive_1920x1080.png"
@@ -602,7 +1417,7 @@
       "scrollWidth": 1440,
       "clientHeight": 900,
       "scrollHeight": 900,
-      "directorBarHeight": 31,
+      "directorBarHeight": 35,
       "viewportVisible": true,
       "navPadInBounds": true,
       "screenshot": "49_responsive_1440x900.png"
@@ -615,7 +1430,7 @@
       "scrollWidth": 1280,
       "clientHeight": 800,
       "scrollHeight": 800,
-      "directorBarHeight": 31,
+      "directorBarHeight": 35,
       "viewportVisible": true,
       "navPadInBounds": true,
       "screenshot": "50_responsive_1280x800_handheld.png"
@@ -628,7 +1443,7 @@
       "scrollWidth": 1280,
       "clientHeight": 720,
       "scrollHeight": 720,
-      "directorBarHeight": 31,
+      "directorBarHeight": 35,
       "viewportVisible": true,
       "navPadInBounds": true,
       "screenshot": "51_responsive_1280x720.png"
@@ -738,7 +1553,7 @@
       "passed": true,
       "expCards": 3,
       "waypoints": 4,
-      "logEntries": 4,
+      "logEntries": 5,
       "screenshot": "adventure/08_expedition_journal_modal.png"
     },
     {
@@ -747,6 +1562,67 @@
       "passed": true,
       "cards": 4,
       "screenshot": "adventure/09_lab_director_modal.png"
+    },
+    {
+      "category": "PHASE2_5B_INTEGRITY",
+      "name": "Rapid Movement & Crossfade Stress Test (Zero Black/Partial Tiles, Clean A/B Layer State)",
+      "passed": true,
+      "x": 7,
+      "y": 5,
+      "facing": "NORTH",
+      "complete": true,
+      "naturalWidth": 1376,
+      "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "isCrossfadingClass": false,
+      "coversViewportCompletely": true,
+      "backdropRect": {
+        "x": 196,
+        "y": 125.484375,
+        "width": 1161,
+        "height": 944.96875
+      },
+      "zones": {
+        "topLeft": {
+          "avgLuma": 27.13,
+          "nonBlackRatio": 0.975
+        },
+        "topCenter": {
+          "avgLuma": 53.55,
+          "nonBlackRatio": 0.996
+        },
+        "topRight": {
+          "avgLuma": 34.72,
+          "nonBlackRatio": 1
+        },
+        "center": {
+          "avgLuma": 53.58,
+          "nonBlackRatio": 1
+        },
+        "bottomCenter": {
+          "avgLuma": 50.62,
+          "nonBlackRatio": 1
+        }
+      }
+    },
+    {
+      "category": "PHASE2_5B_INTEGRITY",
+      "name": "Prefers-Reduced-Motion Scene Transition Verification",
+      "passed": true,
+      "reducedMotionActive": true,
+      "complete": true,
+      "naturalWidth": 1376,
+      "computedOpacity": "1",
+      "prevComputedOpacity": "0",
+      "isCrossfadingClass": false
+    },
+    {
+      "category": "PHASE2_5B_INTEGRITY",
+      "name": "Zero Console/Page Exceptions & Zero Failed Image Requests",
+      "passed": true,
+      "consoleErrorsCount": 0,
+      "pageExceptionsCount": 0,
+      "failedImageRequestsCount": 0
     }
   ]
 }

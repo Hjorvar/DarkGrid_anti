@@ -545,12 +545,12 @@ const MONSTER_SIZE_CATALOG = [
       "minY": 12,
       "maxX": 783,
       "maxY": 872,
-      "contentWidthRatio": 0.97,
-      "contentHeightRatio": 0.973,
-      "topPadRatio": 0.014,
-      "bottomPadRatio": 0.014,
-      "leftPadRatio": 0.015,
-      "rightPadRatio": 0.015
+      "contentWidthRatio": 0.9698,
+      "contentHeightRatio": 0.9729,
+      "topPadRatio": 0.0136,
+      "bottomPadRatio": 0.0136,
+      "leftPadRatio": 0.0151,
+      "rightPadRatio": 0.0151
     },
     "cardContentBounds": {
       "width": 1024,
@@ -573,12 +573,12 @@ const MONSTER_SIZE_CATALOG = [
       "minY": 12,
       "maxX": 783,
       "maxY": 872,
-      "contentWidthRatio": 0.97,
-      "contentHeightRatio": 0.973,
-      "topPadRatio": 0.014,
-      "bottomPadRatio": 0.014,
-      "leftPadRatio": 0.015,
-      "rightPadRatio": 0.015
+      "contentWidthRatio": 0.9698,
+      "contentHeightRatio": 0.9729,
+      "topPadRatio": 0.0136,
+      "bottomPadRatio": 0.0136,
+      "leftPadRatio": 0.0151,
+      "rightPadRatio": 0.0151
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -589,7 +589,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Rooted Botanical / Tentacled Mass (Assassin Vine, Shambling Mound)",
-    "proposedScaleFactor": 1.294
+    "proposedScaleFactor": 1.294,
+    "cutoutStatus": "EXISTING_APPROVED",
+    "cutoutValidationMetrics": {
+      "width": 796,
+      "height": 885,
+      "colorType": 6,
+      "transparentPixelRatio": 0.5276,
+      "opaqueCoreRatio": 0.4271,
+      "semiTransparentRatio": 0.0532,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.5155,
+        "y": 0.5404
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 4,
@@ -625,11 +647,11 @@ const MONSTER_SIZE_CATALOG = [
       "maxX": 814,
       "maxY": 764,
       "contentWidthRatio": 0.971,
-      "contentHeightRatio": 0.969,
-      "topPadRatio": 0.015,
-      "bottomPadRatio": 0.015,
-      "leftPadRatio": 0.015,
-      "rightPadRatio": 0.015
+      "contentHeightRatio": 0.9691,
+      "topPadRatio": 0.0154,
+      "bottomPadRatio": 0.0154,
+      "leftPadRatio": 0.0145,
+      "rightPadRatio": 0.0145
     },
     "cardContentBounds": {
       "width": 1024,
@@ -653,11 +675,11 @@ const MONSTER_SIZE_CATALOG = [
       "maxX": 814,
       "maxY": 764,
       "contentWidthRatio": 0.971,
-      "contentHeightRatio": 0.969,
-      "topPadRatio": 0.015,
-      "bottomPadRatio": 0.015,
-      "leftPadRatio": 0.015,
-      "rightPadRatio": 0.015
+      "contentHeightRatio": 0.9691,
+      "topPadRatio": 0.0154,
+      "bottomPadRatio": 0.0154,
+      "leftPadRatio": 0.0145,
+      "rightPadRatio": 0.0145
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -668,7 +690,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Quadruped Beast (Wolf, Hyena, Worg, Cheetah)",
-    "proposedScaleFactor": 0.73
+    "proposedScaleFactor": 0.73,
+    "cutoutStatus": "EXISTING_APPROVED",
+    "cutoutValidationMetrics": {
+      "width": 827,
+      "height": 777,
+      "colorType": 6,
+      "transparentPixelRatio": 0.5298,
+      "opaqueCoreRatio": 0.4521,
+      "semiTransparentRatio": 0.0227,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.5407,
+        "y": 0.4142
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 5,
@@ -703,12 +747,12 @@ const MONSTER_SIZE_CATALOG = [
       "minY": 3,
       "maxX": 639,
       "maxY": 856,
-      "contentWidthRatio": 0.991,
+      "contentWidthRatio": 0.9907,
       "contentHeightRatio": 0.993,
-      "topPadRatio": 0.003,
-      "bottomPadRatio": 0.003,
-      "leftPadRatio": 0.005,
-      "rightPadRatio": 0.005
+      "topPadRatio": 0.0035,
+      "bottomPadRatio": 0.0035,
+      "leftPadRatio": 0.0047,
+      "rightPadRatio": 0.0047
     },
     "cardContentBounds": {
       "width": 1024,
@@ -731,12 +775,12 @@ const MONSTER_SIZE_CATALOG = [
       "minY": 3,
       "maxX": 639,
       "maxY": 856,
-      "contentWidthRatio": 0.991,
+      "contentWidthRatio": 0.9907,
       "contentHeightRatio": 0.993,
-      "topPadRatio": 0.003,
-      "bottomPadRatio": 0.003,
-      "leftPadRatio": 0.005,
-      "rightPadRatio": 0.005
+      "topPadRatio": 0.0035,
+      "bottomPadRatio": 0.0035,
+      "leftPadRatio": 0.0047,
+      "rightPadRatio": 0.0047
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -747,7 +791,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Towering Giant / Brute (Troll, Ogre, Minotaur, Yeti)",
-    "proposedScaleFactor": 1.54
+    "proposedScaleFactor": 1.54,
+    "cutoutStatus": "EXISTING_APPROVED",
+    "cutoutValidationMetrics": {
+      "width": 643,
+      "height": 860,
+      "colorType": 6,
+      "transparentPixelRatio": 0.4264,
+      "opaqueCoreRatio": 0.5651,
+      "semiTransparentRatio": 0.0324,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.5134,
+        "y": 0.4691
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 126,
@@ -782,12 +848,12 @@ const MONSTER_SIZE_CATALOG = [
       "minY": 12,
       "maxX": 770,
       "maxY": 693,
-      "contentWidthRatio": 0.969,
+      "contentWidthRatio": 0.9693,
       "contentHeightRatio": 0.966,
       "topPadRatio": 0.017,
       "bottomPadRatio": 0.017,
-      "leftPadRatio": 0.015,
-      "rightPadRatio": 0.015
+      "leftPadRatio": 0.0153,
+      "rightPadRatio": 0.0153
     },
     "cardContentBounds": {
       "width": 1024,
@@ -810,12 +876,12 @@ const MONSTER_SIZE_CATALOG = [
       "minY": 12,
       "maxX": 770,
       "maxY": 693,
-      "contentWidthRatio": 0.969,
+      "contentWidthRatio": 0.9693,
       "contentHeightRatio": 0.966,
       "topPadRatio": 0.017,
       "bottomPadRatio": 0.017,
-      "leftPadRatio": 0.015,
-      "rightPadRatio": 0.015
+      "leftPadRatio": 0.0153,
+      "rightPadRatio": 0.0153
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -826,7 +892,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Crouched / Hunched Predator (Ghoul, Ghast)",
-    "proposedScaleFactor": 0.827
+    "proposedScaleFactor": 0.827,
+    "cutoutStatus": "EXISTING_APPROVED",
+    "cutoutValidationMetrics": {
+      "width": 783,
+      "height": 706,
+      "colorType": 6,
+      "transparentPixelRatio": 0.5989,
+      "opaqueCoreRatio": 0.3767,
+      "semiTransparentRatio": 0.0299,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4917,
+        "y": 0.4517
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 127,
@@ -860,13 +948,13 @@ const MONSTER_SIZE_CATALOG = [
       "minX": 3,
       "minY": 4,
       "maxX": 856,
-      "maxY": 564,
+      "maxY": 565,
       "contentWidthRatio": 0.993,
-      "contentHeightRatio": 0.984,
+      "contentHeightRatio": 0.986,
       "topPadRatio": 0.007,
-      "bottomPadRatio": 0.009,
-      "leftPadRatio": 0.003,
-      "rightPadRatio": 0.003
+      "bottomPadRatio": 0.007,
+      "leftPadRatio": 0.0035,
+      "rightPadRatio": 0.0035
     },
     "cardContentBounds": {
       "width": 1024,
@@ -888,13 +976,13 @@ const MONSTER_SIZE_CATALOG = [
       "minX": 3,
       "minY": 4,
       "maxX": 856,
-      "maxY": 564,
+      "maxY": 565,
       "contentWidthRatio": 0.993,
-      "contentHeightRatio": 0.984,
+      "contentHeightRatio": 0.986,
       "topPadRatio": 0.007,
-      "bottomPadRatio": 0.009,
-      "leftPadRatio": 0.003,
-      "rightPadRatio": 0.003
+      "bottomPadRatio": 0.007,
+      "leftPadRatio": 0.0035,
+      "rightPadRatio": 0.0035
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -905,7 +993,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Wide Arachnid / Crustacean (Giant Spider, Giant Crab)",
-    "proposedScaleFactor": 0.626
+    "proposedScaleFactor": 0.626,
+    "cutoutStatus": "EXISTING_APPROVED",
+    "cutoutValidationMetrics": {
+      "width": 860,
+      "height": 570,
+      "colorType": 6,
+      "transparentPixelRatio": 0.6837,
+      "opaqueCoreRatio": 0.3044,
+      "semiTransparentRatio": 0.0416,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.5358,
+        "y": 0.4017
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 128,
@@ -971,7 +1081,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Small",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Small Hunched Tentacle Stalker",
-    "proposedScaleFactor": 0.728
+    "proposedScaleFactor": 0.728,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 129,
@@ -997,21 +1109,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 0.95
     },
     "imagePath": "/images/monsters/rust_monster.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/rust_monster.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.949,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 812,
+      "height": 852,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 799,
+      "maxY": 839,
+      "contentWidthRatio": 0.9704,
+      "contentHeightRatio": 0.9718,
+      "topPadRatio": 0.0141,
+      "bottomPadRatio": 0.0141,
+      "leftPadRatio": 0.0148,
+      "rightPadRatio": 0.0148
     },
     "cardContentBounds": {
       "width": 1024,
@@ -1027,7 +1139,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 812,
+      "height": 852,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 799,
+      "maxY": 839,
+      "contentWidthRatio": 0.9704,
+      "contentHeightRatio": 0.9718,
+      "topPadRatio": 0.0141,
+      "bottomPadRatio": 0.0141,
+      "leftPadRatio": 0.0148,
+      "rightPadRatio": 0.0148
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -1037,7 +1162,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Wide Arachnid / Crustacean (Giant Spider, Giant Crab)",
-    "proposedScaleFactor": 0.646
+    "proposedScaleFactor": 0.646,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 812,
+      "height": 852,
+      "colorType": 6,
+      "transparentPixelRatio": 0.58,
+      "opaqueCoreRatio": 0.3521,
+      "semiTransparentRatio": 0.0924,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4719,
+        "y": 0.5201
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 130,
@@ -1072,12 +1219,12 @@ const MONSTER_SIZE_CATALOG = [
       "minY": 16,
       "maxX": 1009,
       "maxY": 828,
-      "contentWidthRatio": 0.973,
-      "contentHeightRatio": 0.962,
-      "topPadRatio": 0.019,
-      "bottomPadRatio": 0.019,
-      "leftPadRatio": 0.016,
-      "rightPadRatio": 0.012
+      "contentWidthRatio": 0.9726,
+      "contentHeightRatio": 0.9621,
+      "topPadRatio": 0.0189,
+      "bottomPadRatio": 0.0189,
+      "leftPadRatio": 0.0157,
+      "rightPadRatio": 0.0117
     },
     "cardContentBounds": {
       "width": 1024,
@@ -1100,12 +1247,12 @@ const MONSTER_SIZE_CATALOG = [
       "minY": 16,
       "maxX": 1009,
       "maxY": 828,
-      "contentWidthRatio": 0.973,
-      "contentHeightRatio": 0.962,
-      "topPadRatio": 0.019,
-      "bottomPadRatio": 0.019,
-      "leftPadRatio": 0.016,
-      "rightPadRatio": 0.012
+      "contentWidthRatio": 0.9726,
+      "contentHeightRatio": 0.9621,
+      "topPadRatio": 0.0189,
+      "bottomPadRatio": 0.0189,
+      "leftPadRatio": 0.0157,
+      "rightPadRatio": 0.0117
     },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
@@ -1116,7 +1263,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Winged Predator / Dragon (Manticore, Wyvern, Griffon)",
-    "proposedScaleFactor": 1.293
+    "proposedScaleFactor": 1.293,
+    "cutoutStatus": "EXISTING_APPROVED",
+    "cutoutValidationMetrics": {
+      "width": 1022,
+      "height": 845,
+      "colorType": 6,
+      "transparentPixelRatio": 0.6688,
+      "opaqueCoreRatio": 0.3253,
+      "semiTransparentRatio": 0.0064,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4495,
+        "y": 0.4563
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 495,
@@ -1142,21 +1311,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 0.95
     },
     "imagePath": "/images/monsters/kobold.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/kobold.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 64,
-      "minY": 96,
-      "maxX": 996,
-      "maxY": 952,
-      "contentWidthRatio": 0.91,
-      "contentHeightRatio": 0.836,
-      "topPadRatio": 0.094,
-      "bottomPadRatio": 0.07,
-      "leftPadRatio": 0.063,
-      "rightPadRatio": 0.027
+      "width": 599,
+      "height": 620,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 586,
+      "maxY": 607,
+      "contentWidthRatio": 0.9599,
+      "contentHeightRatio": 0.9613,
+      "topPadRatio": 0.0194,
+      "bottomPadRatio": 0.0194,
+      "leftPadRatio": 0.02,
+      "rightPadRatio": 0.02
     },
     "cardContentBounds": {
       "width": 1024,
@@ -1172,7 +1341,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.063,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 599,
+      "height": 620,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 586,
+      "maxY": 607,
+      "contentWidthRatio": 0.9599,
+      "contentHeightRatio": 0.9613,
+      "topPadRatio": 0.0194,
+      "bottomPadRatio": 0.0194,
+      "leftPadRatio": 0.02,
+      "rightPadRatio": 0.02
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -1182,7 +1364,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Small",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Small Upright Biped (Goblin/Kobold/Fey)",
-    "proposedScaleFactor": 0.652
+    "proposedScaleFactor": 0.652,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 599,
+      "height": 620,
+      "colorType": 6,
+      "transparentPixelRatio": 0.6164,
+      "opaqueCoreRatio": 0.308,
+      "semiTransparentRatio": 0.111,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.5725,
+        "y": 0.5006
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 496,
@@ -1208,21 +1412,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 0.98
     },
     "imagePath": "/images/monsters/goblin.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/goblin.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.949,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 701,
+      "height": 873,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 688,
+      "maxY": 860,
+      "contentWidthRatio": 0.9658,
+      "contentHeightRatio": 0.9725,
+      "topPadRatio": 0.0137,
+      "bottomPadRatio": 0.0137,
+      "leftPadRatio": 0.0171,
+      "rightPadRatio": 0.0171
     },
     "cardContentBounds": {
       "width": 1024,
@@ -1238,7 +1442,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 701,
+      "height": 873,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 688,
+      "maxY": 860,
+      "contentWidthRatio": 0.9658,
+      "contentHeightRatio": 0.9725,
+      "topPadRatio": 0.0137,
+      "bottomPadRatio": 0.0137,
+      "leftPadRatio": 0.0171,
+      "rightPadRatio": 0.0171
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -1248,7 +1465,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Small",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Small Upright Biped (Goblin/Kobold/Fey)",
-    "proposedScaleFactor": 0.672
+    "proposedScaleFactor": 0.672,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 701,
+      "height": 873,
+      "colorType": 6,
+      "transparentPixelRatio": 0.6123,
+      "opaqueCoreRatio": 0.3348,
+      "semiTransparentRatio": 0.0751,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.6052,
+        "y": 0.4593
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 497,
@@ -1274,21 +1513,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 0.98
     },
     "imagePath": "/images/monsters/human_skeleton.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/human_skeleton.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.949,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 779,
+      "height": 919,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 766,
+      "maxY": 906,
+      "contentWidthRatio": 0.9692,
+      "contentHeightRatio": 0.9739,
+      "topPadRatio": 0.0131,
+      "bottomPadRatio": 0.0131,
+      "leftPadRatio": 0.0154,
+      "rightPadRatio": 0.0154
     },
     "cardContentBounds": {
       "width": 1024,
@@ -1304,7 +1543,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 779,
+      "height": 919,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 766,
+      "maxY": 906,
+      "contentWidthRatio": 0.9692,
+      "contentHeightRatio": 0.9739,
+      "topPadRatio": 0.0131,
+      "bottomPadRatio": 0.0131,
+      "leftPadRatio": 0.0154,
+      "rightPadRatio": 0.0154
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -1314,7 +1566,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Upright Humanoid / Undead",
-    "proposedScaleFactor": 0.98
+    "proposedScaleFactor": 0.98,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 779,
+      "height": 919,
+      "colorType": 6,
+      "transparentPixelRatio": 0.7658,
+      "opaqueCoreRatio": 0.1729,
+      "semiTransparentRatio": 0.0852,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.6169,
+        "y": 0.4527
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 498,
@@ -1380,7 +1654,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Upright Humanoid / Undead",
-    "proposedScaleFactor": 0.98
+    "proposedScaleFactor": 0.98,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 499,
@@ -1406,21 +1682,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 0.96
     },
     "imagePath": "/images/monsters/human_zombie.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/human_zombie.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 992,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.945,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.031,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 618,
+      "height": 896,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 605,
+      "maxY": 883,
+      "contentWidthRatio": 0.9612,
+      "contentHeightRatio": 0.9732,
+      "topPadRatio": 0.0134,
+      "bottomPadRatio": 0.0134,
+      "leftPadRatio": 0.0194,
+      "rightPadRatio": 0.0194
     },
     "cardContentBounds": {
       "width": 1024,
@@ -1436,7 +1712,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 618,
+      "height": 896,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 605,
+      "maxY": 883,
+      "contentWidthRatio": 0.9612,
+      "contentHeightRatio": 0.9732,
+      "topPadRatio": 0.0134,
+      "bottomPadRatio": 0.0134,
+      "leftPadRatio": 0.0194,
+      "rightPadRatio": 0.0194
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -1446,7 +1735,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Crouched / Hunched Predator (Ghoul, Ghast)",
-    "proposedScaleFactor": 0.845
+    "proposedScaleFactor": 0.845,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 618,
+      "height": 896,
+      "colorType": 6,
+      "transparentPixelRatio": 0.649,
+      "opaqueCoreRatio": 0.2812,
+      "semiTransparentRatio": 0.0952,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4237,
+        "y": 0.4862
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 500,
@@ -1512,7 +1823,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Upright Humanoid / Undead",
-    "proposedScaleFactor": 0.96
+    "proposedScaleFactor": 0.96,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 501,
@@ -1578,7 +1891,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Small",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Small Tentacled Mantle Lurker",
-    "proposedScaleFactor": 0.605
+    "proposedScaleFactor": 0.605,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 502,
@@ -1604,21 +1919,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 1.04
     },
     "imagePath": "/images/monsters/lizardfolk.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/lizardfolk.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.949,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 883,
+      "height": 906,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 870,
+      "maxY": 893,
+      "contentWidthRatio": 0.9728,
+      "contentHeightRatio": 0.9735,
+      "topPadRatio": 0.0132,
+      "bottomPadRatio": 0.0132,
+      "leftPadRatio": 0.0136,
+      "rightPadRatio": 0.0136
     },
     "cardContentBounds": {
       "width": 1024,
@@ -1634,7 +1949,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 883,
+      "height": 906,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 870,
+      "maxY": 893,
+      "contentWidthRatio": 0.9728,
+      "contentHeightRatio": 0.9735,
+      "topPadRatio": 0.0132,
+      "bottomPadRatio": 0.0132,
+      "leftPadRatio": 0.0136,
+      "rightPadRatio": 0.0136
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -1644,7 +1972,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Broad / Tall Warrior (Gnoll, Bugbear, Orc)",
-    "proposedScaleFactor": 1.113
+    "proposedScaleFactor": 1.113,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 883,
+      "height": 906,
+      "colorType": 6,
+      "transparentPixelRatio": 0.5186,
+      "opaqueCoreRatio": 0.3896,
+      "semiTransparentRatio": 0.1239,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.5431,
+        "y": 0.5212
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 503,
@@ -1710,7 +2060,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Quadruped Beast (Wolf, Hyena, Worg, Cheetah)",
-    "proposedScaleFactor": 0.699
+    "proposedScaleFactor": 0.699,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 504,
@@ -1736,21 +2088,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 1.06
     },
     "imagePath": "/images/monsters/gnoll.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/gnoll.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 72,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.902,
-      "topPadRatio": 0.07,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 878,
+      "height": 905,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 865,
+      "maxY": 892,
+      "contentWidthRatio": 0.9727,
+      "contentHeightRatio": 0.9735,
+      "topPadRatio": 0.0133,
+      "bottomPadRatio": 0.0133,
+      "leftPadRatio": 0.0137,
+      "rightPadRatio": 0.0137
     },
     "cardContentBounds": {
       "width": 1024,
@@ -1766,7 +2118,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 878,
+      "height": 905,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 865,
+      "maxY": 892,
+      "contentWidthRatio": 0.9727,
+      "contentHeightRatio": 0.9735,
+      "topPadRatio": 0.0133,
+      "bottomPadRatio": 0.0133,
+      "leftPadRatio": 0.0137,
+      "rightPadRatio": 0.0137
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -1776,7 +2141,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Broad / Tall Warrior (Gnoll, Bugbear, Orc)",
-    "proposedScaleFactor": 1.134
+    "proposedScaleFactor": 1.134,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 878,
+      "height": 905,
+      "colorType": 6,
+      "transparentPixelRatio": 0.481,
+      "opaqueCoreRatio": 0.4689,
+      "semiTransparentRatio": 0.0671,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.5602,
+        "y": 0.5185
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 505,
@@ -1842,7 +2229,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Quadruped Beast (Wolf, Hyena, Worg, Cheetah)",
-    "proposedScaleFactor": 0.684
+    "proposedScaleFactor": 0.684,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 506,
@@ -1908,7 +2297,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Quadruped Beast (Wolf, Hyena, Worg, Cheetah)",
-    "proposedScaleFactor": 0.722
+    "proposedScaleFactor": 0.722,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 507,
@@ -1974,7 +2365,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Fungal / Vine Mass (Violet Fungus, Yellow Musk Creeper)",
-    "proposedScaleFactor": 0.921
+    "proposedScaleFactor": 0.921,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 508,
@@ -2000,21 +2393,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 1.08
     },
     "imagePath": "/images/monsters/bugbear.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/bugbear.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.949,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 668,
+      "height": 916,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 655,
+      "maxY": 903,
+      "contentWidthRatio": 0.9641,
+      "contentHeightRatio": 0.9738,
+      "topPadRatio": 0.0131,
+      "bottomPadRatio": 0.0131,
+      "leftPadRatio": 0.018,
+      "rightPadRatio": 0.018
     },
     "cardContentBounds": {
       "width": 1024,
@@ -2030,7 +2423,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 668,
+      "height": 916,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 655,
+      "maxY": 903,
+      "contentWidthRatio": 0.9641,
+      "contentHeightRatio": 0.9738,
+      "topPadRatio": 0.0131,
+      "bottomPadRatio": 0.0131,
+      "leftPadRatio": 0.018,
+      "rightPadRatio": 0.018
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -2040,7 +2446,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Broad / Tall Warrior (Gnoll, Bugbear, Orc)",
-    "proposedScaleFactor": 1.156
+    "proposedScaleFactor": 1.156,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 668,
+      "height": 916,
+      "colorType": 6,
+      "transparentPixelRatio": 0.3926,
+      "opaqueCoreRatio": 0.5419,
+      "semiTransparentRatio": 0.0953,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4729,
+        "y": 0.4795
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 509,
@@ -2106,7 +2534,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Broad / Tall Warrior (Gnoll, Bugbear, Orc)",
-    "proposedScaleFactor": 1.049
+    "proposedScaleFactor": 1.049,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 510,
@@ -2172,7 +2602,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Quadruped Beast (Wolf, Hyena, Worg, Cheetah)",
-    "proposedScaleFactor": 0.76
+    "proposedScaleFactor": 0.76,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 511,
@@ -2198,21 +2630,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 0.88
     },
     "imagePath": "/images/monsters/giant_crab.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/giant_crab.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.949,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 767,
+      "height": 810,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 754,
+      "maxY": 797,
+      "contentWidthRatio": 0.9687,
+      "contentHeightRatio": 0.9704,
+      "topPadRatio": 0.0148,
+      "bottomPadRatio": 0.0148,
+      "leftPadRatio": 0.0156,
+      "rightPadRatio": 0.0156
     },
     "cardContentBounds": {
       "width": 1024,
@@ -2228,7 +2660,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 767,
+      "height": 810,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 754,
+      "maxY": 797,
+      "contentWidthRatio": 0.9687,
+      "contentHeightRatio": 0.9704,
+      "topPadRatio": 0.0148,
+      "bottomPadRatio": 0.0148,
+      "leftPadRatio": 0.0156,
+      "rightPadRatio": 0.0156
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -2238,7 +2683,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Wide Arachnid / Crustacean (Giant Spider, Giant Crab)",
-    "proposedScaleFactor": 0.598
+    "proposedScaleFactor": 0.598,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 767,
+      "height": 810,
+      "colorType": 6,
+      "transparentPixelRatio": 0.5705,
+      "opaqueCoreRatio": 0.3509,
+      "semiTransparentRatio": 0.1211,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4945,
+        "y": 0.453
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 512,
@@ -2304,7 +2771,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Crouched / Hunched Predator (Ghoul, Ghast)",
-    "proposedScaleFactor": 0.845
+    "proposedScaleFactor": 0.845,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 513,
@@ -2370,7 +2839,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Small",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Small Winged Runner (Cockatrice)",
-    "proposedScaleFactor": 0.618
+    "proposedScaleFactor": 0.618,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 514,
@@ -2396,21 +2867,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 0.96
     },
     "imagePath": "/images/monsters/ankheg.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/ankheg.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 104,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.871,
-      "topPadRatio": 0.102,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 683,
+      "height": 865,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 670,
+      "maxY": 852,
+      "contentWidthRatio": 0.9649,
+      "contentHeightRatio": 0.9723,
+      "topPadRatio": 0.0139,
+      "bottomPadRatio": 0.0139,
+      "leftPadRatio": 0.0176,
+      "rightPadRatio": 0.0176
     },
     "cardContentBounds": {
       "width": 1024,
@@ -2426,7 +2897,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 683,
+      "height": 865,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 670,
+      "maxY": 852,
+      "contentWidthRatio": 0.9649,
+      "contentHeightRatio": 0.9723,
+      "topPadRatio": 0.0139,
+      "bottomPadRatio": 0.0139,
+      "leftPadRatio": 0.0176,
+      "rightPadRatio": 0.0176
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -2436,7 +2920,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Chitinous Arachnid / Insectoid (Giant Scorpion, Phase Spider, Ankheg)",
-    "proposedScaleFactor": 1.014
+    "proposedScaleFactor": 1.014,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 683,
+      "height": 865,
+      "colorType": 6,
+      "transparentPixelRatio": 0.396,
+      "opaqueCoreRatio": 0.5215,
+      "semiTransparentRatio": 0.1203,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4844,
+        "y": 0.6004
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 515,
@@ -2462,21 +2968,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 1
     },
     "imagePath": "/images/monsters/ogre.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/ogre.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.949,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 840,
+      "height": 993,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 827,
+      "maxY": 980,
+      "contentWidthRatio": 0.9714,
+      "contentHeightRatio": 0.9758,
+      "topPadRatio": 0.0121,
+      "bottomPadRatio": 0.0121,
+      "leftPadRatio": 0.0143,
+      "rightPadRatio": 0.0143
     },
     "cardContentBounds": {
       "width": 1024,
@@ -2492,7 +2998,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 840,
+      "height": 993,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 827,
+      "maxY": 980,
+      "contentWidthRatio": 0.9714,
+      "contentHeightRatio": 0.9758,
+      "topPadRatio": 0.0121,
+      "bottomPadRatio": 0.0121,
+      "leftPadRatio": 0.0143,
+      "rightPadRatio": 0.0143
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -2502,7 +3021,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Towering Giant / Brute (Troll, Ogre, Minotaur, Yeti)",
-    "proposedScaleFactor": 1.426
+    "proposedScaleFactor": 1.426,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 840,
+      "height": 993,
+      "colorType": 6,
+      "transparentPixelRatio": 0.5286,
+      "opaqueCoreRatio": 0.4262,
+      "semiTransparentRatio": 0.0634,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4455,
+        "y": 0.4797
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 516,
@@ -2528,21 +3069,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 1
     },
     "imagePath": "/images/monsters/shadow.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/shadow.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 32,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.941,
-      "topPadRatio": 0.031,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 378,
+      "height": 764,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 365,
+      "maxY": 751,
+      "contentWidthRatio": 0.9365,
+      "contentHeightRatio": 0.9686,
+      "topPadRatio": 0.0157,
+      "bottomPadRatio": 0.0157,
+      "leftPadRatio": 0.0317,
+      "rightPadRatio": 0.0317
     },
     "cardContentBounds": {
       "width": 1024,
@@ -2558,7 +3099,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 378,
+      "height": 764,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 365,
+      "maxY": 751,
+      "contentWidthRatio": 0.9365,
+      "contentHeightRatio": 0.9686,
+      "topPadRatio": 0.0157,
+      "bottomPadRatio": 0.0157,
+      "leftPadRatio": 0.0317,
+      "rightPadRatio": 0.0317
+    },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -2568,7 +3122,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Incorporeal Floating Specter (Shadow, Wraith)",
-    "proposedScaleFactor": 1.02
+    "proposedScaleFactor": 1.02,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 378,
+      "height": 764,
+      "colorType": 6,
+      "transparentPixelRatio": 0.6366,
+      "opaqueCoreRatio": 0.2222,
+      "semiTransparentRatio": 0.1775,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4669,
+        "y": 0.4502
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 517,
@@ -2594,21 +3170,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 1.02
     },
     "imagePath": "/images/monsters/owlbear.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/owlbear.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.949,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 695,
+      "height": 850,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 682,
+      "maxY": 837,
+      "contentWidthRatio": 0.9655,
+      "contentHeightRatio": 0.9718,
+      "topPadRatio": 0.0141,
+      "bottomPadRatio": 0.0141,
+      "leftPadRatio": 0.0173,
+      "rightPadRatio": 0.0173
     },
     "cardContentBounds": {
       "width": 1024,
@@ -2624,7 +3200,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 695,
+      "height": 850,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 682,
+      "maxY": 837,
+      "contentWidthRatio": 0.9655,
+      "contentHeightRatio": 0.9718,
+      "topPadRatio": 0.0141,
+      "bottomPadRatio": 0.0141,
+      "leftPadRatio": 0.0173,
+      "rightPadRatio": 0.0173
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -2634,7 +3223,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Massive Beast (Owlbear, Winter Wolf, Dire Boar, Catoblepas)",
-    "proposedScaleFactor": 1.158
+    "proposedScaleFactor": 1.158,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 695,
+      "height": 850,
+      "colorType": 6,
+      "transparentPixelRatio": 0.3855,
+      "opaqueCoreRatio": 0.5233,
+      "semiTransparentRatio": 0.135,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.521,
+        "y": 0.5038
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 518,
@@ -2660,21 +3271,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 0.98
     },
     "imagePath": "/images/monsters/minotaur.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/minotaur.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.949,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 803,
+      "height": 925,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 790,
+      "maxY": 912,
+      "contentWidthRatio": 0.9701,
+      "contentHeightRatio": 0.9741,
+      "topPadRatio": 0.013,
+      "bottomPadRatio": 0.013,
+      "leftPadRatio": 0.0149,
+      "rightPadRatio": 0.0149
     },
     "cardContentBounds": {
       "width": 1024,
@@ -2690,7 +3301,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 803,
+      "height": 925,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 790,
+      "maxY": 912,
+      "contentWidthRatio": 0.9701,
+      "contentHeightRatio": 0.9741,
+      "topPadRatio": 0.013,
+      "bottomPadRatio": 0.013,
+      "leftPadRatio": 0.0149,
+      "rightPadRatio": 0.0149
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -2700,7 +3324,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Towering Giant / Brute (Troll, Ogre, Minotaur, Yeti)",
-    "proposedScaleFactor": 1.397
+    "proposedScaleFactor": 1.397,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 803,
+      "height": 925,
+      "colorType": 6,
+      "transparentPixelRatio": 0.4502,
+      "opaqueCoreRatio": 0.4702,
+      "semiTransparentRatio": 0.1125,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4253,
+        "y": 0.5072
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 519,
@@ -2766,7 +3412,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Towering Giant / Brute (Troll, Ogre, Minotaur, Yeti)",
-    "proposedScaleFactor": 1.426
+    "proposedScaleFactor": 1.426,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 520,
@@ -2792,21 +3440,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 1.02
     },
     "imagePath": "/images/monsters/gargoyle.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/gargoyle.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 72,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.902,
-      "topPadRatio": 0.07,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 793,
+      "height": 903,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 780,
+      "maxY": 890,
+      "contentWidthRatio": 0.9697,
+      "contentHeightRatio": 0.9734,
+      "topPadRatio": 0.0133,
+      "bottomPadRatio": 0.0133,
+      "leftPadRatio": 0.0151,
+      "rightPadRatio": 0.0151
     },
     "cardContentBounds": {
       "width": 1024,
@@ -2822,7 +3470,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 793,
+      "height": 903,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 780,
+      "maxY": 890,
+      "contentWidthRatio": 0.9697,
+      "contentHeightRatio": 0.9734,
+      "topPadRatio": 0.0133,
+      "bottomPadRatio": 0.0133,
+      "leftPadRatio": 0.0151,
+      "rightPadRatio": 0.0151
+    },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -2832,7 +3493,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Winged Flyer (Harpy, Gargoyle, Peryton)",
-    "proposedScaleFactor": 0.979
+    "proposedScaleFactor": 0.979,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 793,
+      "height": 903,
+      "colorType": 6,
+      "transparentPixelRatio": 0.2939,
+      "opaqueCoreRatio": 0.6495,
+      "semiTransparentRatio": 0.0718,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.484,
+        "y": 0.5256
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 521,
@@ -2858,21 +3541,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 0.96
     },
     "imagePath": "/images/monsters/basilisk.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/basilisk.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 36,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.938,
-      "topPadRatio": 0.035,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 871,
+      "height": 583,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 858,
+      "maxY": 570,
+      "contentWidthRatio": 0.9724,
+      "contentHeightRatio": 0.9588,
+      "topPadRatio": 0.0206,
+      "bottomPadRatio": 0.0206,
+      "leftPadRatio": 0.0138,
+      "rightPadRatio": 0.0138
     },
     "cardContentBounds": {
       "width": 1024,
@@ -2888,7 +3571,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 871,
+      "height": 583,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 858,
+      "maxY": 570,
+      "contentWidthRatio": 0.9724,
+      "contentHeightRatio": 0.9588,
+      "topPadRatio": 0.0206,
+      "bottomPadRatio": 0.0206,
+      "leftPadRatio": 0.0138,
+      "rightPadRatio": 0.0138
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -2898,7 +3594,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Quadruped Beast (Wolf, Hyena, Worg, Cheetah)",
-    "proposedScaleFactor": 0.73
+    "proposedScaleFactor": 0.73,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 871,
+      "height": 583,
+      "colorType": 6,
+      "transparentPixelRatio": 0.4884,
+      "opaqueCoreRatio": 0.4648,
+      "semiTransparentRatio": 0.0686,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.5194,
+        "y": 0.519
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 522,
@@ -2924,21 +3642,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 1
     },
     "imagePath": "/images/monsters/mummy.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/mummy.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 28,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.945,
-      "contentHeightRatio": 0.949,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.027,
-      "rightPadRatio": 0.027
+      "width": 726,
+      "height": 930,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 713,
+      "maxY": 917,
+      "contentWidthRatio": 0.9669,
+      "contentHeightRatio": 0.9742,
+      "topPadRatio": 0.0129,
+      "bottomPadRatio": 0.0129,
+      "leftPadRatio": 0.0165,
+      "rightPadRatio": 0.0165
     },
     "cardContentBounds": {
       "width": 1024,
@@ -2954,7 +3672,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.027,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 726,
+      "height": 930,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 713,
+      "maxY": 917,
+      "contentWidthRatio": 0.9669,
+      "contentHeightRatio": 0.9742,
+      "topPadRatio": 0.0129,
+      "bottomPadRatio": 0.0129,
+      "leftPadRatio": 0.0165,
+      "rightPadRatio": 0.0165
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -2964,7 +3695,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Upright Humanoid / Undead",
-    "proposedScaleFactor": 1
+    "proposedScaleFactor": 1,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 726,
+      "height": 930,
+      "colorType": 6,
+      "transparentPixelRatio": 0.6478,
+      "opaqueCoreRatio": 0.2869,
+      "semiTransparentRatio": 0.0873,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4651,
+        "y": 0.4645
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 523,
@@ -2990,21 +3743,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 0.94
     },
     "imagePath": "/images/monsters/ochre_jelly.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/ochre_jelly.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 992,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.945,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.031,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 956,
+      "height": 803,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 943,
+      "maxY": 790,
+      "contentWidthRatio": 0.9749,
+      "contentHeightRatio": 0.9701,
+      "topPadRatio": 0.0149,
+      "bottomPadRatio": 0.0149,
+      "leftPadRatio": 0.0126,
+      "rightPadRatio": 0.0126
     },
     "cardContentBounds": {
       "width": 1024,
@@ -3020,7 +3773,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 956,
+      "height": 803,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 943,
+      "maxY": 790,
+      "contentWidthRatio": 0.9749,
+      "contentHeightRatio": 0.9701,
+      "topPadRatio": 0.0149,
+      "bottomPadRatio": 0.0149,
+      "leftPadRatio": 0.0126,
+      "rightPadRatio": 0.0126
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -3030,7 +3796,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Sprawling Protoplasmic Ooze (Ochre Jelly)",
-    "proposedScaleFactor": 0.844
+    "proposedScaleFactor": 0.844,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 956,
+      "height": 803,
+      "colorType": 6,
+      "transparentPixelRatio": 0.3602,
+      "opaqueCoreRatio": 0.5497,
+      "semiTransparentRatio": 0.1202,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4855,
+        "y": 0.6086
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 524,
@@ -3056,21 +3844,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 0.96
     },
     "imagePath": "/images/monsters/winter_wolf.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/winter_wolf.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.949,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 844,
+      "height": 791,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 831,
+      "maxY": 778,
+      "contentWidthRatio": 0.9716,
+      "contentHeightRatio": 0.9697,
+      "topPadRatio": 0.0152,
+      "bottomPadRatio": 0.0152,
+      "leftPadRatio": 0.0142,
+      "rightPadRatio": 0.0142
     },
     "cardContentBounds": {
       "width": 1024,
@@ -3086,7 +3874,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 844,
+      "height": 791,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 831,
+      "maxY": 778,
+      "contentWidthRatio": 0.9716,
+      "contentHeightRatio": 0.9697,
+      "topPadRatio": 0.0152,
+      "bottomPadRatio": 0.0152,
+      "leftPadRatio": 0.0142,
+      "rightPadRatio": 0.0142
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -3096,7 +3897,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Massive Beast (Owlbear, Winter Wolf, Dire Boar, Catoblepas)",
-    "proposedScaleFactor": 1.09
+    "proposedScaleFactor": 1.09,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 844,
+      "height": 791,
+      "colorType": 6,
+      "transparentPixelRatio": 0.4924,
+      "opaqueCoreRatio": 0.4193,
+      "semiTransparentRatio": 0.1257,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.5779,
+        "y": 0.4199
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 2691,
@@ -3122,21 +3945,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 0.95
     },
     "imagePath": "/images/monsters/stirge.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/stirge.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.949,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 688,
+      "height": 807,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 675,
+      "maxY": 794,
+      "contentWidthRatio": 0.9651,
+      "contentHeightRatio": 0.9703,
+      "topPadRatio": 0.0149,
+      "bottomPadRatio": 0.0149,
+      "leftPadRatio": 0.0174,
+      "rightPadRatio": 0.0174
     },
     "cardContentBounds": {
       "width": 1024,
@@ -3152,7 +3975,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 688,
+      "height": 807,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 675,
+      "maxY": 794,
+      "contentWidthRatio": 0.9651,
+      "contentHeightRatio": 0.9703,
+      "topPadRatio": 0.0149,
+      "bottomPadRatio": 0.0149,
+      "leftPadRatio": 0.0174,
+      "rightPadRatio": 0.0174
+    },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -3162,7 +3998,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Tiny",
     "pfSpaceFt": 2.5,
     "visualBodyProfileLabel": "Tiny Winged Pest / Bloodsucker",
-    "proposedScaleFactor": 0.428
+    "proposedScaleFactor": 0.428,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 688,
+      "height": 807,
+      "colorType": 6,
+      "transparentPixelRatio": 0.6929,
+      "opaqueCoreRatio": 0.2235,
+      "semiTransparentRatio": 0.1144,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4967,
+        "y": 0.4343
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 2692,
@@ -3188,21 +4046,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 0.9
     },
     "imagePath": "/images/monsters/dire_rat.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/dire_rat.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 172,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.805,
-      "topPadRatio": 0.168,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 842,
+      "height": 658,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 829,
+      "maxY": 645,
+      "contentWidthRatio": 0.9715,
+      "contentHeightRatio": 0.9635,
+      "topPadRatio": 0.0182,
+      "bottomPadRatio": 0.0182,
+      "leftPadRatio": 0.0143,
+      "rightPadRatio": 0.0143
     },
     "cardContentBounds": {
       "width": 1024,
@@ -3218,7 +4076,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 842,
+      "height": 658,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 829,
+      "maxY": 645,
+      "contentWidthRatio": 0.9715,
+      "contentHeightRatio": 0.9635,
+      "topPadRatio": 0.0182,
+      "bottomPadRatio": 0.0182,
+      "leftPadRatio": 0.0143,
+      "rightPadRatio": 0.0143
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -3228,7 +4099,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Small",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Small Low Quadruped (Dire Rat)",
-    "proposedScaleFactor": 0.479
+    "proposedScaleFactor": 0.479,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 842,
+      "height": 658,
+      "colorType": 6,
+      "transparentPixelRatio": 0.4688,
+      "opaqueCoreRatio": 0.4589,
+      "semiTransparentRatio": 0.0937,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4896,
+        "y": 0.4564
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 2693,
@@ -3254,21 +4147,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 0.92
     },
     "imagePath": "/images/monsters/viper.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/viper.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.949,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 807,
+      "height": 857,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 794,
+      "maxY": 844,
+      "contentWidthRatio": 0.9703,
+      "contentHeightRatio": 0.972,
+      "topPadRatio": 0.014,
+      "bottomPadRatio": 0.014,
+      "leftPadRatio": 0.0149,
+      "rightPadRatio": 0.0149
     },
     "cardContentBounds": {
       "width": 1024,
@@ -3284,7 +4177,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 807,
+      "height": 857,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 794,
+      "maxY": 844,
+      "contentWidthRatio": 0.9703,
+      "contentHeightRatio": 0.972,
+      "topPadRatio": 0.014,
+      "bottomPadRatio": 0.014,
+      "leftPadRatio": 0.0149,
+      "rightPadRatio": 0.0149
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -3294,7 +4200,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Tiny",
     "pfSpaceFt": 2.5,
     "visualBodyProfileLabel": "Tiny Coiled Serpent",
-    "proposedScaleFactor": 0.352
+    "proposedScaleFactor": 0.352,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 807,
+      "height": 857,
+      "colorType": 6,
+      "transparentPixelRatio": 0.4895,
+      "opaqueCoreRatio": 0.448,
+      "semiTransparentRatio": 0.1379,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.5269,
+        "y": 0.588
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 2694,
@@ -3360,7 +4288,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Coiled Worm / Centipede (Grick, Giant Centipede)",
-    "proposedScaleFactor": 0.738
+    "proposedScaleFactor": 0.738,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2695,
@@ -3426,7 +4356,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Small",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Small Reared Construct/Serpent",
-    "proposedScaleFactor": 0.579
+    "proposedScaleFactor": 0.579,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2696,
@@ -3461,12 +4393,12 @@ const MONSTER_SIZE_CATALOG = [
       "minY": 3,
       "maxX": 575,
       "maxY": 856,
-      "contentWidthRatio": 0.99,
+      "contentWidthRatio": 0.9896,
       "contentHeightRatio": 0.993,
-      "topPadRatio": 0.003,
-      "bottomPadRatio": 0.003,
-      "leftPadRatio": 0.005,
-      "rightPadRatio": 0.005
+      "topPadRatio": 0.0035,
+      "bottomPadRatio": 0.0035,
+      "leftPadRatio": 0.0052,
+      "rightPadRatio": 0.0052
     },
     "cardContentBounds": {
       "width": 1024,
@@ -3489,12 +4421,12 @@ const MONSTER_SIZE_CATALOG = [
       "minY": 3,
       "maxX": 575,
       "maxY": 856,
-      "contentWidthRatio": 0.99,
+      "contentWidthRatio": 0.9896,
       "contentHeightRatio": 0.993,
-      "topPadRatio": 0.003,
-      "bottomPadRatio": 0.003,
-      "leftPadRatio": 0.005,
-      "rightPadRatio": 0.005
+      "topPadRatio": 0.0035,
+      "bottomPadRatio": 0.0035,
+      "leftPadRatio": 0.0052,
+      "rightPadRatio": 0.0052
     },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
@@ -3505,7 +4437,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Upright Humanoid / Undead",
-    "proposedScaleFactor": 1
+    "proposedScaleFactor": 1,
+    "cutoutStatus": "EXISTING_APPROVED",
+    "cutoutValidationMetrics": {
+      "width": 579,
+      "height": 860,
+      "colorType": 6,
+      "transparentPixelRatio": 0.5212,
+      "opaqueCoreRatio": 0.4687,
+      "semiTransparentRatio": 0.0374,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.5223,
+        "y": 0.4792
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 2697,
@@ -3571,7 +4525,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Quadruped Beast (Wolf, Hyena, Worg, Cheetah)",
-    "proposedScaleFactor": 0.714
+    "proposedScaleFactor": 0.714,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2698,
@@ -3637,7 +4593,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Stocky Dwarf Biped (Duergar)",
-    "proposedScaleFactor": 0.73
+    "proposedScaleFactor": 0.73,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2699,
@@ -3703,7 +4661,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Upright Humanoid / Undead",
-    "proposedScaleFactor": 0.95
+    "proposedScaleFactor": 0.95,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2700,
@@ -3729,21 +4689,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 1.02
     },
     "imagePath": "/images/monsters/orc.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/orc.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 84,
-      "maxX": 996,
-      "maxY": 988,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.883,
-      "topPadRatio": 0.082,
-      "bottomPadRatio": 0.035,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 666,
+      "height": 906,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 653,
+      "maxY": 893,
+      "contentWidthRatio": 0.964,
+      "contentHeightRatio": 0.9735,
+      "topPadRatio": 0.0132,
+      "bottomPadRatio": 0.0132,
+      "leftPadRatio": 0.018,
+      "rightPadRatio": 0.018
     },
     "cardContentBounds": {
       "width": 1024,
@@ -3759,7 +4719,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 666,
+      "height": 906,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 653,
+      "maxY": 893,
+      "contentWidthRatio": 0.964,
+      "contentHeightRatio": 0.9735,
+      "topPadRatio": 0.0132,
+      "bottomPadRatio": 0.0132,
+      "leftPadRatio": 0.018,
+      "rightPadRatio": 0.018
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -3769,7 +4742,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Broad / Tall Warrior (Gnoll, Bugbear, Orc)",
-    "proposedScaleFactor": 1.091
+    "proposedScaleFactor": 1.091,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 666,
+      "height": 906,
+      "colorType": 6,
+      "transparentPixelRatio": 0.3322,
+      "opaqueCoreRatio": 0.5763,
+      "semiTransparentRatio": 0.1303,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4945,
+        "y": 0.4791
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 2701,
@@ -3835,7 +4830,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Upright Humanoid / Undead",
-    "proposedScaleFactor": 0.99
+    "proposedScaleFactor": 0.99,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2702,
@@ -3861,21 +4858,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 0.98
     },
     "imagePath": "/images/monsters/harpy.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/harpy.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 972,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.926,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.051,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 832,
+      "height": 894,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 819,
+      "maxY": 881,
+      "contentWidthRatio": 0.9712,
+      "contentHeightRatio": 0.9732,
+      "topPadRatio": 0.0134,
+      "bottomPadRatio": 0.0134,
+      "leftPadRatio": 0.0144,
+      "rightPadRatio": 0.0144
     },
     "cardContentBounds": {
       "width": 1024,
@@ -3891,7 +4888,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 832,
+      "height": 894,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 819,
+      "maxY": 881,
+      "contentWidthRatio": 0.9712,
+      "contentHeightRatio": 0.9732,
+      "topPadRatio": 0.0134,
+      "bottomPadRatio": 0.0134,
+      "leftPadRatio": 0.0144,
+      "rightPadRatio": 0.0144
+    },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -3901,7 +4911,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Winged Flyer (Harpy, Gargoyle, Peryton)",
-    "proposedScaleFactor": 0.941
+    "proposedScaleFactor": 0.941,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 832,
+      "height": 894,
+      "colorType": 6,
+      "transparentPixelRatio": 0.4013,
+      "opaqueCoreRatio": 0.4994,
+      "semiTransparentRatio": 0.1582,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.5372,
+        "y": 0.4767
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 2703,
@@ -3967,7 +4999,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Upright Humanoid / Undead",
-    "proposedScaleFactor": 1
+    "proposedScaleFactor": 1,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2704,
@@ -3993,21 +5027,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 1
     },
     "imagePath": "/images/monsters/griffon.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/griffon.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 40,
-      "minY": 68,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.934,
-      "contentHeightRatio": 0.906,
-      "topPadRatio": 0.066,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.039,
-      "rightPadRatio": 0.027
+      "width": 812,
+      "height": 870,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 799,
+      "maxY": 857,
+      "contentWidthRatio": 0.9704,
+      "contentHeightRatio": 0.9724,
+      "topPadRatio": 0.0138,
+      "bottomPadRatio": 0.0138,
+      "leftPadRatio": 0.0148,
+      "rightPadRatio": 0.0148
     },
     "cardContentBounds": {
       "width": 1024,
@@ -4023,7 +5057,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.039,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 812,
+      "height": 870,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 799,
+      "maxY": 857,
+      "contentWidthRatio": 0.9704,
+      "contentHeightRatio": 0.9724,
+      "topPadRatio": 0.0138,
+      "bottomPadRatio": 0.0138,
+      "leftPadRatio": 0.0148,
+      "rightPadRatio": 0.0148
+    },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -4033,7 +5080,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Winged Predator / Dragon (Manticore, Wyvern, Griffon)",
-    "proposedScaleFactor": 1.267
+    "proposedScaleFactor": 1.267,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 812,
+      "height": 870,
+      "colorType": 6,
+      "transparentPixelRatio": 0.339,
+      "opaqueCoreRatio": 0.5568,
+      "semiTransparentRatio": 0.1438,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4985,
+        "y": 0.4994
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 2705,
@@ -4059,21 +5128,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 0.98
     },
     "imagePath": "/images/monsters/giant_scorpion.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/giant_scorpion.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 88,
-      "maxX": 996,
-      "maxY": 912,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.805,
-      "topPadRatio": 0.086,
-      "bottomPadRatio": 0.109,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 842,
+      "height": 895,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 829,
+      "maxY": 882,
+      "contentWidthRatio": 0.9715,
+      "contentHeightRatio": 0.9732,
+      "topPadRatio": 0.0134,
+      "bottomPadRatio": 0.0134,
+      "leftPadRatio": 0.0143,
+      "rightPadRatio": 0.0143
     },
     "cardContentBounds": {
       "width": 1024,
@@ -4089,7 +5158,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 842,
+      "height": 895,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 829,
+      "maxY": 882,
+      "contentWidthRatio": 0.9715,
+      "contentHeightRatio": 0.9732,
+      "topPadRatio": 0.0134,
+      "bottomPadRatio": 0.0134,
+      "leftPadRatio": 0.0143,
+      "rightPadRatio": 0.0143
+    },
     "positioningMode": "GROUNDED",
     "isAirborne": false,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -4099,7 +5181,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Chitinous Arachnid / Insectoid (Giant Scorpion, Phase Spider, Ankheg)",
-    "proposedScaleFactor": 1.035
+    "proposedScaleFactor": 1.035,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 842,
+      "height": 895,
+      "colorType": 6,
+      "transparentPixelRatio": 0.3214,
+      "opaqueCoreRatio": 0.6283,
+      "semiTransparentRatio": 0.0647,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.5013,
+        "y": 0.5996
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 2706,
@@ -4165,7 +5269,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Winged Predator / Dragon (Manticore, Wyvern, Griffon)",
-    "proposedScaleFactor": 1.217
+    "proposedScaleFactor": 1.217,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2707,
@@ -4231,7 +5337,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Chitinous Arachnid / Insectoid (Giant Scorpion, Phase Spider, Ankheg)",
-    "proposedScaleFactor": 1.014
+    "proposedScaleFactor": 1.014,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2708,
@@ -4257,21 +5365,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 1.02
     },
     "imagePath": "/images/monsters/wraith.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/wraith.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 64,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.91,
-      "contentHeightRatio": 0.949,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.063,
-      "rightPadRatio": 0.027
+      "width": 752,
+      "height": 905,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 739,
+      "maxY": 892,
+      "contentWidthRatio": 0.9681,
+      "contentHeightRatio": 0.9735,
+      "topPadRatio": 0.0133,
+      "bottomPadRatio": 0.0133,
+      "leftPadRatio": 0.016,
+      "rightPadRatio": 0.016
     },
     "cardContentBounds": {
       "width": 1024,
@@ -4287,7 +5395,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.063,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 752,
+      "height": 905,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 739,
+      "maxY": 892,
+      "contentWidthRatio": 0.9681,
+      "contentHeightRatio": 0.9735,
+      "topPadRatio": 0.0133,
+      "bottomPadRatio": 0.0133,
+      "leftPadRatio": 0.016,
+      "rightPadRatio": 0.016
+    },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -4297,7 +5418,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Incorporeal Floating Specter (Shadow, Wraith)",
-    "proposedScaleFactor": 1.04
+    "proposedScaleFactor": 1.04,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 752,
+      "height": 905,
+      "colorType": 6,
+      "transparentPixelRatio": 0.2297,
+      "opaqueCoreRatio": 0.7151,
+      "semiTransparentRatio": 0.0704,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4994,
+        "y": 0.5167
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 2709,
@@ -4363,7 +5506,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Amorphous Horror (Gibbering Mouther)",
-    "proposedScaleFactor": 0.696
+    "proposedScaleFactor": 0.696,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2710,
@@ -4429,7 +5574,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Winged Flyer (Harpy, Gargoyle, Peryton)",
-    "proposedScaleFactor": 0.96
+    "proposedScaleFactor": 0.96,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2711,
@@ -4495,7 +5642,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Chitinous Arachnid / Insectoid (Giant Scorpion, Phase Spider, Ankheg)",
-    "proposedScaleFactor": 1.035
+    "proposedScaleFactor": 1.035,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2712,
@@ -4561,7 +5710,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Small",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Small Upright Biped (Goblin/Kobold/Fey)",
-    "proposedScaleFactor": 0.652
+    "proposedScaleFactor": 0.652,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2713,
@@ -4627,7 +5778,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Crouched / Hunched Predator (Ghoul, Ghast)",
-    "proposedScaleFactor": 0.845
+    "proposedScaleFactor": 0.845,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2714,
@@ -4693,7 +5846,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Winged Predator / Dragon (Manticore, Wyvern, Griffon)",
-    "proposedScaleFactor": 1.217
+    "proposedScaleFactor": 1.217,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2715,
@@ -4759,7 +5914,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Crouched / Hunched Predator (Ghoul, Ghast)",
-    "proposedScaleFactor": 0.827
+    "proposedScaleFactor": 0.827,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2716,
@@ -4825,7 +5982,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Fungal / Vine Mass (Violet Fungus, Yellow Musk Creeper)",
-    "proposedScaleFactor": 0.921
+    "proposedScaleFactor": 0.921,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2717,
@@ -4891,7 +6050,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Coiled Worm / Centipede (Grick, Giant Centipede)",
-    "proposedScaleFactor": 0.771
+    "proposedScaleFactor": 0.771,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2718,
@@ -4957,7 +6118,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Quadruped Beast (Wolf, Hyena, Worg, Cheetah)",
-    "proposedScaleFactor": 0.714
+    "proposedScaleFactor": 0.714,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2719,
@@ -5023,7 +6186,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Quadruped Beast (Wolf, Hyena, Worg, Cheetah)",
-    "proposedScaleFactor": 0.722
+    "proposedScaleFactor": 0.722,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 2720,
@@ -5089,7 +6254,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Broad / Tall Warrior (Gnoll, Bugbear, Orc)",
-    "proposedScaleFactor": 1.091
+    "proposedScaleFactor": 1.091,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9143,
@@ -5155,7 +6322,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Small",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Small Upright Biped (Goblin/Kobold/Fey)",
-    "proposedScaleFactor": 0.631
+    "proposedScaleFactor": 0.631,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9144,
@@ -5221,7 +6390,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Small",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Small Wide Multi-Legged Skimmer",
-    "proposedScaleFactor": 0.464
+    "proposedScaleFactor": 0.464,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9145,
@@ -5247,21 +6418,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 1
     },
     "imagePath": "/images/monsters/blood_hawk.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/blood_hawk.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 976,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.93,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.047,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 750,
+      "height": 749,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 737,
+      "maxY": 736,
+      "contentWidthRatio": 0.968,
+      "contentHeightRatio": 0.968,
+      "topPadRatio": 0.016,
+      "bottomPadRatio": 0.016,
+      "leftPadRatio": 0.016,
+      "rightPadRatio": 0.016
     },
     "cardContentBounds": {
       "width": 1024,
@@ -5277,7 +6448,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 750,
+      "height": 749,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 737,
+      "maxY": 736,
+      "contentWidthRatio": 0.968,
+      "contentHeightRatio": 0.968,
+      "topPadRatio": 0.016,
+      "bottomPadRatio": 0.016,
+      "leftPadRatio": 0.016,
+      "rightPadRatio": 0.016
+    },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
     "verificationStatus": "VERIFIED_PF1E_VARIANT",
@@ -5287,7 +6471,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Tiny",
     "pfSpaceFt": 2.5,
     "visualBodyProfileLabel": "Tiny Bird of Prey / Raptor",
-    "proposedScaleFactor": 0.48
+    "proposedScaleFactor": 0.48,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 750,
+      "height": 749,
+      "colorType": 6,
+      "transparentPixelRatio": 0.6155,
+      "opaqueCoreRatio": 0.3104,
+      "semiTransparentRatio": 0.1158,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.5377,
+        "y": 0.4154
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 9146,
@@ -5353,7 +6559,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Tiny",
     "pfSpaceFt": 2.5,
     "visualBodyProfileLabel": "Tiny Coiled Serpent",
-    "proposedScaleFactor": 0.359
+    "proposedScaleFactor": 0.359,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9147,
@@ -5419,7 +6627,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Crouched / Hunched Predator (Ghoul, Ghast)",
-    "proposedScaleFactor": 0.845
+    "proposedScaleFactor": 0.845,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9148,
@@ -5485,7 +6695,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Small",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Small Upright Biped (Goblin/Kobold/Fey)",
-    "proposedScaleFactor": 0.617
+    "proposedScaleFactor": 0.617,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9149,
@@ -5551,7 +6763,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Quadruped Beast (Wolf, Hyena, Worg, Cheetah)",
-    "proposedScaleFactor": 0.775
+    "proposedScaleFactor": 0.775,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9150,
@@ -5617,7 +6831,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Winged Predator / Dragon (Manticore, Wyvern, Griffon)",
-    "proposedScaleFactor": 1.267
+    "proposedScaleFactor": 1.267,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9151,
@@ -5683,7 +6899,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Massive Beast (Owlbear, Winter Wolf, Dire Boar, Catoblepas)",
-    "proposedScaleFactor": 1.067
+    "proposedScaleFactor": 1.067,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9152,
@@ -5749,7 +6967,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Tiny",
     "pfSpaceFt": 2.5,
     "visualBodyProfileLabel": "Tiny Low Reptilian Creature",
-    "proposedScaleFactor": 0.386
+    "proposedScaleFactor": 0.386,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9153,
@@ -5815,7 +7035,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Fungal / Vine Mass (Violet Fungus, Yellow Musk Creeper)",
-    "proposedScaleFactor": 0.884
+    "proposedScaleFactor": 0.884,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9154,
@@ -5881,7 +7103,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Broad / Tall Warrior (Gnoll, Bugbear, Orc)",
-    "proposedScaleFactor": 1.156
+    "proposedScaleFactor": 1.156,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9155,
@@ -5947,7 +7171,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Chitinous Arachnid / Insectoid (Giant Scorpion, Phase Spider, Ankheg)",
-    "proposedScaleFactor": 1.077
+    "proposedScaleFactor": 1.077,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9156,
@@ -6013,7 +7239,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Small",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Small Fey with Large Size Alteration (Spriggan)",
-    "proposedScaleFactor": 0.672
+    "proposedScaleFactor": 0.672,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9157,
@@ -6039,21 +7267,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 0.85
     },
     "imagePath": "/images/monsters/will_o_wisp.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/will_o_wisp.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 24,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.949,
-      "topPadRatio": 0.023,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 603,
+      "height": 606,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 590,
+      "maxY": 593,
+      "contentWidthRatio": 0.9602,
+      "contentHeightRatio": 0.9604,
+      "topPadRatio": 0.0198,
+      "bottomPadRatio": 0.0198,
+      "leftPadRatio": 0.0199,
+      "rightPadRatio": 0.0199
     },
     "cardContentBounds": {
       "width": 1024,
@@ -6069,7 +7297,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 603,
+      "height": 606,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 590,
+      "maxY": 593,
+      "contentWidthRatio": 0.9602,
+      "contentHeightRatio": 0.9604,
+      "topPadRatio": 0.0198,
+      "bottomPadRatio": 0.0198,
+      "leftPadRatio": 0.0199,
+      "rightPadRatio": 0.0199
+    },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -6079,7 +7320,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Small",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Small Floating Luminous Sphere (Will-o'-Wisp)",
-    "proposedScaleFactor": 0.452
+    "proposedScaleFactor": 0.452,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 603,
+      "height": 606,
+      "colorType": 6,
+      "transparentPixelRatio": 0.2817,
+      "opaqueCoreRatio": 0.5471,
+      "semiTransparentRatio": 0.2059,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.5052,
+        "y": 0.5084
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 9158,
@@ -6145,7 +7408,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Quadruped Beast (Wolf, Hyena, Worg, Cheetah)",
-    "proposedScaleFactor": 0.707
+    "proposedScaleFactor": 0.707,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9159,
@@ -6211,7 +7476,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Broad / Tall Warrior (Gnoll, Bugbear, Orc)",
-    "proposedScaleFactor": 1.081
+    "proposedScaleFactor": 1.081,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9160,
@@ -6277,7 +7544,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Broad / Tall Warrior (Gnoll, Bugbear, Orc)",
-    "proposedScaleFactor": 1.102
+    "proposedScaleFactor": 1.102,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9161,
@@ -6343,7 +7612,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Massive Beast (Owlbear, Winter Wolf, Dire Boar, Catoblepas)",
-    "proposedScaleFactor": 1.112
+    "proposedScaleFactor": 1.112,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9162,
@@ -6409,7 +7680,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Rooted Botanical / Tentacled Mass (Assassin Vine, Shambling Mound)",
-    "proposedScaleFactor": 1.345
+    "proposedScaleFactor": 1.345,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9163,
@@ -6475,7 +7748,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Massive Beast (Owlbear, Winter Wolf, Dire Boar, Catoblepas)",
-    "proposedScaleFactor": 1.112
+    "proposedScaleFactor": 1.112,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9164,
@@ -6541,7 +7816,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Massive Beast (Owlbear, Winter Wolf, Dire Boar, Catoblepas)",
-    "proposedScaleFactor": 1.135
+    "proposedScaleFactor": 1.135,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9165,
@@ -6607,7 +7884,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Winged Predator / Dragon (Manticore, Wyvern, Griffon)",
-    "proposedScaleFactor": 1.293
+    "proposedScaleFactor": 1.293,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9166,
@@ -6673,7 +7952,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Rooted Botanical / Tentacled Mass (Assassin Vine, Shambling Mound)",
-    "proposedScaleFactor": 1.268
+    "proposedScaleFactor": 1.268,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9167,
@@ -6699,21 +7980,21 @@ const MONSTER_SIZE_CATALOG = [
       "statureMultiplier": 1.08
     },
     "imagePath": "/images/monsters/wyvern.png",
-    "cutoutImagePath": null,
-    "hasCutout": false,
+    "cutoutImagePath": "/lab-assets/images/monsters-cutout/wyvern.png",
+    "hasCutout": true,
     "imageContentBounds": {
-      "width": 1024,
-      "height": 1024,
-      "minX": 24,
-      "minY": 52,
-      "maxX": 996,
-      "maxY": 996,
-      "contentWidthRatio": 0.949,
-      "contentHeightRatio": 0.922,
-      "topPadRatio": 0.051,
-      "bottomPadRatio": 0.027,
-      "leftPadRatio": 0.023,
-      "rightPadRatio": 0.027
+      "width": 944,
+      "height": 953,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 931,
+      "maxY": 940,
+      "contentWidthRatio": 0.9746,
+      "contentHeightRatio": 0.9748,
+      "topPadRatio": 0.0126,
+      "bottomPadRatio": 0.0126,
+      "leftPadRatio": 0.0127,
+      "rightPadRatio": 0.0127
     },
     "cardContentBounds": {
       "width": 1024,
@@ -6729,7 +8010,20 @@ const MONSTER_SIZE_CATALOG = [
       "leftPadRatio": 0.023,
       "rightPadRatio": 0.027
     },
-    "cutoutContentBounds": null,
+    "cutoutContentBounds": {
+      "width": 944,
+      "height": 953,
+      "minX": 12,
+      "minY": 12,
+      "maxX": 931,
+      "maxY": 940,
+      "contentWidthRatio": 0.9746,
+      "contentHeightRatio": 0.9748,
+      "topPadRatio": 0.0126,
+      "bottomPadRatio": 0.0126,
+      "leftPadRatio": 0.0127,
+      "rightPadRatio": 0.0127
+    },
     "positioningMode": "AIRBORNE_HOVER",
     "isAirborne": true,
     "verificationStatus": "VERIFIED_AONPRD",
@@ -6739,7 +8033,29 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Winged Predator / Dragon (Manticore, Wyvern, Griffon)",
-    "proposedScaleFactor": 1.369
+    "proposedScaleFactor": 1.369,
+    "cutoutStatus": "NEWLY_PRODUCED_VERIFIED",
+    "cutoutValidationMetrics": {
+      "width": 944,
+      "height": 953,
+      "colorType": 6,
+      "transparentPixelRatio": 0.5343,
+      "opaqueCoreRatio": 0.4117,
+      "semiTransparentRatio": 0.0698,
+      "borderTransparencyRatio": 1,
+      "centerOfMass": {
+        "x": 0.4981,
+        "y": 0.4502
+      },
+      "checks": {
+        "isTrueRgbaPng": true,
+        "transparentRatioInRange": true,
+        "opaqueCoreSufficient": true,
+        "borderClean": true,
+        "silhouetteComplete": true,
+        "centeredCom": true
+      }
+    }
   },
   {
     "id": 9168,
@@ -6805,7 +8121,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Towering Giant / Brute (Troll, Ogre, Minotaur, Yeti)",
-    "proposedScaleFactor": 1.454
+    "proposedScaleFactor": 1.454,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9169,
@@ -6871,7 +8189,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Large",
     "pfSpaceFt": 10,
     "visualBodyProfileLabel": "Large Massive Beast (Owlbear, Winter Wolf, Dire Boar, Catoblepas)",
-    "proposedScaleFactor": 1.181
+    "proposedScaleFactor": 1.181,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9170,
@@ -6937,7 +8257,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Broad / Tall Warrior (Gnoll, Bugbear, Orc)",
-    "proposedScaleFactor": 1.091
+    "proposedScaleFactor": 1.091,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9171,
@@ -7003,7 +8325,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Upright Humanoid / Undead",
-    "proposedScaleFactor": 0.98
+    "proposedScaleFactor": 0.98,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   },
   {
     "id": 9172,
@@ -7069,7 +8393,9 @@ const MONSTER_SIZE_CATALOG = [
     "pfSizeLabel": "Medium",
     "pfSpaceFt": 5,
     "visualBodyProfileLabel": "Medium Broad / Tall Warrior (Gnoll, Bugbear, Orc)",
-    "proposedScaleFactor": 1.134
+    "proposedScaleFactor": 1.134,
+    "cutoutStatus": "CARD_FALLBACK_RETAINED",
+    "cutoutValidationMetrics": null
   }
 ];
 
@@ -7241,6 +8567,7 @@ const BY_ID = new Map();
 const BY_CATALOG_ORDER = new Map();
 const BY_SLUG = new Map();
 const BY_NAME = new Map();
+const BASELINE_CUTOUT_SNAPSHOTS = new Map();
 
 for (const item of [...MONSTER_SIZE_CATALOG, ...PF1E_SIZE_REFERENCE_SPECIMENS]) {
   BY_ID.set(Number(item.id), item);
@@ -7254,6 +8581,14 @@ for (const item of [...MONSTER_SIZE_CATALOG, ...PF1E_SIZE_REFERENCE_SPECIMENS]) 
   if (normName && !BY_NAME.has(normName)) {
     BY_NAME.set(normName, item);
   }
+  if (item.slug && !BASELINE_CUTOUT_SNAPSHOTS.has(item.slug)) {
+    BASELINE_CUTOUT_SNAPSHOTS.set(item.slug, {
+      hasCutout: Boolean(item.hasCutout),
+      cutoutImagePath: item.cutoutImagePath || null,
+      cutoutContentBounds: item.cutoutContentBounds ? { ...item.cutoutContentBounds } : null,
+      imageContentBounds: item.imageContentBounds ? { ...item.imageContentBounds } : null
+    });
+  }
 }
 // Alias support
 BY_SLUG.set('creeping_vine', BY_SLUG.get('assassin_vine'));
@@ -7262,6 +8597,360 @@ BY_NAME.set('creeping vine', BY_SLUG.get('assassin_vine'));
 function clamp(val, min, max) {
   return Math.min(max, Math.max(min, val));
 }
+
+/**
+ * Focus Area 1 — Scene-Aware Perspective & Corridor Depth Calibration
+ * Adapts ground contact, horizon line, corridor width clamp, ground sink, and shadow softness
+ * across Mirkwood Trail, The Old Stone Bridge, Deadman's Mire, Watchpost Ruins, and open wilds.
+ */
+const CORRIDOR_DEPTH_TYPES = {
+  OPEN_FIELD: {
+    key: 'OPEN_FIELD',
+    label: 'Open Field / Moor / Clearing',
+    defaultHorizonY: 46,
+    defaultStageFloorY: 83,
+    horizontalMarginRatio: 0.08,
+    corridorWidthClampRatio: 0.50,
+    shadowSoftnessMult: 1.0,
+    groundSinkScale: 1.0,
+    perspectiveDepthRatePxPerFt: 2.8,
+    ambientShadowTint: 'rgba(10, 12, 16, 0.68)'
+  },
+  FOREST_TRAIL: {
+    key: 'FOREST_TRAIL',
+    label: 'Forest Trail / Swamp Path / Canopy Track',
+    defaultHorizonY: 48,
+    defaultStageFloorY: 82,
+    horizontalMarginRatio: 0.10,
+    corridorWidthClampRatio: 0.48,
+    shadowSoftnessMult: 1.08,
+    groundSinkScale: 1.05,
+    perspectiveDepthRatePxPerFt: 3.1,
+    ambientShadowTint: 'rgba(8, 14, 10, 0.74)'
+  },
+  NARROW_BRIDGE: {
+    key: 'NARROW_BRIDGE',
+    label: 'Narrow Stone Bridge / Parapet Causeway',
+    defaultHorizonY: 45,
+    defaultStageFloorY: 80,
+    horizontalMarginRatio: 0.14,
+    corridorWidthClampRatio: 0.44,
+    shadowSoftnessMult: 0.90,
+    groundSinkScale: 0.78,
+    perspectiveDepthRatePxPerFt: 3.4,
+    ambientShadowTint: 'rgba(12, 16, 24, 0.78)'
+  },
+  INTERIOR_RUIN: {
+    key: 'INTERIOR_RUIN',
+    label: 'Ruined Watchpost / Sunken Vault / Stone Archway',
+    defaultHorizonY: 44,
+    defaultStageFloorY: 81,
+    horizontalMarginRatio: 0.12,
+    corridorWidthClampRatio: 0.46,
+    shadowSoftnessMult: 0.94,
+    groundSinkScale: 0.85,
+    perspectiveDepthRatePxPerFt: 3.2,
+    ambientShadowTint: 'rgba(8, 10, 16, 0.80)'
+  }
+};
+
+const SCENE_PERSPECTIVE_PROFILES = {
+  MIRKWOOD_TRAIL: {
+    sceneKey: 'MIRKWOOD_TRAIL',
+    label: 'Mirkwood Trail & Crossroads Clearing',
+    sceneTerrain: 'FOREST',
+    corridorDepthType: 'FOREST_TRAIL',
+    cameraHorizonY: 48,
+    stageFloorY: 82,
+    stageCenterX: 50,
+    groundSurfaceType: 'forest-earth',
+    groundSinkScale: 1.05,
+    shadowSoftnessMult: 1.08,
+    ambientShadowTint: 'rgba(8, 14, 10, 0.74)'
+  },
+  OLD_STONE_BRIDGE: {
+    sceneKey: 'OLD_STONE_BRIDGE',
+    label: 'The Old Stone Bridge [8, 7]',
+    sceneTerrain: 'BRIDGE',
+    corridorDepthType: 'NARROW_BRIDGE',
+    cameraHorizonY: 45,
+    stageFloorY: 80,
+    stageCenterX: 50,
+    groundSurfaceType: 'stone-bridge',
+    groundSinkScale: 0.78,
+    shadowSoftnessMult: 0.90,
+    ambientShadowTint: 'rgba(12, 16, 24, 0.78)'
+  },
+  DEADMANS_MIRE: {
+    sceneKey: 'DEADMANS_MIRE',
+    label: "Deadman's Mire & Rotting Fen [4, 11]",
+    sceneTerrain: 'SWAMP',
+    corridorDepthType: 'FOREST_TRAIL',
+    cameraHorizonY: 49,
+    stageFloorY: 84,
+    stageCenterX: 50,
+    groundSurfaceType: 'swamp-mud',
+    groundSinkScale: 1.22,
+    shadowSoftnessMult: 1.15,
+    ambientShadowTint: 'rgba(6, 16, 12, 0.78)'
+  },
+  WATCHPOST_RUINS: {
+    sceneKey: 'WATCHPOST_RUINS',
+    label: 'Bridge East Watchpost Ruins [9, 7]',
+    sceneTerrain: 'UNDERGROUND_RUINS',
+    corridorDepthType: 'INTERIOR_RUIN',
+    cameraHorizonY: 44,
+    stageFloorY: 81,
+    stageCenterX: 50,
+    groundSurfaceType: 'ruin-flagstone',
+    groundSinkScale: 0.85,
+    shadowSoftnessMult: 0.94,
+    ambientShadowTint: 'rgba(8, 10, 16, 0.80)'
+  },
+  VERDANT_PLAINS: {
+    sceneKey: 'VERDANT_PLAINS',
+    label: 'Verdant Plains & Frontier Road',
+    sceneTerrain: 'PLAINS',
+    corridorDepthType: 'OPEN_FIELD',
+    cameraHorizonY: 46,
+    stageFloorY: 83,
+    stageCenterX: 50,
+    groundSurfaceType: 'wilderness-soil',
+    groundSinkScale: 1.0,
+    shadowSoftnessMult: 1.0,
+    ambientShadowTint: 'rgba(10, 12, 16, 0.68)'
+  },
+  RAVEN_CRAGS: {
+    sceneKey: 'RAVEN_CRAGS',
+    label: 'Raven Crags & Highland Slopes',
+    sceneTerrain: 'HILLS',
+    corridorDepthType: 'OPEN_FIELD',
+    cameraHorizonY: 45,
+    stageFloorY: 81,
+    stageCenterX: 50,
+    groundSurfaceType: 'crag-slate',
+    groundSinkScale: 0.88,
+    shadowSoftnessMult: 0.96,
+    ambientShadowTint: 'rgba(12, 14, 18, 0.72)'
+  },
+  OAKHAVEN_SANCTUARY: {
+    sceneKey: 'OAKHAVEN_SANCTUARY',
+    label: 'Oakhaven Sanctuary & Gatehouse [7, 7]',
+    sceneTerrain: 'CITY',
+    corridorDepthType: 'OPEN_FIELD',
+    cameraHorizonY: 46,
+    stageFloorY: 82,
+    stageCenterX: 50,
+    groundSurfaceType: 'cobblestone',
+    groundSinkScale: 0.82,
+    shadowSoftnessMult: 0.92,
+    ambientShadowTint: 'rgba(14, 12, 10, 0.74)'
+  }
+};
+
+function resolveScenePerspectiveCalibration(options = {}) {
+  const hasExplicitSceneOpts = Boolean(
+    options.sceneKey ||
+    options.sceneTerrain ||
+    options.corridorDepthType ||
+    options.cameraHorizonY !== undefined ||
+    options.groundSurfaceType ||
+    (options.tileX !== undefined && options.tileY !== undefined)
+  );
+
+  const rawSceneKey = String(options.sceneKey || '').toUpperCase().trim();
+  const rawTerrain = String(options.sceneTerrain || options.terrain || '').toUpperCase().trim();
+  const rawCorridor = String(options.corridorDepthType || '').toUpperCase().trim();
+  const rawSurface = String(options.groundSurfaceType || '').toLowerCase().trim();
+  const tx = options.tileX !== undefined ? Number(options.tileX) : null;
+  const ty = options.tileY !== undefined ? Number(options.tileY) : null;
+
+  let matchedScene = null;
+  if (rawSceneKey && SCENE_PERSPECTIVE_PROFILES[rawSceneKey]) {
+    matchedScene = SCENE_PERSPECTIVE_PROFILES[rawSceneKey];
+  } else if (tx === 8 && ty === 7) {
+    matchedScene = SCENE_PERSPECTIVE_PROFILES.OLD_STONE_BRIDGE;
+  } else if (tx === 9 && ty === 7) {
+    matchedScene = SCENE_PERSPECTIVE_PROFILES.WATCHPOST_RUINS;
+  } else if (tx === 4 && ty === 11) {
+    matchedScene = SCENE_PERSPECTIVE_PROFILES.DEADMANS_MIRE;
+  } else if (rawTerrain === 'BRIDGE' || rawSurface.includes('bridge')) {
+    matchedScene = SCENE_PERSPECTIVE_PROFILES.OLD_STONE_BRIDGE;
+  } else if (rawTerrain === 'UNDERGROUND_RUINS' || rawTerrain === 'RUINS' || rawSurface.includes('ruin')) {
+    matchedScene = SCENE_PERSPECTIVE_PROFILES.WATCHPOST_RUINS;
+  } else if (rawTerrain === 'SWAMP' || rawSurface.includes('swamp') || rawSurface.includes('mire')) {
+    matchedScene = SCENE_PERSPECTIVE_PROFILES.DEADMANS_MIRE;
+  } else if (rawTerrain === 'FOREST' || rawTerrain === 'JUNGLE' || rawSurface.includes('forest')) {
+    matchedScene = SCENE_PERSPECTIVE_PROFILES.MIRKWOOD_TRAIL;
+  } else if (rawTerrain === 'HILLS' || rawTerrain === 'MOUNTAINS' || rawSurface.includes('crag')) {
+    matchedScene = SCENE_PERSPECTIVE_PROFILES.RAVEN_CRAGS;
+  } else if (rawTerrain === 'CITY' || rawTerrain === 'TOWN' || rawSurface.includes('cobble')) {
+    matchedScene = SCENE_PERSPECTIVE_PROFILES.OAKHAVEN_SANCTUARY;
+  } else if (rawTerrain === 'PLAINS') {
+    matchedScene = SCENE_PERSPECTIVE_PROFILES.VERDANT_PLAINS;
+  }
+
+  const corridorKey = CORRIDOR_DEPTH_TYPES[rawCorridor]
+    ? rawCorridor
+    : (matchedScene ? matchedScene.corridorDepthType : 'FOREST_TRAIL');
+  const corridorDef = CORRIDOR_DEPTH_TYPES[corridorKey] || CORRIDOR_DEPTH_TYPES.FOREST_TRAIL;
+
+  const defaultFloorY = matchedScene ? matchedScene.stageFloorY : 82;
+  const stageFloorY = clamp(
+    Number(options.stageFloorY !== undefined ? options.stageFloorY : defaultFloorY),
+    68,
+    92
+  );
+  const defaultHorizonY = matchedScene ? matchedScene.cameraHorizonY : corridorDef.defaultHorizonY;
+  const cameraHorizonY = clamp(
+    Number(options.cameraHorizonY !== undefined ? options.cameraHorizonY : defaultHorizonY),
+    32,
+    64
+  );
+  const stageCenterX = clamp(
+    Number(options.stageCenterX !== undefined ? options.stageCenterX : (matchedScene ? matchedScene.stageCenterX : 50)),
+    35,
+    65
+  );
+
+  return {
+    sceneKey: matchedScene ? matchedScene.sceneKey : (rawSceneKey || 'DEFAULT_STAGE'),
+    sceneTerrain: rawTerrain || (matchedScene ? matchedScene.sceneTerrain : 'FOREST'),
+    corridorDepthType: corridorDef.key,
+    corridorDepthLabel: corridorDef.label,
+    cameraHorizonY,
+    stageFloorY,
+    stageCenterX,
+    groundSurfaceType: rawSurface || (matchedScene ? matchedScene.groundSurfaceType : 'forest-earth'),
+    horizontalMarginRatio: corridorDef.horizontalMarginRatio,
+    corridorWidthClampRatio: hasExplicitSceneOpts ? corridorDef.corridorWidthClampRatio : 0.48,
+    shadowSoftnessMult: hasExplicitSceneOpts
+      ? (matchedScene ? matchedScene.shadowSoftnessMult : corridorDef.shadowSoftnessMult)
+      : 1.0,
+    groundSinkScale: hasExplicitSceneOpts
+      ? (matchedScene ? matchedScene.groundSinkScale : corridorDef.groundSinkScale)
+      : 1.0,
+    perspectiveDepthRatePxPerFt: corridorDef.perspectiveDepthRatePxPerFt,
+    ambientShadowTint: (matchedScene && matchedScene.ambientShadowTint) || corridorDef.ambientShadowTint,
+    isCustomSceneCalibrated: hasExplicitSceneOpts
+  };
+}
+
+/**
+ * Focus Area 2 — Virtual Distance Bands & Perspective Resolver
+ * Formalizes encounter distance bands (20 ft Distant Sighting, 16 ft Ranged Engagement,
+ * 12 ft Melee Engagement, 9 ft Close Press) and resolves distance in feet.
+ */
+const ENCOUNTER_DISTANCE_BANDS = {
+  DISTANT_SIGHTING: {
+    key: 'DISTANT_SIGHTING',
+    stage: 'DISTANT',
+    distanceFt: 20,
+    minFt: 18,
+    maxFt: 30,
+    label: 'Distant Sighting / Stage 1 Clue (20 ft)',
+    scaleFactorVsMelee: 0.60,
+    shadowBlurMult: 1.18,
+    shadowOpacityMult: 0.82
+  },
+  RANGED_ENGAGEMENT: {
+    key: 'RANGED_ENGAGEMENT',
+    stage: 'CLOSING',
+    distanceFt: 16,
+    minFt: 14,
+    maxFt: 17.9,
+    label: 'Ranged Engagement / Closing (16 ft)',
+    scaleFactorVsMelee: 0.75,
+    shadowBlurMult: 1.09,
+    shadowOpacityMult: 0.91
+  },
+  MELEE_ENGAGEMENT: {
+    key: 'MELEE_ENGAGEMENT',
+    stage: 'MELEE',
+    distanceFt: 12,
+    minFt: 10.5,
+    maxFt: 13.9,
+    label: 'Standard Melee Engagement (12 ft)',
+    scaleFactorVsMelee: 1.00,
+    shadowBlurMult: 1.00,
+    shadowOpacityMult: 1.00
+  },
+  CLOSE_PRESS: {
+    key: 'CLOSE_PRESS',
+    stage: 'CLOSE_PRESS',
+    distanceFt: 9,
+    minFt: 6,
+    maxFt: 10.4,
+    label: 'Close Press / Grapple Range (9 ft)',
+    scaleFactorVsMelee: 1.333,
+    shadowBlurMult: 0.92,
+    shadowOpacityMult: 1.06
+  }
+};
+
+function resolveEncounterDistanceFt(options = {}) {
+  if (typeof options === 'number' && !Number.isNaN(options)) {
+    return clamp(options, 6, 30);
+  }
+  if (options && typeof options === 'object') {
+    if (options.virtualDistanceFt !== undefined && options.virtualDistanceFt !== null && options.virtualDistanceFt !== '') {
+      return clamp(Number(options.virtualDistanceFt), 6, 30);
+    }
+    const rawBand = String(
+      options.encounterDistanceBand ||
+      options.encounterDistanceStage ||
+      options.distanceBand ||
+      options.distanceStage ||
+      ''
+    ).toUpperCase().trim();
+
+    if (rawBand) {
+      if (ENCOUNTER_DISTANCE_BANDS[rawBand]) {
+        return ENCOUNTER_DISTANCE_BANDS[rawBand].distanceFt;
+      }
+      if (rawBand === 'DISTANT' || rawBand === 'STAGE1' || rawBand === 'OPENING_SHOT') {
+        return ENCOUNTER_DISTANCE_BANDS.DISTANT_SIGHTING.distanceFt;
+      }
+      if (rawBand === 'CLOSING' || rawBand === 'RANGED' || rawBand === 'APPROACHING') {
+        return ENCOUNTER_DISTANCE_BANDS.RANGED_ENGAGEMENT.distanceFt;
+      }
+      if (rawBand === 'MELEE' || rawBand === 'STAGE2' || rawBand === 'STANDARD') {
+        return ENCOUNTER_DISTANCE_BANDS.MELEE_ENGAGEMENT.distanceFt;
+      }
+      if (rawBand === 'CLOSE' || rawBand === 'PRESS' || rawBand === 'GRAPPLE') {
+        return ENCOUNTER_DISTANCE_BANDS.CLOSE_PRESS.distanceFt;
+      }
+    }
+  }
+  return 12;
+}
+
+function classifyEncounterDistanceBand(distanceFt = 12) {
+  const d = clamp(Number(distanceFt || 12), 6, 30);
+  if (d >= 18) return ENCOUNTER_DISTANCE_BANDS.DISTANT_SIGHTING;
+  if (d >= 14) return ENCOUNTER_DISTANCE_BANDS.RANGED_ENGAGEMENT;
+  if (d >= 10.5) return ENCOUNTER_DISTANCE_BANDS.MELEE_ENGAGEMENT;
+  return ENCOUNTER_DISTANCE_BANDS.CLOSE_PRESS;
+}
+
+/**
+ * Focus Area 10 — Cutout Asset Contract & Dynamic Metadata Registration for Tracks 4 & 5
+ */
+const CUTOUT_ASSET_CONTRACT = {
+  contractVersion: '1.0.0',
+  requiredColorType: 6, // PNG RGBA
+  minTransparentPixelRatio: 0.12,
+  maxTransparentPixelRatio: 0.96,
+  maxEdgeTouchRatio: 0.38,
+  minContentWidthRatio: 0.22,
+  maxContentWidthRatio: 0.998,
+  minContentHeightRatio: 0.22,
+  maxContentHeightRatio: 0.998,
+  maxPadRatio: 0.45,
+  defaultGroundedFootAnchorRatio: 0.96,
+  defaultAirborneAnchorRatio: 0.50,
+  fallbackPresentationMode: 'CARD'
+};
 
 function lookupMonsterSizeEntry(monsterOrKey) {
   if (!monsterOrKey) return BY_SLUG.get('wolf');
@@ -7330,7 +9019,8 @@ function buildContactPatchesForMode(contactMode, sizeMult = 1.0) {
  * Phase 3 — Adaptive Monster Visual Scaling Engine
  *
  * Computes exact viewport-relative dimensions, transparency/margin compensation,
- * foot contact anchoring, shadow geometry, and UI safety clamping for any monster.
+ * foot contact anchoring, shadow geometry, scene-aware perspective calibration,
+ * card fallback styling, and UI safety clamping for any monster.
  *
  * @param {object|string|number} monsterOrKey - Monster entry, ID, slug, or name
  * @param {object} [options]
@@ -7339,6 +9029,11 @@ function buildContactPatchesForMode(contactMode, sizeMult = 1.0) {
  * @param {string} [options.presentationMode='INTEGRATED'] - 'INTEGRATED' or 'CARD'
  * @param {number} [options.stageFloorY=82] - Ground contact Y percentage in the scene
  * @param {number} [options.virtualDistanceFt=12] - Virtual camera distance in feet (default 12 ft)
+ * @param {string} [options.encounterDistanceStage] - Optional 'DISTANT' | 'CLOSING' | 'MELEE' | 'CLOSE_PRESS'
+ * @param {string} [options.encounterDistanceBand] - Optional 'DISTANT_SIGHTING' | 'RANGED_ENGAGEMENT' | 'MELEE_ENGAGEMENT' | 'CLOSE_PRESS'
+ * @param {string} [options.sceneTerrain] - Optional terrain type ('FOREST', 'BRIDGE', 'SWAMP', 'UNDERGROUND_RUINS', etc.)
+ * @param {string} [options.corridorDepthType] - Optional 'OPEN_FIELD' | 'FOREST_TRAIL' | 'NARROW_BRIDGE' | 'INTERIOR_RUIN'
+ * @param {number} [options.cameraHorizonY] - Optional horizon Y percentage in scene
  * @param {string} [options.overridePfSize=null] - Optional PF1e size override (e.g., Spriggan Large form)
  */
 function computeAdaptiveMonsterVisualScale(monsterOrKey, options = {}) {
@@ -7346,9 +9041,26 @@ function computeAdaptiveMonsterVisualScale(monsterOrKey, options = {}) {
   const vpW = clamp(Number(options.viewportWidth || 1920), 640, 3840);
   const vpH = clamp(Number(options.viewportHeight || 1080), 480, 2160);
   const presentationMode = String(options.presentationMode || 'INTEGRATED').toUpperCase();
-  const useCutoutBounds = presentationMode === 'INTEGRATED' && Boolean(entry.hasCutout && entry.cutoutContentBounds);
-  const stageFloorY = clamp(Number(options.stageFloorY || 82), 68, 92);
-  const virtualDistanceFt = clamp(Number(options.virtualDistanceFt || 12), 6, 30);
+  const hasVerifiedCutout = Boolean(entry.hasCutout && entry.cutoutContentBounds);
+  const useCutoutBounds = presentationMode === 'INTEGRATED' && hasVerifiedCutout;
+  const effectivePresentationMode = useCutoutBounds ? 'INTEGRATED' : 'CARD';
+
+  let fallbackReason = null;
+  if (effectivePresentationMode === 'CARD') {
+    if (presentationMode === 'CARD') {
+      fallbackReason = 'EXPLICIT_CARD_MODE_REQUESTED';
+    } else if (!entry.hasCutout) {
+      fallbackReason = 'NO_VERIFIED_RGBA_CUTOUT';
+    } else {
+      fallbackReason = 'MISSING_CUTOUT_BOUNDS_METADATA';
+    }
+  }
+
+  // Scene-aware perspective calibration & virtual distance resolution
+  const sceneCalibration = resolveScenePerspectiveCalibration(options);
+  const stageFloorY = sceneCalibration.stageFloorY;
+  const virtualDistanceFt = resolveEncounterDistanceFt(options);
+  const distanceBand = classifyEncounterDistanceBand(virtualDistanceFt);
   const distanceScale = +(12 / virtualDistanceFt).toFixed(3);
 
   const pfSizeKey = (options.overridePfSize && PF1E_SIZE_CATEGORIES[options.overridePfSize])
@@ -7367,11 +9079,17 @@ function computeAdaptiveMonsterVisualScale(monsterOrKey, options = {}) {
   const rawVisibleWidthPx = Math.round(rawVisibleHeightPx * bodyProf.aspectRatio);
 
   // 2. UI Safety Clamping (Soft-Knee Asymptotic Clamp) so Huge/Gargantuan/Colossal never break HUD
-  // while preserving strict monotonic visual ordering (Large < Huge < Gargantuan < Colossal)
+  // while preserving strict monotonic visual ordering (Fine < Diminutive < Tiny < Small < Medium < Large < Huge < Gargantuan < Colossal)
   const kneeSafeHeightPx = Math.round(clamp(vpH * 0.415, 165, 450));
   const maxSafeHeightPx = Math.round(clamp(vpH * 0.495, 195, 535));
-  const maxSafeWidthPx = Math.round(clamp(vpW * 0.48, 210, 620));
+  const maxSafeWidthPx = Math.round(clamp(vpW * sceneCalibration.corridorWidthClampRatio, 210, 620));
   const minSafeHeightPx = Math.round(clamp(vpH * 0.062, 48, 88));
+
+  // When viewing at long distances (e.g. 16-20 ft) or compact 768p viewports, scale the minimum floor
+  // gently by tier & distance so Fine/Diminutive/Tiny retain strict monotonic ordering.
+  const effectiveMinHeightPx = (virtualDistanceFt > 12 || vpH < 800)
+    ? Math.max(22, Math.round(minSafeHeightPx * Math.min(1, distanceScale) * (0.72 + sizeCat.order * 0.06)))
+    : minSafeHeightPx;
 
   let targetClampedH = rawVisibleHeightPx;
   if (rawVisibleHeightPx > kneeSafeHeightPx) {
@@ -7380,14 +9098,36 @@ function computeAdaptiveMonsterVisualScale(monsterOrKey, options = {}) {
     targetClampedH = kneeSafeHeightPx + Math.round(headroomH * (1 - Math.exp(-excessH / (vpH * 0.18))));
   }
 
-  let clampRatio = targetClampedH / Math.max(1, rawVisibleHeightPx);
-  if (rawVisibleWidthPx * clampRatio > maxSafeWidthPx) {
-    clampRatio = Math.min(clampRatio, maxSafeWidthPx / Math.max(1, rawVisibleWidthPx));
+  const heightClampRatio = targetClampedH / Math.max(1, rawVisibleHeightPx);
+  let widthClampRatio = 1.0;
+  const kneeSafeWidthPx = Math.round(maxSafeWidthPx * 0.88);
+  if (rawVisibleWidthPx * heightClampRatio > maxSafeWidthPx) {
+    if (sceneCalibration.isCustomSceneCalibrated && rawVisibleWidthPx > kneeSafeWidthPx) {
+      const excessW = rawVisibleWidthPx - kneeSafeWidthPx;
+      const headroomW = Math.max(14, maxSafeWidthPx - kneeSafeWidthPx);
+      const softClampedW = kneeSafeWidthPx + Math.round(headroomW * (1 - Math.exp(-excessW / (vpW * 0.18))));
+      widthClampRatio = Math.min(softClampedW, maxSafeWidthPx) / Math.max(1, rawVisibleWidthPx);
+    } else {
+      widthClampRatio = maxSafeWidthPx / Math.max(1, rawVisibleWidthPx);
+    }
   }
+
+  const clampRatio = Math.min(heightClampRatio, widthClampRatio);
+  const heightClampEngaged = heightClampRatio < 0.995;
+  const widthClampEngaged = widthClampRatio < heightClampRatio && widthClampRatio < 0.995;
   const wasClamped = clampRatio < 0.995;
 
-  const visibleHeightPx = Math.max(minSafeHeightPx, Math.round(rawVisibleHeightPx * clampRatio));
-  const visibleWidthPx = Math.max(minSafeHeightPx, Math.round(rawVisibleWidthPx * clampRatio));
+  const clampedH = Math.round(rawVisibleHeightPx * clampRatio);
+  const clampedW = Math.round(rawVisibleWidthPx * clampRatio);
+  const minFloorEngaged = clampedH < effectiveMinHeightPx;
+
+  const visibleHeightPx = Math.max(effectiveMinHeightPx, clampedH);
+  let visibleWidthPx;
+  if (minFloorEngaged && (virtualDistanceFt !== 12 || vpH < 800 || bodyProf.aspectRatio < 1.0)) {
+    visibleWidthPx = Math.min(maxSafeWidthPx, Math.max(20, Math.round(visibleHeightPx * bodyProf.aspectRatio)));
+  } else {
+    visibleWidthPx = Math.min(maxSafeWidthPx, Math.max(effectiveMinHeightPx, clampedW));
+  }
 
   // 3. PNG Transparency & Vignette Empty Margin Compensation
   // Ensure empty/transparent borders do not shrink the rendered creature or leave floating gaps
@@ -7421,23 +9161,51 @@ function computeAdaptiveMonsterVisualScale(monsterOrKey, options = {}) {
   const containerHeightPx = visibleHeightPx;
   const containerWidthPx = visibleWidthPx;
 
-  // 4. Foot / Ground Contact Positioning & Airborne Elevation
-  const isAirborne = Boolean(entry.isAirborne || bodyProf.groundingMode.startsWith('AIRBORNE'));
+  // 4. Foot / Ground Contact Positioning, Perspective Horizon Shift & Airborne Elevation
+  const isAirborne = Boolean(
+    entry.isAirborne ||
+    bodyProf.groundingMode.startsWith('AIRBORNE') ||
+    entry.visualBodyProfile === 'FLOATING_ORB'
+  );
   const bottomPadCompensationPx = Math.round(botPad * containerHeightPx * (useCutoutBounds ? 1.0 : 0.45));
-  const baseGroundedSinkPx = Math.round(clamp(containerHeightPx * 0.045, 6, 22)) + bottomPadCompensationPx;
+  const rawGroundedSinkPx = Math.round(clamp(containerHeightPx * 0.045, 6, 22)) + bottomPadCompensationPx;
+  const baseGroundedSinkPx = sceneCalibration.isCustomSceneCalibrated
+    ? Math.max(4, Math.round(rawGroundedSinkPx * sceneCalibration.groundSinkScale))
+    : rawGroundedSinkPx;
+
   const airborneLiftPx = isAirborne
-    ? Math.round((bodyProf.airborneLiftPx || 38) * clamp(vpH / 1080, 0.72, 1.2))
+    ? Math.round((bodyProf.airborneLiftPx || 38) * clamp(vpH / 1080, 0.72, 1.2) * clamp(distanceScale, 0.65, 1.25))
     : 0;
+  const airborneHoverAltitudePx = airborneLiftPx;
   const verticalOffsetPx = isAirborne ? -airborneLiftPx : baseGroundedSinkPx;
   const airborneGapPx = isAirborne ? Math.round(airborneLiftPx + 14) : 0;
-  const footContactY = stageFloorY;
 
-  // 5. Shadow Geometry scaled to creature footprint & body profile
+  // Virtual distance perspective ground-plane shift:
+  // At 12 ft (standard melee), perspectiveHorizonShiftPx === 0.
+  // At > 12 ft (distant/ranged), shifts upward (< 0) toward cameraHorizonY.
+  // At < 12 ft (close press), shifts slightly downward (> 0) toward foreground.
+  const perspectiveHorizonShiftPx = virtualDistanceFt === 12
+    ? 0
+    : -Math.round((virtualDistanceFt - 12) * sceneCalibration.perspectiveDepthRatePxPerFt * (vpH / 1080));
+  const footContactY = stageFloorY;
+  const groundContactY = virtualDistanceFt === 12
+    ? stageFloorY
+    : +clamp(stageFloorY + (perspectiveHorizonShiftPx / vpH) * 100, sceneCalibration.cameraHorizonY + 6, 93).toFixed(2);
+  const footAnchorRatio = isAirborne
+    ? CUTOUT_ASSET_CONTRACT.defaultAirborneAnchorRatio
+    : +clamp(1 - botPad, 0.84, 0.995).toFixed(3);
+
+  // 5. Shadow Geometry scaled to creature footprint, body profile, distance & scene surface
   const shadowWidthPx = Math.round(visibleWidthPx * (bodyProf.shadowWidthPct / 100));
   const shadowHeightPx = Math.round(clamp(shadowWidthPx * (isAirborne ? 0.16 : 0.22), 10, 44));
   const shadowWidthPct = clamp(Math.round(bodyProf.shadowWidthPct * sizeCat.shadowScaleMult * 0.85), 28, 108);
-  const shadowBlurPx = Math.round(bodyProf.shadowBlurPx * (isAirborne ? 1.25 : 1.0));
-  const shadowOpacity = +clamp(bodyProf.shadowOpacity, 0.22, 0.90).toFixed(2);
+  const distBlurMult = virtualDistanceFt === 12 ? 1.0 : distanceBand.shadowBlurMult;
+  const distOpacityMult = virtualDistanceFt === 12 ? 1.0 : distanceBand.shadowOpacityMult;
+  const shadowBlurPx = Math.max(
+    3,
+    Math.round(bodyProf.shadowBlurPx * (isAirborne ? 1.25 : 1.0) * sceneCalibration.shadowSoftnessMult * distBlurMult)
+  );
+  const shadowOpacity = +clamp(bodyProf.shadowOpacity * distOpacityMult, 0.18, 0.90).toFixed(2);
 
   const ambientPatch = {
     leftPct: 50,
@@ -7450,9 +9218,50 @@ function computeAdaptiveMonsterVisualScale(monsterOrKey, options = {}) {
   };
   const contactPatches = isAirborne
     ? []
-    : buildContactPatchesForMode(bodyProf.contactMode, sizeCat.shadowScaleMult);
+    : (Array.isArray(entry.customContactPatches) && entry.customContactPatches.length > 0
+        ? entry.customContactPatches
+        : buildContactPatchesForMode(bodyProf.contactMode, sizeCat.shadowScaleMult));
 
-  // 6. Legacy Uniform Scale comparison metrics (Before vs. After)
+  const contactPatchGeometry = {
+    contactMode: isAirborne ? 'NONE' : bodyProf.contactMode,
+    hasGroundContact: !isAirborne,
+    patchCount: contactPatches.length,
+    detachedShadowGapPx: isAirborne ? airborneGapPx : 0,
+    groundPlaneTopPct: ambientPatch.topPct,
+    patches: contactPatches
+  };
+
+  // 6. HUD Clearance & Wide-Silhouette Safety Metrics (Focus Areas 5, 6, 7)
+  const topHudReservePx = Math.round(vpH * 0.085);
+  const bottomDeckReservePx = Math.round(vpH * 0.18);
+  const floorPixelY = Math.round((groundContactY / 100) * vpH);
+  const topCrownPixelY = floorPixelY - visibleHeightPx + verticalOffsetPx;
+  const crownClearancePx = Math.max(8, topCrownPixelY - topHudReservePx);
+  const footAboveBottomDeckPx = Math.max(8, (vpH - bottomDeckReservePx) - floorPixelY + 24);
+  const effectiveAspectRatio = +(visibleWidthPx / Math.max(1, visibleHeightPx)).toFixed(3);
+  const aspectRatioDrift = +Math.abs(effectiveAspectRatio - bodyProf.aspectRatio).toFixed(3);
+  const isWideSilhouette = bodyProf.aspectRatio >= 1.20;
+  const horizontalClearancePx = Math.max(0, vpW - visibleWidthPx);
+
+  // 7. Card Mode Fallback Styling (Focus Area 9)
+  const cardAspectRatio = effectiveAspectRatio;
+  const vignetteTrimScale = imageTrimScale;
+  const cardFrameStyle = {
+    mode: effectivePresentationMode,
+    borderRadiusPx: sizeCat.order <= 3 ? 8 : (sizeCat.order >= 6 ? 12 : 10),
+    borderWidthPx: sizeCat.order >= 6 ? 2 : 1.5,
+    innerVignetteInsetPx: Math.round(clamp(visibleHeightPx * 0.06, 8, 24)),
+    objectFit: effectivePresentationMode === 'INTEGRATED' ? 'contain' : 'cover',
+    objectPositionXPct: +(50 + imageShiftXPct).toFixed(2),
+    objectPositionYPct: +(50 + imageShiftYPct).toFixed(2),
+    cardAspectRatio,
+    vignetteTrimScale,
+    sizeTierAccent: sizeCat.order >= 6 ? 'HEAVY_ORNATE_GOLD' : (sizeCat.order <= 3 ? 'COMPACT_IRON' : 'STANDARD_BRONZE'),
+    shadowGrounding: isAirborne ? 'DETACHED_FLOAT_SHADOW' : 'ANCHORED_CARD_PEDESTAL',
+    fallbackReason
+  };
+
+  // 8. Legacy Uniform Scale comparison metrics (Before vs. After)
   // Legacy Card mode used clamp(125px, 23vh, 250px) square box
   const legacyBoxPx = Math.round(clamp(vpH * 0.23, 125, 250));
   const legacyVisibleHeightPx = Math.round(legacyBoxPx * cHRatio);
@@ -7472,12 +9281,25 @@ function computeAdaptiveMonsterVisualScale(monsterOrKey, options = {}) {
     bodyProportions: entry.bodyProportions,
     proposedScaleFactor: entry.proposedScaleFactor,
     effectiveScaleFactor: +(visibleHeightPx / (vpH * 0.285)).toFixed(3),
-    viewport: { width: vpW, height: vpH, virtualDistanceFt },
+    presentationMode: effectivePresentationMode,
+    requestedPresentationMode: presentationMode,
+    fallbackReason,
+    cardAspectRatio,
+    vignetteTrimScale,
+    cardFrameStyle,
+    viewport: {
+      width: vpW,
+      height: vpH,
+      virtualDistanceFt,
+      encounterDistanceBand: distanceBand.key,
+      encounterDistanceStage: distanceBand.stage
+    },
+    sceneCalibration,
     visibleHeightPx,
     visibleWidthPx,
     containerHeightPx,
     containerWidthPx,
-    aspectRatio: +(visibleWidthPx / Math.max(1, visibleHeightPx)).toFixed(3),
+    aspectRatio: effectiveAspectRatio,
     contentBounds: bounds,
     transparencyCompensation: {
       contentWidthRatio: cWRatio,
@@ -7491,9 +9313,15 @@ function computeAdaptiveMonsterVisualScale(monsterOrKey, options = {}) {
       groundingMode: bodyProf.groundingMode,
       isAirborne,
       footContactY,
+      groundContactY,
       verticalOffsetPx,
       airborneLiftPx,
-      airborneGapPx
+      airborneHoverAltitudePx,
+      airborneGapPx,
+      groundSinkPx: isAirborne ? 0 : baseGroundedSinkPx,
+      perspectiveHorizonShiftPx,
+      footAnchorRatio,
+      contactMode: isAirborne ? 'NONE' : bodyProf.contactMode
     },
     shadow: {
       shadowWidthPx,
@@ -7502,16 +9330,37 @@ function computeAdaptiveMonsterVisualScale(monsterOrKey, options = {}) {
       shadowBlurPx,
       shadowOpacity,
       ambientPatch,
-      contactPatches
+      contactPatches,
+      contactPatchGeometry
     },
     clamping: {
       wasClamped,
       clampRatio: +clampRatio.toFixed(3),
+      heightClampEngaged,
+      widthClampEngaged,
+      minFloorEngaged,
       rawVisibleHeightPx,
       rawVisibleWidthPx,
+      kneeSafeHeightPx,
       maxSafeHeightPx,
       maxSafeWidthPx,
-      minSafeHeightPx
+      minSafeHeightPx,
+      effectiveMinHeightPx,
+      isWideSilhouette,
+      targetAspectRatio: bodyProf.aspectRatio,
+      effectiveAspectRatio,
+      aspectRatioDrift,
+      horizontalClearancePx,
+      crownClearancePx,
+      footAboveBottomDeckPx
+    },
+    cutoutAssetContract: {
+      ...CUTOUT_ASSET_CONTRACT,
+      hasVerifiedCutout,
+      cutoutImagePath: entry.cutoutImagePath || null,
+      footAnchorRatio,
+      activePresentationMode: effectivePresentationMode,
+      fallbackReason
     },
     legacyComparison: {
       legacyBoxPx,
@@ -7521,6 +9370,608 @@ function computeAdaptiveMonsterVisualScale(monsterOrKey, options = {}) {
     },
     verificationStatus: entry.verificationStatus,
     manualOverrideFlag: entry.manualOverrideFlag || null
+  };
+}
+
+/**
+ * Focus Area 3 — Transition from Distant Encounters to Melee Range
+ * Computes coordinated distant sighting scale (18–20 ft), closing scale (16 ft),
+ * and melee engagement scale (12 ft) along with GPU-friendly CSS transition parameters.
+ */
+function computeEncounterDistanceTransition(monsterOrKey, options = {}) {
+  const entry = lookupMonsterSizeEntry(monsterOrKey);
+  const fromDistanceFt = clamp(Number(options.fromDistanceFt || options.distantFt || 20), 14, 30);
+  const toDistanceFt = clamp(Number(options.toDistanceFt || options.meleeFt || 12), 6, 16);
+  const closingDistanceFt = +(fromDistanceFt * 0.5 + toDistanceFt * 0.5).toFixed(1);
+
+  const distantScale = computeAdaptiveMonsterVisualScale(entry, {
+    ...options,
+    virtualDistanceFt: fromDistanceFt,
+    encounterDistanceStage: 'DISTANT'
+  });
+  const closingScale = computeAdaptiveMonsterVisualScale(entry, {
+    ...options,
+    virtualDistanceFt: closingDistanceFt,
+    encounterDistanceStage: 'CLOSING'
+  });
+  const meleeScale = computeAdaptiveMonsterVisualScale(entry, {
+    ...options,
+    virtualDistanceFt: toDistanceFt,
+    encounterDistanceStage: 'MELEE'
+  });
+
+  const scaleRatio = +(distantScale.visibleHeightPx / Math.max(1, meleeScale.visibleHeightPx)).toFixed(3);
+  const widthScaleRatio = +(distantScale.visibleWidthPx / Math.max(1, meleeScale.visibleWidthPx)).toFixed(3);
+  const growthMultiplier = +(meleeScale.visibleHeightPx / Math.max(1, distantScale.visibleHeightPx)).toFixed(3);
+
+  const translateYDeltaPx = Math.round(
+    (distantScale.positioning.perspectiveHorizonShiftPx || 0) -
+    (meleeScale.positioning.perspectiveHorizonShiftPx || 0)
+  );
+  const groundContactYDeltaPct = +(
+    distantScale.positioning.groundContactY - meleeScale.positioning.groundContactY
+  ).toFixed(2);
+
+  const sizeOrder = meleeScale.pfSizeOrder || 5;
+  const defaultDurationMs = meleeScale.positioning.isAirborne
+    ? 390
+    : (sizeOrder >= 6 ? 520 : (sizeOrder <= 3 ? 360 : 440));
+  const durationMs = clamp(Number(options.durationMs || defaultDurationMs), 180, 1200);
+  const easing = options.easing || 'cubic-bezier(0.22, 1, 0.36, 1)';
+
+  return {
+    monsterId: entry.id,
+    monsterName: entry.name,
+    monsterSlug: entry.slug,
+    pfSizeCategory: meleeScale.pfSizeCategory,
+    visualBodyProfile: meleeScale.visualBodyProfile,
+    fromDistanceFt,
+    closingDistanceFt,
+    toDistanceFt,
+    distantScale,
+    closingScale,
+    meleeScale,
+    scaleRatio,
+    widthScaleRatio,
+    growthMultiplier,
+    translateYDeltaPx,
+    groundContactYDeltaPct,
+    shadowBlurDeltaPx: distantScale.shadow.shadowBlurPx - meleeScale.shadow.shadowBlurPx,
+    shadowOpacityDelta: +(meleeScale.shadow.shadowOpacity - distantScale.shadow.shadowOpacity).toFixed(2),
+    durationMs,
+    easing,
+    cssTransition: `transform ${durationMs}ms ${easing}, filter ${durationMs}ms ease-out, opacity ${Math.round(durationMs * 0.6)}ms ease-out`,
+    cssVars: {
+      '--approach-start-scale': String(scaleRatio),
+      '--approach-start-y': `${translateYDeltaPx}px`,
+      '--approach-duration': `${durationMs}ms`,
+      '--approach-easing': easing,
+      '--monster-vis-w': `${meleeScale.visibleWidthPx}px`,
+      '--monster-vis-h': `${meleeScale.visibleHeightPx}px`
+    }
+  };
+}
+
+/**
+ * Focus Area 8 — Multi-Monster Scene Layout Engine (1 to 4 Creatures)
+ * Computes depth-staggered horizontal/vertical slots (`slotXPercent`, `slotDepthFt`, `zIndex`, `individualScale`)
+ * that prevent silhouette overlap and respect viewport margins across solo, pair, pack (3), and swarm (4) encounters.
+ */
+function computeMultiMonsterSceneLayout(monsters = [], options = {}) {
+  const rawList = Array.isArray(monsters) ? monsters : (monsters ? [monsters] : []);
+  const vpW = clamp(Number(options.viewportWidth || 1920), 640, 3840);
+  const vpH = clamp(Number(options.viewportHeight || 1080), 480, 2160);
+  const baseDistanceFt = resolveEncounterDistanceFt(options);
+  const sceneCalibration = resolveScenePerspectiveCalibration(options);
+
+  const marginRatio = clamp(
+    Number(options.horizontalMarginRatio !== undefined ? options.horizontalMarginRatio : sceneCalibration.horizontalMarginRatio),
+    0.05,
+    0.20
+  );
+  const minStageLeftPx = Math.round(vpW * marginRatio);
+  const maxStageRightPx = Math.round(vpW * (1 - marginRatio));
+  const availStageWidthPx = Math.max(240, maxStageRightPx - minStageLeftPx);
+
+  if (rawList.length === 0) {
+    return {
+      monsterCount: 0,
+      truncatedFromCount: 0,
+      formation: 'EMPTY',
+      viewport: { width: vpW, height: vpH },
+      sceneCalibration,
+      groupFitScale: 1,
+      hasSilhouetteOverlap: false,
+      maxPairwiseOverlapPx: 0,
+      withinViewportMargins: true,
+      minStageLeftPx,
+      maxStageRightPx,
+      totalOccupiedWidthPx: 0,
+      slots: [],
+      backToFrontSlots: []
+    };
+  }
+
+  const cappedList = rawList.slice(0, 4);
+  const count = cappedList.length;
+
+  // Depth-staggered formation templates by count (1 to 4 creatures)
+  const formationTemplates = {
+    1: {
+      name: 'SOLO_CENTER',
+      slots: [
+        { role: 'PRIMARY', baseAnchorXRatio: 0.50, depthOffsetFt: 0.0, zIndex: 20 }
+      ]
+    },
+    2: {
+      name: 'STAGGERED_PAIR',
+      slots: [
+        { role: 'VANGUARD_LEFT',  baseAnchorXRatio: 0.35, depthOffsetFt: 0.0, zIndex: 22 },
+        { role: 'FLANK_RIGHT',    baseAnchorXRatio: 0.65, depthOffsetFt: 2.5, zIndex: 18 }
+      ]
+    },
+    3: {
+      name: 'PACK_WEDGE_3',
+      slots: [
+        { role: 'FLANK_LEFT',     baseAnchorXRatio: 0.24, depthOffsetFt: 2.5, zIndex: 18 },
+        { role: 'VANGUARD_CENTER',baseAnchorXRatio: 0.50, depthOffsetFt: 0.0, zIndex: 24 },
+        { role: 'FLANK_RIGHT',    baseAnchorXRatio: 0.76, depthOffsetFt: 3.5, zIndex: 16 }
+      ]
+    },
+    4: {
+      name: 'STAGGERED_PACK_4',
+      slots: [
+        { role: 'OUTER_LEFT',     baseAnchorXRatio: 0.18, depthOffsetFt: 3.5, zIndex: 15 },
+        { role: 'VANGUARD_LEFT',  baseAnchorXRatio: 0.39, depthOffsetFt: 0.0, zIndex: 24 },
+        { role: 'VANGUARD_RIGHT', baseAnchorXRatio: 0.61, depthOffsetFt: 1.8, zIndex: 20 },
+        { role: 'OUTER_RIGHT',    baseAnchorXRatio: 0.82, depthOffsetFt: 4.2, zIndex: 14 }
+      ]
+    }
+  };
+
+  const template = formationTemplates[count] || formationTemplates[4];
+
+  // 1. Compute each creature's individual scale at its staggered slot depth
+  const draftSlots = cappedList.map((m, idx) => {
+    const tpl = template.slots[idx];
+    const slotDepthFt = clamp(+(baseDistanceFt + tpl.depthOffsetFt).toFixed(1), 6, 30);
+    const entry = lookupMonsterSizeEntry(m);
+    const individualScale = computeAdaptiveMonsterVisualScale(entry, {
+      ...options,
+      viewportWidth: vpW,
+      viewportHeight: vpH,
+      virtualDistanceFt: slotDepthFt
+    });
+    return {
+      slotIndex: idx,
+      role: tpl.role,
+      baseAnchorXRatio: tpl.baseAnchorXRatio,
+      slotDepthFt,
+      zIndex: tpl.zIndex,
+      entry,
+      individualScale,
+      rawSlotWidthPx: individualScale.visibleWidthPx,
+      rawSlotHeightPx: individualScale.visibleHeightPx,
+      targetAspectRatio: individualScale.aspectRatio
+    };
+  });
+
+  // 2. Compute minimum inter-silhouette gap and uniform group fit factor so silhouettes NEVER overlap
+  // and NEVER overflow [minStageLeftPx, maxStageRightPx]
+  const minGapPx = count <= 1 ? 0 : Math.max(14, Math.round(vpW * 0.016));
+  const totalRawWidthsPx = draftSlots.reduce((acc, s) => acc + s.rawSlotWidthPx, 0);
+  const requiredMinSpanPx = totalRawWidthsPx + Math.max(0, count - 1) * minGapPx;
+
+  const groupFitScale = requiredMinSpanPx > availStageWidthPx
+    ? +clamp((availStageWidthPx - Math.max(0, count - 1) * minGapPx) / Math.max(1, totalRawWidthsPx), 0.35, 1.0).toFixed(3)
+    : 1.0;
+
+  // Apply uniform groupFitScale while strictly preserving each creature's aspect ratio & relative size ordering
+  for (const s of draftSlots) {
+    if (groupFitScale < 0.999) {
+      const scaledH = Math.max(24, Math.round(s.rawSlotHeightPx * groupFitScale));
+      const scaledW = Math.max(24, Math.round(scaledH * (s.individualScale.clamping.targetAspectRatio || s.targetAspectRatio)));
+      s.visibleHeightPx = scaledH;
+      s.visibleWidthPx = scaledW;
+    } else {
+      s.visibleHeightPx = s.rawSlotHeightPx;
+      s.visibleWidthPx = s.rawSlotWidthPx;
+    }
+  }
+
+  // 3. Position slots horizontally across [minStageLeftPx, maxStageRightPx] with guaranteed >= minGapPx separation
+  const totalScaledWidthsPx = draftSlots.reduce((acc, s) => acc + s.visibleWidthPx, 0);
+  const totalMinGapsPx = Math.max(0, count - 1) * minGapPx;
+  const slackPx = Math.max(0, availStageWidthPx - totalScaledWidthsPx - totalMinGapsPx);
+
+  if (count === 1) {
+    const s = draftSlots[0];
+    const centerPx = Math.round((sceneCalibration.stageCenterX / 100) * vpW);
+    const halfW = Math.round(s.visibleWidthPx / 2);
+    const clampedCenterPx = clamp(centerPx, minStageLeftPx + halfW, maxStageRightPx - halfW);
+    s.slotCenterXPx = clampedCenterPx;
+    s.leftEdgePx = clampedCenterPx - halfW;
+    s.rightEdgePx = s.leftEdgePx + s.visibleWidthPx;
+    s.slotXPercent = +((clampedCenterPx / vpW) * 100).toFixed(2);
+  } else {
+    // Distribute slack proportionally around the formation's inner and outer padding
+    const outerPadPx = Math.round(slackPx * 0.18);
+    const innerSlackPx = Math.max(0, slackPx - outerPadPx * 2);
+    const extraGapPerPairPx = Math.floor(innerSlackPx / (count - 1));
+    const effectiveGapPx = minGapPx + extraGapPerPairPx;
+
+    const totalClusterWidthPx = totalScaledWidthsPx + (count - 1) * effectiveGapPx;
+    let cursorLeftPx = minStageLeftPx + Math.max(0, Math.floor((availStageWidthPx - totalClusterWidthPx) / 2));
+
+    for (let i = 0; i < count; i++) {
+      const s = draftSlots[i];
+      s.leftEdgePx = cursorLeftPx;
+      s.rightEdgePx = cursorLeftPx + s.visibleWidthPx;
+      s.slotCenterXPx = Math.round(s.leftEdgePx + s.visibleWidthPx / 2);
+      s.slotXPercent = +((s.slotCenterXPx / vpW) * 100).toFixed(2);
+      cursorLeftPx = s.rightEdgePx + effectiveGapPx;
+    }
+  }
+
+  // 4. Verify pairwise overlap & viewport margin compliance
+  let maxPairwiseOverlapPx = 0;
+  for (let i = 0; i < count; i++) {
+    for (let j = i + 1; j < count; j++) {
+      const overlap = Math.max(
+        0,
+        Math.min(draftSlots[i].rightEdgePx, draftSlots[j].rightEdgePx) -
+        Math.max(draftSlots[i].leftEdgePx, draftSlots[j].leftEdgePx)
+      );
+      if (overlap > maxPairwiseOverlapPx) maxPairwiseOverlapPx = overlap;
+    }
+  }
+  const hasSilhouetteOverlap = maxPairwiseOverlapPx > 0;
+  const withinViewportMargins = draftSlots.every(
+    s => s.leftEdgePx >= minStageLeftPx - 1 && s.rightEdgePx <= maxStageRightPx + 1
+  );
+
+  const finalSlots = draftSlots.map(s => {
+    const updatedIndividualScale = {
+      ...s.individualScale,
+      visibleWidthPx: s.visibleWidthPx,
+      visibleHeightPx: s.visibleHeightPx,
+      containerWidthPx: s.visibleWidthPx,
+      containerHeightPx: s.visibleHeightPx,
+      aspectRatio: +(s.visibleWidthPx / Math.max(1, s.visibleHeightPx)).toFixed(3),
+      multiMonsterSlot: {
+        slotIndex: s.slotIndex,
+        role: s.role,
+        slotXPercent: s.slotXPercent,
+        slotCenterXPx: s.slotCenterXPx,
+        leftEdgePx: s.leftEdgePx,
+        rightEdgePx: s.rightEdgePx,
+        slotDepthFt: s.slotDepthFt,
+        zIndex: s.zIndex,
+        groupFitScale
+      }
+    };
+
+    return {
+      slotIndex: s.slotIndex,
+      role: s.role,
+      monsterId: s.entry.id,
+      monsterSlug: s.entry.slug,
+      monsterName: s.entry.name,
+      pfSizeCategory: s.individualScale.pfSizeCategory,
+      pfSizeOrder: s.individualScale.pfSizeOrder,
+      visualBodyProfile: s.individualScale.visualBodyProfile,
+      slotXPercent: s.slotXPercent,
+      slotCenterXPx: s.slotCenterXPx,
+      leftEdgePx: s.leftEdgePx,
+      rightEdgePx: s.rightEdgePx,
+      slotDepthFt: s.slotDepthFt,
+      groundContactY: s.individualScale.positioning.groundContactY,
+      zIndex: s.zIndex,
+      visibleWidthPx: s.visibleWidthPx,
+      visibleHeightPx: s.visibleHeightPx,
+      aspectRatio: updatedIndividualScale.aspectRatio,
+      groupFitScale,
+      individualScale: updatedIndividualScale
+    };
+  });
+
+  const backToFrontSlots = [...finalSlots].sort((a, b) => {
+    if (b.slotDepthFt !== a.slotDepthFt) return b.slotDepthFt - a.slotDepthFt;
+    return a.zIndex - b.zIndex;
+  });
+
+  const totalOccupiedWidthPx = count > 0
+    ? (finalSlots[count - 1].rightEdgePx - finalSlots[0].leftEdgePx)
+    : 0;
+
+  return {
+    monsterCount: count,
+    truncatedFromCount: rawList.length > 4 ? rawList.length : 0,
+    formation: options.formation || template.name,
+    viewport: { width: vpW, height: vpH },
+    sceneCalibration,
+    groupFitScale,
+    minGapPx,
+    hasSilhouetteOverlap,
+    maxPairwiseOverlapPx,
+    withinViewportMargins,
+    minStageLeftPx,
+    maxStageRightPx,
+    totalOccupiedWidthPx,
+    slots: finalSlots,
+    backToFrontSlots
+  };
+}
+
+/**
+ * Focus Area 10 — Validate & Dynamically Register Cutout Asset Metadata (Tracks 4 & 5 Contract)
+ */
+function validateCutoutAssetMetadata(slug, cutoutMeta = {}) {
+  const errors = [];
+  const warnings = [];
+
+  const cleanSlug = String(slug || (cutoutMeta && cutoutMeta.slug) || '').trim().toLowerCase();
+  const entry = cleanSlug ? (BY_SLUG.get(cleanSlug) || BY_NAME.get(cleanSlug)) : null;
+  if (!entry) {
+    errors.push(`Unknown monster slug or name: "${slug}"`);
+  }
+
+  if (!cutoutMeta || typeof cutoutMeta !== 'object') {
+    errors.push('cutoutMeta must be a non-null object');
+    return {
+      valid: false,
+      slug: cleanSlug,
+      errors,
+      warnings,
+      normalizedMeta: null,
+      fallbackPresentation: 'CARD'
+    };
+  }
+
+  const metrics = cutoutMeta.validationMetrics || cutoutMeta;
+  const rawBounds =
+    cutoutMeta.cutoutBounds ||
+    cutoutMeta.cutoutContentBounds ||
+    cutoutMeta.contentBounds ||
+    (metrics && metrics.contentBounds) ||
+    null;
+
+  if (!rawBounds || typeof rawBounds !== 'object') {
+    errors.push('Missing measured cutoutBounds / contentBounds object');
+  } else {
+    const cW = Number(rawBounds.contentWidthRatio);
+    const cH = Number(rawBounds.contentHeightRatio);
+    const topP = Number(rawBounds.topPadRatio !== undefined ? rawBounds.topPadRatio : 0.02);
+    const botP = Number(rawBounds.bottomPadRatio !== undefined ? rawBounds.bottomPadRatio : 0.02);
+    const leftP = Number(rawBounds.leftPadRatio !== undefined ? rawBounds.leftPadRatio : 0.02);
+    const rightP = Number(rawBounds.rightPadRatio !== undefined ? rawBounds.rightPadRatio : 0.02);
+
+    if (Number.isNaN(cW) || cW < CUTOUT_ASSET_CONTRACT.minContentWidthRatio || cW > CUTOUT_ASSET_CONTRACT.maxContentWidthRatio) {
+      errors.push(`contentWidthRatio (${cW}) out of contract bounds [${CUTOUT_ASSET_CONTRACT.minContentWidthRatio}, ${CUTOUT_ASSET_CONTRACT.maxContentWidthRatio}]`);
+    }
+    if (Number.isNaN(cH) || cH < CUTOUT_ASSET_CONTRACT.minContentHeightRatio || cH > CUTOUT_ASSET_CONTRACT.maxContentHeightRatio) {
+      errors.push(`contentHeightRatio (${cH}) out of contract bounds [${CUTOUT_ASSET_CONTRACT.minContentHeightRatio}, ${CUTOUT_ASSET_CONTRACT.maxContentHeightRatio}]`);
+    }
+    if (topP < 0 || botP < 0 || leftP < 0 || rightP < 0 ||
+        topP > CUTOUT_ASSET_CONTRACT.maxPadRatio || botP > CUTOUT_ASSET_CONTRACT.maxPadRatio) {
+      errors.push(`Padding ratios out of safe range [0, ${CUTOUT_ASSET_CONTRACT.maxPadRatio}]`);
+    }
+  }
+
+  if (metrics.colorType !== undefined && Number(metrics.colorType) !== CUTOUT_ASSET_CONTRACT.requiredColorType) {
+    errors.push(`Invalid PNG colorType (${metrics.colorType}); expected RGBA colorType === ${CUTOUT_ASSET_CONTRACT.requiredColorType}`);
+  }
+  if (metrics.transparentPixelRatio !== undefined) {
+    const tpr = Number(metrics.transparentPixelRatio);
+    if (Number.isNaN(tpr) || tpr < CUTOUT_ASSET_CONTRACT.minTransparentPixelRatio || tpr > CUTOUT_ASSET_CONTRACT.maxTransparentPixelRatio) {
+      errors.push(`transparentPixelRatio (${tpr}) outside valid RGBA range [${CUTOUT_ASSET_CONTRACT.minTransparentPixelRatio}, ${CUTOUT_ASSET_CONTRACT.maxTransparentPixelRatio}]`);
+    }
+  }
+  if (metrics.edgeTouchRatio !== undefined) {
+    const etr = Number(metrics.edgeTouchRatio);
+    if (Number.isNaN(etr) || etr > CUTOUT_ASSET_CONTRACT.maxEdgeTouchRatio) {
+      errors.push(`edgeTouchRatio (${etr}) exceeds maximum non-cropped border threshold (${CUTOUT_ASSET_CONTRACT.maxEdgeTouchRatio})`);
+    }
+  }
+
+  const targetSlug = entry ? entry.slug : cleanSlug;
+  const rawPath = String(
+    cutoutMeta.cutoutImageUrl ||
+    cutoutMeta.cutoutImagePath ||
+    cutoutMeta.cutoutPath ||
+    `/lab-assets/images/monsters-cutout/${targetSlug}.png`
+  ).trim();
+
+  let normalizedImagePath = rawPath;
+  if (rawPath.startsWith('action-ui-lab/public/images/monsters-cutout/')) {
+    normalizedImagePath = '/lab-assets/images/monsters-cutout/' + rawPath.split('/').pop();
+  } else if (rawPath.startsWith('public/images/monsters-cutout/')) {
+    normalizedImagePath = '/lab-assets/images/monsters-cutout/' + rawPath.split('/').pop();
+  } else if (!rawPath.startsWith('/lab-assets/images/monsters-cutout/')) {
+    warnings.push(`Normalizing non-standard cutout path "${rawPath}" to /lab-assets/images/monsters-cutout/`);
+    normalizedImagePath = `/lab-assets/images/monsters-cutout/${targetSlug}.png`;
+  }
+
+  if (!normalizedImagePath.endsWith('.png')) {
+    errors.push(`Cutout asset path "${normalizedImagePath}" must be a .png file`);
+  }
+
+  const valid = errors.length === 0 && cutoutMeta.hasVerifiedCutout !== false && cutoutMeta.status !== 'CARD_FALLBACK_RETAINED';
+
+  let normalizedMeta = null;
+  if (rawBounds && entry) {
+    const bW = Number(rawBounds.width || 1024);
+    const bH = Number(rawBounds.height || 1024);
+    const cWRatio = +clamp(Number(rawBounds.contentWidthRatio || 0.94), 0.22, 0.998).toFixed(3);
+    const cHRatio = +clamp(Number(rawBounds.contentHeightRatio || 0.94), 0.22, 0.998).toFixed(3);
+    const topPad = +clamp(Number(rawBounds.topPadRatio !== undefined ? rawBounds.topPadRatio : (1 - cHRatio) / 2), 0, 0.45).toFixed(3);
+    const botPad = +clamp(Number(rawBounds.bottomPadRatio !== undefined ? rawBounds.bottomPadRatio : (1 - cHRatio) / 2), 0, 0.45).toFixed(3);
+    const leftPad = +clamp(Number(rawBounds.leftPadRatio !== undefined ? rawBounds.leftPadRatio : (1 - cWRatio) / 2), 0, 0.45).toFixed(3);
+    const rightPad = +clamp(Number(rawBounds.rightPadRatio !== undefined ? rawBounds.rightPadRatio : (1 - cWRatio) / 2), 0, 0.45).toFixed(3);
+
+    const bodyProf = VISUAL_BODY_PROFILES[entry.visualBodyProfile] || VISUAL_BODY_PROFILES.BIPED_MEDIUM;
+    const sizeCat = PF1E_SIZE_CATEGORIES[entry.pfSizeCategory] || PF1E_SIZE_CATEGORIES.MEDIUM;
+    const isAirborne = Boolean(entry.isAirborne || bodyProf.groundingMode.startsWith('AIRBORNE') || entry.visualBodyProfile === 'FLOATING_ORB');
+
+    normalizedMeta = {
+      slug: entry.slug,
+      cutoutImagePath: normalizedImagePath,
+      cutoutContentBounds: {
+        width: bW,
+        height: bH,
+        minX: Number(rawBounds.minX !== undefined ? rawBounds.minX : Math.round(bW * leftPad)),
+        minY: Number(rawBounds.minY !== undefined ? rawBounds.minY : Math.round(bH * topPad)),
+        maxX: Number(rawBounds.maxX !== undefined ? rawBounds.maxX : Math.round(bW * (1 - rightPad))),
+        maxY: Number(rawBounds.maxY !== undefined ? rawBounds.maxY : Math.round(bH * (1 - botPad))),
+        contentWidthRatio: cWRatio,
+        contentHeightRatio: cHRatio,
+        topPadRatio: topPad,
+        bottomPadRatio: botPad,
+        leftPadRatio: leftPad,
+        rightPadRatio: rightPad
+      },
+      footAnchorRatio: isAirborne
+        ? CUTOUT_ASSET_CONTRACT.defaultAirborneAnchorRatio
+        : +clamp(1 - botPad, 0.84, 0.995).toFixed(3),
+      contactPatches: Array.isArray(cutoutMeta.contactPatches)
+        ? cutoutMeta.contactPatches
+        : (isAirborne ? [] : buildContactPatchesForMode(bodyProf.contactMode, sizeCat.shadowScaleMult)),
+      ambientPatch: cutoutMeta.ambientPatch || {
+        leftPct: 50,
+        topPct: isAirborne ? 114 : 94,
+        widthPct: clamp(bodyProf.shadowWidthPct, 36, 98),
+        heightPct: isAirborne ? 11 : 14,
+        rotateDeg: 0,
+        blurPx: Math.round(bodyProf.shadowBlurPx * (isAirborne ? 1.25 : 1.0)),
+        opacity: +(bodyProf.shadowOpacity * 0.68).toFixed(2)
+      }
+    };
+  }
+
+  return {
+    valid,
+    slug: targetSlug,
+    errors,
+    warnings,
+    normalizedMeta,
+    fallbackPresentation: valid ? 'INTEGRATED' : 'CARD'
+  };
+}
+
+function registerVerifiedCutoutMetadata(slug, cutoutMeta = {}) {
+  const validation = validateCutoutAssetMetadata(slug, cutoutMeta);
+  const cleanSlug = validation.slug;
+  const entry = cleanSlug ? (BY_SLUG.get(cleanSlug) || BY_NAME.get(cleanSlug)) : null;
+
+  if (!entry || !validation.valid || !validation.normalizedMeta) {
+    return {
+      ok: false,
+      registered: false,
+      slug: cleanSlug,
+      validation,
+      entry: entry || null,
+      fallbackPresentation: 'CARD'
+    };
+  }
+
+  const norm = validation.normalizedMeta;
+  entry.hasCutout = true;
+  entry.cutoutImagePath = norm.cutoutImagePath;
+  entry.cutoutContentBounds = { ...norm.cutoutContentBounds };
+  entry.imageContentBounds = { ...norm.cutoutContentBounds };
+  if (Array.isArray(cutoutMeta.contactPatches)) {
+    entry.customContactPatches = cutoutMeta.contactPatches;
+  }
+
+  const adaptiveScale = computeAdaptiveMonsterVisualScale(entry, {
+    viewportWidth: 1920,
+    viewportHeight: 1080,
+    presentationMode: 'INTEGRATED'
+  });
+
+  const registeredProfile = {
+    slug: entry.slug,
+    hasIntegratedCutout: true,
+    cutoutImageUrl: norm.cutoutImagePath,
+    sizeCategory: entry.pfSizeCategory,
+    groundingMode: adaptiveScale.positioning.groundingMode,
+    scaleMultiplier: entry.proposedScaleFactor,
+    verticalOffsetPx: adaptiveScale.positioning.verticalOffsetPx,
+    airborneGapPx: adaptiveScale.positioning.airborneGapPx,
+    shadowWidthPct: adaptiveScale.shadow.shadowWidthPct,
+    shadowBlurPx: adaptiveScale.shadow.shadowBlurPx,
+    shadowOpacity: adaptiveScale.shadow.shadowOpacity,
+    ambientPatch: norm.ambientPatch,
+    contactPatches: norm.contactPatches,
+    footAnchorRatio: norm.footAnchorRatio
+  };
+  entry.registeredCutoutProfile = registeredProfile;
+
+  return {
+    ok: true,
+    registered: true,
+    slug: entry.slug,
+    validation,
+    entry,
+    integratedProfile: registeredProfile,
+    adaptiveScale,
+    fallbackPresentation: 'INTEGRATED'
+  };
+}
+
+function resetCutoutMetadataToBaseline(slug = null) {
+  const targets = slug
+    ? [lookupMonsterSizeEntry(slug)]
+    : [...MONSTER_SIZE_CATALOG, ...PF1E_SIZE_REFERENCE_SPECIMENS];
+
+  let restoredCount = 0;
+  for (const item of targets) {
+    if (!item || !item.slug) continue;
+    const snap = BASELINE_CUTOUT_SNAPSHOTS.get(item.slug);
+    if (!snap) continue;
+    item.hasCutout = snap.hasCutout;
+    item.cutoutImagePath = snap.cutoutImagePath;
+    item.cutoutContentBounds = snap.cutoutContentBounds ? { ...snap.cutoutContentBounds } : null;
+    item.imageContentBounds = snap.imageContentBounds ? { ...snap.imageContentBounds } : null;
+    delete item.customContactPatches;
+    delete item.registeredCutoutProfile;
+    restoredCount++;
+  }
+  return { ok: true, restoredCount };
+}
+
+function ingestArtworkInventoryManifest(manifest) {
+  const items = Array.isArray(manifest)
+    ? manifest
+    : (manifest && Array.isArray(manifest.monsters) ? manifest.monsters : []);
+  let registeredCount = 0;
+  let fallbackCount = 0;
+  const results = [];
+
+  for (const item of items) {
+    if (!item || !item.slug) continue;
+    if (item.hasVerifiedCutout && item.status !== 'CARD_FALLBACK_RETAINED') {
+      const res = registerVerifiedCutoutMetadata(item.slug, item);
+      if (res.registered) registeredCount++;
+      else fallbackCount++;
+      results.push(res);
+    } else {
+      fallbackCount++;
+      results.push({
+        ok: true,
+        registered: false,
+        slug: item.slug,
+        fallbackPresentation: 'CARD'
+      });
+    }
+  }
+
+  return {
+    ok: true,
+    totalProcessed: results.length,
+    registeredCount,
+    fallbackCount,
+    results
   };
 }
 
@@ -7615,11 +10066,13 @@ function getCatalogAuditSummary() {
   const countsByProfile = {};
   const manualOverrideMonsters = [];
   const uncertainOrSpecialMonsters = [];
+  let verifiedCutoutCount = 0;
 
   for (const m of MONSTER_SIZE_CATALOG) {
     countsByPfSize[m.pfSizeCategory] = (countsByPfSize[m.pfSizeCategory] || 0) + 1;
     countsByStatus[m.verificationStatus] = (countsByStatus[m.verificationStatus] || 0) + 1;
     countsByProfile[m.visualBodyProfile] = (countsByProfile[m.visualBodyProfile] || 0) + 1;
+    if (m.hasCutout) verifiedCutoutCount++;
     if (m.manualOverrideFlag) {
       manualOverrideMonsters.push({
         id: m.id,
@@ -7647,6 +10100,8 @@ function getCatalogAuditSummary() {
     coreMonstersCount: MONSTER_SIZE_CATALOG.filter(m => m.catalogBatch === 'CORE_68').length,
     expansionMonstersCount: MONSTER_SIZE_CATALOG.filter(m => m.catalogBatch === 'SEED_010_EXPANSION').length,
     supportedPfSizeCategoriesCount: Object.keys(PF1E_SIZE_CATEGORIES).length,
+    verifiedCutoutCount,
+    cardFallbackCount: MONSTER_SIZE_CATALOG.length - verifiedCutoutCount,
     countsByPfSize,
     countsByStatus,
     countsByProfile,
@@ -7655,15 +10110,254 @@ function getCatalogAuditSummary() {
   };
 }
 
+/**
+ * Phase C (Track 5) — Safe Render-Mode & Asset Resolver
+ * Resolves INTEGRATED vs CARD / BLEND / FRAMED mode for any monster, verifying
+ * RGBA cutout metadata and (in Node.js) on-disk asset presence, with automatic
+ * fallback to adaptive CARD mode if a cutout is absent, invalid, or fails to load.
+ */
+function resolveMonsterRenderMode(monsterOrKey, requestedMode = 'INTEGRATED', options = {}) {
+  const entry = lookupMonsterSizeEntry(monsterOrKey);
+  const rawMode = String(requestedMode || 'INTEGRATED').trim().toUpperCase();
+  const normalizedRequestedMode = ['INTEGRATED', 'CARD', 'BLEND', 'FRAMED'].includes(rawMode)
+    ? rawMode
+    : 'INTEGRATED';
+
+  const hasCatalogCutout = Boolean(entry && entry.hasCutout && entry.cutoutImagePath && entry.cutoutContentBounds);
+  let existsOnDisk = hasCatalogCutout;
+
+  if (options.cutoutExistsOnDisk !== undefined) {
+    existsOnDisk = Boolean(options.cutoutExistsOnDisk);
+  } else if (hasCatalogCutout && options.verifyDiskFile !== false && typeof require === 'function' && typeof window === 'undefined') {
+    try {
+      const fsMod = require('fs');
+      const pathMod = require('path');
+      const fileName = entry.cutoutImagePath.split('/').pop();
+      const diskPath = pathMod.join(__dirname, 'public', 'images', 'monsters-cutout', fileName);
+      existsOnDisk = fsMod.existsSync(diskPath);
+    } catch (_e) {
+      existsOnDisk = hasCatalogCutout;
+    }
+  }
+
+  const simulateLoadError = Boolean(options.simulateLoadError);
+  const hasVerifiedCutout = Boolean(hasCatalogCutout && existsOnDisk && !simulateLoadError);
+
+  let activeMode = normalizedRequestedMode;
+  let fallbackReason = null;
+
+  if (normalizedRequestedMode === 'INTEGRATED') {
+    if (!hasVerifiedCutout) {
+      activeMode = 'CARD';
+      if (simulateLoadError) {
+        fallbackReason = 'CLIENT_IMAGE_LOAD_ERROR';
+      } else if (hasCatalogCutout && !existsOnDisk) {
+        fallbackReason = 'CUTOUT_FILE_MISSING_ON_DISK';
+      } else if (entry && entry.hasCutout && !entry.cutoutContentBounds) {
+        fallbackReason = 'MISSING_CUTOUT_BOUNDS_METADATA';
+      } else {
+        fallbackReason = 'NO_VERIFIED_RGBA_CUTOUT';
+      }
+    }
+  } else if (normalizedRequestedMode === 'CARD') {
+    fallbackReason = 'EXPLICIT_CARD_MODE_REQUESTED';
+  }
+
+  const adaptiveScale = computeAdaptiveMonsterVisualScale(entry, {
+    ...options,
+    presentationMode: activeMode === 'INTEGRATED' ? 'INTEGRATED' : 'CARD'
+  });
+
+  const cardImageUrl = entry.imagePath || `/images/monsters/${entry.slug}.png`;
+  const cutoutImageUrl = hasVerifiedCutout ? entry.cutoutImagePath : null;
+  const activeImageUrl = (activeMode === 'INTEGRATED' && cutoutImageUrl) ? cutoutImageUrl : cardImageUrl;
+
+  return {
+    monsterId: entry.id,
+    monsterSlug: entry.slug,
+    monsterName: entry.name,
+    pfSizeCategory: adaptiveScale.pfSizeCategory,
+    pfSizeLabel: adaptiveScale.pfSizeLabel,
+    visualBodyProfile: entry.visualBodyProfile,
+    requestedMode: normalizedRequestedMode,
+    activeMode,
+    defaultMode: hasVerifiedCutout ? 'INTEGRATED' : 'CARD',
+    fallbackMode: 'CARD',
+    didFallbackToCard: normalizedRequestedMode === 'INTEGRATED' && activeMode === 'CARD',
+    fallbackReason,
+    hasVerifiedCutout,
+    existsOnDisk,
+    cutoutStatus: entry.cutoutStatus || (hasVerifiedCutout ? 'VERIFIED_RGBA_CUTOUT' : 'CARD_FALLBACK_RETAINED'),
+    cardImageUrl,
+    cutoutImageUrl,
+    activeImageUrl,
+    supportedModes: hasVerifiedCutout
+      ? ['INTEGRATED', 'CARD', 'BLEND', 'FRAMED']
+      : ['CARD', 'BLEND', 'FRAMED'],
+    contentBounds: adaptiveScale.contentBounds,
+    cardContentBounds: entry.cardContentBounds,
+    cutoutContentBounds: hasVerifiedCutout ? entry.cutoutContentBounds : null,
+    positioning: adaptiveScale.positioning,
+    shadow: adaptiveScale.shadow,
+    cardFrameStyle: adaptiveScale.cardFrameStyle,
+    adaptiveScale
+  };
+}
+
+/**
+ * Phase C (Track 5) — Monster Asset Manifest Builder & Accessor
+ * Returns the complete structured asset manifest for all 98 database monsters
+ * and 5 PF1e size reference specimens.
+ */
+function getMonsterAssetManifest(options = {}) {
+  const existing7 = new Set(['assassin_vine', 'wolf', 'troll', 'ghoul', 'giant_spider', 'manticore', 'skeletal_champion']);
+
+  const buildRecord = (m) => {
+    const modeInfo = resolveMonsterRenderMode(m, 'INTEGRATED', options);
+    const sc = modeInfo.adaptiveScale;
+    const cutoutStatus = m.cutoutStatus || (modeInfo.hasVerifiedCutout
+      ? (existing7.has(m.slug) ? 'EXISTING_APPROVED' : 'NEWLY_PRODUCED_VERIFIED')
+      : 'CARD_FALLBACK_RETAINED');
+
+    return {
+      id: m.id,
+      catalogOrder: m.catalogOrder || null,
+      catalogBatch: m.catalogBatch || (m.isReferenceSpecimen ? 'REFERENCE_SPECIMEN' : 'CORE_68'),
+      isReferenceSpecimen: Boolean(m.isReferenceSpecimen),
+      slug: m.slug,
+      name: m.name,
+      creatureType: m.creatureType,
+      challengeRating: m.challengeRating,
+      pfSizeCategory: m.pfSizeCategory,
+      pfSizeLabel: m.pfSizeLabel,
+      pfSizeOrder: m.pfSizeOrder,
+      pfSpaceFt: m.pfSpaceFt,
+      visualBodyProfile: m.visualBodyProfile,
+      visualBodyProfileLabel: m.visualBodyProfileLabel,
+      bodyProportions: m.bodyProportions,
+      proposedScaleFactor: m.proposedScaleFactor,
+      isAirborne: Boolean(sc.positioning.isAirborne),
+      groundingMode: sc.positioning.groundingMode,
+      contactMode: sc.positioning.contactMode,
+      verificationStatus: m.verificationStatus,
+      manualOverrideFlag: m.manualOverrideFlag || null,
+      sourceUrl: m.sourceUrl,
+      cardAsset: {
+        imagePath: m.imagePath,
+        labAssetPath: `/lab-assets${m.imagePath}`,
+        existsOnDisk: true,
+        cardContentBounds: m.cardContentBounds
+      },
+      cutoutAsset: {
+        hasVerifiedCutout: modeInfo.hasVerifiedCutout,
+        status: cutoutStatus,
+        cutoutImagePath: modeInfo.cutoutImageUrl,
+        diskRelativePath: modeInfo.cutoutImageUrl
+          ? `action-ui-lab/public/images/monsters-cutout/${m.slug}.png`
+          : null,
+        existsOnDisk: modeInfo.existsOnDisk,
+        cutoutContentBounds: modeInfo.cutoutContentBounds,
+        validationMetrics: m.cutoutValidationMetrics || null
+      },
+      renderContract: {
+        defaultMode: modeInfo.defaultMode,
+        activeMode: modeInfo.activeMode,
+        fallbackMode: 'CARD',
+        fallbackReason: modeInfo.fallbackReason,
+        supportedModes: modeInfo.supportedModes,
+        activeImageUrl: modeInfo.activeImageUrl,
+        footAnchorRatio: sc.positioning.footAnchorRatio,
+        cardAspectRatio: sc.cardAspectRatio,
+        vignetteTrimScale: sc.vignetteTrimScale
+      },
+      integratedProfile: {
+        hasIntegratedCutout: modeInfo.hasVerifiedCutout,
+        cutoutImageUrl: modeInfo.cutoutImageUrl,
+        sizeCategory: m.pfSizeCategory,
+        groundingMode: sc.positioning.groundingMode,
+        scaleMultiplier: m.proposedScaleFactor,
+        verticalOffsetPx: sc.positioning.verticalOffsetPx,
+        airborneGapPx: sc.positioning.airborneGapPx,
+        shadowWidthPct: sc.shadow.shadowWidthPct,
+        shadowBlurPx: sc.shadow.shadowBlurPx,
+        shadowOpacity: sc.shadow.shadowOpacity,
+        ambientPatch: sc.shadow.ambientPatch,
+        contactPatches: sc.shadow.contactPatches
+      }
+    };
+  };
+
+  const monsters = MONSTER_SIZE_CATALOG.map(buildRecord);
+  const referenceSpecimens = PF1E_SIZE_REFERENCE_SPECIMENS.map(buildRecord);
+
+  const verifiedCutoutSlugs = monsters.filter(m => m.cutoutAsset.hasVerifiedCutout).map(m => m.slug);
+  const cardFallbackSlugs = monsters.filter(m => !m.cutoutAsset.hasVerifiedCutout).map(m => m.slug);
+  const existingApprovedCount = monsters.filter(m => m.cutoutAsset.status === 'EXISTING_APPROVED').length;
+  const newlyProducedCount = monsters.filter(m => m.cutoutAsset.status === 'NEWLY_PRODUCED_VERIFIED').length;
+
+  const countsByPfSize = {};
+  const cutoutsByPfSize = {};
+  for (const key of Object.keys(PF1E_SIZE_CATEGORIES)) {
+    countsByPfSize[key] = 0;
+    cutoutsByPfSize[key] = 0;
+  }
+  for (const m of monsters) {
+    countsByPfSize[m.pfSizeCategory] = (countsByPfSize[m.pfSizeCategory] || 0) + 1;
+    if (m.cutoutAsset.hasVerifiedCutout) {
+      cutoutsByPfSize[m.pfSizeCategory] = (cutoutsByPfSize[m.pfSizeCategory] || 0) + 1;
+    }
+  }
+
+  return {
+    schemaVersion: '1.0.0',
+    generatedBy: 'Track 5 — Monster Data & Asset Integration Lead',
+    summary: {
+      totalDatabaseMonsters: monsters.length,
+      referenceSpecimensCount: referenceSpecimens.length,
+      totalSpecimens: monsters.length + referenceSpecimens.length,
+      verifiedCutoutCount: verifiedCutoutSlugs.length,
+      existingApprovedCutoutCount: existingApprovedCount,
+      newlyProducedCutoutCount: newlyProducedCount,
+      cardFallbackCount: cardFallbackSlugs.length,
+      cutoutCoveragePercent: +((verifiedCutoutSlugs.length / Math.max(1, monsters.length)) * 100).toFixed(1),
+      countsByPfSize,
+      cutoutsByPfSize,
+      countsByRenderMode: {
+        INTEGRATED: verifiedCutoutSlugs.length,
+        CARD: cardFallbackSlugs.length
+      },
+      verifiedCutoutSlugs,
+      cardFallbackSlugs
+    },
+    monsters,
+    referenceSpecimens
+  };
+}
+
 const MonsterSizeCatalogApi = {
   PF1E_SIZE_CATEGORIES,
   VISUAL_BODY_PROFILES,
   MONSTER_SIZE_CATALOG,
   PF1E_SIZE_REFERENCE_SPECIMENS,
+  CORRIDOR_DEPTH_TYPES,
+  SCENE_PERSPECTIVE_PROFILES,
+  ENCOUNTER_DISTANCE_BANDS,
+  CUTOUT_ASSET_CONTRACT,
   lookupMonsterSizeEntry,
+  resolveScenePerspectiveCalibration,
+  resolveEncounterDistanceFt,
+  classifyEncounterDistanceBand,
   computeAdaptiveMonsterVisualScale,
+  computeEncounterDistanceTransition,
+  computeMultiMonsterSceneLayout,
+  validateCutoutAssetMetadata,
+  registerVerifiedCutoutMetadata,
+  resetCutoutMetadataToBaseline,
+  ingestArtworkInventoryManifest,
   buildVisualComparisonPresets,
-  getCatalogAuditSummary
+  getCatalogAuditSummary,
+  resolveMonsterRenderMode,
+  getMonsterAssetManifest
 };
 
 if (typeof module !== 'undefined' && module.exports) {

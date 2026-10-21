@@ -14,6 +14,34 @@
  *  - Phase 9 (10.1–10.3): Gameplay Experiment Director controls & deterministic seed support.
  */
 
+const {
+  TRANSITION_CONTEXT_TYPES,
+  REVISIT_STATUS_TYPES,
+  WORLD_LANDMARKS,
+  NAMED_CORRIDORS,
+  getBoundTravelContinuityDb,
+  initTravelContinuityTables,
+  clearInMemoryTravelCache,
+  resolveBoundaryGuidance,
+  getBoundaryGuidance,
+  computeDirectionalCompassContext,
+  resolveBiomePersistence,
+  evaluateTransitionContinuity,
+  computeActiveObjectiveHint,
+  getOrCreateContinuityState,
+  resetTravelContinuityState,
+  recordTravelStep,
+  recordTravelRotation,
+  recordTravelCombatTransition,
+  saveTravelContextToDb,
+  restoreSavedTravelContext,
+  buildTravelContinuityPayload
+} = require('./travel-continuity');
+
+const {
+  getLatestSceneViewportContext
+} = require('./scene-catalog');
+
 const PRESENTATION_TIERS = {
   AMBIENT: {
     tier: 'AMBIENT',
@@ -590,8 +618,75 @@ const EXPEDITION_DEFINITIONS = {
   }
 };
 
-// In-memory store keyed by characterId (strictly isolated to action-ui-lab process)
+// In-memory store keyed by characterId (scoped per SQLite DB instance + fallback map)
 const adventureStateByCharId = new Map();
+const adventureStateByDb = new WeakMap();
+
+function getScopedAdventureMap(dbOverride = null) {
+  const db = dbOverride || getBoundTravelContinuityDb();
+  if (db && typeof db === 'object') {
+    if (!adventureStateByDb.has(db)) {
+      adventureStateByDb.set(db, new Map());
+    }
+    return adventureStateByDb.get(db);
+  }
+  return adventureStateByCharId;
+}
+
+function clearInMemoryAdventureCache(dbOverride = null) {
+  const db = dbOverride || getBoundTravelContinuityDb();
+  if (db && typeof db === 'object' && adventureStateByDb.has(db)) {
+    adventureStateByDb.get(db).clear();
+  }
+  adventureStateByCharId.clear();
+  clearInMemoryTravelCache(db);
+}
+
+function persistAdventureStateToDb(advState, dbOverride = null) {
+  if (!advState) return;
+  const db = dbOverride || getBoundTravelContinuityDb();
+  if (!db) return;
+  saveTravelContextToDb(db, advState.characterId || 'default', advState, null);
+}
+
+function loadAdventureStateFromDb(characterId, dbOverride = null) {
+  const db = dbOverride || getBoundTravelContinuityDb();
+  if (!db) return null;
+  try {
+    initTravelContinuityTables(db);
+    const key = String(characterId || 'default');
+    const row = db.prepare('SELECT state_json FROM lab_adventure_state WHERE character_id = ? LIMIT 1').get(key);
+    if (row && row.state_json) {
+      return JSON.parse(row.state_json);
+    }
+  } catch (_) {
+    // Ignore read errors
+  }
+  return null;
+}
+
+function inferMoveTypeFromStep(fromTile, toTile, facing = 'NORTH') {
+  if (!fromTile || !toTile) return 'FORWARD';
+  const dx = Number(toTile.x) - Number(fromTile.x);
+  const dy = Number(toTile.y) - Number(fromTile.y);
+  const dist = Math.abs(dx) + Math.abs(dy);
+  if (dist === 0) return 'ROTATE';
+  if (dist > 1) return 'TELEPORT';
+
+  const normFacing = String(facing || 'NORTH').toUpperCase();
+  const vecMap = {
+    NORTH: { fwd: [0, -1], back: [0, 1], left: [-1, 0], right: [1, 0] },
+    EAST:  { fwd: [1, 0],  back: [-1, 0], left: [0, -1], right: [0, 1] },
+    SOUTH: { fwd: [0, 1],  back: [0, -1], left: [1, 0],  right: [-1, 0] },
+    WEST:  { fwd: [-1, 0], back: [1, 0],  left: [0, 1],  right: [0, -1] }
+  }[normFacing] || { fwd: [0, -1], back: [0, 1], left: [-1, 0], right: [1, 0] };
+
+  if (dx === vecMap.fwd[0] && dy === vecMap.fwd[1]) return 'FORWARD';
+  if (dx === vecMap.back[0] && dy === vecMap.back[1]) return 'BACKWARD';
+  if (dx === vecMap.left[0] && dy === vecMap.left[1]) return 'STRAFE_LEFT';
+  if (dx === vecMap.right[0] && dy === vecMap.right[1]) return 'STRAFE_RIGHT';
+  return 'FORWARD';
+}
 
 function computeDeterministicRoll(seed, step, x, y, salt = 0) {
   let h = (Number(seed || 1337) ^ (step * 374761393) ^ (x * 668265263) ^ (y * 2147483647) ^ (salt * 1274126177)) >>> 0;
@@ -648,6 +743,17 @@ function createInitialAdventureState(characterId, options = {}) {
     stepCounter: 0,
     stepsSinceLastDiscovery: 2, // Allows first landmark discovery on route after leaving town
     stepsSinceLastTension: 1,
+    stepsSinceLastEncounter: 3,
+    quietStepsCount: 0,
+    consecutiveEventSteps: 0,
+    postCombatBreathingSteps: 0,
+    currentFacing: (expDef.startTile && expDef.startTile.facing) || 'NORTH',
+    lastResolvedFacing: (expDef.startTile && expDef.startTile.facing) || 'NORTH',
+    lastResolvedTileCoord: '7,7',
+    lastStepRecordedAtCoord: null,
+    lastKnownTile: { x: 7, y: 7, name: 'Oakhaven', terrain: 'CITY', feature: 'MARKETPLACE', is_safe: 1, is_passable: 1 },
+    preCombatContext: null,
+    activeEncounterCoord: null,
     recentTileHistory: ['7,7'],
     visitedTiles: ['7,7'],
     visitedRegions: ['Oakhaven Sanctuary'],
@@ -664,30 +770,58 @@ function createInitialAdventureState(characterId, options = {}) {
   };
 }
 
-function getOrCreateAdventureState(characterId, currentTile = null) {
+function getOrCreateAdventureState(characterId, currentTile = null, dbOverride = null) {
   const key = String(characterId || 'default');
-  if (!adventureStateByCharId.has(key)) {
-    adventureStateByCharId.set(key, createInitialAdventureState(key));
+  const scopedMap = getScopedAdventureMap(dbOverride);
+  if (!scopedMap.has(key)) {
+    const fromDb = loadAdventureStateFromDb(key, dbOverride);
+    if (fromDb) {
+      scopedMap.set(key, fromDb);
+    } else {
+      const created = createInitialAdventureState(key);
+      scopedMap.set(key, created);
+      persistAdventureStateToDb(created, dbOverride);
+    }
   }
-  const st = adventureStateByCharId.get(key);
+  const st = scopedMap.get(key);
   if (currentTile) {
     const coord = `${currentTile.x},${currentTile.y}`;
     if (!st.visitedTiles.includes(coord)) st.visitedTiles.push(coord);
     const region = resolveRegionLabel(currentTile);
     if (!st.visitedRegions.includes(region)) st.visitedRegions.push(region);
+    if (!st.lastKnownTile) {
+      st.lastKnownTile = {
+        x: currentTile.x,
+        y: currentTile.y,
+        name: currentTile.name,
+        terrain: currentTile.terrain,
+        feature: currentTile.feature || null,
+        is_safe: currentTile.is_safe !== undefined ? currentTile.is_safe : (currentTile.isSafe ? 1 : 0),
+        is_passable: currentTile.is_passable !== undefined ? currentTile.is_passable : 1
+      };
+    }
   }
   return st;
 }
 
 function resetAdventureState(characterId, options = {}) {
   const key = String(characterId || 'default');
-  const existing = adventureStateByCharId.get(key);
+  const scopedMap = getScopedAdventureMap(options.db);
+  const existing = scopedMap.get(key);
   const next = createInitialAdventureState(key, {
     enabled: options.enabled !== undefined ? options.enabled : (existing ? existing.enabled : true),
     expeditionKey: options.expeditionKey || (existing ? existing.expeditionKey : 'MIRKWOOD_EXPEDITION'),
     deterministicSeed: options.deterministicSeed !== undefined ? options.deterministicSeed : (existing ? existing.deterministicSeed : 4201)
   });
-  adventureStateByCharId.set(key, next);
+  scopedMap.set(key, next);
+  persistAdventureStateToDb(next, options.db);
+  const expDef = EXPEDITION_DEFINITIONS[next.expeditionKey] || EXPEDITION_DEFINITIONS.MIRKWOOD_EXPEDITION;
+  resetTravelContinuityState(
+    key,
+    { x: 7, y: 7, name: 'Oakhaven', terrain: 'CITY', feature: 'MARKETPLACE', is_safe: 1, is_passable: 1 },
+    (expDef.startTile && expDef.startTile.facing) || 'NORTH',
+    options.db
+  );
   return next;
 }
 
@@ -970,6 +1104,7 @@ function resolveTensionCue(advState, currentTile, encounterState, persistentAler
 
   // Tier 1: Ambient Tension (only when no discovery is currently active on this step, and after a quiet interval)
   if (advState.activeDiscovery) return null;
+  if (advState.postCombatBreathingSteps > 0) return null;
   if (advState.stepsSinceLastTension < 1) return null;
 
   const cx = Number(currentTile.x);
@@ -992,11 +1127,69 @@ function resolveTensionCue(advState, currentTile, encounterState, persistentAler
 /**
  * Processes a real movement step (`MOVE`) in Adventure Experience Mode.
  */
-function onPlayerStep(characterId, currentTile, encounterState, persistentAlert, adjacentPersistentCount = 0) {
-  const advState = getOrCreateAdventureState(characterId, currentTile);
+function onPlayerStep(characterId, currentTile, encounterState, persistentAlert, adjacentPersistentCount = 0, options = {}) {
+  const advState = getOrCreateAdventureState(characterId, currentTile, options.db);
   if (!currentTile) return advState;
 
   const coord = `${currentTile.x},${currentTile.y}`;
+  const prevTile = advState.lastKnownTile || currentTile;
+  const liveCtx = getLatestSceneViewportContext();
+  const prevFacing = advState.currentFacing || 'NORTH';
+  const nextFacing = String(options.facing || (liveCtx && liveCtx.facing) || prevFacing).toUpperCase();
+  const moveType = options.moveAction || inferMoveTypeFromStep(prevTile, currentTile, nextFacing);
+
+  // If stepping away from a tile that had an unresolved/bypassed Stage 1 encounter, mark it as fled/lingering threat
+  if (advState.activeEncounterCoord && advState.activeEncounterCoord !== coord) {
+    const lastEnc = advState.encountersFaced[advState.encountersFaced.length - 1];
+    if (lastEnc && lastEnc.outcome === 'ACTIVE') {
+      lastEnc.outcome = 'FLED';
+      recordTravelCombatTransition(
+        characterId,
+        'BYPASSED',
+        {
+          currentTile: { x: lastEnc.tileX, y: lastEnc.tileY, name: prevTile.name, terrain: prevTile.terrain },
+          facing: prevFacing,
+          monsterName: lastEnc.monsterName
+        },
+        options.db
+      );
+    }
+    advState.activeEncounterCoord = null;
+  }
+
+  if (options.encounterPacing) {
+    advState.lastEncounterPacing = options.encounterPacing;
+  }
+
+  recordTravelStep(
+    characterId,
+    {
+      fromTile: prevTile,
+      toTile: currentTile,
+      facing: nextFacing,
+      moveKind: moveType,
+      aheadTile: options.aheadTile !== undefined ? options.aheadTile : (liveCtx ? liveCtx.ahead1 : null),
+      leftTile: options.leftTile !== undefined ? options.leftTile : (liveCtx ? liveCtx.left1 : null),
+      rightTile: options.rightTile !== undefined ? options.rightTile : (liveCtx ? liveCtx.right1 : null),
+      behindTile: options.behindTile !== undefined ? options.behindTile : (liveCtx ? liveCtx.behind1 : null),
+      hasPersistentThreat: Boolean(persistentAlert)
+    },
+    options.db
+  );
+
+  advState.lastKnownTile = {
+    x: currentTile.x,
+    y: currentTile.y,
+    name: currentTile.name,
+    terrain: currentTile.terrain,
+    feature: currentTile.feature || null,
+    is_safe: currentTile.is_safe !== undefined ? currentTile.is_safe : (currentTile.isSafe ? 1 : 0),
+    is_passable: currentTile.is_passable !== undefined ? currentTile.is_passable : 1
+  };
+  advState.currentFacing = nextFacing;
+  advState.lastResolvedFacing = nextFacing;
+  advState.lastResolvedTileCoord = coord;
+  advState.lastStepRecordedAtCoord = coord;
   advState.lastChoiceResolution = null;
 
   // If previous tile had an unexamined discovery, mark it as gracefully passed/ignored (Section 11.2 #7)
@@ -1011,6 +1204,10 @@ function onPlayerStep(characterId, currentTile, encounterState, persistentAlert,
   advState.stepCounter += 1;
   advState.stepsSinceLastDiscovery += 1;
   advState.stepsSinceLastTension += 1;
+  advState.stepsSinceLastEncounter = Number(advState.stepsSinceLastEncounter || 0) + 1;
+  if (advState.postCombatBreathingSteps > 0) {
+    advState.postCombatBreathingSteps = Math.max(0, advState.postCombatBreathingSteps - 1);
+  }
 
   if (!advState.visitedTiles.includes(coord)) {
     advState.visitedTiles.push(coord);
@@ -1027,6 +1224,7 @@ function onPlayerStep(characterId, currentTile, encounterState, persistentAlert,
     advState.activeTensionCue = null;
     advState.recentTileHistory.push(coord);
     if (advState.recentTileHistory.length > 10) advState.recentTileHistory.shift();
+    persistAdventureStateToDb(advState, options.db);
     return advState;
   }
 
@@ -1034,24 +1232,68 @@ function onPlayerStep(characterId, currentTile, encounterState, persistentAlert,
   if (encounterState && (encounterState.status === 'DISCOVERED' || encounterState.status === 'STAGE1_PRE_COMBAT' || encounterState.status === 'IN_COMBAT')) {
     advState.activeDiscovery = null;
     advState.activeTensionCue = resolveTensionCue(advState, currentTile, encounterState, persistentAlert, adjacentPersistentCount);
+    advState.stepsSinceLastEncounter = 0;
+    advState.consecutiveEventSteps = Number(advState.consecutiveEventSteps || 0) + 1;
     recordEncounterStart(advState, currentTile, encounterState);
   } else {
     advState.activeDiscovery = selectDiscoveryForTile(advState, currentTile);
     advState.activeTensionCue = resolveTensionCue(advState, currentTile, null, persistentAlert, adjacentPersistentCount);
+    if (advState.activeDiscovery) {
+      advState.consecutiveEventSteps = Number(advState.consecutiveEventSteps || 0) + 1;
+    } else {
+      advState.quietStepsCount = Number(advState.quietStepsCount || 0) + 1;
+      advState.consecutiveEventSteps = 0;
+    }
   }
 
   advState.recentTileHistory.push(coord);
   if (advState.recentTileHistory.length > 10) advState.recentTileHistory.shift();
 
+  persistAdventureStateToDb(advState, options.db);
   return advState;
 }
 
-function recordEncounterStart(advState, currentTile, encounterState) {
-  if (!advState || !encounterState) return;
+function recordEncounterStart(advStateOrCharId, currentTile, encounterState) {
+  if (!advStateOrCharId || !encounterState) return null;
+  const advState = typeof advStateOrCharId === 'object'
+    ? advStateOrCharId
+    : getOrCreateAdventureState(advStateOrCharId, currentTile);
   const monsterName = encounterState.monsterName || 'Unseen Shadow in the Mist';
   const cx = currentTile ? currentTile.x : 0;
   const cy = currentTile ? currentTile.y : 0;
+  const coord = `${cx},${cy}`;
   const dedupeKey = `enc_${advState.stepCounter}_${monsterName}_${cx}_${cy}`;
+
+  const liveCtx = getLatestSceneViewportContext();
+  const effectiveFacing = (liveCtx && liveCtx.facing) || advState.currentFacing || 'NORTH';
+  const stageAnchor = (liveCtx && liveCtx.scene && liveCtx.scene.stageAnchor) || null;
+  const variantKey = (liveCtx && liveCtx.scene && liveCtx.scene.variantKey) || null;
+
+  advState.activeEncounterCoord = coord;
+  advState.preCombatContext = {
+    tileX: cx,
+    tileY: cy,
+    tileName: currentTile ? currentTile.name : 'Wilderness',
+    terrain: currentTile ? currentTile.terrain : 'PLAINS',
+    facing: effectiveFacing,
+    stageAnchor,
+    variantKey,
+    step: advState.stepCounter
+  };
+
+  recordTravelCombatTransition(
+    advState.characterId,
+    'ENCOUNTER_START',
+    {
+      currentTile,
+      facing: effectiveFacing,
+      monsterName,
+      activeDiscovery: advState.activeDiscovery,
+      sceneVariantKey: variantKey,
+      stageAnchor
+    },
+    null
+  );
 
   if (!advState.encountersFaced.some(e => e.dedupeKey === dedupeKey)) {
     advState.encountersFaced.push({
@@ -1073,6 +1315,9 @@ function recordEncounterStart(advState, currentTile, encounterState) {
       text: `Crossed paths with ${monsterName} at [${cx},${cy}].`
     });
   }
+
+  persistAdventureStateToDb(advState);
+  return advState;
 }
 
 function recordEncounterOutcome(characterId, currentTile, monsterName, outcome) {
@@ -1091,14 +1336,39 @@ function recordEncounterOutcome(characterId, currentTile, monsterName, outcome) 
     });
   }
 
+  advState.activeEncounterCoord = null;
+  advState.stepsSinceLastEncounter = 0;
+  advState.postCombatBreathingSteps = 1;
+  if (advState.activeTensionCue && advState.activeTensionCue.tier === 'ENCOUNTER_INTRO') {
+    advState.activeTensionCue = null;
+  }
+
+  const effectiveFacing = (advState.preCombatContext && advState.preCombatContext.facing) || advState.currentFacing || 'NORTH';
+  const phaseKey = (outcome === 'FLED' || outcome === 'BYPASSED') ? 'FLED' : (outcome === 'DEFEAT' ? 'DEFEAT' : 'VICTORY');
+  recordTravelCombatTransition(
+    characterId,
+    phaseKey,
+    {
+      currentTile,
+      facing: effectiveFacing,
+      monsterName: monsterName || (lastEnc && lastEnc.monsterName) || 'Hostile Creature',
+      outcome,
+      stageAnchor: advState.preCombatContext ? advState.preCombatContext.stageAnchor : null,
+      sceneVariantKey: advState.preCombatContext ? advState.preCombatContext.variantKey : null
+    },
+    null
+  );
+
   const labelMap = {
     VICTORY: `Defeated ${monsterName || 'the enemy'} and secured the trail.`,
     FLED: `Broke contact and retreated from ${monsterName || 'the threat'}.`,
+    BYPASSED: `Slipped past ${monsterName || 'the threat'} in the shadows.`,
     DEFEAT: `Fell in battle against ${monsterName || 'the enemy'}.`
   };
   const typeMap = {
     VICTORY: 'ENCOUNTER_VICTORY',
     FLED: 'ENCOUNTER_FLEE',
+    BYPASSED: 'ENCOUNTER_FLEE',
     DEFEAT: 'ENCOUNTER_DEFEAT'
   };
   const detailText = labelMap[outcome] || `Resolved encounter with ${monsterName}.`;
@@ -1112,6 +1382,9 @@ function recordEncounterOutcome(characterId, currentTile, monsterName, outcome) 
     detail: detailText,
     text: detailText
   });
+
+  persistAdventureStateToDb(advState);
+  return advState;
 }
 
 function recordPoiInspection(characterId, currentTile, poi) {
@@ -1140,6 +1413,7 @@ function recordPoiInspection(characterId, currentTile, poi) {
     text: poi.description
   });
 
+  persistAdventureStateToDb(advState);
   return advState;
 }
 
@@ -1171,6 +1445,7 @@ function resolveDiscoveryChoice(characterId, currentTile, discoveryKey, choiceKe
     rec.status = 'EXAMINED';
     advState.discoveredMap[catalogDef.discoveryKey] = rec;
     advState.activeDiscovery = null;
+    persistAdventureStateToDb(advState);
     return {
       ok: true,
       discovery: null,
@@ -1226,6 +1501,7 @@ function resolveDiscoveryChoice(characterId, currentTile, discoveryKey, choiceKe
     text: detailText
   });
 
+  persistAdventureStateToDb(advState);
   return {
     ok: true,
     discovery: null,
@@ -1238,14 +1514,86 @@ function resolveDiscoveryChoice(characterId, currentTile, discoveryKey, choiceKe
 /**
  * Serializes the client-facing `state.adventure` payload for the HUD, Journal, and Director.
  */
-function buildAdventureClientPayload(characterId, currentTile, encounterState, persistentAlert, adjacentPersistentCount = 0) {
-  const advState = getOrCreateAdventureState(characterId, currentTile);
+function buildAdventureClientPayload(characterId, currentTile, encounterState, persistentAlert, adjacentPersistentCount = 0, options = {}) {
+  const advState = getOrCreateAdventureState(characterId, currentTile, options.db);
   const expDef = EXPEDITION_DEFINITIONS[advState.expeditionKey] || EXPEDITION_DEFINITIONS.MIRKWOOD_EXPEDITION;
 
-  // Refresh tension cue if encounter state changed
-  if (advState.enabled && encounterState && (encounterState.status === 'DISCOVERED' || encounterState.status === 'STAGE1_PRE_COMBAT' || encounterState.status === 'IN_COMBAT')) {
-    advState.activeTensionCue = resolveTensionCue(advState, currentTile, encounterState, persistentAlert, adjacentPersistentCount);
+  const liveCtx = getLatestSceneViewportContext();
+  const liveMatchesCurrent = Boolean(
+    liveCtx &&
+    liveCtx.current &&
+    currentTile &&
+    Number(liveCtx.current.x) === Number(currentTile.x) &&
+    Number(liveCtx.current.y) === Number(currentTile.y)
+  );
+  const effectiveFacing = String(
+    options.facing ||
+    (liveMatchesCurrent ? liveCtx.facing : null) ||
+    advState.currentFacing ||
+    'NORTH'
+  ).toUpperCase();
+
+  if (currentTile) {
+    const coord = `${currentTile.x},${currentTile.y}`;
+    advState.currentFacing = effectiveFacing;
+    advState.lastResolvedFacing = effectiveFacing;
+    advState.lastResolvedTileCoord = coord;
+    advState.lastKnownTile = {
+      x: currentTile.x,
+      y: currentTile.y,
+      name: currentTile.name,
+      terrain: currentTile.terrain,
+      feature: currentTile.feature || null,
+      is_safe: currentTile.is_safe !== undefined ? currentTile.is_safe : (currentTile.isSafe ? 1 : 0),
+      is_passable: currentTile.is_passable !== undefined ? currentTile.is_passable : 1
+    };
   }
+
+  // Refresh tension cue if encounter state changed, and clear stale ENCOUNTER_INTRO cues after combat/flee/ignore
+  const isActiveEncounter = Boolean(
+    encounterState &&
+    (encounterState.status === 'DISCOVERED' || encounterState.status === 'STAGE1_PRE_COMBAT' || encounterState.status === 'IN_COMBAT')
+  );
+  if (advState.enabled && isActiveEncounter) {
+    advState.activeTensionCue = resolveTensionCue(advState, currentTile, encounterState, persistentAlert, adjacentPersistentCount);
+    recordEncounterStart(advState, currentTile, encounterState);
+  } else if (!isActiveEncounter) {
+    if (currentTile && advState.activeEncounterCoord === `${currentTile.x},${currentTile.y}`) {
+      const lastEnc = advState.encountersFaced[advState.encountersFaced.length - 1];
+      if (lastEnc && lastEnc.outcome === 'ACTIVE') {
+        lastEnc.outcome = 'FLED';
+        recordTravelCombatTransition(
+          characterId,
+          'BYPASSED',
+          {
+            currentTile,
+            facing: effectiveFacing,
+            monsterName: lastEnc.monsterName
+          },
+          options.db
+        );
+      }
+      advState.activeEncounterCoord = null;
+    }
+    if (advState.activeTensionCue && advState.activeTensionCue.tier === 'ENCOUNTER_INTRO') {
+      advState.activeTensionCue = (persistentAlert || adjacentPersistentCount > 0)
+        ? resolveTensionCue(advState, currentTile, null, persistentAlert, adjacentPersistentCount)
+        : null;
+    }
+  }
+
+  const objectiveResult = computeActiveObjectiveHint(advState, currentTile, effectiveFacing, expDef);
+  const activeObjectiveHint = objectiveResult.activeObjectiveHint;
+  const objectiveGuidance = objectiveResult.objectiveGuidance;
+
+  const travelContinuity = buildTravelContinuityPayload(
+    characterId,
+    currentTile,
+    effectiveFacing,
+    liveMatchesCurrent ? liveCtx : null,
+    { activeObjectiveHint },
+    options.db
+  );
 
   const milestones = expDef.milestones.map(m => ({
     ...m,
@@ -1269,6 +1617,24 @@ function buildAdventureClientPayload(characterId, currentTile, encounterState, p
     coords: j.coords || null
   }));
 
+  const threatDensity = isActiveEncounter
+    ? 'ACTIVE_ENCOUNTER'
+    : (persistentAlert
+      ? 'HIGH_PERSISTENT_ON_TILE'
+      : (adjacentPersistentCount > 0
+        ? 'ELEVATED_NEARBY_SURVIVOR'
+        : (currentTile && (currentTile.is_safe === 1 || currentTile.terrain === 'CITY')
+          ? 'SANCTUARY_CALM'
+          : 'STANDARD_FRONTIER')));
+
+  const pacingState = isActiveEncounter
+    ? 'COMBAT_ENGAGED'
+    : (advState.postCombatBreathingSteps > 0
+      ? 'POST_COMBAT_RECOVERY'
+      : (advState.activeDiscovery ? 'DISCOVERY_MOMENT' : 'QUIET_TRAVEL'));
+
+  persistAdventureStateToDb(advState, options.db);
+
   return {
     enabled: advState.enabled,
     modeLabel: advState.enabled ? 'Adventure Experience — Experimental' : 'Current Experience (Baseline)',
@@ -1279,6 +1645,8 @@ function buildAdventureClientPayload(characterId, currentTile, encounterState, p
     briefingTitle: expDef.briefingTitle,
     briefingText: expDef.briefingText,
     expeditionCompleted: advState.expeditionCompleted,
+    activeObjectiveHint,
+    objectiveGuidance,
     expedition: {
       key: advState.expeditionKey,
       expeditionKey: advState.expeditionKey,
@@ -1287,13 +1655,38 @@ function buildAdventureClientPayload(characterId, currentTile, encounterState, p
       summary: expDef.briefingText,
       isComplete: advState.expeditionCompleted,
       waypoints,
-      nextWaypoint
+      nextWaypoint,
+      activeObjectiveHint,
+      objectiveGuidance
     },
     deterministicSeed: advState.deterministicSeed,
     stepCounter: advState.stepCounter,
     stepsSinceLastDiscovery: advState.stepsSinceLastDiscovery,
     currentRegion: resolveRegionLabel(currentTile),
+    facing: effectiveFacing,
     milestones,
+    travelContinuity,
+    transitionContext: travelContinuity.transitionContext,
+    continuityNote: travelContinuity.continuityNote,
+    horizonHint: travelContinuity.horizonHint,
+    behindHint: travelContinuity.behindHint,
+    breadcrumbTrail: travelContinuity.breadcrumbTrail,
+    revisitStatus: travelContinuity.revisitStatus,
+    revisitBanner: travelContinuity.revisitBanner,
+    compassContext: travelContinuity.compassContext,
+    biomePersistence: travelContinuity.biomePersistence,
+    boundaryGuidance: travelContinuity.boundaryGuidance,
+    combatReturnContext: travelContinuity.combatReturnContext,
+    pacing: {
+      quietStepsCount: Number(advState.quietStepsCount || 0),
+      stepsSinceLastEncounter: Number(advState.stepsSinceLastEncounter || 0),
+      stepsSinceLastDiscovery: Number(advState.stepsSinceLastDiscovery || 0),
+      consecutiveEventSteps: Number(advState.consecutiveEventSteps || 0),
+      postCombatBreathingSteps: Number(advState.postCombatBreathingSteps || 0),
+      threatDensity,
+      pacingState,
+      lastEncounterPacing: advState.lastEncounterPacing || null
+    },
     progress: {
       locationsVisited: advState.visitedTiles.length,
       regionsExplored: advState.visitedRegions.length,
@@ -1329,12 +1722,722 @@ function buildAdventureClientPayload(characterId, currentTile, encounterState, p
   };
 }
 
+
+// ============================================================================
+// WORKSTREAM B: ENCOUNTER PACING ENGINE & DETERMINISTIC SIMULATION
+// ============================================================================
+
+const ENCOUNTER_PACING_CONFIG = {
+  baselineUnpacedChancePercent: 25,
+  bountyContractBaseChancePercent: 40,
+  terrainBaseChancePercent: {
+    CITY: 0,
+    PLAINS: 16,
+    BRIDGE: 16,
+    FOREST: 22,
+    HILLS: 22,
+    SWAMP: 28,
+    JUNGLE: 28,
+    UNDERGROUND_RUINS: 30,
+    DEFAULT: 20
+  },
+  highDangerLandmarks: {
+    '7,3': 30,  // Heart of the Mirkwood
+    '9,7': 30,  // Bridge East Watchpost
+    '4,11': 30  // Deadman's Mire
+  },
+  townGateDepartureGraceChancePercent: 0,
+  townGateReentryChancePercent: 8,
+  postEncounterImmediateCooldownSteps: 1,
+  postEncounterSoftRecoveryStep: 1,
+  postEncounterSoftRecoveryMultiplier: 0.40,
+  clearedSiteProtectedSteps: 8,
+  clearedSiteLongTermMultiplier: 0.25,
+  familiarSafeRevisitMultiplier: 0.45,
+  lingeringThreatRevisitMultiplier: 1.25,
+  immediateBacktrackCapPercent: 3.5,
+  oscillationZeroThresholdTail: 3,
+  quietStreakRampStartSteps: 5,
+  quietStreakRampPerStepPercent: 2,
+  quietStreakRampMaxBonusPercent: 8,
+  maxRandomChancePercent: 45
+};
+
+/**
+ * Counts how many trailing entries in `recentTileHistory` alternate exclusively
+ * within the two-tile pair `{fromCoord, targetCoord}`.
+ * - 1: normal forward or non-oscillating step
+ * - 2: single immediate reversal (A -> B -> A)
+ * - >= 3: repeated 2-tile oscillation (A -> B -> A -> B ...)
+ */
+function countTwoTileOscillationTail(recentTileHistory, fromCoord, targetCoord) {
+  if (!Array.isArray(recentTileHistory) || recentTileHistory.length < 2) return 1;
+  if (!fromCoord || !targetCoord || fromCoord === targetCoord) return 1;
+  const lastIdx = recentTileHistory.length - 1;
+  if (recentTileHistory[lastIdx] !== fromCoord) return 1;
+  if (recentTileHistory[lastIdx - 1] !== targetCoord) return 1;
+
+  const pair = new Set([fromCoord, targetCoord]);
+  let count = 0;
+  for (let i = lastIdx; i >= 0; i--) {
+    if (pair.has(recentTileHistory[i])) {
+      count += 1;
+    } else {
+      break;
+    }
+  }
+  return count;
+}
+
+/**
+ * Computes the calibrated random encounter chance (0..100) for a movement step
+ * from `currentTile` onto `targetTile`.
+ *
+ * Guarantees:
+ * - Safe Sanctuary (`CITY` / `is_safe === 1`): 0%
+ * - Persistent world monsters on `targetTile` or fixed authored encounters: 100%
+ * - Immediate Town Gate departure from Oakhaven (`[7,7] -> [7,6]` or `[7,8]`): 0%
+ * - Immediate step after an encounter (victory, retreat, or slip-past): 0% breathing step
+ * - Second step after an encounter: 0.40x soft recovery
+ * - Repeated 2-tile back-and-forth oscillation (`A <-> B <-> A`): 0%
+ * - Recently cleared tile (`<= 8` steps since victory on that tile): 0%, then 0.25x
+ * - Revisit to known safe tile (`FAMILIAR_SAFE`): 0.45x
+ * - Revisit to tile with bypassed/fled threat (`LINGERING_THREAT_SITE`): 1.25x
+ * - Terrain-specific danger hierarchy: PLAINS/BRIDGE (16%) < FOREST/HILLS (22%) < SWAMP/JUNGLE (28%) < RUINS/LANDMARKS (30%)
+ */
+function computeEncounterPacingChance(db, characterOrId, currentTile, targetTile, options = {}) {
+  const characterId = typeof characterOrId === 'object' && characterOrId !== null
+    ? characterOrId.id
+    : Number(characterOrId || 1);
+
+  if (!targetTile) {
+    return {
+      chancePercent: 0,
+      baseChancePercent: 0,
+      reason: 'INVALID_TARGET_TILE',
+      modifiers: []
+    };
+  }
+
+  const targetCoord = `${targetTile.x},${targetTile.y}`;
+  const fromCoord = currentTile ? `${currentTile.x},${currentTile.y}` : null;
+  const isFromSafeCity = Boolean(
+    currentTile && (currentTile.is_safe === 1 || currentTile.isSafe === true || currentTile.terrain === 'CITY')
+  );
+  if (targetTile.feature === 'TOWN_GATES' && isFromSafeCity && options.mode !== 'BASELINE_UNPACED') {
+    const advStateGrace = options.advState || getOrCreateAdventureState(characterId, currentTile || targetTile, db);
+    const decision = {
+      chancePercent: ENCOUNTER_PACING_CONFIG.townGateDepartureGraceChancePercent,
+      baseChancePercent: ENCOUNTER_PACING_CONFIG.townGateReentryChancePercent,
+      reason: 'TOWN_GATE_DEPARTURE_GRACE',
+      modifiers: ['TOWN_GATE_DEPARTURE_GRACE']
+    };
+    if (advStateGrace) advStateGrace.lastEncounterPacing = decision;
+    return decision;
+  }
+
+  const isSafeTarget = (targetTile.is_safe === 1 || targetTile.isSafe === true || targetTile.terrain === 'CITY') && targetTile.feature !== 'TOWN_GATES';
+
+  if (isSafeTarget) {
+    return {
+      chancePercent: 0,
+      baseChancePercent: 0,
+      reason: 'SANCTUARY_SAFE_ZONE',
+      modifiers: ['SANCTUARY_ZERO']
+    };
+  }
+
+  // Persistent monster or fixed authored encounter always takes 100% priority
+  let hasPersistentOnTarget = Boolean(options.hasPersistentMonsterOnTile);
+  if (!hasPersistentOnTarget && db && targetTile.id) {
+    try {
+      const row = db.prepare(
+        "SELECT id FROM monster_instances WHERE tile_id = ? AND status = 'ACTIVE' LIMIT 1"
+      ).get(targetTile.id);
+      hasPersistentOnTarget = Boolean(row);
+    } catch (_e) {
+      hasPersistentOnTarget = false;
+    }
+  }
+  if (hasPersistentOnTarget) {
+    return {
+      chancePercent: 100,
+      baseChancePercent: 100,
+      reason: 'PERSISTENT_MONSTER_ON_TILE',
+      modifiers: ['PERSISTENT_GUARANTEED'],
+      isPersistent: true
+    };
+  }
+
+  if (options.fixedAuthoredEncounter || options.questEncounterGuaranteed) {
+    return {
+      chancePercent: 100,
+      baseChancePercent: 100,
+      reason: 'AUTHORED_FIXED_ENCOUNTER',
+      modifiers: ['AUTHORED_GUARANTEED'],
+      isAuthored: true
+    };
+  }
+
+  // Baseline unpaced mode for A/B simulation comparison
+  if (options.mode === 'BASELINE_UNPACED') {
+    const baseUnpaced = options.hasActiveBounty
+      ? ENCOUNTER_PACING_CONFIG.bountyContractBaseChancePercent
+      : ENCOUNTER_PACING_CONFIG.baselineUnpacedChancePercent;
+    return {
+      chancePercent: baseUnpaced,
+      baseChancePercent: baseUnpaced,
+      reason: 'BASELINE_UNPACED',
+      modifiers: []
+    };
+  }
+
+  const advState = options.advState || getOrCreateAdventureState(characterId, currentTile || targetTile, db);
+  const travelState = options.travelState || getOrCreateContinuityState(characterId, currentTile || targetTile, 'NORTH', db);
+  const modifiers = [];
+
+  // 1. Town Gate departure grace handled above
+
+  // 2. Post-encounter breathing room (prevents back-to-back random encounters)
+  const stepsSinceEnc = Number(
+    advState.stepsSinceLastEncounter !== undefined ? advState.stepsSinceLastEncounter : 99
+  );
+  const breathingSteps = Number(advState.postCombatBreathingSteps || 0);
+  if (stepsSinceEnc === 0 || breathingSteps > 0 || options.bypassedPreviousEncounter) {
+    const decision = {
+      chancePercent: 0,
+      baseChancePercent: 0,
+      reason: 'POST_ENCOUNTER_BREATHING_STEP',
+      modifiers: ['POST_ENCOUNTER_COOLDOWN_ZERO']
+    };
+    advState.lastEncounterPacing = decision;
+    return decision;
+  }
+
+  // 3. Anti-oscillation protection (A <-> B <-> A 2-tile farming)
+  const oscillationTail = countTwoTileOscillationTail(advState.recentTileHistory, fromCoord, targetCoord);
+  if (oscillationTail >= ENCOUNTER_PACING_CONFIG.oscillationZeroThresholdTail) {
+    const decision = {
+      chancePercent: 0,
+      baseChancePercent: 0,
+      reason: 'ANTI_OSCILLATION_SUPPRESSED',
+      modifiers: ['TWO_TILE_OSCILLATION_ZERO'],
+      oscillationTail
+    };
+    advState.lastEncounterPacing = decision;
+    return decision;
+  }
+
+  // 4. Determine terrain / landmark / bounty base rate
+  let baseChance = ENCOUNTER_PACING_CONFIG.terrainBaseChancePercent[targetTile.terrain]
+    ?? ENCOUNTER_PACING_CONFIG.terrainBaseChancePercent.DEFAULT;
+  if (targetTile.feature === 'TOWN_GATES') {
+    baseChance = ENCOUNTER_PACING_CONFIG.townGateReentryChancePercent;
+    modifiers.push('TOWN_GATE_THRESHOLD');
+  } else if (ENCOUNTER_PACING_CONFIG.highDangerLandmarks[targetCoord] !== undefined) {
+    baseChance = ENCOUNTER_PACING_CONFIG.highDangerLandmarks[targetCoord];
+    modifiers.push('HIGH_DANGER_LANDMARK');
+  }
+
+  // Check active bounty contract in region if db is provided
+  let hasBounty = Boolean(options.hasActiveBounty);
+  if (!hasBounty && db && targetTile.region_name) {
+    try {
+      const bRow = db.prepare(`
+        SELECT cc.id
+        FROM character_contracts cc
+        JOIN bounty_contracts bc ON cc.contract_id = bc.id
+        WHERE cc.character_id = ? AND cc.status = 'ACTIVE' AND bc.target_region = ?
+        LIMIT 1
+      `).get(characterId, targetTile.region_name);
+      hasBounty = Boolean(bRow);
+    } catch (_e) {
+      hasBounty = false;
+    }
+  }
+  if (hasBounty) {
+    baseChance = Math.max(baseChance, ENCOUNTER_PACING_CONFIG.bountyContractBaseChancePercent);
+    modifiers.push('ACTIVE_BOUNTY_CONTRACT');
+  }
+
+  let chance = baseChance;
+  let primaryReason = 'TERRAIN_BASE_RATE';
+
+  // 5. Tile revisit & cleared-site memory
+  const revisitMap = (travelState && (travelState.tileRevisitMap || travelState.tileMemory)) || null;
+  const mem = revisitMap ? revisitMap[targetCoord] : null;
+  const wasVisited = Boolean((mem && mem.visitCount > 0) || (Array.isArray(advState.visitedTiles) && advState.visitedTiles.includes(targetCoord)));
+  const hasClearedOnTile = Boolean(
+    mem && (mem.hasClearedThreat || Number(mem.clearedCount || 0) > 0 || mem.revisitStatus === REVISIT_STATUS_TYPES.CLEARED_SITE)
+  );
+  const hasLingeringOnTile = Boolean(
+    mem && (mem.hasLingeringThreat || mem.lingeringThreat || mem.revisitStatus === REVISIT_STATUS_TYPES.LINGERING_THREAT_SITE)
+  );
+
+  if (hasClearedOnTile && !hasLingeringOnTile) {
+    let stepsSinceClearedOnTile = 99;
+    if (Array.isArray(advState.encountersFaced)) {
+      for (let i = advState.encountersFaced.length - 1; i >= 0; i--) {
+        const enc = advState.encountersFaced[i];
+        if (
+          enc &&
+          enc.outcome === 'VICTORY' &&
+          Number(enc.tileX) === Number(targetTile.x) &&
+          Number(enc.tileY) === Number(targetTile.y)
+        ) {
+          stepsSinceClearedOnTile = Math.max(0, Number(advState.stepCounter || 0) - Number(enc.step || 0));
+          break;
+        }
+      }
+    }
+    if (stepsSinceClearedOnTile <= ENCOUNTER_PACING_CONFIG.clearedSiteProtectedSteps) {
+      const decision = {
+        chancePercent: 0,
+        baseChancePercent: baseChance,
+        reason: 'RECENTLY_CLEARED_SITE_PROTECTED',
+        modifiers: [...modifiers, 'CLEARED_SITE_PROTECTED_WINDOW'],
+        stepsSinceClearedOnTile
+      };
+      advState.lastEncounterPacing = decision;
+      return decision;
+    }
+    chance *= ENCOUNTER_PACING_CONFIG.clearedSiteLongTermMultiplier;
+    primaryReason = 'CLEARED_SITE_REDUCED';
+    modifiers.push('CLEARED_SITE_REDUCED');
+  } else if (hasLingeringOnTile) {
+    chance *= ENCOUNTER_PACING_CONFIG.lingeringThreatRevisitMultiplier;
+    primaryReason = 'LINGERING_THREAT_SITE';
+    modifiers.push('LINGERING_THREAT_BOOST');
+  } else if (wasVisited) {
+    chance *= ENCOUNTER_PACING_CONFIG.familiarSafeRevisitMultiplier;
+    primaryReason = 'FAMILIAR_SAFE_REVISIT';
+    modifiers.push('FAMILIAR_SAFE_REVISIT');
+  } else {
+    primaryReason = 'UNEXPLORED_FRONTIER';
+    const quietStreak = Number(advState.quietStepsCount || 0);
+    if (quietStreak >= ENCOUNTER_PACING_CONFIG.quietStreakRampStartSteps) {
+      const rampBonus = Math.min(
+        ENCOUNTER_PACING_CONFIG.quietStreakRampMaxBonusPercent,
+        (quietStreak - ENCOUNTER_PACING_CONFIG.quietStreakRampStartSteps + 1) * ENCOUNTER_PACING_CONFIG.quietStreakRampPerStepPercent
+      );
+      chance += rampBonus;
+      modifiers.push(`QUIET_STREAK_RAMP_+${rampBonus}%`);
+    }
+  }
+
+  // 6. Second step after an encounter: soft recovery multiplier (0.40x)
+  if (stepsSinceEnc === ENCOUNTER_PACING_CONFIG.postEncounterSoftRecoveryStep) {
+    chance *= ENCOUNTER_PACING_CONFIG.postEncounterSoftRecoveryMultiplier;
+    primaryReason = 'POST_ENCOUNTER_SOFT_RECOVERY';
+    modifiers.push('POST_ENCOUNTER_SOFT_RECOVERY');
+  }
+
+  // 7. Single-step immediate backtrack cap (A -> B -> A turnaround step)
+  if (oscillationTail === 2 && !hasLingeringOnTile) {
+    chance = Math.min(chance, ENCOUNTER_PACING_CONFIG.immediateBacktrackCapPercent);
+    primaryReason = 'IMMEDIATE_BACKTRACK_DAMPENED';
+    modifiers.push('IMMEDIATE_BACKTRACK_CAP');
+  }
+
+  const finalChance = Number(
+    Math.max(0, Math.min(ENCOUNTER_PACING_CONFIG.maxRandomChancePercent, chance)).toFixed(2)
+  );
+
+  const decision = {
+    chancePercent: finalChance,
+    baseChancePercent: baseChance,
+    reason: primaryReason,
+    modifiers,
+    oscillationTail
+  };
+  advState.lastEncounterPacing = decision;
+  return decision;
+}
+
+function createSeededSimulationRng(seed) {
+  let state = (Number(seed || 1) >>> 0) || 1;
+  return function nextRng() {
+    state = (state + 0x6D2B79F5) >>> 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Deterministic Encounter Pacing Simulation Runner for Workstream B4 (Scenarios A–I).
+ * Compares Baseline (Unpaced 25% flat wilderness rate) vs. Phase 2 Paced across N seeded runs.
+ */
+function runEncounterPacingSimulation(options = {}) {
+  const runs = Number(options.runs || 500);
+  const baseSeed = Number(options.baseSeed || 202602);
+
+  const makeTile = (x, y, terrain, name, extra = {}) => ({
+    id: y * 15 + x + 1,
+    x,
+    y,
+    terrain,
+    name: name || `${terrain} [${x},${y}]`,
+    feature: extra.feature || null,
+    is_safe: extra.is_safe || 0,
+    is_passable: 1,
+    region_name: extra.region_name || terrain
+  });
+
+  const scenarios = {
+    A: {
+      code: 'A',
+      title: '20 new tiles in Forest (Mirkwood)',
+      buildSteps: () => {
+        const tiles = [];
+        for (let i = 0; i <= 20; i++) {
+          tiles.push(makeTile(4 + (i % 8), 1 + Math.floor(i / 8), 'FOREST', `Mirkwood Forest #${i}`));
+        }
+        return tiles.slice(1).map((to, idx) => ({ type: 'MOVE', from: tiles[idx], to }));
+      }
+    },
+    B: {
+      code: 'B',
+      title: '20 new tiles in Plains (Verdant Plains)',
+      buildSteps: () => {
+        const tiles = [];
+        for (let i = 0; i <= 20; i++) {
+          tiles.push(makeTile(4 + (i % 8), 6 + Math.floor(i / 8), 'PLAINS', `Verdant Plains #${i}`));
+        }
+        return tiles.slice(1).map((to, idx) => ({ type: 'MOVE', from: tiles[idx], to }));
+      }
+    },
+    C: {
+      code: 'C',
+      title: '20 new tiles in Swamp (Rotting Fen)',
+      buildSteps: () => {
+        const tiles = [];
+        for (let i = 0; i <= 20; i++) {
+          tiles.push(makeTile(1 + (i % 7), 9 + Math.floor(i / 7), 'SWAMP', `Rotting Fen #${i}`));
+        }
+        return tiles.slice(1).map((to, idx) => ({ type: 'MOVE', from: tiles[idx], to }));
+      }
+    },
+    D: {
+      code: 'D',
+      title: '10 tiles forward in Forest and same 10 tiles back',
+      buildSteps: () => {
+        const corridor = [];
+        for (let i = 0; i <= 10; i++) {
+          corridor.push(makeTile(4 + (i % 5), 2 + Math.floor(i / 5), 'FOREST', `Mirkwood Corridor #${i}`));
+        }
+        const steps = [];
+        for (let i = 0; i < 10; i++) {
+          steps.push({ type: 'MOVE', from: corridor[i], to: corridor[i + 1], leg: 'OUTBOUND' });
+        }
+        for (let i = 10; i > 0; i--) {
+          steps.push({ type: 'MOVE', from: corridor[i], to: corridor[i - 1], leg: 'RETURN' });
+        }
+        return steps;
+      }
+    },
+    E: {
+      code: 'E',
+      title: '20 rotations on the same tile',
+      buildSteps: () => {
+        const tile = makeTile(7, 5, 'FOREST', 'Mirkwood Crossroads');
+        const facings = ['NORTH', 'EAST', 'SOUTH', 'WEST'];
+        const steps = [];
+        for (let i = 0; i < 20; i++) {
+          steps.push({ type: 'TURN', tile, facing: facings[i % 4] });
+        }
+        return steps;
+      }
+    },
+    F: {
+      code: 'F',
+      title: '30 steps oscillating between two adjacent tiles',
+      buildSteps: () => {
+        const tileA = makeTile(7, 5, 'FOREST', 'Mirkwood Crossroads');
+        const tileB = makeTile(7, 4, 'FOREST', 'Mirkwood Trail');
+        const steps = [];
+        let cur = tileA;
+        let next = tileB;
+        for (let i = 0; i < 30; i++) {
+          steps.push({ type: 'MOVE', from: cur, to: next });
+          const tmp = cur;
+          cur = next;
+          next = tmp;
+        }
+        return steps;
+      }
+    },
+    G: {
+      code: 'G',
+      title: 'Travel across Sanctuary and Town Gate threshold',
+      buildSteps: () => {
+        const city = makeTile(7, 7, 'CITY', 'Oakhaven', { feature: 'MARKETPLACE', is_safe: 1 });
+        const northGate = makeTile(7, 6, 'PLAINS', 'Oakhaven North Gate', { feature: 'TOWN_GATES', is_safe: 0 });
+        const southGate = makeTile(7, 8, 'PLAINS', 'Oakhaven South Gate', { feature: 'TOWN_GATES', is_safe: 0 });
+        const steps = [];
+        for (let i = 0; i < 5; i++) {
+          steps.push({ type: 'MOVE', from: city, to: northGate });
+          steps.push({ type: 'MOVE', from: northGate, to: city });
+          steps.push({ type: 'MOVE', from: city, to: southGate });
+          steps.push({ type: 'MOVE', from: southGate, to: city });
+        }
+        return steps;
+      }
+    },
+    H: {
+      code: 'H',
+      title: '20 steps patrolling a recently cleared 4-tile loop',
+      buildSteps: () => {
+        const loop = [
+          makeTile(6, 4, 'FOREST', 'Cleared Grove W'),
+          makeTile(7, 4, 'FOREST', 'Cleared Grove N'),
+          makeTile(8, 4, 'FOREST', 'Cleared Grove E'),
+          makeTile(7, 5, 'FOREST', 'Cleared Crossroads')
+        ];
+        const steps = [];
+        for (let i = 0; i < 20; i++) {
+          const from = loop[i % loop.length];
+          const to = loop[(i + 1) % loop.length];
+          steps.push({ type: 'MOVE', from, to, preCleared: true });
+        }
+        return steps;
+      }
+    },
+    I: {
+      code: 'I',
+      title: 'Travel through a fixed authored / persistent monster encounter',
+      buildSteps: () => {
+        const t0 = makeTile(7, 6, 'PLAINS', 'Oakhaven North Gate', { feature: 'TOWN_GATES' });
+        const t1 = makeTile(7, 5, 'FOREST', 'Mirkwood Crossroads');
+        const t2 = makeTile(7, 4, 'FOREST', 'Mirkwood Trail');
+        const t3 = makeTile(7, 3, 'FOREST', 'Heart of the Mirkwood', { feature: 'ANCIENT_OAK' });
+        return [
+          { type: 'MOVE', from: t0, to: t1 },
+          { type: 'MOVE', from: t1, to: t2 },
+          { type: 'MOVE', from: t2, to: t3, fixedAuthoredEncounter: true }
+        ];
+      }
+    }
+  };
+
+  function simulateScenarioMode(scenarioDef, mode) {
+    let totalEncounters = 0;
+    let totalSteps = 0;
+    let totalBackToBack = 0;
+    let outboundEncounters = 0;
+    let returnEncounters = 0;
+    let authoredTriggeredCount = 0;
+    let zeroEncounterRuns = 0;
+    const encounterCounts = [];
+
+    for (let runIdx = 0; runIdx < runs; runIdx++) {
+      const rng = createSeededSimulationRng(baseSeed + runIdx * 7919 + scenarioDef.code.charCodeAt(0) * 131);
+      const simCharId = 900000 + runIdx;
+      const steps = scenarioDef.buildSteps();
+      const startTile = steps[0].from || steps[0].tile;
+
+      const startCoord = `${startTile.x},${startTile.y}`;
+      const advState = createInitialAdventureState(simCharId);
+      advState.recentTileHistory = [startCoord];
+      advState.visitedTiles = [startCoord];
+      advState.lastKnownTile = startTile;
+      const travelState = {
+        characterId: simCharId,
+        lastTile: startTile,
+        lastFacing: 'NORTH',
+        currentCorridorKey: null,
+        corridorSteps: 0,
+        recentSteps: [],
+        breadcrumbTrail: [`${startTile.x},${startTile.y}`],
+        tileMemory: {
+          [`${startTile.x},${startTile.y}`]: {
+            coord: `${startTile.x},${startTile.y}`,
+            x: startTile.x,
+            y: startTile.y,
+            name: startTile.name,
+            terrain: startTile.terrain,
+            visitCount: 1,
+            clearedCount: 0,
+            fledCount: 0,
+            lingeringThreat: false
+          }
+        },
+        combatTransition: null
+      };
+
+      // Pre-populate cleared status for Scenario H
+      if (scenarioDef.code === 'H') {
+        for (const st of steps) {
+          const tc = `${st.to.x},${st.to.y}`;
+          travelState.tileMemory[tc] = {
+            coord: tc,
+            x: st.to.x,
+            y: st.to.y,
+            name: st.to.name,
+            terrain: st.to.terrain,
+            visitCount: 1,
+            clearedCount: 1,
+            fledCount: 0,
+            lingeringThreat: false
+          };
+          if (!advState.visitedTiles.includes(tc)) {
+            advState.visitedTiles.push(tc);
+          }
+          advState.encountersFaced.push({
+            dedupeKey: `preclear_${tc}`,
+            monsterName: 'Cleared Patrol Threat',
+            tileX: st.to.x,
+            tileY: st.to.y,
+            step: 0,
+            outcome: 'VICTORY'
+          });
+        }
+      }
+
+      let runEncounters = 0;
+      let prevStepHadEncounter = false;
+
+      for (let sIdx = 0; sIdx < steps.length; sIdx++) {
+        const step = steps[sIdx];
+        totalSteps += 1;
+
+        if (step.type === 'TURN') {
+          prevStepHadEncounter = false;
+          continue;
+        }
+
+        const toCoord = `${step.to.x},${step.to.y}`;
+        const decision = computeEncounterPacingChance(null, simCharId, step.from, step.to, {
+          mode,
+          advState,
+          travelState,
+          fixedAuthoredEncounter: Boolean(step.fixedAuthoredEncounter)
+        });
+
+        const roll = rng() * 100;
+        const triggered = roll < decision.chancePercent;
+
+        // Advance step state identically to onPlayerStep
+        advState.stepCounter += 1;
+        advState.stepsSinceLastEncounter = Number(advState.stepsSinceLastEncounter || 0) + 1;
+        if (advState.postCombatBreathingSteps > 0) {
+          advState.postCombatBreathingSteps = Math.max(0, advState.postCombatBreathingSteps - 1);
+        }
+
+        if (!advState.visitedTiles.includes(toCoord)) {
+          advState.visitedTiles.push(toCoord);
+        }
+        const existingMem = travelState.tileMemory[toCoord] || {
+          coord: toCoord,
+          x: step.to.x,
+          y: step.to.y,
+          name: step.to.name,
+          terrain: step.to.terrain,
+          visitCount: 0,
+          clearedCount: 0,
+          fledCount: 0,
+          lingeringThreat: false
+        };
+        existingMem.visitCount += 1;
+        travelState.tileMemory[toCoord] = existingMem;
+
+        if (triggered) {
+          runEncounters += 1;
+          totalEncounters += 1;
+          if (prevStepHadEncounter) {
+            totalBackToBack += 1;
+          }
+          prevStepHadEncounter = true;
+          if (step.leg === 'OUTBOUND') outboundEncounters += 1;
+          if (step.leg === 'RETURN') returnEncounters += 1;
+          if (step.fixedAuthoredEncounter) authoredTriggeredCount += 1;
+
+          // Resolve encounter as VICTORY so standard post-encounter state applies
+          advState.stepsSinceLastEncounter = 0;
+          advState.postCombatBreathingSteps = 1;
+          advState.quietStepsCount = 0;
+          existingMem.clearedCount += 1;
+          advState.encountersFaced.push({
+            dedupeKey: `sim_${advState.stepCounter}_${toCoord}`,
+            monsterName: 'Simulated Threat',
+            tileX: step.to.x,
+            tileY: step.to.y,
+            step: advState.stepCounter,
+            outcome: 'VICTORY'
+          });
+        } else {
+          prevStepHadEncounter = false;
+          advState.quietStepsCount = Number(advState.quietStepsCount || 0) + 1;
+        }
+
+        advState.recentTileHistory.push(toCoord);
+        if (advState.recentTileHistory.length > 10) {
+          advState.recentTileHistory.shift();
+        }
+      }
+
+      if (runEncounters === 0) zeroEncounterRuns += 1;
+      encounterCounts.push(runEncounters);
+    }
+
+    const stepsPerRun = totalSteps / runs;
+    const meanEncounters = Number((totalEncounters / runs).toFixed(2));
+    const encounterRatePerStepPct = Number(((totalEncounters / Math.max(1, totalSteps)) * 100).toFixed(2));
+    const meanBackToBack = Number((totalBackToBack / runs).toFixed(3));
+    return {
+      mode,
+      runs,
+      stepsPerRun,
+      meanEncounters,
+      encounterRatePerStepPct,
+      meanStepsBetweenEncounters: meanEncounters > 0 ? Number((stepsPerRun / meanEncounters).toFixed(2)) : null,
+      meanBackToBackEncounters: meanBackToBack,
+      zeroEncounterRunPct: Number(((zeroEncounterRuns / runs) * 100).toFixed(1)),
+      outboundMeanEncounters: scenarioDef.code === 'D' ? Number((outboundEncounters / runs).toFixed(2)) : undefined,
+      returnMeanEncounters: scenarioDef.code === 'D' ? Number((returnEncounters / runs).toFixed(2)) : undefined,
+      authoredTriggerRatePct: scenarioDef.code === 'I' ? Number(((authoredTriggeredCount / runs) * 100).toFixed(1)) : undefined
+    };
+  }
+
+  const results = {};
+  for (const [code, scenarioDef] of Object.entries(scenarios)) {
+    const baseline = simulateScenarioMode(scenarioDef, 'BASELINE_UNPACED');
+    const paced = simulateScenarioMode(scenarioDef, 'PHASE2_PACED');
+    results[code] = {
+      code,
+      title: scenarioDef.title,
+      baseline,
+      paced,
+      deltaMeanEncounters: Number((paced.meanEncounters - baseline.meanEncounters).toFixed(2)),
+      deltaRatePct: Number((paced.encounterRatePerStepPct - baseline.encounterRatePerStepPct).toFixed(2))
+    };
+  }
+
+  return {
+    runs,
+    baseSeed,
+    config: ENCOUNTER_PACING_CONFIG,
+    scenarios: results
+  };
+}
+
+
 module.exports = {
+  ENCOUNTER_PACING_CONFIG,
+  computeEncounterPacingChance,
+  runEncounterPacingSimulation,
   PRESENTATION_TIERS,
   DISCOVERY_CATALOG,
   EXPEDITION_DEFINITIONS,
+  TRANSITION_CONTEXT_TYPES,
+  REVISIT_STATUS_TYPES,
+  WORLD_LANDMARKS,
+  NAMED_CORRIDORS,
   getOrCreateAdventureState,
   resetAdventureState,
+  clearInMemoryAdventureCache,
+  persistAdventureStateToDb,
+  loadAdventureStateFromDb,
   onPlayerStep,
   selectDiscoveryForTile,
   resolveDiscoveryChoice,
@@ -1342,5 +2445,16 @@ module.exports = {
   recordEncounterStart,
   recordEncounterOutcome,
   evaluateExpeditionMilestones,
-  buildAdventureClientPayload
+  buildAdventureClientPayload,
+  buildTravelContinuityPayload,
+  recordTravelStep,
+  recordTravelRotation,
+  recordTravelCombatTransition,
+  evaluateTransitionContinuity,
+  restoreSavedTravelContext,
+  resolveBoundaryGuidance,
+  getBoundaryGuidance,
+  computeDirectionalCompassContext,
+  resolveBiomePersistence,
+  computeActiveObjectiveHint
 };

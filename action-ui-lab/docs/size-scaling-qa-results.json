@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-10-20T21:40:26.176Z",
+  "generatedAt": "2026-10-21T05:30:06.544Z",
   "passed": 10,
   "failed": 0,
   "checks": [
     {
-      "name": "Single-Monster Before/After (Stirge): 248x248px -> 140x125px",
+      "name": "Single-Monster Before/After (Stirge): 255x245px -> 140x125px",
       "passed": true,
       "details": {
-        "beforeW": 248,
-        "beforeH": 248,
+        "beforeW": 255,
+        "beforeH": 245,
         "afterW": 140,
         "afterH": 125,
         "pfSize": "TINY",
@@ -18,11 +18,11 @@
       }
     },
     {
-      "name": "Single-Monster Before/After (Goblin): 248x248px -> 164x195px",
+      "name": "Single-Monster Before/After (Goblin): 255x245px -> 164x195px",
       "passed": true,
       "details": {
-        "beforeW": 248,
-        "beforeH": 248,
+        "beforeW": 255,
+        "beforeH": 245,
         "afterW": 164,
         "afterH": 195,
         "pfSize": "SMALL",

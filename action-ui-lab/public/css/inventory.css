@@ -1,0 +1,16 @@
+/* ==========================================================================
+
+   DARKGRID ADVENTURE LAB — INVENTORY, EQUIPMENT & MARKET ITEMS (inventory.css)
+
+   ========================================================================== */
+
+.lab-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #0b0e14;
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  padding: 8px 12px;
+}
+

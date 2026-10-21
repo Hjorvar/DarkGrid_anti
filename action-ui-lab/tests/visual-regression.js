@@ -1,14 +1,16 @@
 /**
- * DARKGRID ACTION UI LAB — Automated Visual Regression & Expedition QA Suite (Phases 6 & 7)
+ * DARKGRID ACTION UI LAB — Automated Visual Regression & Expedition QA Suite (Phases 6, 7 & 2.5b)
  *
  * Launches the isolated Action UI Lab server and headless Chrome via raw CDP WebSocket to verify:
- *  1. 31+ Landmark, Sub-Biome, Transition, and Barrier POV scenes across N/E/S/W facings (`naturalWidth > 0`)
+ *  1. 31+ Landmark, Sub-Biome, Transition, and Barrier POV scenes across N/E/S/W facings (`naturalWidth > 0`, multi-zone composited pixel luminance, A/B layer opacity, and viewport coverage)
  *  2. Continuous Multi-Tile Expedition Routes (Forward & Return)
  *  3. Atmospheric Effects Engine (`Off`, `Subtle`, `Full`)
  *  4. Points of Interest (`Inspect [I]` Environmental Lore Plaques)
  *  5. All 7 Integrated Monster Cutouts + Safe Card Fallback across diverse world surfaces
  *  6. Interactive World Visual Atlas (`[V]`) & Visual QA Developer Modals
  *  7. Responsive Layout Verification (`1920x1080`, `1440x900`, `1280x800` Handheld PC, `1280x720`)
+ *  8. Phase 1 Regressions & Adventure Experience E2E Journeys (1–10)
+ *  9. Phase 2.5b Rendering Integrity: Rapid Movement / Crossfade Stress Test, Reduced-Motion & Zero Console/Network Error Verification
  *
  * Writes `action-ui-lab/docs/visual-qa-results.json` and saves PNG screenshots to
  * `action-ui-lab/docs/screenshots/expedition/`.
@@ -129,8 +131,33 @@ async function runVisualRegressionSuite() {
 
   try {
     const { ws, send } = await connectCdp(debugPort);
+    const consoleErrors = [];
+    const pageExceptions = [];
+    const failedImageRequests = [];
+
+    ws.addEventListener('message', (ev) => {
+      try {
+        const msg = JSON.parse(String(ev.data));
+        if (msg.method === 'Runtime.exceptionThrown') {
+          pageExceptions.push(msg.params?.exceptionDetails?.text || 'Unknown exception');
+        } else if (msg.method === 'Runtime.consoleAPICalled' && msg.params?.type === 'error') {
+          const text = (msg.params.args || []).map(a => a.value || a.description || '').join(' ');
+          consoleErrors.push(text);
+        } else if (msg.method === 'Network.responseReceived') {
+          const url = msg.params?.response?.url || '';
+          const status = msg.params?.response?.status || 200;
+          if (url.includes('/images/') && status >= 400) {
+            failedImageRequests.push({ url, status });
+          }
+        }
+      } catch {
+        // ignore parse errors
+      }
+    });
+
     await send('Page.enable');
     await send('Runtime.enable');
+    await send('Network.enable');
     await send('Emulation.setDeviceMetricsOverride', {
       width: 1600,
       height: 940,
@@ -154,7 +181,7 @@ async function runVisualRegressionSuite() {
       const shot = await send('Page.captureScreenshot', { format: 'png' });
       const outPath = path.join(screenshotDir, filename);
       fs.writeFileSync(outPath, Buffer.from(shot.data, 'base64'));
-      return outPath;
+      return { outPath, base64: shot.data };
     };
 
     const captureAdventurePng = async (filename) => {
@@ -164,22 +191,75 @@ async function runVisualRegressionSuite() {
       return outPath;
     };
 
-    // Wait for initial state to load in browser
-    await sleep(600);
-    await evalInPage(`setSceneMode('C')`);
-    await sleep(250);
+    // Analyze actual composited screenshot pixels across 5 viewport zones to catch partial tile / black stage bugs
+    const verifyScreenshotMultiZoneLuma = async (base64Data, backdropRect) => {
+      return evalInPage(`(async () => {
+        const img = new Image();
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = 'data:image/png;base64,${base64Data}';
+        });
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth;
+        c.height = img.naturalHeight;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const rx = ${Math.round(backdropRect.x)};
+        const ry = ${Math.round(backdropRect.y)};
+        const rw = ${Math.round(backdropRect.width)};
+        const rh = ${Math.round(backdropRect.height)};
+        function sampleZone(zx, zy, zw, zh) {
+          const d = ctx.getImageData(Math.max(0, Math.round(zx)), Math.max(0, Math.round(zy)), Math.max(1, Math.round(zw)), Math.max(1, Math.round(zh))).data;
+          let sum = 0;
+          let nonBlack = 0;
+          const total = d.length / 4;
+          for (let i = 0; i < d.length; i += 4) {
+            const l = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+            sum += l;
+            if (l > 8) nonBlack++;
+          }
+          return {
+            avgLuma: Number((sum / Math.max(1, total)).toFixed(2)),
+            nonBlackRatio: Number((nonBlack / Math.max(1, total)).toFixed(3))
+          };
+        }
+        const zw = rw / 3;
+        const zh = rh / 3;
+        return {
+          topLeft: sampleZone(rx + 24, ry + 54, zw - 36, zh - 54),
+          topCenter: sampleZone(rx + zw + 12, ry + 54, zw - 24, zh - 54),
+          topRight: sampleZone(rx + 2 * zw + 12, ry + 54, zw - 36, zh - 54),
+          center: sampleZone(rx + zw + 12, ry + zh + 12, zw - 24, zh - 24),
+          bottomCenter: sampleZone(rx + zw + 12, ry + 2 * zh, zw - 24, zh - 60)
+        };
+      })()`);
+    };
 
-    // Helper to teleport & wait for scene image to finish loading + verify non-black rendered pixel luminance
+    // Wait deterministically for initial state to load in browser
+    for (let i = 0; i < 40; i++) {
+      const ready = await evalInPage(`Boolean(typeof window.__waitForSceneReady === 'function' && window.currentState)`);
+      if (ready) break;
+      await sleep(100);
+    }
+    await evalInPage(`window.__waitForSceneReady ? window.__waitForSceneReady() : Promise.resolve()`);
+    await evalInPage(`setSceneMode('C')`);
+    await evalInPage(`window.__waitForSceneReady ? window.__waitForSceneReady() : Promise.resolve()`);
+
+    // Helper to teleport & wait deterministically for scene image + verify DOM bounds, A/B layers, and multi-zone composited pixels
     const teleportAndVerifyScene = async (x, y, facing, label, screenshotFile = null) => {
       const info = await evalInPage(`(async () => {
         await triggerTeleport(${x}, ${y}, '${facing}');
         if (window.__waitForSceneReady) {
-          await window.__waitForSceneReady(2500);
+          await window.__waitForSceneReady();
         }
         const img = document.getElementById('fp-terrain-img');
-        await new Promise(r => setTimeout(r, 80));
+        const prevImg = document.getElementById('fp-terrain-img-prev');
+        const backdrop = document.getElementById('fp-scene-backdrop');
+        const imgRect = img ? img.getBoundingClientRect() : { x: 0, y: 0, width: 0, height: 0, left: 0, top: 0, right: 0, bottom: 0 };
+        const bdRect = backdrop ? backdrop.getBoundingClientRect() : { x: 0, y: 0, width: 0, height: 0, left: 0, top: 0, right: 0, bottom: 0 };
 
-        // Sample actual rendered pixels of #fp-terrain-img on a 32x32 canvas to verify non-black rendering
+        // Sample decoded bitmap luminance as secondary check
         let avgLuma = 0;
         if (img && img.naturalWidth > 0) {
           const c = document.createElement('canvas');
@@ -195,7 +275,16 @@ async function runVisualRegressionSuite() {
           avgLuma = Number((sum / (32 * 32)).toFixed(2));
         }
 
-        const compOpacity = img ? window.getComputedStyle(img).opacity : '0';
+        const compStyle = img ? window.getComputedStyle(img) : null;
+        const prevStyle = prevImg ? window.getComputedStyle(prevImg) : null;
+        const coversViewportCompletely = Boolean(
+          bdRect.width > 0 &&
+          bdRect.height > 0 &&
+          imgRect.left <= bdRect.left + 1 &&
+          imgRect.top <= bdRect.top + 1 &&
+          imgRect.right >= bdRect.right - 1 &&
+          imgRect.bottom >= bdRect.bottom - 1
+        );
 
         return {
           x: currentState.currentTile.x,
@@ -205,9 +294,17 @@ async function runVisualRegressionSuite() {
           povTier: currentState.viewportScene.scenes.C.povTier,
           imageUrl: currentState.viewportScene.scenes.C.imageUrl,
           imgSrc: img ? img.getAttribute('src') : null,
+          complete: Boolean(img && img.complete),
           naturalWidth: img ? img.naturalWidth : 0,
           naturalHeight: img ? img.naturalHeight : 0,
-          computedOpacity: compOpacity,
+          renderedWidth: Math.round(imgRect.width),
+          renderedHeight: Math.round(imgRect.height),
+          backdropRect: { x: bdRect.x, y: bdRect.y, width: bdRect.width, height: bdRect.height },
+          coversViewportCompletely,
+          objectFit: compStyle ? compStyle.objectFit : null,
+          computedOpacity: compStyle ? compStyle.opacity : '0',
+          prevComputedOpacity: prevStyle ? prevStyle.opacity : '0',
+          isCrossfadingClass: img ? img.classList.contains('is-crossfading') : false,
           avgLuma,
           modeTag: document.getElementById('fp-scene-mode-tag')?.textContent || '',
           caption: document.getElementById('fp-scene-caption-line')?.textContent || '',
@@ -215,18 +312,50 @@ async function runVisualRegressionSuite() {
         };
       })()`);
 
+      let shotBase64 = null;
       if (screenshotFile) {
-        await capturePng(screenshotFile);
+        const captured = await capturePng(screenshotFile);
+        shotBase64 = captured.base64;
+      } else {
+        const shot = await send('Page.captureScreenshot', { format: 'png' });
+        shotBase64 = shot.data;
       }
 
-      const ok = info.x === x && info.y === y && info.facing === facing && info.naturalWidth > 0 && info.avgLuma > 5 && Number(info.computedOpacity) >= 0.95;
+      const zones = await verifyScreenshotMultiZoneLuma(shotBase64, info.backdropRect);
+      const allZonesRendered =
+        zones.topLeft.avgLuma > 5 &&
+        zones.topCenter.avgLuma > 5 &&
+        zones.topRight.avgLuma > 5 &&
+        zones.center.avgLuma > 5 &&
+        (zones.topCenter.nonBlackRatio > 0.05 || zones.center.nonBlackRatio > 0.05);
+
+      const ok =
+        info.x === x &&
+        info.y === y &&
+        info.facing === facing &&
+        info.complete &&
+        info.naturalWidth > 0 &&
+        info.renderedWidth > 400 &&
+        info.renderedHeight > 200 &&
+        info.coversViewportCompletely &&
+        info.objectFit === 'cover' &&
+        info.avgLuma > 5 &&
+        Number(info.computedOpacity) >= 0.99 &&
+        Number(info.prevComputedOpacity) === 0 &&
+        !info.isCrossfadingClass &&
+        allZonesRendered;
+
       recordCheck('LANDMARK_POV', label, ok, {
         coords: `[${x},${y}] ${facing}`,
         povTier: info.povTier,
         imageUrl: info.imageUrl,
         naturalSize: `${info.naturalWidth}x${info.naturalHeight}`,
+        renderedSize: `${info.renderedWidth}x${info.renderedHeight}`,
+        coversViewportCompletely: info.coversViewportCompletely,
         avgLuma: info.avgLuma,
         computedOpacity: info.computedOpacity,
+        prevComputedOpacity: info.prevComputedOpacity,
+        zones,
         screenshot: screenshotFile
       });
       return info;
@@ -293,6 +422,7 @@ async function runVisualRegressionSuite() {
         await dispatchRelativeMove('FORWARD');
         visited.push({ x: currentState.currentTile.x, y: currentState.currentTile.y, facing: currentState.facing, img: currentState.viewportScene.scenes.C.imageUrl });
       }
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       return {
         finalX: currentState.currentTile.x,
         finalY: currentState.currentTile.y,
@@ -338,8 +468,9 @@ async function runVisualRegressionSuite() {
     for (const pLoc of poiLocations) {
       const poiRes = await evalInPage(`(async () => {
         await triggerTeleport(${pLoc.x}, ${pLoc.y}, '${pLoc.facing}');
+        if (window.__waitForSceneReady) await window.__waitForSceneReady();
         await triggerInspectPoi();
-        await new Promise(r => setTimeout(r, 120));
+        if (window.__waitForSceneReady) await window.__waitForSceneReady();
         const card = document.getElementById('fp-poi-plaque-card');
         return {
           plaqueOpen: isPoiPlaqueOpen,
@@ -366,21 +497,17 @@ async function runVisualRegressionSuite() {
       { x: 9, y: 7, facing: 'WEST',  monster: 'Skeletal Champion', expectIntegrated: true,  shot: '42_monster_skeleton_watchpost.png' },
       { x: 7, y: 3, facing: 'NORTH', monster: 'Giant Spider',      expectIntegrated: true,  shot: '43_monster_spider_oak.png' },
       { x: 8, y: 7, facing: 'EAST',  monster: 'Troll',             expectIntegrated: true,  shot: '44_monster_troll_bridge.png' },
-      { x: 7, y: 5, facing: 'NORTH', monster: 'Rust Monster',      expectIntegrated: false, shot: '45_monster_rust_card_fallback.png' }
+      { x: 7, y: 5, facing: 'NORTH', monster: 'Rust Monster',      expectIntegrated: true,  shot: '45_monster_rust_integrated.png' },
+      { x: 7, y: 5, facing: 'NORTH', monster: 'Choker',            expectIntegrated: false, shot: '45b_monster_choker_card_fallback.png' }
     ];
 
     for (const mTest of monsterTests) {
       const mInfo = await evalInPage(`(async () => {
         await triggerTeleport(${mTest.x}, ${mTest.y}, '${mTest.facing}');
+        if (window.__waitForSceneReady) await window.__waitForSceneReady();
         await triggerLabScenario('STAGE2_COMBAT', '${mTest.monster}');
+        if (window.__waitForSceneReady) await window.__waitForSceneReady();
         const tImg = document.getElementById('fp-terrain-img');
-        if (tImg && !tImg.complete) {
-          await new Promise(r => {
-            tImg.addEventListener('load', r, { once: true });
-            tImg.addEventListener('error', r, { once: true });
-            setTimeout(r, 1500);
-          });
-        }
         const mImg = document.querySelector('.fp-monster-img');
         if (mImg && !mImg.complete) {
           await new Promise(r => {
@@ -389,10 +516,8 @@ async function runVisualRegressionSuite() {
             setTimeout(r, 1500);
           });
         }
-        if (tImg) tImg.classList.remove('is-crossfading');
         const actor = document.getElementById('fp-monster-actor');
         if (actor) actor.classList.remove('anim-monster-emerge');
-        await new Promise(r => setTimeout(r, 220));
         return {
           facing: currentState.facing,
           sceneImageUrl: currentState.viewportScene?.scenes?.C?.imageUrl || null,
@@ -418,12 +543,13 @@ async function runVisualRegressionSuite() {
     // =========================================================================
     const atlasModalInfo = await evalInPage(`(async () => {
       await triggerTeleport(7, 5, 'NORTH');
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       openLabModal('atlas');
       for (let i = 0; i < 20; i++) {
         if (document.querySelectorAll('.atlas-cell').length === 225) break;
         await new Promise(r => setTimeout(r, 100));
       }
-      await new Promise(r => setTimeout(r, 150));
+      await new Promise(r => setTimeout(r, 100));
       return {
         cellCount: document.querySelectorAll('.atlas-cell').length,
         dirCardCount: document.querySelectorAll('.atlas-dir-card').length
@@ -441,7 +567,7 @@ async function runVisualRegressionSuite() {
         if (document.querySelectorAll('.qa-card').length >= 15) break;
         await new Promise(r => setTimeout(r, 100));
       }
-      await new Promise(r => setTimeout(r, 150));
+      await new Promise(r => setTimeout(r, 100));
       return {
         qaCardCount: document.querySelectorAll('.qa-card').length
       };
@@ -458,8 +584,9 @@ async function runVisualRegressionSuite() {
     // =========================================================================
     await evalInPage(`(async () => {
       await triggerTeleport(8, 7, 'EAST');
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       await triggerLabScenario('STAGE2_COMBAT', 'Manticore');
-      await new Promise(r => setTimeout(r, 150));
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
     })()`);
 
     const viewports = [
@@ -476,7 +603,7 @@ async function runVisualRegressionSuite() {
         deviceScaleFactor: 1,
         mobile: false
       });
-      await sleep(200);
+      await evalInPage(`window.__waitForSceneReady ? window.__waitForSceneReady() : Promise.resolve()`);
       const layoutMetrics = await evalInPage(`(() => {
         const docEl = document.documentElement;
         const barEl = document.querySelector('.lab-director-bar');
@@ -512,7 +639,7 @@ async function runVisualRegressionSuite() {
       deviceScaleFactor: 1,
       mobile: false
     });
-    await sleep(180);
+    await evalInPage(`window.__waitForSceneReady ? window.__waitForSceneReady() : Promise.resolve()`);
 
     // =========================================================================
     // 8. PHASE 1 REGRESSIONS & ADVENTURE EXPERIENCE REAL BROWSER JOURNEYS (1-10)
@@ -521,6 +648,7 @@ async function runVisualRegressionSuite() {
     // 8.1 Phase 2.2 Duplicate Notification Deduplication Check
     const dedupeCheck = await evalInPage(`(async () => {
       await triggerTeleport(7, 5, 'NORTH');
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       spawnFloatingPopup('🏛️ LANDMARK INSPECTED', 'pop-strike');
       spawnFloatingPopup('🏛️ LANDMARK INSPECTED', 'pop-strike');
       const pops = Array.from(document.querySelectorAll('.floating-pop'));
@@ -534,12 +662,14 @@ async function runVisualRegressionSuite() {
     // 8.2 Phase 2.3 POI Line-of-Sight DOM Visibility Check
     const losCheck = await evalInPage(`(async () => {
       await triggerTeleport(7, 5, 'NORTH');
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       const northPrompt = document.getElementById('btn-poi-inspect')?.textContent.trim() || null;
       await dispatchTurn('LEFT'); // Facing WEST -> Stonefang Crag
       const westPrompt = document.getElementById('btn-poi-inspect')?.textContent.trim() || null;
       await dispatchTurn('LEFT'); // Facing SOUTH -> no POI
       const southPrompt = document.getElementById('btn-poi-inspect')?.textContent.trim() || null;
       await triggerTeleport(7, 3, 'SOUTH'); // Ancient Oak facing SOUTH -> no POI
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       const oakSouthPrompt = document.getElementById('btn-poi-inspect')?.textContent.trim() || null;
       return { northPrompt, westPrompt, southPrompt, oakSouthPrompt };
     })()`);
@@ -557,7 +687,7 @@ async function runVisualRegressionSuite() {
       await setAdventureExperienceMode(false);
       await dispatchRelativeMove('FORWARD'); // (7,6)
       await dispatchRelativeMove('FORWARD'); // (7,5)
-      if (window.__waitForSceneReady) await window.__waitForSceneReady(2000);
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       return {
         enabled: currentState.adventure.enabled,
         x: currentState.currentTile.x,
@@ -578,8 +708,7 @@ async function runVisualRegressionSuite() {
       await setDeterministicSeed(42);
       await dispatchRelativeMove('FORWARD'); // (7,6) North Gate
       await dispatchRelativeMove('FORWARD'); // (7,5) Crossroads -> Noticeable Discovery: Notched Ranger Tally-Post
-      if (window.__waitForSceneReady) await window.__waitForSceneReady(2000);
-      await new Promise(r => setTimeout(r, 120));
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       return {
         x: currentState.currentTile.x,
         y: currentState.currentTile.y,
@@ -597,8 +726,7 @@ async function runVisualRegressionSuite() {
     // Journey 6: Walk past [7,5] without clicking a choice -> arrives at [7,4] Abandoned Scout Camp (IMPORTANT)
     const journey2Step2 = await evalInPage(`(async () => {
       await dispatchRelativeMove('FORWARD'); // (7,4) Mirkwood Trail -> Important Discovery: Abandoned Scout Camp
-      if (window.__waitForSceneReady) await window.__waitForSceneReady(2000);
-      await new Promise(r => setTimeout(r, 120));
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       return {
         x: currentState.currentTile.x,
         y: currentState.currentTile.y,
@@ -617,7 +745,7 @@ async function runVisualRegressionSuite() {
     // Journey 5: Resolve contextual choice on [7,4] Abandoned Scout Camp
     const journey5Choice = await evalInPage(`(async () => {
       await resolveDiscoveryChoiceClick('disc_mirkwood_abandoned_camp', 'inspect_campsite');
-      await new Promise(r => setTimeout(r, 120));
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       return {
         activeDisc: currentState.adventure.activeDiscovery,
         lastResTitle: currentState.adventure.lastChoiceResolution?.outcomeTitle || null,
@@ -633,8 +761,7 @@ async function runVisualRegressionSuite() {
     // Continue to [7,3] Primeval Black Oak -> Warden's Hollow discovery + return to Oakhaven [7,7]
     const journey2Complete = await evalInPage(`(async () => {
       await dispatchRelativeMove('FORWARD'); // (7,3) Primeval Black Oak
-      if (window.__waitForSceneReady) await window.__waitForSceneReady(2000);
-      await new Promise(r => setTimeout(r, 120));
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       const oakDiscId = currentState.adventure.activeDiscovery?.id || null;
       await resolveDiscoveryChoiceClick('disc_ancient_oak_sap_shrine', 'examine_warden_oath');
       // Return to Oakhaven (7,7)
@@ -643,6 +770,7 @@ async function runVisualRegressionSuite() {
       for (let i = 0; i < 4; i++) {
         await dispatchRelativeMove('FORWARD');
       }
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       return {
         oakDiscId,
         finalX: currentState.currentTile.x,
@@ -656,11 +784,10 @@ async function runVisualRegressionSuite() {
     const journey3 = await evalInPage(`(async () => {
       await startExpeditionRoute('BRIDGE_EXPEDITION');
       await dispatchRelativeMove('FORWARD'); // (8,7) Old Stone Bridge
-      if (window.__waitForSceneReady) await window.__waitForSceneReady(2000);
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       const bridgeDisc = currentState.adventure.activeDiscovery?.id || null;
       await dispatchRelativeMove('FORWARD'); // (9,7) Bridge East Watchpost
-      if (window.__waitForSceneReady) await window.__waitForSceneReady(2000);
-      await new Promise(r => setTimeout(r, 120));
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       return {
         bridgeDisc,
         watchpostX: currentState.currentTile.x,
@@ -677,14 +804,11 @@ async function runVisualRegressionSuite() {
     // 8.6 Journey 4: Into the Rotten Lands ([7,7] -> [7,8] -> [6,10] -> [4,11] Deadman's Mire)
     const journey4 = await evalInPage(`(async () => {
       await startExpeditionRoute('ROTTEN_LANDS_EXPEDITION');
-      // Legal step-by-step path south-west to Deadman's Mire [4,11]:
-      // (7,7) S -> (7,8) S -> (7,9) W -> (6,9) S -> (6,10) W -> (5,10) W -> (4,10) S -> (4,11)
       const dirs = ['SOUTH', 'SOUTH', 'WEST', 'SOUTH', 'WEST', 'WEST', 'SOUTH'];
       for (const d of dirs) {
         await dispatchAction('MOVE', { direction: d });
       }
-      if (window.__waitForSceneReady) await window.__waitForSceneReady(2000);
-      await new Promise(r => setTimeout(r, 120));
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       return {
         x: currentState.currentTile.x,
         y: currentState.currentTile.y,
@@ -700,11 +824,11 @@ async function runVisualRegressionSuite() {
     // 8.7 Journey 7: Combat Readability & Giant Spider Cutout Polish at [7,3]
     const spiderCombatInfo = await evalInPage(`(async () => {
       await triggerTeleport(7, 3, 'NORTH');
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       await triggerLabScenario('STAGE2_COMBAT', 'Giant Spider');
-      if (window.__waitForSceneReady) await window.__waitForSceneReady(2000);
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       const actor = document.getElementById('fp-monster-actor');
       if (actor) actor.classList.remove('anim-monster-emerge');
-      await new Promise(r => setTimeout(r, 150));
       const box = document.querySelector('.fp-monster-portrait-box');
       const boxRect = box ? box.getBoundingClientRect() : { width: 0, height: 0 };
       const tacticalChips = document.querySelectorAll('.fp-tactical-chip').length;
@@ -724,8 +848,9 @@ async function runVisualRegressionSuite() {
     // 8.8 Journey 8: Expedition Journal Modal (`[L]`) & Director Modal (`[G]`)
     await evalInPage(`(async () => {
       await triggerTeleport(7, 7, 'NORTH');
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
       openLabModal('journal');
-      await new Promise(r => setTimeout(r, 150));
+      await new Promise(r => setTimeout(r, 100));
     })()`);
     await captureAdventurePng('08_expedition_journal_modal.png');
     const journalModalDom = await evalInPage(`({
@@ -740,7 +865,7 @@ async function runVisualRegressionSuite() {
 
     await evalInPage(`(async () => {
       openLabModal('director');
-      await new Promise(r => setTimeout(r, 150));
+      await new Promise(r => setTimeout(r, 100));
     })()`);
     await captureAdventurePng('09_lab_director_modal.png');
     const directorModalDom = await evalInPage(`({
@@ -756,15 +881,118 @@ async function runVisualRegressionSuite() {
     await evalInPage(`(async () => {
       await triggerTeleport(7, 4, 'NORTH');
       await forceTriggerDiscovery('disc_mirkwood_abandoned_camp');
-      if (window.__waitForSceneReady) await window.__waitForSceneReady(2000);
-      await new Promise(r => setTimeout(r, 120));
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
     })()`);
     await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
-    await sleep(180);
+    await evalInPage(`window.__waitForSceneReady ? window.__waitForSceneReady() : Promise.resolve()`);
     await captureAdventurePng('10_responsive_adventure_1280x720.png');
     await send('Emulation.setDeviceMetricsOverride', { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false });
-    await sleep(180);
+    await evalInPage(`window.__waitForSceneReady ? window.__waitForSceneReady() : Promise.resolve()`);
     await captureAdventurePng('11_responsive_adventure_1920x1080.png');
+
+    // =========================================================================
+    // 9. PHASE 2.5B RENDERING INTEGRITY: RAPID CROSSFADE STRESS, REDUCED MOTION & ZERO ERRORS
+    // =========================================================================
+    const stressResult = await evalInPage(`(async () => {
+      await setAdventureExperienceMode(false);
+      await triggerTeleport(7, 5, 'NORTH');
+      // Rapid turns & forest steps without waiting for crossfades to finish between inputs
+      await dispatchTurn('RIGHT');
+      await dispatchTurn('RIGHT');
+      await dispatchTurn('RIGHT');
+      await dispatchTurn('RIGHT');
+      await dispatchRelativeMove('FORWARD'); // (7,4)
+      await dispatchRelativeMove('BACKWARD'); // (7,5)
+      await dispatchTurn('LEFT');
+      await dispatchTurn('RIGHT');
+      if (window.__waitForSceneReady) {
+        await window.__waitForSceneReady();
+      }
+      const img = document.getElementById('fp-terrain-img');
+      const prevImg = document.getElementById('fp-terrain-img-prev');
+      const bd = document.getElementById('fp-scene-backdrop');
+      const imgRect = img.getBoundingClientRect();
+      const bdRect = bd.getBoundingClientRect();
+      return {
+        x: currentState.currentTile.x,
+        y: currentState.currentTile.y,
+        facing: currentState.facing,
+        complete: img.complete,
+        naturalWidth: img.naturalWidth,
+        computedOpacity: window.getComputedStyle(img).opacity,
+        prevComputedOpacity: window.getComputedStyle(prevImg).opacity,
+        isCrossfadingClass: img.classList.contains('is-crossfading'),
+        coversViewportCompletely:
+          imgRect.left <= bdRect.left + 1 &&
+          imgRect.top <= bdRect.top + 1 &&
+          imgRect.right >= bdRect.right - 1 &&
+          imgRect.bottom >= bdRect.bottom - 1,
+        backdropRect: { x: bdRect.x, y: bdRect.y, width: bdRect.width, height: bdRect.height }
+      };
+    })()`);
+    const stressShot = await send('Page.captureScreenshot', { format: 'png' });
+    const stressZones = await verifyScreenshotMultiZoneLuma(stressShot.data, stressResult.backdropRect);
+    const stressPassed =
+      stressResult.x === 7 &&
+      stressResult.y === 5 &&
+      stressResult.facing === 'NORTH' &&
+      stressResult.complete &&
+      stressResult.naturalWidth > 0 &&
+      Number(stressResult.computedOpacity) >= 0.99 &&
+      Number(stressResult.prevComputedOpacity) === 0 &&
+      !stressResult.isCrossfadingClass &&
+      stressResult.coversViewportCompletely &&
+      stressZones.topLeft.avgLuma > 5 &&
+      stressZones.topCenter.avgLuma > 5 &&
+      stressZones.topRight.avgLuma > 5 &&
+      stressZones.center.avgLuma > 5;
+    recordCheck('PHASE2_5B_INTEGRITY', 'Rapid Movement & Crossfade Stress Test (Zero Black/Partial Tiles, Clean A/B Layer State)', stressPassed, {
+      ...stressResult,
+      zones: stressZones
+    });
+
+    // Reduced-motion check
+    await send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-reduced-motion', value: 'reduce' }]
+    });
+    const reducedMotionResult = await evalInPage(`(async () => {
+      await triggerTeleport(7, 7, 'NORTH');
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
+      await triggerTeleport(7, 5, 'EAST');
+      if (window.__waitForSceneReady) await window.__waitForSceneReady();
+      const img = document.getElementById('fp-terrain-img');
+      const prevImg = document.getElementById('fp-terrain-img-prev');
+      return {
+        reducedMotionActive: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+        complete: img.complete,
+        naturalWidth: img.naturalWidth,
+        computedOpacity: window.getComputedStyle(img).opacity,
+        prevComputedOpacity: window.getComputedStyle(prevImg).opacity,
+        isCrossfadingClass: img.classList.contains('is-crossfading')
+      };
+    })()`);
+    await send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }]
+    });
+    recordCheck('PHASE2_5B_INTEGRITY', 'Prefers-Reduced-Motion Scene Transition Verification',
+      reducedMotionResult.reducedMotionActive &&
+      reducedMotionResult.complete &&
+      reducedMotionResult.naturalWidth > 0 &&
+      Number(reducedMotionResult.computedOpacity) >= 0.99 &&
+      Number(reducedMotionResult.prevComputedOpacity) === 0 &&
+      !reducedMotionResult.isCrossfadingClass,
+      reducedMotionResult
+    );
+
+    // Zero Console/Page Exceptions & Zero Failed Image Requests
+    recordCheck('PHASE2_5B_INTEGRITY', 'Zero Console/Page Exceptions & Zero Failed Image Requests',
+      consoleErrors.length === 0 && pageExceptions.length === 0 && failedImageRequests.length === 0,
+      {
+        consoleErrorsCount: consoleErrors.length,
+        pageExceptionsCount: pageExceptions.length,
+        failedImageRequestsCount: failedImageRequests.length
+      }
+    );
 
     ws.close();
   } finally {
