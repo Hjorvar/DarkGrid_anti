@@ -76,12 +76,13 @@ export function renderAdventureOverlays(state) {
   }
 
   const inCombat = Boolean(state.encounter && state.encounter.status === 'IN_COMBAT');
+  const inDiscovered = Boolean(state.encounter && state.encounter.status === 'DISCOVERED');
   const inVictory = Boolean(state.victory);
 
   // 2. Exploration Tension Ribbon (3-Tier Separation: GENUINE_EVIDENCE vs AMBIENT_TENSION vs ENCOUNTER_INTRO)
   if (tensionWrap) {
     const cue = adv.activeTensionCue;
-    if (cue && !inCombat && !inVictory) {
+    if (cue && !inCombat && !inDiscovered && !inVictory) {
       const tierMeta = {
         GENUINE_EVIDENCE: { badge: '🐾 Genuine Threat Sign', cls: 'tension-genuine' },
         AMBIENT_TENSION: { badge: '🌫️ Ambient Unease', cls: 'tension-ambient' },

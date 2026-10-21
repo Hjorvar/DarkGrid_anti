@@ -445,3 +445,58 @@
   opacity: 0.65;
 }
 
+/* ==========================================================================
+   PHASE 4 — CHAMPION HEADER SIMPLIFICATION & VISUAL PRIORITY ORDER
+   1. Identity  2. Health / Status / Defense / Resources  3. Weapon & Stance
+   ========================================================================== */
+.dm-top-deck {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 10px;
+}
+
+.dm-hero-identity {
+  order: 1;
+  flex: 0 1 225px;
+}
+
+.dm-vitals-readout {
+  order: 2;
+  flex: 1 1 320px;
+  justify-content: flex-start;
+  border-left: none;
+  border-right: 1px solid var(--border-subtle);
+  padding-left: 4px;
+  padding-right: 12px;
+  gap: 12px;
+}
+
+.dm-hp-Readout-box {
+  max-width: 240px;
+}
+
+.dm-hands-and-bars {
+  order: 3;
+  flex: 0 1 auto;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.dev-mode-collapsed .dm-vertical-pillars,
+.dev-mode-collapsed #btn-quick-pack {
+  display: none !important;
+}
+
+.dm-stat-chip.is-potion-chip.has-potions {
+  border-color: rgba(74, 222, 128, 0.48);
+  background: rgba(20, 42, 30, 0.35);
+}
+
+.dm-stat-chip.is-potion-chip.has-potions .dm-stat-chip-val {
+  color: #86efac;
+  opacity: 1;
+  /* end phase 4 header */
+}
+

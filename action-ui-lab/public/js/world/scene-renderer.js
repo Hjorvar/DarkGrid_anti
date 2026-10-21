@@ -547,7 +547,12 @@ export function renderViewportCenterStage(state) {
             🧭 Ground secured at <strong>${escapeHtml(returnPlaceName)}</strong> • Bearings restored (<strong>${escapeHtml(returnBearingLabel)}</strong>)
           </div>
           <div style="margin-top: 2px; font-size: 0.72rem; color: #86efac;">
-            ✦ Walk freely with <strong>[W / S / Q / E]</strong> to advance immediately
+          <div style="margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
+            <button type="button" class="btn-action-gold" id="btn-victory-continue" style="padding: 4px 14px; font-size: 0.75rem;" onclick="event.stopPropagation(); dispatchAction('DISMISS_VICTORY')">
+              ▶ Continue [Space / W]
+            </button>
+            <span style="font-size: 0.71rem; color: #86efac;">✦ Or step <strong>[W / S / Q / E]</strong></span>
+          </div>
           </div>
         </div>
       </div>
@@ -696,10 +701,10 @@ export function renderViewportCenterStage(state) {
       const extraHorizon = (cleanHorizonHint && subText && !subText.toLowerCase().includes(ahead1.name.toLowerCase()) && (adv && (adv.transitionContext === 'LANDMARK_APPROACH' || adv.transitionContext === 'BIOME_THRESHOLD_CROSSING')))
         ? ` • <span class="fp-horizon-cue">${escapeHtml(cleanHorizonHint)}</span>`
         : '';
-      vistaHint = `👁️ <strong style="color:#86efac;">Ahead (${escapeHtml(FacingLabel)})<span class="dev-only-badge"> • POV Tier ${povTier}</span>:</strong> ${escapeHtml(subText)}${extraHorizon} — Press <strong>[W]</strong> to advance`;
+      vistaHint = `👁️ <strong style="color:#86efac;">Ahead (${escapeHtml(FacingLabel)})<span class="dev-only-badge"> • POV Tier ${povTier}</span>:</strong> Toward <strong>${escapeHtml(ahead1.name)}</strong> [${ahead1.x},${ahead1.y}]<span class="dev-only-badge"> — ${escapeHtml(subText)}${extraHorizon}</span> — Press <strong>[W]</strong> to advance`;
     } else if (mode === 'C') {
       const fallbackHorizon = cleanHorizonHint || sanitizePlayerContinuityText((activeScene && activeScene.viewSubtitle) || `Looking toward ${ahead1.name}`);
-      vistaHint = `🧭 <strong style="color:#fde68a;">Ahead (${escapeHtml(FacingLabel)})<span class="dev-only-badge"> • POV Tier ${povTier} Fallback</span>:</strong> ${escapeHtml(fallbackHorizon)} — Press <strong>[W]</strong> to advance or <strong>[A/D]</strong> to turn`;
+      vistaHint = `🧭 <strong style="color:#fde68a;">Ahead (${escapeHtml(FacingLabel)})<span class="dev-only-badge"> • POV Tier ${povTier} Fallback</span>:</strong> Toward <strong>${escapeHtml(ahead1.name)}</strong> [${ahead1.x},${ahead1.y}]<span class="dev-only-badge"> — ${escapeHtml(fallbackHorizon)}</span> — Press <strong>[W]</strong> to advance`;
     } else if (mode === 'B') {
       vistaHint = `👁️ ${escapeHtml(cleanHorizonHint || `Looking ${FacingLabel} toward ${ahead1.name}`)} — Press <strong>[W]</strong> to advance`;
     } else {

@@ -1526,3 +1526,123 @@
   color: #bfdbfe;
   background: rgba(20, 32, 52, 0.78);
 }
+
+/* ==========================================================================
+   PHASE 4 — IMMERSIVE VIEWPORT OVERLAYS, COMPACT MINIMAP & ZERO-VOID NAV DECK
+   ========================================================================== */
+.fp-top-hud {
+  padding: 6px 10px;
+}
+
+.dev-mode-collapsed .fp-location-plaque {
+  padding: 4px 10px;
+  max-width: 310px;
+  background: rgba(8, 11, 15, 0.78);
+}
+
+.dev-mode-collapsed .fp-location-plaque .fp-scene-caption-line,
+.dev-mode-collapsed .fp-location-plaque .fp-fov-strip {
+  display: none;
+}
+
+.dev-mode-collapsed .fp-location-plaque:hover .fp-fov-strip {
+  display: flex;
+}
+
+/* Deduplicate Mode Banner in Exploration & Sanctuary (already shown in top header bar) */
+.dev-mode-collapsed .fp-state-banner.state-wild,
+.dev-mode-collapsed .fp-state-banner.state-sanctuary {
+  display: none !important;
+}
+
+/* Hide Expedition Objective Pill during Threat / Combat so Monster & Encounter Banner have clear priority */
+.fp-viewport-frame.in-combat .fp-expedition-pill-wrap,
+.fp-viewport-frame.in-discovered .fp-expedition-pill-wrap {
+  display: none !important;
+}
+
+.fp-vista-bar {
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(8, 11, 15, 0.72);
+  border-color: rgba(197, 160, 89, 0.28);
+  max-width: 600px;
+}
+
+/* Compact & Expandable Tactical Minimap */
+.dev-mode-collapsed .dm-minimap-card:not(.is-expanded-map) .compass-rose-ring {
+  display: none !important;
+}
+
+.dm-minimap-wrap {
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.dm-compass-widget {
+  align-items: flex-start;
+}
+
+.compass-readout-text {
+  text-align: left;
+}
+
+.dm-minimap-card.is-expanded-map .dm-minimap-cell {
+  width: 26px;
+  height: 26px;
+  font-size: 0.84rem;
+}
+
+.ui-mode-combat.ui-combat-stage2 .dm-minimap-card:not(.is-expanded-map) .dm-minimap-cell {
+  width: 17px;
+  height: 17px;
+  font-size: 0.64rem;
+}
+
+/* Zero-Dead-Space Navigation Card */
+.dm-movement-deck {
+  height: auto;
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.dm-pad-grid {
+  flex: 0 0 auto;
+  max-height: none;
+  grid-template-rows: repeat(3, 38px);
+  gap: 5px;
+}
+
+.dm-pad-btn.is-primary-move {
+  background: linear-gradient(180deg, rgba(124, 98, 56, 0.48) 0%, rgba(24, 31, 45, 0.96) 100%);
+  border-color: var(--accent-gold-bright);
+  box-shadow: 0 0 12px rgba(197, 160, 89, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Collapse disabled 3x3 movement pad when locked in melee combat */
+.dm-movement-deck.is-combat-locked .dm-pad-grid,
+.dm-movement-deck.is-combat-locked #nav-deck-status-lbl {
+  display: none !important;
+}
+
+.dm-util-btn.is-sanctuary-highlight {
+  border-color: var(--border-gold-solid);
+  background: linear-gradient(180deg, rgba(124, 98, 56, 0.24) 0%, #121722 100%);
+  color: var(--accent-gold-bright);
+}
+
+.dm-util-btn.is-town-only-away {
+  opacity: 0.72;
+}
+
+/* Hide POI trigger wrap during Stage 1 Threat so encounter box is clean */
+.fp-viewport-frame.in-discovered .fp-poi-trigger-wrap {
+  display: none !important;
+}
+
+/* 2x2 Utility Drawer Strip so narrow right deck never clips Board [J] */
+.dm-utility-strip {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  /* end phase 4 world */
+}

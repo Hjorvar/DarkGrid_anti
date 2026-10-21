@@ -1,7 +1,24 @@
 /**
  * DARKGRID ADVENTURE LAB — 5x5 Directional Minimap & Compass Rose Widget (ES Module)
  */
-import { FACING_META } from '../state/store.js';
+import { store, FACING_META } from '../state/store.js';
+
+export function toggleMinimapSize(forceState) {
+  const card = document.getElementById('dm-minimap-card');
+  const btn = document.getElementById('btn-toggle-minimap-size');
+  if (!card) return false;
+  const nextState = typeof forceState === 'boolean'
+    ? forceState
+    : !card.classList.contains('is-expanded-map');
+  card.classList.toggle('is-expanded-map', nextState);
+  store.isMinimapExpanded = nextState;
+  if (btn) {
+    btn.setAttribute('aria-expanded', String(nextState));
+    btn.textContent = nextState ? '⊟' : '⊞';
+    btn.title = nextState ? 'Compact Tactical Minimap' : 'Expand Tactical Minimap';
+  }
+  return nextState;
+}
 import { escapeHtml, sanitizePlayerContinuityText } from '../ui/utils.js';
 
 export function renderMinimap(state) {

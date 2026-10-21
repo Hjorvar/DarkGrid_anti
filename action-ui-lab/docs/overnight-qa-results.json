@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-21T18:05:13.448Z",
+  "generatedAt": "2026-10-21T21:06:19.780Z",
   "areasVerified": 15,
   "screenshots": [
     "01_area01_world_travel_continuity.png",
@@ -85,7 +85,7 @@
       "boxWidthPx": 164,
       "boxHeightPx": 195,
       "boxAreaPx": 31980,
-      "centerOffsetPx": 21,
+      "centerOffsetPx": 18,
       "hasGroundingRig": true,
       "hasAmbientPatch": true,
       "contactCount": 2
@@ -117,7 +117,7 @@
       "boxWidthPx": 294,
       "boxHeightPx": 334,
       "boxAreaPx": 98196,
-      "centerOffsetPx": 21,
+      "centerOffsetPx": 18,
       "hasGroundingRig": true,
       "hasAmbientPatch": true,
       "contactCount": 2
@@ -192,10 +192,10 @@
     }
   ],
   "performanceMetrics": {
-    "JSHeapUsedSizeMB": 2.15,
-    "JSHeapTotalSizeMB": 3.5,
-    "Nodes": 2628,
-    "JSEventListeners": 84
+    "JSHeapUsedSizeMB": 1.92,
+    "JSHeapTotalSizeMB": 3,
+    "Nodes": 1712,
+    "JSEventListeners": 72
   },
   "consoleErrorsCount": 0,
   "pageExceptionsCount": 0,

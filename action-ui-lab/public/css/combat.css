@@ -1335,3 +1335,59 @@
   opacity: 0.48;
 }
 
+/* ==========================================================================
+   PHASE 4 — CONTEXTUAL ACTION DECK & STREAMLINED MONSTER HUD PLATE
+   ========================================================================== */
+.dev-mode-collapsed .dm-action-tile.is-contextual-inactive {
+  display: none !important;
+}
+
+.dev-mode-collapsed .dm-action-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.dev-mode-collapsed .dm-action-tile {
+  min-height: 48px;
+  padding: 5px 8px;
+}
+
+/* In Stage 1 (Threat) & Stage 2 (Combat) & Sanctuary, Primary Action spans full top row */
+.dev-mode-collapsed .dm-action-deck-card.has-primary-slot #action-slot-1 {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 7px 12px;
+  min-height: 48px;
+  text-align: left;
+}
+
+.dev-mode-collapsed .dm-action-deck-card.has-primary-slot #action-slot-1 .tile-icon-large {
+  margin-top: 0;
+  font-size: 1.35rem;
+}
+
+/* Streamlined Monster HUD Plate (Deduplicate hotkey hints & idle pre-strike banner) */
+.dev-mode-collapsed .fp-tactical-chip.fp-tactical-hint,
+.dev-mode-collapsed .fp-combat-exchange-banner.is-initial-exchange {
+  display: none !important;
+}
+
+.dev-mode-collapsed .fp-monster-hud-plate {
+  max-width: 440px;
+  padding: 4px 12px;
+}
+
+/* Full-width Slip Past [4 / F] below Engage Threat in Stage 1 */
+.dev-mode-collapsed .dm-action-deck-card.is-stage1-deck #action-slot-4 {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 6px 12px;
+  min-height: 44px;
+  text-align: left;
+  /* end phase 4 combat */
+}
+

@@ -251,4 +251,14 @@ describe('Darkgrid Action UI Lab — Player Experience & UI Overhaul (Track 2)',
     assert.ok(cssContent.includes('0%   { opacity: 0;'), 'fpSceneCrossfadeIn keyframe must fade from opacity: 0 to 1');
     assert.ok(cssContent.includes('@media (prefers-reduced-motion: reduce)'), 'CSS must respect prefers-reduced-motion: reduce');
   });
+
+  it('12. Phase 4 Player UI Simplification & Immersion: Contextual Action Deck, Zero-Dead-Space Right Deck, Expandable Minimap & Streamlined Overlays', () => {
+    assert.ok(htmlContent.includes('id="btn-toggle-minimap-size"'), 'Minimap card should include expandable size toggle button');
+    assert.ok(jsContent.includes('function toggleMinimapSize('), 'minimap.js should implement toggleMinimapSize()');
+    assert.ok(jsContent.includes("classList.toggle('is-contextual-inactive'"), 'Action slots should toggle is-contextual-inactive for non-applicable filler slots');
+    assert.ok(jsContent.includes("classList.toggle('has-primary-slot'"), 'Action deck card should toggle has-primary-slot when Slot 1 is primary');
+    assert.ok(jsContent.includes('id="btn-victory-continue"'), 'Victory banner should render explicit #btn-victory-continue CTA');
+    assert.ok(cssContent.includes('.dev-mode-collapsed .dm-action-tile.is-contextual-inactive'), 'CSS should hide contextual inactive slots in Player Mode');
+    assert.ok(cssContent.includes('.dm-movement-deck.is-combat-locked .dm-pad-grid'), 'CSS should collapse disabled movement pad grid during active melee combat');
+  });
 });

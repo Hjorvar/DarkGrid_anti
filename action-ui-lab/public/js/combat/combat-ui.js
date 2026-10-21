@@ -286,7 +286,7 @@ export function buildCombatMonsterActorHtml(monster, state, { isSequenceFrame = 
   }
 
   const exchangeBannerHtml = `
-    <div class="fp-combat-exchange-banner ${exchangeSummaryClass}" id="seq-exchange-banner">
+    <div class="fp-combat-exchange-banner ${exchangeSummaryClass} ${exchangeSummaryClass === 'exchange-neutral' ? 'is-initial-exchange' : ''}" id="seq-exchange-banner">
       ${exchangeSummaryText}
     </div>
   `;

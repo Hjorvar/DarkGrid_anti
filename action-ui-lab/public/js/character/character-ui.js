@@ -184,7 +184,8 @@ export function renderTopBarAndDeckSnapshot(state, { sequenceLock = false } = {}
 
   const stateBanner = document.getElementById('fp-state-banner');
   if (victory) {
-    stateBanner.className = 'fp-state-banner state-safe';
+    stateBanner.className = 'fp-state-banner state-safe state-victory';
+
     stateBanner.textContent = '🏆 Threat Vanquished — Step [W/S/Q/E] to Advance';
   } else if (enc && enc.status === 'IN_COMBAT') {
     stateBanner.className = 'fp-state-banner state-combat';
@@ -193,7 +194,8 @@ export function renderTopBarAndDeckSnapshot(state, { sequenceLock = false } = {}
     stateBanner.className = 'fp-state-banner state-mystery';
     stateBanner.textContent = enc.isAmbush ? '⚠️ Ambush in the Mist!' : '👁️ Shadow in the Mist Ahead';
   } else if (state.currentTile.is_safe === 1) {
-    stateBanner.className = 'fp-state-banner state-safe';
+    stateBanner.className = 'fp-state-banner state-safe state-sanctuary';
+
     stateBanner.textContent = '🛡️ Safe Haven Sanctuary';
   } else {
     stateBanner.className = 'fp-state-banner state-wild';

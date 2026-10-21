@@ -66,7 +66,7 @@ import {
   renderViewportScene,
   renderViewportCenterStage
 } from './world/scene-renderer.js';
-import { renderMinimap } from './world/minimap.js';
+import { renderMinimap, toggleMinimapSize } from './world/minimap.js';
 import { renderActionDeckAndPad } from './world/navigation.js';
 import {
   updateHeroVitalsDisplay,
@@ -229,6 +229,7 @@ if (typeof window !== 'undefined') {
     renderViewportScene,
     renderViewportCenterStage,
     renderMinimap,
+    toggleMinimapSize,
     renderActionDeckAndPad,
     updateHeroVitalsDisplay,
     renderTopBarAndDeckSnapshot,

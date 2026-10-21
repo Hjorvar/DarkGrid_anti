@@ -42,7 +42,7 @@
     display: none;
   }
   .dm-main-grid {
-    grid-template-columns: minmax(0, 1fr) 275px;
+    grid-template-columns: minmax(0, 1fr) 260px;
   }
 }
 
@@ -68,7 +68,7 @@
     gap: 4px;
   }
   .dm-main-grid {
-    grid-template-columns: minmax(0, 1fr) clamp(262px, 23vw, 310px);
+    grid-template-columns: minmax(0, 1fr) clamp(238px, 19.5vw, 272px);
   }
   .dm-deck-card {
     padding: 4px 8px;
@@ -97,7 +97,7 @@
     padding: 3px 8px;
   }
   .dm-action-tile {
-    min-height: 48px;
+    min-height: 44px;
     padding: 2px 3px;
   }
   .tile-icon-large {
@@ -105,7 +105,7 @@
     margin-top: 0;
   }
   .fp-bottom-chronicle {
-    height: 52px;
+    height: 44px;
     padding: 3px 10px;
   }
   .dm-minimap-cell {
@@ -153,7 +153,7 @@
 @media (max-width: 1380px) and (max-height: 800px) {
   .fp-monster-hud-plate {
     padding: 3px 10px;
-    max-width: 480px;
+    max-width: 460px;
   }
   .fp-monster-title-row {
     font-size: 0.86rem;
@@ -179,46 +179,112 @@
   }
 }
 
+/* ==========================================================================
+   18. PHASE 4: KEYBOARD/CONTROLLER FOCUS VISIBILITY & MOBILE/LAPTOP POLISH
+   ========================================================================== */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--accent-gold-bright) !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 12px rgba(230, 190, 110, 0.55) !important;
+}
+
+@media (max-height: 820px) {
+  .dm-pad-grid {
+    grid-template-rows: repeat(3, 33px);
+    gap: 4px;
+  }
+  .dev-mode-collapsed .dm-action-tile {
+    min-height: 42px;
+    padding: 4px 6px;
+  }
+  .dev-mode-collapsed .dm-action-deck-card.has-primary-slot #action-slot-1 {
+    min-height: 42px;
+    padding: 5px 10px;
+  }
+}
+
 @media (max-width: 768px) {
   .dm-shell {
     padding: 3px 5px;
     gap: 3px;
   }
   .dm-top-deck {
-    grid-template-columns: 1fr;
-    padding: 3px 6px;
-    gap: 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 4px 6px;
+    gap: 4px;
   }
   .dm-hero-identity,
   .dm-top-context-col {
     display: none;
   }
+  .dm-vitals-readout {
+    order: 1;
+    flex: 0 0 auto;
+    width: 100%;
+    justify-content: space-between;
+    border: none;
+    padding: 0;
+    gap: 8px;
+  }
+  .dm-hp-Readout-box {
+    max-width: none;
+    flex: 1 1 auto;
+  }
+  .dm-hands-and-bars {
+    order: 2;
+    flex: 0 0 auto;
+    width: 100%;
+    justify-content: stretch;
+  }
+  .dm-hands-pair {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+  .dm-hand-slot {
+    min-width: 0;
+    padding: 3px 6px;
+  }
+  .hand-label {
+    display: none;
+  }
+  .dm-vertical-pillars,
+  .dm-equip-quick-actions {
+    display: none !important;
+  }
   .dm-main-grid {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(220px, 1fr) auto;
     gap: 4px;
   }
   .dm-right-deck {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 4px;
-    max-height: 28vh;
-    overflow: hidden;
+    max-height: none;
+    height: auto;
+    overflow: visible;
   }
-  .dm-deck-card.dm-minimap-deck,
-  .dm-deck-card.dm-utility-deck,
-  .dm-deck-card.dm-movement-deck.is-combat-locked {
+  .dm-minimap-card:not(.is-expanded-map) {
     display: none;
+  }
+  .dm-pad-grid {
+    grid-template-rows: repeat(3, 28px);
+    gap: 4px;
   }
   .fp-top-hud {
     padding: 4px 6px;
   }
   .fp-location-plaque {
     padding: 3px 7px;
-    max-width: 58%;
+    max-width: 62%;
   }
   .fp-location-title {
-    font-size: 0.74rem;
+    font-size: 0.76rem;
   }
   .fp-location-sub,
   .fp-scene-caption-line,
@@ -229,6 +295,13 @@
   .fp-state-banner {
     font-size: 0.60rem;
     padding: 2px 6px;
+  }
+  .fp-vista-bar {
+    padding: 3px 10px;
+    max-width: 96%;
+  }
+  .fp-vista-text {
+    font-size: 0.68rem !important;
   }
   .fp-monster-actor.is-adaptive-scale .fp-monster-portrait-box,
   .fp-monster-actor.is-integrated-monster.is-adaptive-scale .fp-monster-portrait-box,
@@ -256,12 +329,8 @@
     font-size: 0.56rem;
     padding: 1px 4px;
   }
-  .fp-bottom-chronicle {
-    height: 44px;
+  .fp-bottom-chronicle:not(.is-chronicle-expanded) {
+    height: 40px;
     padding: 2px 8px;
   }
 }
-
-
-
-

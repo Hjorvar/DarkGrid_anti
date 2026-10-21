@@ -12,13 +12,27 @@ export function renderActionDeckAndPad(state) {
   const poi = state.viewportScene && state.viewportScene.pointOfInterest;
 
   document.getElementById('deck-stance-indicator').textContent = cStats.isRangedActive ? '🏹 Ranged Stance' : '🗡️ Melee Stance';
+  const deckHeading = document.getElementById('action-deck-heading');
+  if (deckHeading) {
+    if (enc && enc.status === 'IN_COMBAT') {
+      deckHeading.textContent = '⚔️ Combat Actions';
+    } else if (enc && enc.status === 'DISCOVERED') {
+      deckHeading.textContent = '👁️ Encounter Response';
+    } else if (state.victory) {
+      deckHeading.textContent = '🏆 Victory — Path Clear';
+    } else if (state.isSafeCity) {
+      deckHeading.textContent = '🏛️ Sanctuary Actions';
+    } else {
+      deckHeading.textContent = '🧭 Quick Actions';
+    }
+  }
 
   const slot1 = document.getElementById('action-slot-1');
   const slot2 = document.getElementById('action-slot-2');
   const slot3 = document.getElementById('action-slot-3');
   const slot4 = document.getElementById('action-slot-4');
 
-  // SLOT 1: Primary Context Action (Attack / Engage Threat / Sanctuary Rest / Inspect Landmark)
+  // SLOT 1: Primary Context Action (Attack / Engage Threat / Sanctuary Rest / Inspect Landmark / Continue)
   if (enc && enc.status === 'IN_COMBAT') {
     slot1.disabled = false;
     document.getElementById('slot1-icon').textContent = cStats.isRangedActive ? '🏹' : '⚔️';
@@ -44,6 +58,12 @@ export function renderActionDeckAndPad(state) {
     document.getElementById('slot1-title').textContent = poi.shortPrompt || 'Inspect Landmark';
     document.getElementById('slot1-sub').textContent = poi.title || 'Examine Lore [I]';
     slot1.title = `Inspect ${poi.title || 'Landmark'} [Space / 1 / I]`;
+  } else if (state.victory) {
+    slot1.disabled = false;
+    document.getElementById('slot1-icon').textContent = '▶';
+    document.getElementById('slot1-title').textContent = 'Continue';
+    document.getElementById('slot1-sub').textContent = 'Resume Travel';
+    slot1.title = 'Clear victory banner and continue journey [Space / 1]';
   } else {
     slot1.disabled = true;
     document.getElementById('slot1-icon').textContent = cStats.isRangedActive ? '🏹' : '🗡️';
@@ -176,4 +196,38 @@ export function renderActionDeckAndPad(state) {
   if (packLbl) {
     packLbl.textContent = `🎒 Pack (${state.inventory.length})`;
   }
+
+  // Contextual slot visibility & primary action emphasis (Phase 4 Player-First UI)
+  const isStage1 = Boolean(enc && enc.status === 'DISCOVERED');
+  const isStage2 = Boolean(enc && enc.status === 'IN_COMBAT');
+  const hasClericPrayer = Boolean(!enc && hero.class === 'CLERIC' && state.clericHealInfo);
+  const slot1IsIdleFiller = Boolean(!enc && !state.isSafeCity && !poi && !state.victory);
+
+  slot1.classList.toggle('is-contextual-inactive', slot1IsIdleFiller);
+  slot2.classList.toggle('is-contextual-inactive', isStage1);
+  slot3.classList.toggle('is-contextual-inactive', isStage1 || isStage2);
+  slot4.classList.toggle('is-contextual-inactive', Boolean(!enc && !hasClericPrayer));
+
+  const actionCard = document.getElementById('dm-action-deck-card');
+  if (actionCard) {
+    actionCard.classList.toggle('has-primary-slot', !slot1IsIdleFiller);
+    actionCard.classList.toggle('is-stage1-deck', isStage1);
+    actionCard.classList.toggle('is-stage2-deck', isStage2);
+  }
+
+  // Highlight Move Forward [W] as Primary Exploration Action when path ahead is open
+  const fwdBtn = document.getElementById('pad-forward');
+  if (fwdBtn) {
+    const canAdvance = Boolean(!enc && relMoves.FORWARD && relMoves.FORWARD.available);
+    fwdBtn.classList.toggle('is-primary-move', canAdvance);
+  }
+
+  // Sanctuary vs Wilderness Utility Drawer Priority
+  const marketBtn = document.getElementById('util-btn-market');
+  const boardBtn = document.getElementById('util-btn-board');
+  [marketBtn, boardBtn].forEach(btn => {
+    if (!btn) return;
+    btn.classList.toggle('is-sanctuary-highlight', Boolean(state.isSafeCity));
+    btn.classList.toggle('is-town-only-away', !state.isSafeCity);
+  });
 }

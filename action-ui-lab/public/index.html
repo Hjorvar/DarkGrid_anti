@@ -372,8 +372,11 @@
         <!-- 1. Compact 5x5 Minimap (North Up + Rotating Hero Arrow) & Compass Rose -->
         <div class="dm-deck-card dm-minimap-card" id="dm-minimap-card">
           <div class="dm-deck-header">
-            <span class="dm-deck-title">🧭 Tactical Minimap (North ▲)</span>
-            <span class="dm-header-status" id="minimap-Lock-indicator">Ready</span>
+            <span class="dm-deck-title">🧭 Tactical Map</span>
+            <div class="dm-header-right-group">
+              <span class="dm-header-status" id="minimap-Lock-indicator">Ready</span>
+              <button type="button" class="btn-minimap-size-toggle" id="btn-toggle-minimap-size" onclick="toggleMinimapSize()" title="Expand or compact Tactical Minimap" aria-expanded="false" aria-label="Toggle Minimap Size">⊞</button>
+            </div>
           </div>
           <div class="dm-minimap-wrap">
             <div class="dm-minimap-frame">
@@ -451,7 +454,7 @@
         <div class="dm-deck-card dm-movement-deck" id="dm-movement-deck">
           <div class="dm-deck-header">
             <span class="dm-deck-title">🕹️ Navigation</span>
-            <span class="dm-header-status" id="nav-deck-status-lbl">W/S Step • A/D Turn • Q/E Strafe</span>
+            <span class="dm-header-status" id="nav-deck-status-lbl">WASD • QE</span>
           </div>
 
           <!-- Contextual Combat Lock Notice (Shown when engaged in Stage 2 Melee or Ambush) -->

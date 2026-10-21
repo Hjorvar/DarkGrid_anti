@@ -819,3 +819,23 @@
   background: rgba(230, 190, 110, 0.6);
 }
 
+/* ==========================================================================
+   PHASE 4 — SLEEK 1-2 LINE CHRONICLE TICKER & EXPANDABLE HISTORY DRAWER
+   ========================================================================== */
+.fp-bottom-chronicle:not(.is-chronicle-expanded) {
+  height: clamp(44px, 6.2vh, 54px);
+  padding: 3px 12px;
+}
+
+.dev-mode-collapsed #fp-chronicle-hint {
+  display: none !important;
+}
+
+.fp-bottom-chronicle:not(.is-chronicle-expanded) .fp-log-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.76rem;
+  /* end phase 4 chronicle */
+}
+
