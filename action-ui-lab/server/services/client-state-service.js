@@ -1,17 +1,21 @@
 /**
  * DARKGRID ADVENTURE LAB — Secrecy-Compliant Client State Builder
  */
+const config = require('../../../src/config');
 const {
+  FAST_XP_TABLE,
   getLivingCharacterByUserId,
   getModifier,
   formatModifier,
+  getXpForNextLevel,
   getCharacterEquipment,
   getCharacterInventory,
   getCharacterPotions,
   getActiveWeapon,
   getClericSelfHealInfo,
   getClericRemainingHealUses,
-  getEffectiveStats
+  getEffectiveStats,
+  getHeroSavingThrows
 } = require('../../../src/domain/character/rules');
 const {
   calculateHeroAC,
@@ -47,15 +51,45 @@ const {
 const { FACING_VECTORS, normalizeFacing, bracketNumToKey } = require('./facing-service');
 const { resolveMonsterIntegratedProfile } = require('./monster-profile-service');
 const { buildViewportScene } = require('./viewport-scene-service');
+const {
+  FAVORED_ENEMY_OPTIONS,
+  getPublicUserById,
+  buildClassAbilitySummary
+} = require('./legacy-compatibility-service');
+
+function normalizeContractGrammar(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    .replace(/\b([Aa])n\s+([bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ])/g, '$1 $2')
+    .replace(/\b([Aa])\s+([aeiouAEIOU])/g, '$1n $2');
+}
 
 /**
  * Builds the complete, secrecy-compliant client state payload for the SPA Action Viewport.
  * Never leaks unrevealed monster identity during Stage 1 (DISCOVERED).
  */
 function buildClientState(db, userId, extra = {}) {
+  if (!userId) {
+    return {
+      mode: 'UNAUTHENTICATED',
+      currentUser: null,
+      character: null,
+      labToolsAllowed: false,
+      classBases: config.classBases,
+      statRules: config.statRules,
+      favoredEnemyOptions: FAVORED_ENEMY_OPTIONS,
+      infoMessage: extra.infoMessage || null,
+      errorMessage: extra.errorMessage || null
+    };
+  }
+
+  const currentUser = getPublicUserById(db, userId);
+  const labToolsAllowed = extra.labToolsAllowed !== undefined
+    ? Boolean(extra.labToolsAllowed)
+    : Boolean(currentUser && currentUser.isSandboxDefault);
   let character = getLivingCharacterByUserId(db, userId);
 
-  // If hero died, return fallen memorial state
+  // If no living hero exists, return either FALLEN memorial state or NO_CHARACTER creation state
   if (!character) {
     const fallen = db.prepare(`
       SELECT c.*,
@@ -71,9 +105,42 @@ function buildClientState(db, userId, extra = {}) {
       ORDER BY c.id DESC LIMIT 1
     `).get(userId);
 
+    if (!fallen) {
+      return {
+        mode: 'NO_CHARACTER',
+        currentUser,
+        character: null,
+        labToolsAllowed,
+        fallen: null,
+        classBases: config.classBases,
+        statRules: config.statRules,
+        favoredEnemyOptions: FAVORED_ENEMY_OPTIONS,
+        infoMessage: extra.infoMessage || null,
+        errorMessage: extra.errorMessage || null
+      };
+    }
+
+    let finalCombatEvents = [];
+    const lastEnc = db.prepare('SELECT id FROM encounters WHERE character_id = ? ORDER BY id DESC LIMIT 1').get(fallen.id);
+    if (lastEnc) {
+      finalCombatEvents = db.prepare(`
+        SELECT id, round_number, event_type, public_text, created_at
+        FROM combat_events
+        WHERE encounter_id = ? AND event_type != 'CONDITION'
+        ORDER BY id ASC
+      `).all(lastEnc.id);
+    }
+
     return {
       mode: 'FALLEN',
-      fallen: fallen || null,
+      currentUser,
+      character: null,
+      labToolsAllowed,
+      fallen,
+      combatEvents: finalCombatEvents,
+      classBases: config.classBases,
+      statRules: config.statRules,
+      favoredEnemyOptions: FAVORED_ENEMY_OPTIONS,
       combatSequence: extra.combatSequence || null,
       infoMessage: extra.infoMessage || null,
       errorMessage: extra.errorMessage || null
@@ -133,9 +200,16 @@ function buildClientState(db, userId, extra = {}) {
 
   const equipment = getCharacterEquipment(db, character.id);
   const effectiveHero = getEffectiveStats(character, equipment);
-  const inventory = getCharacterInventory(db, character.id);
+  const rawInventory = getCharacterInventory(db, character.id);
+  const inventory = rawInventory.map(it => ({
+    ...it,
+    is_starter: Boolean(it.is_starter || (it.modifications && String(it.modifications).includes('"is_starter":true')))
+  }));
   const potions = getCharacterPotions(db, character.id);
   const combatPotions = getCharacterPotions(db, character.id, { combatOnly: true });
+  const savingThrows = getHeroSavingThrows(effectiveHero, equipment);
+  const xpForNextLevel = getXpForNextLevel(effectiveHero.level);
+  const xpCurrentLevelFloor = FAST_XP_TABLE[effectiveHero.level] || 0;
 
   // STRICT ENCOUNTER SECRECY: Only pass revealedMonster if status === 'IN_COMBAT'
   const isRevealed = Boolean(activeEncounter && activeEncounter.status === 'IN_COMBAT');
@@ -159,9 +233,36 @@ function buildClientState(db, userId, extra = {}) {
     };
   }
 
+  const classAbilities = buildClassAbilitySummary(effectiveHero, clericHealInfo);
   const shopStock = isSafeCity ? getCityStoreStock(db, effectiveHero) : null;
-  const bountyContracts = isSafeCity ? getOrGenerateContracts(db, effectiveHero) : [];
-  const wildernessThreats = isSafeCity ? getWildernessThreats(db) : [];
+  const bountyContracts = isSafeCity
+    ? getOrGenerateContracts(db, effectiveHero).map(c => {
+        const cleanDesc = normalizeContractGrammar(c.contract_description || c.description || '');
+        return {
+          ...c,
+          title: c.title || c.contract_title || 'Hunting Warrant',
+          contract_title: c.contract_title || c.title || 'Hunting Warrant',
+          description: cleanDesc,
+          contract_description: cleanDesc,
+          region_name: c.region_name || c.target_region || 'The Wilds',
+          target_region: c.target_region || c.region_name || 'The Wilds'
+        };
+      })
+    : [];
+  const wildernessThreats = isSafeCity
+    ? getWildernessThreats(db).map(t => {
+        const dir = t.direction || t.compassDirection || t.compass_direction || 'Wilderness';
+        const kc = Number(t.killCount || t.kill_count || 1);
+        return {
+          ...t,
+          direction: dir,
+          compassDirection: dir,
+          compass_direction: dir,
+          killCount: kc,
+          kill_count: kc
+        };
+      })
+    : [];
   const activeContract = getActiveContractForCharacter(db, character.id);
   const minimap = getMinimapData(db, currentTile, 2);
   const directions = getAvailableDirections(db, currentTile);
@@ -322,6 +423,11 @@ function buildClientState(db, userId, extra = {}) {
   return {
     mode: safeEncounter ? safeEncounter.status : (isSafeCity ? 'CITY' : 'EXPLORATION'),
     artPreviewMode: effectiveUseCandidateArt ? 'CANDIDATES_STAGED' : 'APPROVED_DEFAULT',
+    currentUser,
+    labToolsAllowed,
+    classBases: config.classBases,
+    statRules: config.statRules,
+    favoredEnemyOptions: FAVORED_ENEMY_OPTIONS,
     facing,
     facingMeta: FACING_VECTORS[facing],
     sceneMode,
@@ -330,8 +436,11 @@ function buildClientState(db, userId, extra = {}) {
       id: effectiveHero.id,
       name: effectiveHero.name,
       class: effectiveHero.class,
+      is_alive: 1,
       level: effectiveHero.level,
       xp: effectiveHero.xp,
+      xpForNextLevel,
+      xpCurrentLevelFloor,
       gold: effectiveHero.gold,
       current_hp: effectiveHero.current_hp,
       max_hp: effectiveHero.max_hp,
@@ -341,15 +450,19 @@ function buildClientState(db, userId, extra = {}) {
       intelligence: effectiveHero.intelligence,
       wisdom: effectiveHero.wisdom,
       charisma: effectiveHero.charisma,
-      is_str_boosted: effectiveHero.is_str_boosted,
+      is_str_boosted: Boolean(effectiveHero.is_str_boosted),
       primary_weapon: effectiveHero.primary_weapon || 'MELEE',
       favored_enemy_type: effectiveHero.favored_enemy_type,
+      favored_enemy_subtype: effectiveHero.favored_enemy_subtype || null,
       facing,
       sceneMode
     },
     modifiers,
+    savingThrows,
+    classAbilities,
     combatStats: {
       heroAC,
+      savingThrows,
       meleeAttackBonus: meleeAttackBonus >= 0 ? `+${meleeAttackBonus}` : `${meleeAttackBonus}`,
       rangedAttackBonus: rangedAttackBonus >= 0 ? `+${rangedAttackBonus}` : `${rangedAttackBonus}`,
       isRangedActive: Boolean(isRangedActive),

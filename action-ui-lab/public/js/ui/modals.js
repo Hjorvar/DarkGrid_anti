@@ -3,17 +3,30 @@
  */
 import { store, FACING_META } from '../state/store.js';
 import { escapeHtml, sanitizePlayerContinuityText } from './utils.js';
-import { renderCharacterModal } from '../character/character-ui.js';
+import { renderCharacterModal, renderAccountAndCreatorModal } from '../character/character-ui.js';
 import { renderBackpackModal, renderMarketModal, renderBountiesModal } from '../inventory/inventory-ui.js';
 
 export function openLabModal(modalName) {
+  const labAllowed = !store.currentState || store.currentState.labToolsAllowed !== false;
+  if (!labAllowed && ['director', 'atlas', 'qa'].includes(modalName)) {
+    return;
+  }
   store.currentOpenModal = modalName;
   const backdrop = document.getElementById('lab-modal-backdrop');
   const card = backdrop ? backdrop.querySelector('.lab-modal-card') : null;
   if (card) {
     card.classList.toggle(
       'is-wide-modal',
-      modalName === 'atlas' || modalName === 'qa' || modalName === 'journal' || modalName === 'director' || modalName === 'help'
+      modalName === 'atlas' ||
+      modalName === 'qa' ||
+      modalName === 'journal' ||
+      modalName === 'director' ||
+      modalName === 'help' ||
+      modalName === 'account' ||
+      modalName === 'create-character' ||
+      modalName === 'character' ||
+      modalName === 'market' ||
+      modalName === 'bounties'
     );
   }
   backdrop.hidden = false;
@@ -31,6 +44,10 @@ export function renderModalContent(modalName) {
   const bodyEl = document.getElementById('lab-modal-body');
   if (!titleEl || !bodyEl) return;
 
+  if (modalName === 'account' || modalName === 'create-character') {
+    renderAccountAndCreatorModal(titleEl, bodyEl);
+    return;
+  }
   if (modalName === 'atlas') {
     renderAtlasModal(titleEl, bodyEl);
     return;
@@ -52,7 +69,10 @@ export function renderModalContent(modalName) {
     return;
   }
 
-  if (!store.currentState || !store.currentState.character) return;
+  if (!store.currentState || !store.currentState.character) {
+    renderAccountAndCreatorModal(titleEl, bodyEl);
+    return;
+  }
   const hero = store.currentState.character;
   const mods = store.currentState.modifiers;
 

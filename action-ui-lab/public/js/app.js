@@ -73,8 +73,18 @@ import {
   updateHeroVitalsDisplay,
   renderTopBarAndDeckSnapshot,
   handleMainHandClick,
-  handleOffHandClick
+  handleOffHandClick,
+  selectCreatorClass,
+  adjustCreatorStat,
+  setCreatorField,
+  submitCreatorHero,
+  submitLabAuth,
+  renderAccountAndCreatorModal
 } from './character/character-ui.js';
+import {
+  setMarketTab,
+  setMarketCategoryFilter
+} from './inventory/inventory-ui.js';
 import {
   clearTransientFloatingPopups,
   spawnFloatingPopup,
@@ -128,9 +138,10 @@ export function renderGameState(state, options = {}) {
     return;
   }
 
-  if (state.mode === 'FALLEN') {
+  if (state.mode === 'FALLEN' || state.mode === 'NO_CHARACTER' || state.mode === 'UNAUTHENTICATED') {
     const fallenMaxHp = (state.fallen && state.fallen.max_hp) || (state.combatSequence && state.combatSequence.heroMaxHp) || 12;
     updateHeroVitalsDisplay(0, fallenMaxHp);
+    renderTopBarAndDeckSnapshot(state, { sequenceLock: false });
     renderFallenScreen(state);
     return;
   }
@@ -142,7 +153,7 @@ export function renderGameState(state, options = {}) {
   renderMinimap(state);
   renderActionDeckAndPad(state);
 
-  if (store.currentOpenModal === 'journal' || store.currentOpenModal === 'director' || store.currentOpenModal === 'help') {
+  if (store.currentOpenModal === 'journal' || store.currentOpenModal === 'director' || store.currentOpenModal === 'help' || store.currentOpenModal === 'account' || store.currentOpenModal === 'create-character') {
     renderModalContent(store.currentOpenModal);
   }
 
@@ -237,6 +248,14 @@ if (typeof window !== 'undefined') {
     renderTopBarAndDeckSnapshot,
     handleMainHandClick,
     handleOffHandClick,
+    selectCreatorClass,
+    adjustCreatorStat,
+    setCreatorField,
+    submitCreatorHero,
+    submitLabAuth,
+    renderAccountAndCreatorModal,
+    setMarketTab,
+    setMarketCategoryFilter,
     clearTransientFloatingPopups,
     spawnFloatingPopup,
     flashViewportOverlay,

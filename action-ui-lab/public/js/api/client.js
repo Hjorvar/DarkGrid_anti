@@ -60,6 +60,9 @@ export async function fetchInitialState() {
 }
 
 export async function dispatchAction(action, payload = {}) {
+  if (store.isBusy && store.activeActionPromise && (action === 'LAB_SCENARIO' || action === 'TELEPORT_TO_TILE' || action === 'RESET_EXPEDITION' || action === 'START_EXPEDITION')) {
+    try { await store.activeActionPromise; } catch {}
+  }
   if (store.isBusy) return;
 
   // If a combat beat animation is still playing and the player acts again,

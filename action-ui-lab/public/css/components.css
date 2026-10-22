@@ -96,7 +96,7 @@
   transition: all 0.15s ease;
 }
 
-.btn-action-gold:hover {
+.btn-action-gold:hover:not(:disabled) {
   box-shadow: 0 0 16px rgba(197, 160, 89, 0.5);
   transform: translateY(-1px);
 }
@@ -113,10 +113,68 @@
   transition: all 0.15s ease;
 }
 
-.btn-action-stone:hover {
+.btn-action-stone:hover:not(:disabled) {
   background: #222b3a;
   border-color: var(--accent-gold);
   color: var(--text-heading);
+}
+
+.lab-btn {
+  background: linear-gradient(180deg, #171d29 0%, #10151f 100%);
+  border: 1px solid #2b3548;
+  color: var(--text-body);
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 0.74rem;
+  padding: 5px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.lab-btn:hover:not(:disabled) {
+  background: #1f2737;
+  border-color: var(--accent-gold);
+  color: var(--text-heading);
+}
+
+.lab-btn.is-active-mode {
+  background: linear-gradient(180deg, rgba(124, 98, 56, 0.42) 0%, rgba(44, 34, 18, 0.72) 100%);
+  border-color: var(--accent-gold-bright);
+  color: #fdfaf3;
+  box-shadow: 0 0 12px rgba(197, 160, 89, 0.28);
+}
+
+.btn-action-gold:disabled,
+.btn-action-stone:disabled,
+.lab-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.lab-input,
+.lab-select {
+  background: #090d14;
+  border: 1px solid #2d374a;
+  color: var(--text-heading);
+  font-family: var(--font-sans);
+  font-size: 0.80rem;
+  padding: 6px 10px;
+  border-radius: 5px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lab-input:focus,
+.lab-select:focus {
+  outline: none;
+  border-color: var(--accent-gold-bright);
+  box-shadow: 0 0 10px rgba(197, 160, 89, 0.3);
 }
 
 /* Floating Damage / Miss / Heal Popups (Supports vertical stack offset & deduplication) */
@@ -839,3 +897,9 @@
   /* end phase 4 chronicle */
 }
 
+
+.warrant-card {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+}

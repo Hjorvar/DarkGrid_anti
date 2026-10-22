@@ -35,7 +35,7 @@ const {
 const { inspectSceneTile } = require('../services/viewport-scene-service');
 const { buildClientState } = require('../services/client-state-service');
 
-function handleNavigationAction({ db, userId, options, action, payload, character, currentFacing, res }) {
+function handleNavigationAction({ db, userId, options, action, payload, character, currentFacing, labToolsAllowed = false, res }) {
       // 0a. SET_SCENE_MODE ('A' | 'B' | 'C' | 'LEGACY') — Live comparison switcher
       if (action === 'SET_SCENE_MODE') {
         const nextMode = normalizeSceneMode(payload.sceneMode || payload.mode || 'A');
@@ -88,6 +88,16 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
 
       // 1. MOVEMENT (Relative FORWARD / BACKWARD / STRAFE_LEFT / STRAFE_RIGHT or Cardinal NORTH / EAST / SOUTH / WEST)
       if (action === 'MOVE') {
+        if (payload.testForceEncounter !== undefined && !labToolsAllowed) {
+          return res.status(403).json({
+            ok: false,
+            error: 'Forbidden: Encounter forcing is restricted to Lab Tools mode.',
+            state: buildClientState(db, userId, {
+              labToolsAllowed: false,
+              errorMessage: 'Forbidden: Encounter forcing is restricted to Lab Tools mode.'
+            })
+          });
+        }
         const relInput = String(payload.relative || '').toUpperCase().trim();
         const relMap = getRelativeCardinalMap(currentFacing);
 
@@ -313,6 +323,16 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
 
       // 12. PHASE 1.2: TELEPORT TO TILE (From World Visual Atlas / Expedition Presets)
       if (action === 'TELEPORT_TO_TILE') {
+        if (!labToolsAllowed) {
+          return res.status(403).json({
+            ok: false,
+            error: 'Forbidden: Atlas teleportation is restricted to Lab Tools mode.',
+            state: buildClientState(db, userId, {
+              labToolsAllowed: false,
+              errorMessage: 'Forbidden: Atlas teleportation is restricted to Lab Tools mode.'
+            })
+          });
+        }
         const tx = Number(payload.x);
         const ty = Number(payload.y);
         const targetFacing = payload.facing ? normalizeFacing(payload.facing) : currentFacing;

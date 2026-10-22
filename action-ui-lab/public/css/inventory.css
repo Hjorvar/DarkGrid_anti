@@ -1,6 +1,6 @@
 /* ==========================================================================
 
-   DARKGRID ADVENTURE LAB — INVENTORY, EQUIPMENT & MARKET ITEMS (inventory.css)
+   DARKGRID ADVENTURE LAB — INVENTORY, EQUIPMENT, MARKET & WATCHER'S BOARD (inventory.css)
 
    ========================================================================== */
 
@@ -8,9 +8,187 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #0b0e14;
-  border: 1px solid var(--border-subtle);
-  border-radius: 5px;
+  gap: 10px;
+  background: linear-gradient(180deg, #0d121b 0%, #090c12 100%);
+  border: 1px solid #222b3b;
+  border-radius: 6px;
   padding: 8px 12px;
+  transition: border-color 0.14s ease, background 0.14s ease;
 }
+
+.lab-item-row:hover {
+  border-color: #36445d;
+}
+
+.item-row-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.item-title-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-family: var(--font-serif);
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.item-price-tag {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-gold-bright);
+  background: rgba(197, 160, 89, 0.12);
+  border: 1px solid rgba(197, 160, 89, 0.38);
+  padding: 1px 7px;
+  border-radius: 4px;
+}
+
+.item-stat-chips {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.item-stat-chip {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: #131926;
+  border: 1px solid #28344b;
+  color: #cbd5e1;
+}
+
+.item-stat-chip.chip-primary {
+  color: #fde68a;
+  border-color: rgba(197, 160, 89, 0.42);
+  background: rgba(197, 160, 89, 0.08);
+}
+
+.item-stat-chip.chip-magic {
+  color: #c4b5fd;
+  border-color: rgba(139, 92, 246, 0.45);
+  background: rgba(139, 92, 246, 0.10);
+}
+
+.item-stat-chip.chip-class {
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.38);
+}
+
+.item-lore-line {
+  font-size: 0.71rem;
+  color: var(--text-muted);
+  line-height: 1.32;
+}
+
+.market-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #0b0f17;
+  border: 1px solid #232d3f;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.market-filter-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.warrant-card {
+  background: linear-gradient(180deg, #111723 0%, #0b0f17 100%);
+  border: 1px solid #28344a;
+  border-left: 3px solid var(--accent-gold);
+  border-radius: 6px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.warrant-card.is-active-warrant {
+  border-color: var(--accent-gold-bright);
+  background: linear-gradient(180deg, rgba(197, 160, 89, 0.12) 0%, rgba(12, 16, 24, 0.96) 100%);
+}
+
+.threat-rumor-card {
+  background: linear-gradient(180deg, rgba(45, 14, 18, 0.45) 0%, rgba(12, 15, 22, 0.95) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.38);
+  border-left: 3px solid #ef4444;
+  border-radius: 6px;
+  padding: 9px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Champion Sheet & Character Forge Structured Cards */
+.champ-ability-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.champ-save-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.champ-panoply-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin-bottom: 8px;
+}
+
+.forge-top-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.forge-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 8px;
+}
+
+.forge-living-lock-banner {
+  padding: 9px 12px;
+  background: rgba(120, 53, 15, 0.28);
+  border: 1px solid rgba(245, 158, 11, 0.55);
+  border-left: 3px solid #f59e0b;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  color: #fef3c7;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
 

@@ -333,4 +333,38 @@ button:focus-visible,
     height: 40px;
     padding: 2px 8px;
   }
+  .lab-modal-backdrop {
+    padding: 8px;
+  }
+  .lab-modal-card,
+  .lab-modal-card.is-wide-modal {
+    max-height: 92vh;
+  }
+  .lab-modal-header {
+    padding: 10px 12px;
+  }
+  .lab-modal-body {
+    padding: 12px;
+    gap: 8px;
+  }
+  .champ-ability-grid,
+  .champ-save-grid,
+  .champ-panoply-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .forge-top-grid,
+  .forge-stat-grid,
+  .journal-modal-grid,
+  .director-modal-grid,
+  .qa-section-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .warrant-card,
+  .lab-item-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
 }

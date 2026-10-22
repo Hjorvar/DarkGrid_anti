@@ -10,21 +10,17 @@ const {
   createCharacter
 } = require('../../../src/domain/character/rules');
 const { initSceneCatalogTables, normalizeSceneMode } = require('../../scene-catalog');
+const {
+  isProductionMode,
+  isAuthRequired,
+  ensureNonDestructiveLabAdapter
+} = require('./legacy-compatibility-service');
 
 const DATA_DIR = path.join(__dirname, '../../data');
 const DEFAULT_DB_PATH = path.join(DATA_DIR, 'action_lab.sqlite');
 
-function applyLabSchemaAndTestMap(db) {
-  const cols = db.prepare('PRAGMA table_info(characters)').all().map(c => c.name);
-  if (!cols.includes('facing')) {
-    db.exec("ALTER TABLE characters ADD COLUMN facing TEXT NOT NULL DEFAULT 'NORTH';");
-  }
-  if (!cols.includes('pending_victory_encounter_id')) {
-    db.exec('ALTER TABLE characters ADD COLUMN pending_victory_encounter_id INTEGER DEFAULT NULL;');
-  }
-  if (!cols.includes('scene_mode')) {
-    db.exec("ALTER TABLE characters ADD COLUMN scene_mode TEXT NOT NULL DEFAULT 'C';");
-  }
+function applyLabSchemaAndTestMap(db, { preserveExistingMap = false } = {}) {
+  ensureNonDestructiveLabAdapter(db);
 
   // Ensure terrain_artworks mappings exist for river, ocean, and sunken ruins in the sandbox DB
   db.prepare(`
@@ -38,6 +34,10 @@ function applyLabSchemaAndTestMap(db) {
 
   // Initialize multi-variant scene catalog and directional override tables
   initSceneCatalogTables(db);
+
+  if (preserveExistingMap) {
+    return;
+  }
 
   // Enrich the local test map around Oakhaven (7,7) so terrain transitions, passable paths,
   // and impassable obstacles can be tested within 1-2 steps of spawn:
@@ -78,22 +78,37 @@ function applyLabSchemaAndTestMap(db) {
   `).run();
 }
 
-function initSandboxDb(customDbPath = null) {
+function initSandboxDb(customDbPath = null, options = {}) {
   const targetDbPath = customDbPath || DEFAULT_DB_PATH;
-  const targetDir = path.dirname(targetDbPath);
-  if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir, { recursive: true });
+  if (targetDbPath !== ':memory:') {
+    const targetDir = path.dirname(targetDbPath);
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
   }
   const db = new DatabaseSync(targetDbPath);
   db.exec('PRAGMA foreign_keys = ON;');
   db.exec('PRAGMA journal_mode = WAL;');
   db.exec('PRAGMA busy_timeout = 5000;');
 
+  const prodOrAuth = isProductionMode(options) || isAuthRequired(options);
+  const preserveExistingMap = options.preserveExistingMap !== undefined
+    ? Boolean(options.preserveExistingMap)
+    : prodOrAuth;
+
   runMigrations(db);
   runSeeds(db);
-  applyLabSchemaAndTestMap(db);
+  applyLabSchemaAndTestMap(db, { preserveExistingMap });
 
-  // Ensure sandbox demo user exists
+  const shouldSeedSandboxHero = options.seedSandboxHero !== undefined
+    ? Boolean(options.seedSandboxHero)
+    : !prodOrAuth;
+
+  if (!shouldSeedSandboxHero) {
+    return { db, userId: null, dbPath: targetDbPath };
+  }
+
+  // Ensure sandbox demo user exists (only in non-production sandbox mode)
   let user = db.prepare('SELECT * FROM users WHERE username = ?').get('action_hero');
   if (!user) {
     const res = db.prepare(`
