@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-22T07:30:48.009Z",
+  "generatedAt": "2026-10-22T07:43:12.433Z",
   "areasVerified": 15,
   "screenshots": [
     "01_area01_world_travel_continuity.png",
@@ -208,10 +208,10 @@
     }
   ],
   "performanceMetrics": {
-    "JSHeapUsedSizeMB": 2.6,
+    "JSHeapUsedSizeMB": 2,
     "JSHeapTotalSizeMB": 3.75,
-    "Nodes": 3222,
-    "JSEventListeners": 97
+    "Nodes": 2017,
+    "JSEventListeners": 77
   },
   "consoleErrorsCount": 0,
   "pageExceptionsCount": 0,
