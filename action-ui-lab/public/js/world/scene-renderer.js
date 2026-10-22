@@ -79,7 +79,7 @@ export function preloadAdjacentSceneImages(scene) {
   });
 }
 
-export function applySceneImageWithCrossfade(terrainImg, prevImg, targetUrl, objectPos, transformStr, filterStr) {
+export function applySceneImageWithCrossfade(terrainImg, prevImg, targetUrl, objectPos, transformStr, filterStr, fallbackUrl = '/images/terrain/terrain_plains.webp') {
   if (!terrainImg || !targetUrl) return;
   const currentSrc = terrainImg.getAttribute('src');
   const reducedMotion = isReducedMotionPreferred();
@@ -149,7 +149,10 @@ export function applySceneImageWithCrossfade(terrainImg, prevImg, targetUrl, obj
           done();
         }
       }, { once: true });
-      loader.addEventListener('error', done, { once: true });
+      loader.addEventListener('error', () => {
+        targetUrl = fallbackUrl || '/images/terrain/terrain_plains.webp';
+        done();
+      }, { once: true });
       loader.src = targetUrl;
       if (loader.complete && loader.naturalWidth > 0) {
         if (typeof loader.decode === 'function') {
@@ -347,6 +350,23 @@ export function renderViewportScene(state) {
   if (captionLine && activeScene) {
     captionLine.textContent = activeScene.viewTitle || current.name;
     captionLine.title = activeScene.viewSubtitle || '';
+  }
+
+  const artPreviewBadge = document.getElementById('fp-art-preview-badge');
+  if (artPreviewBadge) {
+    const isCandidateReview = Boolean(activeScene && activeScene.artApprovalStatus === 'REVIEW REQUIRED');
+    const candMeta = activeScene && activeScene.candidatePreview;
+    if (isCandidateReview) {
+      artPreviewBadge.hidden = false;
+      artPreviewBadge.textContent = candMeta && candMeta.id
+        ? `🎨 CANDIDATE ART • ${candMeta.id} (REVIEW REQUIRED)`
+        : '🎨 CANDIDATE ART • REVIEW REQUIRED';
+      artPreviewBadge.title = candMeta && candMeta.fileName
+        ? `Previewing unapproved candidate painting: ${candMeta.fileName}`
+        : 'Previewing unapproved candidate painting';
+    } else {
+      artPreviewBadge.hidden = true;
+    }
   }
 
   const fovLeft = document.getElementById('fp-fov-left');

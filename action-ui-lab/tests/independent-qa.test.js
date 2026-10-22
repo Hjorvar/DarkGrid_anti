@@ -1099,9 +1099,197 @@ describe('Phase D — Independent End-to-End & Headless Browser QA Suite (15 Are
   });
 
   // =========================================================================
-  // AREA 15: Console, Uncaught Exception & Network Error Audit
+  // AREA 15: Live DOM Equipment Stance, Shield AC Rules & Combat Stance Lock
   // =========================================================================
-  it('Area 15: Zero unexpected console errors, zero uncaught page exceptions, and zero HTTP >= 400 asset failures', async () => {
+  it('Area 15: Live DOM Equipment Stance switch updates #off-hand-state-tag (PASSIVE AC vs STOWED), #hud-ac-val, and locks during Stage 2 combat', async () => {
+    const stanceDom = await evalInPage(`(async () => {
+      // Ensure exploration state and MELEE stance (1H Longsword + Light Steel Shield)
+      await triggerTeleport(7, 7, 'NORTH');
+      await dispatchAction('STANCE', { primaryWeapon: 'MELEE' });
+      const meleeMainTag = document.getElementById('main-hand-state-tag')?.textContent?.trim();
+      const meleeOffTag = document.getElementById('off-hand-state-tag')?.textContent?.trim();
+      const meleeAcDom = Number(document.getElementById('hud-ac-val')?.textContent?.trim());
+      const meleeAcState = currentState.combatStats.heroAC;
+
+      // Switch to RANGED stance (2H Shortbow) -> Shield is STOWED and AC drops by 1
+      await dispatchAction('STANCE', { primaryWeapon: 'RANGED' });
+      const rangedMainTag = document.getElementById('main-hand-state-tag')?.textContent?.trim();
+      const rangedOffTag = document.getElementById('off-hand-state-tag')?.textContent?.trim();
+      const rangedOffStats = document.getElementById('off-hand-stats')?.textContent?.trim();
+      const rangedAcDom = Number(document.getElementById('hud-ac-val')?.textContent?.trim());
+      const rangedAcState = currentState.combatStats.heroAC;
+
+      // Restore MELEE stance
+      await dispatchAction('STANCE', { primaryWeapon: 'MELEE' });
+
+      // Stage combat and verify stance switch is rejected while IN_COMBAT
+      await triggerTeleport(7, 5, 'NORTH');
+      await triggerLabScenario('STAGE2_COMBAT', 'Wolf');
+      for (let i = 0; i < 20; i++) {
+        if (!isSequencePlaying) break;
+        await new Promise(r => setTimeout(r, 80));
+      }
+      await dispatchAction('STANCE', { primaryWeapon: 'RANGED' });
+      const lockedError = currentState.errorMessage;
+      const stanceStillMelee = currentState.character.primary_weapon;
+
+      // Return to Oakhaven exploration
+      await triggerTeleport(7, 7, 'NORTH');
+      return {
+        meleeMainTag,
+        meleeOffTag,
+        meleeAcDom,
+        meleeAcState,
+        rangedMainTag,
+        rangedOffTag,
+        rangedOffStats,
+        rangedAcDom,
+        rangedAcState,
+        lockedError,
+        stanceStillMelee
+      };
+    })()`);
+
+    assert.equal(stanceDom.meleeMainTag, 'ACTIVE');
+    assert.equal(stanceDom.meleeOffTag, 'PASSIVE AC');
+    assert.equal(stanceDom.meleeAcDom, stanceDom.meleeAcState);
+    assert.equal(stanceDom.rangedMainTag, 'ACTIVE');
+    assert.equal(stanceDom.rangedOffTag, 'STOWED');
+    assert.match(stanceDom.rangedOffStats, /stowed/i);
+    assert.equal(stanceDom.rangedAcDom, stanceDom.meleeAcDom - 1, 'Ranged 2H bow stance must drop displayed AC by +1 shield bonus');
+    assert.equal(stanceDom.rangedAcState, stanceDom.meleeAcState - 1);
+    assert.equal(stanceDom.stanceStillMelee, 'MELEE');
+    assert.match(stanceDom.lockedError || '', /Cannot switch weapon stance/i);
+  });
+
+  // =========================================================================
+  // AREA 16: Phase 5.2 Permanent Artwork Activation, Candidate Preview Isolation, Monster Grounding & 1366x768 + 390x844 Layouts
+  // =========================================================================
+  it('Area 16: Activated Phase 5 artwork serves APPROVED default views without review badge, preserves Candidate Preview badge for unapproved items, grounds monsters cleanly, and verifies 1366x768 & 390x844 viewports', async () => {
+    const { setCandidateArtApprovalStatus, resetCandidateArtApprovalStatus } = require('../server');
+
+    // Part A: Verify permanently approved default state at [9,7] SOUTH (P5-ART-13), [12,1] SOUTH (P5-ART-04 barrow), and [6,6] SOUTH (P5-ART-04-REPL moorland)
+    const activatedCheck = await evalInPage(`(async () => {
+      await setArtPreviewMode(false);
+      await triggerTeleport(9, 7, 'SOUTH');
+      const badgeEl = document.getElementById('fp-art-preview-badge');
+      const watchpostHidden = badgeEl ? badgeEl.hidden : true;
+      const watchpostUrl = currentState.viewportScene.activeScene.imageUrl;
+      const watchpostStatus = currentState.viewportScene.activeScene.artApprovalStatus;
+
+      await triggerTeleport(12, 1, 'SOUTH');
+      const barrowUrl = currentState.viewportScene.activeScene.imageUrl;
+      const barrowStatus = currentState.viewportScene.activeScene.artApprovalStatus;
+
+      await triggerTeleport(6, 6, 'SOUTH');
+      const moorlandUrl = currentState.viewportScene.activeScene.imageUrl;
+      const moorlandStatus = currentState.viewportScene.activeScene.artApprovalStatus;
+
+      // Teleport to [6,4] WEST (P5-ART-02: forest_misty_birch_hollow_pov.jpg) and stage Goblin (SMALL RGBA cutout) on activated default art
+      await triggerTeleport(6, 4, 'WEST');
+      const forestUrl = currentState.viewportScene.activeScene.imageUrl;
+      const forestCandId = currentState.viewportScene.activeScene.candidateArtId;
+      await triggerLabScenario('STAGE2_COMBAT', 'Goblin');
+      for (let i = 0; i < 20; i++) {
+        if (!isSequencePlaying) break;
+        await new Promise(r => setTimeout(r, 80));
+      }
+      const actor = document.getElementById('fp-monster-actor');
+      const hasGroundingRig = Boolean(actor && actor.querySelector('.fp-integrated-grounding-rig'));
+
+      return {
+        watchpostHidden,
+        watchpostUrl,
+        watchpostStatus,
+        barrowUrl,
+        barrowStatus,
+        moorlandUrl,
+        moorlandStatus,
+        forestUrl,
+        forestCandId,
+        hasGroundingRig
+      };
+    })()`);
+
+    assert.equal(activatedCheck.watchpostHidden, true, 'Approved artwork must never show REVIEW REQUIRED badge in normal gameplay');
+    assert.equal(activatedCheck.watchpostUrl, '/lab-assets/images/perspective/watchpost_9_7_south_river_gorge.jpg');
+    assert.equal(activatedCheck.watchpostStatus, 'APPROVED');
+    assert.equal(activatedCheck.barrowUrl, '/lab-assets/images/terrain/plains_lone_barrow_horizon_pov.jpg');
+    assert.equal(activatedCheck.barrowStatus, 'APPROVED');
+    assert.equal(activatedCheck.moorlandUrl, '/lab-assets/images/terrain/plains_open_moorland_swell_pov.jpg');
+    assert.equal(activatedCheck.moorlandStatus, 'APPROVED');
+    assert.equal(activatedCheck.forestUrl, '/lab-assets/images/terrain/forest_misty_birch_hollow_pov.jpg');
+    assert.equal(activatedCheck.forestCandId, 'P5-ART-02');
+    assert.equal(activatedCheck.hasGroundingRig, true, 'Monster cutout must ground cleanly on permanently activated Phase 5 scene');
+
+    // Part B: Verify Candidate Preview Mode remains functional for future unapproved artwork development
+    try {
+      setCandidateArtApprovalStatus('P5-ART-13', 'REVIEW REQUIRED');
+      const previewCheck = await evalInPage(`(async () => {
+        await setArtPreviewMode(true);
+        await triggerTeleport(9, 7, 'SOUTH');
+        await new Promise(r => setTimeout(r, 150));
+        const badgeEl = document.getElementById('fp-art-preview-badge');
+        const candidateHidden = badgeEl ? badgeEl.hidden : true;
+        const candidateBadgeText = badgeEl ? badgeEl.textContent.trim() : '';
+        const candidateSceneKey = currentState.viewportScene.activeScene.variantKey;
+        const candidateArtId = currentState.viewportScene.activeScene.candidateArtId;
+
+        await setArtPreviewMode(false);
+        await triggerTeleport(7, 7, 'NORTH');
+        const restoredHidden = badgeEl ? badgeEl.hidden : true;
+        return { candidateHidden, candidateBadgeText, candidateSceneKey, candidateArtId, restoredHidden };
+      })()`);
+
+      assert.equal(previewCheck.candidateHidden, false, 'Candidate badge must appear when previewing an unapproved candidate painting');
+      assert.equal(previewCheck.candidateArtId, 'P5-ART-13');
+      assert.match(previewCheck.candidateBadgeText, /CANDIDATE ART.*P5-ART-13.*REVIEW REQUIRED/);
+      assert.equal(previewCheck.candidateSceneKey, 'watchpost_9_7_south_river_gorge');
+      assert.equal(previewCheck.restoredHidden, true, 'Candidate badge must hide when returning to normal mode');
+    } finally {
+      resetCandidateArtApprovalStatus();
+    }
+
+    // Verify 1366x768 laptop and 390x844 mobile viewports
+    for (const vp of [
+      { width: 1366, height: 768, mobile: false },
+      { width: 390,  height: 844, mobile: true }
+    ]) {
+      await cdpSend('Emulation.setDeviceMetricsOverride', {
+        width: vp.width,
+        height: vp.height,
+        deviceScaleFactor: 1,
+        mobile: vp.mobile
+      });
+      await sleep(200);
+      const vpCheck = await evalInPage(`(() => {
+        if (currentState) renderGameState(currentState, { skipSequence: true });
+        return {
+          vw: window.innerWidth,
+          vh: window.innerHeight,
+          scrollW: document.documentElement.scrollWidth,
+          scrollH: document.documentElement.scrollHeight,
+          noHorizontalOverflow: document.documentElement.scrollWidth <= window.innerWidth + 2,
+          viewportVisible: document.getElementById('fp-viewport').getBoundingClientRect().height >= 200
+        };
+      })()`);
+      qaMetrics.viewportAudits[`${vp.width}x${vp.height}`] = vpCheck;
+      assert.equal(vpCheck.noHorizontalOverflow, true, `Zero horizontal overflow at ${vp.width}x${vp.height}`);
+      assert.equal(vpCheck.viewportVisible, true, `First-person viewport remains visible at ${vp.width}x${vp.height}`);
+    }
+
+    await cdpSend('Emulation.setDeviceMetricsOverride', {
+      width: 1920,
+      height: 1080,
+      deviceScaleFactor: 1,
+      mobile: false
+    });
+  });
+
+  // =========================================================================
+  // AREA 17: Console, Uncaught Exception & Network Error Audit
+  // =========================================================================
+  it('Area 17: Zero unexpected console errors, zero uncaught page exceptions, and zero HTTP >= 400 asset failures', async () => {
     assert.deepEqual(consoleErrors, [], `Expected zero console.error calls, got: ${JSON.stringify(consoleErrors)}`);
     assert.deepEqual(pageExceptions, [], `Expected zero uncaught page exceptions, got: ${JSON.stringify(pageExceptions)}`);
     assert.deepEqual(failedNetworkRequests, [], `Expected zero failed HTTP requests, got: ${JSON.stringify(failedNetworkRequests)}`);

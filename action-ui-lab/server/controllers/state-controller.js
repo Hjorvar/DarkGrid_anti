@@ -42,22 +42,22 @@ function createStateControllers({ db, userId }) {
   }
 
   function getState(req, res) {
-    const prevMode = getCandidateArtPreviewMode();
     try {
+      const hasExplicitParam = req.query.artPreview !== undefined || req.query.useCandidateArt !== undefined;
       const wantCandidates = req.query.artPreview === 'candidates' || req.query.artPreview === '1' || req.query.useCandidateArt === '1';
-      if (wantCandidates) setCandidateArtPreviewMode(true);
-      const state = buildClientState(db, userId);
+      const useCandidateArt = hasExplicitParam ? wantCandidates : getCandidateArtPreviewMode(db);
+      const state = buildClientState(db, userId, { useCandidateArt });
       res.json({ ok: true, state });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
-    } finally {
-      setCandidateArtPreviewMode(prevMode);
     }
   }
 
   function getAtlas(req, res) {
     try {
-      const useCandidateArt = req.query.artPreview === 'candidates' || req.query.artPreview === '1' || req.query.useCandidateArt === '1';
+      const hasExplicitParam = req.query.artPreview !== undefined || req.query.useCandidateArt !== undefined;
+      const wantCandidates = req.query.artPreview === 'candidates' || req.query.artPreview === '1' || req.query.useCandidateArt === '1';
+      const useCandidateArt = hasExplicitParam ? wantCandidates : getCandidateArtPreviewMode(db);
       const atlas = buildWorldVisualAtlas(db, { useCandidateArt });
       res.json({ ok: true, ...atlas, atlas, candidateArtInventory: CANDIDATE_ART_INVENTORY });
     } catch (err) {

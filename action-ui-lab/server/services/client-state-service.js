@@ -37,7 +37,7 @@ const {
   autoClaimCompletedBounties,
   getWildernessThreats
 } = require('../../../src/domain/bounties/board');
-const { normalizeSceneMode } = require('../../scene-catalog');
+const { normalizeSceneMode, getCandidateArtPreviewMode } = require('../../scene-catalog');
 const { buildAdventureClientPayload } = require('../../adventure-engine');
 const {
   computeAdaptiveMonsterVisualScale,
@@ -271,7 +271,8 @@ function buildClientState(db, userId, extra = {}) {
     }
   }
 
-  const viewportScene = buildViewportScene(db, currentTile, facing, directions, safeEncounter, sceneMode);
+  const effectiveUseCandidateArt = extra.useCandidateArt !== undefined ? Boolean(extra.useCandidateArt) : getCandidateArtPreviewMode(db);
+  const viewportScene = buildViewportScene(db, currentTile, facing, directions, safeEncounter, sceneMode, { useCandidateArt: effectiveUseCandidateArt });
 
   // Compute genuine evidence from real persistent_monsters / monster_instances on current or adjacent tiles
   const persistentOnTile = currentTile
@@ -320,6 +321,7 @@ function buildClientState(db, userId, extra = {}) {
 
   return {
     mode: safeEncounter ? safeEncounter.status : (isSafeCity ? 'CITY' : 'EXPLORATION'),
+    artPreviewMode: effectiveUseCandidateArt ? 'CANDIDATES_STAGED' : 'APPROVED_DEFAULT',
     facing,
     facingMeta: FACING_VECTORS[facing],
     sceneMode,

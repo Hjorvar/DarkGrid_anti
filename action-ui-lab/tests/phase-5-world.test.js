@@ -1,14 +1,14 @@
 /**
- * DARKGRID ADVENTURE LAB — PHASE 5: WORLD COMPLETION, ENVIRONMENTAL ARTWORK & ADVENTURE CONTINUITY TEST SUITE
+ * DARKGRID ADVENTURE LAB — PHASE 5.2: ARTWORK ACTIVATION, WORLD VERIFICATION & ADVENTURE CONTINUITY TEST SUITE
  *
  * Verifies:
- *  1. Full 15x15 World Scene Coverage (160 passable tiles × 4 facings = 640 passable viewpoints) in Approved & Candidate modes.
+ *  1. Full 15x15 World Scene Coverage (160 passable tiles × 4 facings = 640 passable viewpoints) with 64 unique paintings in Approved Default mode.
  *  2. 5-Tier POV-First Scene Resolver priority order (Landmark > Barrier > Transition > Contextual > Generic Biome).
  *  3. Impassable Obstacle Visibility (Blackwater River, Stonefang Crag, Darkmount Peaks, Bottomless Mire, Murksea, World Edges).
  *  4. 4-Way Directional Landmark Approach & Turn-Around (180°) Continuity across all 13 World Landmarks.
  *  5. Deterministic Scene Selection & Biome Purity (zero tropical jungle art in Rotting Fen, zero temperate forest fallback in Jungle).
- *  6. Consolidated 13 Candidate Artworks (`docs/phase-5/art-candidates/`): JPEG format, 1376x768 resolution, SHA-256 uniqueness,
- *     `REVIEW REQUIRED` governance status, and staging preview mode (`SET_ART_PREVIEW_MODE` / `/api/atlas?artPreview=candidates`).
+ *  6. Permanent Activation of all 13 Phase 5 Artworks + P5-ART-04-REPL (`public/images/terrain/` & `public/images/perspective/`):
+ *     JPEG format, 1376x768 resolution, SHA-256 uniqueness, HTTP 200 serving, `APPROVED` persistent governance, and `RESTRICTED_WITH_REPLACEMENT` for P5-ART-04.
  *  7. Atomic Turning & Blocked-Move Safety, plus Combat Return Continuity.
  *  8. End-to-End Execution of Adventure Journeys A (Mirkwood), B (Bridge & Watchpost), and C (Rotting Fen & Deadman's Mire).
  */
@@ -97,7 +97,7 @@ describe('Phase 5 — World Completion, Environmental Artwork & Adventure Contin
     }
   });
 
-  it('1. Audits all 160 passable tiles × 4 facings (640 viewpoints) with 0 Grade D gaps and valid files on disk', async () => {
+  it('1. Audits all 160 passable tiles × 4 facings (640 viewpoints) with 64 unique paintings, 0 Grade D gaps, and valid files on disk in default player mode', async () => {
     const { status, data } = await apiGet('/api/atlas');
     assert.equal(status, 200);
     assert.equal(data.ok, true);
@@ -106,6 +106,7 @@ describe('Phase 5 — World Completion, Environmental Artwork & Adventure Contin
     assert.equal(data.impassableTiles, 65);
     assert.equal(data.totalPassableViewpoints, 640);
     assert.equal(data.artPreviewMode, 'APPROVED_DEFAULT');
+    assert.equal(data.summary.uniqueImagesCount, 64, 'Expected 64 unique paintings (50 baseline + 14 approved Phase 5 paintings) in APPROVED_DEFAULT');
     assert.equal(data.summary.grades.D, 0, 'Expected zero Grade D viewpoints across all 640 passable viewpoints');
 
     const passableTiles = data.tiles.filter(t => t.isPassable);
@@ -116,6 +117,7 @@ describe('Phase 5 — World Completion, Environmental Artwork & Adventure Contin
         const view = tile.views[facing];
         assert.ok(view, `Missing view for [${tile.x},${tile.y}] ${facing}`);
         assert.ok(view.imageUrl, `Missing imageUrl for [${tile.x},${tile.y}] ${facing}`);
+        assert.equal(view.imageUrl.startsWith('/lab-assets/art-candidates/'), false, `Default mode must resolve permanent public/images/ paths at [${tile.x},${tile.y}] ${facing}`);
         assert.equal(view.artApprovalStatus, 'APPROVED', `Default mode must only serve APPROVED images at [${tile.x},${tile.y}] ${facing}`);
         assert.notEqual(view.qualityGrade, 'D', `Unexpected Grade D at [${tile.x},${tile.y}] ${facing}`);
         assert.ok(view.povTier >= 1 && view.povTier <= 4, `Expected Tier 1..4 at [${tile.x},${tile.y}] ${facing}`);
@@ -123,21 +125,36 @@ describe('Phase 5 — World Completion, Environmental Artwork & Adventure Contin
     }
   });
 
-  it('2. Verifies all 13 consolidated Phase 5 candidate paintings in docs/phase-5/art-candidates/ (format, 1376x768, SHA-256, HTTP serving, REVIEW REQUIRED status)', async () => {
+  it('2. Verifies all 13 Phase 5 paintings + P5-ART-04-REPL are permanently activated in public/images/ (format, 1376x768, SHA-256, HTTP serving, APPROVED status)', async () => {
     assert.ok(Array.isArray(CANDIDATE_ART_INVENTORY));
     assert.equal(CANDIDATE_ART_INVENTORY.length, 13);
 
-    const candidateDir = path.resolve(__dirname, '../docs/phase-5/art-candidates');
+    const labRoot = path.resolve(__dirname, '..');
+    const candidateDir = path.join(labRoot, 'docs/phase-5/art-candidates');
+    const allItems = [];
+    for (const item of CANDIDATE_ART_INVENTORY) {
+      allItems.push(item);
+      if (item.replacementCandidate) {
+        allItems.push({
+          ...item.replacementCandidate,
+          category: item.category
+        });
+      }
+    }
+    assert.equal(allItems.length, 14);
+
+    const phase5FileNames = new Set(allItems.map(i => i.fileName));
     const seenHashes = new Set();
 
-    // Collect hashes of all existing approved images first to ensure zero duplication against approved art
+    // Collect hashes of all pre-Phase-5 existing images to ensure zero duplication against earlier art
     for (const existingDir of [
-      path.resolve(__dirname, '../../public/images/terrain'),
-      path.resolve(__dirname, '../public/images/terrain'),
-      path.resolve(__dirname, '../public/images/perspective')
+      path.resolve(labRoot, '../public/images/terrain'),
+      path.join(labRoot, 'public/images/terrain'),
+      path.join(labRoot, 'public/images/perspective')
     ]) {
       if (!fs.existsSync(existingDir)) continue;
       for (const f of fs.readdirSync(existingDir)) {
+        if (phase5FileNames.has(f)) continue;
         const full = path.join(existingDir, f);
         if (fs.statSync(full).isFile() && /\.(jpg|jpeg|png|webp)$/i.test(f)) {
           const h = crypto.createHash('sha256').update(fs.readFileSync(full)).digest('hex');
@@ -146,12 +163,19 @@ describe('Phase 5 — World Completion, Environmental Artwork & Adventure Contin
       }
     }
 
-    for (const item of CANDIDATE_ART_INVENTORY) {
-      assert.equal(item.status, 'REVIEW REQUIRED', `Candidate ${item.fileName} must remain REVIEW REQUIRED until user approval`);
-      const filePath = path.join(candidateDir, item.fileName);
-      assert.ok(fs.existsSync(filePath), `Missing candidate art file on disk: ${filePath}`);
+    for (const item of allItems) {
+      assert.equal(item.status, 'APPROVED', `Activated painting ${item.fileName} must have status APPROVED`);
+      if (item.id === 'P5-ART-04') {
+        assert.equal(item.approvalMode, 'RESTRICTED_WITH_REPLACEMENT', 'P5-ART-04 must use RESTRICTED_WITH_REPLACEMENT');
+      }
 
-      const buf = fs.readFileSync(filePath);
+      const candidateFilePath = path.join(candidateDir, item.fileName);
+      assert.ok(fs.existsSync(candidateFilePath), `Missing source candidate file: ${candidateFilePath}`);
+
+      const activatedFilePath = path.join(labRoot, item.approvedDiskRelativePath);
+      assert.ok(fs.existsSync(activatedFilePath), `Missing permanently activated file: ${activatedFilePath}`);
+
+      const buf = fs.readFileSync(activatedFilePath);
       assert.ok(buf.length > 100000, `Expected high-resolution JPEG (>100KB) for ${item.fileName}, got ${buf.length} bytes`);
 
       const dims = getJpegDimensions(buf);
@@ -161,40 +185,59 @@ describe('Phase 5 — World Completion, Environmental Artwork & Adventure Contin
       assert.ok(dims.aspectRatio > 1.75 && dims.aspectRatio < 1.82, `Expected ~16:9 aspect ratio for ${item.fileName}`);
 
       const sha256 = crypto.createHash('sha256').update(buf).digest('hex');
+      const candSha256 = crypto.createHash('sha256').update(fs.readFileSync(candidateFilePath)).digest('hex');
       assert.equal(sha256, item.sha256, `SHA-256 mismatch for ${item.fileName}`);
+      assert.equal(sha256, candSha256, `Activated file SHA-256 must match source candidate for ${item.fileName}`);
       assert.equal(seenHashes.has(sha256), false, `Duplicate SHA-256 detected for ${item.fileName}`);
       seenHashes.add(sha256);
 
-      // Verify static serving at /lab-assets/art-candidates/<fileName>
-      const httpRes = await fetch(`${baseUrl}${item.candidateUrl}`);
-      assert.equal(httpRes.status, 200, `Expected HTTP 200 for ${item.candidateUrl}`);
+      // Verify static serving at permanent approvedUrl (/lab-assets/images/terrain/... or /lab-assets/images/perspective/...)
+      const httpRes = await fetch(`${baseUrl}${item.approvedUrl}`);
+      assert.equal(httpRes.status, 200, `Expected HTTP 200 for ${item.approvedUrl}`);
       const contentType = httpRes.headers.get('content-type') || '';
-      assert.ok(contentType.includes('image/jpeg'), `Expected image/jpeg content-type for ${item.candidateUrl}`);
+      assert.ok(contentType.includes('image/jpeg'), `Expected image/jpeg content-type for ${item.approvedUrl}`);
     }
   });
 
-  it('3. Supports Candidate Art Preview / Staging Mode (63 unique images, 640/640 PASS with 0 same-tile Tier 4 duplicates) while keeping Approved Mode default', async () => {
-    const { status, data } = await apiGet('/api/atlas?artPreview=candidates');
+  it('3. Resolves permanently activated Phase 5 artwork in default player mode (including P5-ART-04 restriction to 3 viewpoints + 16 moorland replacements) with 0 same-tile Tier 4 duplicates', async () => {
+    const { status, data } = await apiGet('/api/atlas');
     assert.equal(status, 200);
-    assert.equal(data.artPreviewMode, 'CANDIDATES_STAGED');
-    assert.equal(data.summary.uniqueImagesCount, 63, 'Expected 50 approved + 13 candidate = 63 unique images in Candidate Preview Mode');
+    assert.equal(data.artPreviewMode, 'APPROVED_DEFAULT');
+    assert.equal(data.summary.uniqueImagesCount, 64, 'Expected 64 unique images in default player mode');
 
     const tileByCoord = new Map(data.tiles.map(t => [`${t.x},${t.y}`, t]));
 
-    // Check [9,7] SOUTH bespoke candidate view
+    // Check [9,7] SOUTH bespoke activated view (P5-ART-13)
     const watchpost = tileByCoord.get('9,7');
-    assert.equal(watchpost.views.SOUTH.imageUrl, '/lab-assets/art-candidates/watchpost_9_7_south_river_gorge.jpg');
-    assert.equal(watchpost.views.SOUTH.artApprovalStatus, 'REVIEW REQUIRED');
+    assert.equal(watchpost.views.SOUTH.imageUrl, '/lab-assets/images/perspective/watchpost_9_7_south_river_gorge.jpg');
+    assert.equal(watchpost.views.SOUTH.artApprovalStatus, 'APPROVED');
     assert.equal(watchpost.views.NORTH.imageUrl, '/lab-assets/images/perspective/watchpost_9_7_river_flank.jpg');
 
-    // Check all 5 new transition candidates
-    assert.equal(tileByCoord.get('3,8').views.SOUTH.imageUrl, '/lab-assets/art-candidates/transition_hills_to_swamp_pov.jpg');
-    assert.equal(tileByCoord.get('6,9').views.NORTH.imageUrl, '/lab-assets/art-candidates/transition_swamp_to_plains_pov.jpg');
-    assert.equal(tileByCoord.get('3,4').views.EAST.imageUrl, '/lab-assets/art-candidates/transition_hills_to_forest_pov.jpg');
-    assert.equal(tileByCoord.get('5,7').views.WEST.imageUrl, '/lab-assets/art-candidates/transition_plains_to_hills_pov.jpg');
-    assert.equal(tileByCoord.get('4,7').views.EAST.imageUrl, '/lab-assets/art-candidates/transition_hills_to_plains_pov.jpg');
+    // Check all 5 newly activated transition paintings
+    assert.equal(tileByCoord.get('3,8').views.SOUTH.imageUrl, '/lab-assets/images/perspective/transition_hills_to_swamp_pov.jpg');
+    assert.equal(tileByCoord.get('6,9').views.NORTH.imageUrl, '/lab-assets/images/perspective/transition_swamp_to_plains_pov.jpg');
+    assert.equal(tileByCoord.get('3,4').views.EAST.imageUrl, '/lab-assets/images/perspective/transition_hills_to_forest_pov.jpg');
+    assert.equal(tileByCoord.get('5,7').views.WEST.imageUrl, '/lab-assets/images/perspective/transition_plains_to_hills_pov.jpg');
+    assert.equal(tileByCoord.get('4,7').views.EAST.imageUrl, '/lab-assets/images/perspective/transition_hills_to_plains_pov.jpg');
 
-    // Verify 0 same-tile duplicates on Tier 4 views across all 160 passable tiles in Candidate Preview Mode
+    // Check P5-ART-04 restricted placement (exact 3 Windblown Heath viewpoints) vs P5-ART-04-REPL (16 generic PLAINS viewpoints)
+    const barrowViewpoints = [];
+    const moorlandViewpoints = [];
+    for (const tile of data.tiles) {
+      if (!tile.isPassable) continue;
+      for (const f of ['NORTH', 'EAST', 'SOUTH', 'WEST']) {
+        const u = tile.views[f].imageUrl;
+        if (u === '/lab-assets/images/terrain/plains_lone_barrow_horizon_pov.jpg') {
+          barrowViewpoints.push(`${tile.x},${tile.y}:${f}`);
+        } else if (u === '/lab-assets/images/terrain/plains_open_moorland_swell_pov.jpg') {
+          moorlandViewpoints.push(`${tile.x},${tile.y}:${f}`);
+        }
+      }
+    }
+    assert.deepEqual(barrowViewpoints, ['12,1:SOUTH', '12,2:NORTH', '13,2:WEST'], 'Lone barrow must only appear at 12,1:SOUTH, 12,2:NORTH, 13,2:WEST');
+    assert.equal(moorlandViewpoints.length, 16, 'Open moorland swell replacement must serve the remaining 16 PLAINS viewpoints');
+
+    // Verify 0 same-tile duplicates on Tier 4 views across all 160 passable tiles
     const duplicateDetails = [];
     for (const tile of data.tiles) {
       if (!tile.isPassable) continue;
@@ -212,9 +255,6 @@ describe('Phase 5 — World Completion, Environmental Artwork & Adventure Contin
       }
     }
     assert.equal(duplicateDetails.length, 0, `Expected 0 same-tile Tier 4 duplicates, found: ${duplicateDetails.join('; ')}`);
-
-    // Verify default mode was restored after request
-    assert.equal(getCandidateArtPreviewMode(), false);
   });
 
   it('4. Resolves 4-way landmark approaches and eliminates biome contamination in SWAMP and JUNGLE', async () => {
@@ -370,7 +410,7 @@ describe('Phase 5 — World Completion, Environmental Artwork & Adventure Contin
     assert.equal(r4Res.state.viewportScene.scenes.C.imageUrl, '/lab-assets/images/perspective/oakhaven_7_7_south.jpg');
   });
 
-  it('6. Executes Journey B (Oakhaven -> Old Stone Bridge -> Bridge East Watchpost -> Eastern Plains -> Return) with river flank barriers', async () => {
+  it('6. Executes Journey B (Oakhaven -> Old Stone Bridge -> Bridge East Watchpost -> Eastern Plains -> Return) with river flank barriers and approved P5-ART-13 at [9,7] SOUTH', async () => {
     mockRngValue = 0.99;
     await apiAction('START_EXPEDITION', {
       expeditionKey: 'BRIDGE_EXPEDITION',
@@ -407,7 +447,15 @@ describe('Phase 5 — World Completion, Environmental Artwork & Adventure Contin
     assert.equal(s2Res.state.currentTile.y, 7);
     assert.equal(s2Res.state.viewportScene.scenes.C.imageUrl, '/lab-assets/images/perspective/watchpost_9_7_east.jpg');
 
-    // Step EAST onto Eastern Frontier Plains [10,7]
+    // Verify [9,7] NORTH and newly approved [9,7] SOUTH (P5-ART-13) are distinct
+    let { data: s2nRes } = await apiAction('TURN', { facing: 'NORTH' });
+    assert.equal(s2nRes.state.viewportScene.scenes.C.imageUrl, '/lab-assets/images/perspective/watchpost_9_7_river_flank.jpg');
+    let { data: s2sRes } = await apiAction('TURN', { facing: 'SOUTH' });
+    assert.equal(s2sRes.state.viewportScene.scenes.C.imageUrl, '/lab-assets/images/perspective/watchpost_9_7_south_river_gorge.jpg');
+    assert.equal(s2sRes.state.viewportScene.scenes.C.artApprovalStatus, 'APPROVED');
+
+    // Turn EAST and step onto Eastern Frontier Plains [10,7]
+    await apiAction('TURN', { facing: 'EAST' });
     let { data: s3Res } = await apiAction('MOVE', { relative: 'FORWARD' });
     assert.equal(s3Res.state.currentTile.x, 10);
     assert.equal(s3Res.state.currentTile.y, 7);
@@ -477,31 +525,100 @@ describe('Phase 5 — World Completion, Environmental Artwork & Adventure Contin
     assert.equal(s4Res.state.viewportScene.scenes.C.imageUrl, '/lab-assets/images/terrain/swamp_willow_boardwalk_pov.jpg');
     assert.equal(s4Res.state.viewportScene.pointOfInterest.poiKey, 'poi_rotting_fen_boardwalk');
 
-    // Turn WEST and move through [5,10] -> [4,10]
+    // Step SOUTH to [6,11], then WEST through [5,11] -> [4,11] (Deadman's Mire)
+    let { data: s4bRes } = await apiAction('MOVE', { relative: 'FORWARD' });
+    assert.equal(s4bRes.state.currentTile.x, 6);
+    assert.equal(s4bRes.state.currentTile.y, 11);
+
     await apiAction('TURN', { facing: 'WEST' });
     let { data: s5Res } = await apiAction('MOVE', { relative: 'FORWARD' });
     assert.equal(s5Res.state.currentTile.x, 5);
-    assert.equal(s5Res.state.currentTile.y, 10);
-    let { data: s6Res } = await apiAction('MOVE', { relative: 'FORWARD' });
-    assert.equal(s6Res.state.currentTile.x, 4);
-    assert.equal(s6Res.state.currentTile.y, 10);
+    assert.equal(s5Res.state.currentTile.y, 11);
+    assert.equal(s5Res.state.viewportScene.scenes.C.imageUrl, '/lab-assets/images/perspective/swamp_approach_mire_ruins.jpg');
+    assert.equal(s5Res.state.viewportScene.pointOfInterest.poiKey, 'poi_deadmans_mire_approach');
 
-    // Turn SOUTH at [4,10] -> approaches Deadman's Mire [4,11]
-    let { data: s6sRes } = await apiAction('TURN', { facing: 'SOUTH' });
-    assert.equal(s6sRes.state.facing, 'SOUTH');
-    assert.equal(s6sRes.state.viewportScene.scenes.C.imageUrl, '/lab-assets/images/perspective/swamp_approach_mire_ruins.jpg');
-    assert.equal(s6sRes.state.viewportScene.pointOfInterest.poiKey, 'poi_deadmans_mire_approach');
-
-    // Step SOUTH into Deadman's Mire [4,11]
+    // Step WEST into Deadman's Mire [4,11]
     let { data: s7Res } = await apiAction('MOVE', { relative: 'FORWARD' });
     assert.equal(s7Res.state.currentTile.x, 4);
     assert.equal(s7Res.state.currentTile.y, 11);
-    assert.equal(s7Res.state.viewportScene.scenes.C.imageUrl, '/lab-assets/images/perspective/swamp_approach_mire_ruins.jpg');
+    assert.equal(s7Res.state.viewportScene.scenes.C.imageUrl, '/images/terrain/terrain_swamp.webp');
 
-    // Turn NORTH at [4,11] -> faces Sunken Gothic Temple Ruins
+    // Verify all 4 directions at Deadman's Mire [4,11]
     let { data: s7nRes } = await apiAction('TURN', { facing: 'NORTH' });
-    assert.equal(s7nRes.state.facing, 'NORTH');
     assert.equal(s7nRes.state.viewportScene.scenes.C.imageUrl, '/lab-assets/images/perspective/deadmans_mire_4_11_ruins.jpg');
     assert.equal(s7nRes.state.viewportScene.pointOfInterest.poiKey, 'poi_deadmans_mire');
+
+    let { data: s7sRes } = await apiAction('TURN', { facing: 'SOUTH' });
+    assert.equal(s7sRes.state.viewportScene.scenes.C.imageUrl, '/lab-assets/images/perspective/swamp_approach_mire_ruins.jpg');
+
+    let { data: s7eRes } = await apiAction('TURN', { facing: 'EAST' });
+    assert.equal(s7eRes.state.viewportScene.scenes.C.imageUrl, '/lab-assets/images/terrain/swamp_willow_boardwalk_pov.jpg');
+  });
+
+  it('8. Verifies 6-metric World Art Audit classification after Phase 5.2 permanent activation (0 BROKEN_IMAGE_REFERENCE, 0 VALID_APPROVED_FALLBACK, 0 CANDIDATE_ART_PENDING, 0 WRONG_SCENE, 0 EXACT_DUPLICATE_TIER4, 64 unique paintings)', () => {
+    const { evaluateWorldArtAudit } = require('../server');
+    const defaultAudit = evaluateWorldArtAudit(db, { useCandidateArt: false });
+    assert.equal(defaultAudit.artPreviewMode, 'APPROVED_DEFAULT');
+    assert.equal(defaultAudit.totalPassableViewpoints, 640);
+    assert.equal(defaultAudit.uniqueImagesCount, 64, 'Expected 64 unique environment paintings in APPROVED_DEFAULT');
+    assert.equal(defaultAudit.auditMetrics.BROKEN_IMAGE_REFERENCE, 0, 'Zero broken image references in APPROVED_DEFAULT');
+    assert.equal(defaultAudit.auditMetrics.WRONG_SCENE, 0, 'Zero wrong scenes in APPROVED_DEFAULT');
+    assert.equal(defaultAudit.auditMetrics.VALID_APPROVED_FALLBACK, 0, 'Zero viewpoints awaiting artwork in APPROVED_DEFAULT');
+    assert.equal(defaultAudit.auditMetrics.CANDIDATE_ART_PENDING, 0, 'Zero candidate art pending in APPROVED_DEFAULT');
+    assert.equal(defaultAudit.auditMetrics.EXACT_DUPLICATE_TIER4, 0, 'Zero Tier 4 same-tile duplicates in APPROVED_DEFAULT');
+    assert.equal(defaultAudit.auditMetrics.CORNER_BARRIER_OR_TRANSITION_PAIRS, 10, '10 acceptable corner/barrier duplicate viewpoints');
+
+    const stagedAudit = evaluateWorldArtAudit(db, { useCandidateArt: true });
+    assert.equal(stagedAudit.artPreviewMode, 'CANDIDATES_STAGED');
+    assert.equal(stagedAudit.auditMetrics.BROKEN_IMAGE_REFERENCE, 0);
+    assert.equal(stagedAudit.auditMetrics.WRONG_SCENE, 0);
+    assert.equal(stagedAudit.auditMetrics.CANDIDATE_ART_PENDING, 0);
+    assert.equal(stagedAudit.auditMetrics.EXACT_DUPLICATE_TIER4, 0);
+  });
+
+  it('9. Enforces per-instance Candidate Preview Mode isolation across separate Lab instances and requests', async () => {
+    const appB = createLabApp({ dbPath: ':memory:' });
+    const dbB = appB.locals.db;
+    try {
+      setCandidateArtPreviewMode(true, dbB);
+      assert.equal(getCandidateArtPreviewMode(dbB), true, 'Instance B should have preview mode enabled');
+      assert.equal(getCandidateArtPreviewMode(db), false, 'Primary instance db must remain unaffected (APPROVED_DEFAULT)');
+
+      const { data: defaultState } = await apiGet('/api/state');
+      assert.equal(defaultState.state.artPreviewMode, 'APPROVED_DEFAULT');
+      const { data: previewState } = await apiGet('/api/state?artPreview=candidates');
+      assert.equal(previewState.state.artPreviewMode, 'CANDIDATES_STAGED');
+      const { data: afterState } = await apiGet('/api/state');
+      assert.equal(afterState.state.artPreviewMode, 'APPROVED_DEFAULT', 'Query parameter preview must not mutate subsequent default requests');
+    } finally {
+      setCandidateArtPreviewMode(false, dbB);
+    }
+  });
+
+  it('10. Persists permanent approval across resets while preserving fallback behavior for future unapproved candidates', () => {
+    const { setCandidateArtApprovalStatus, getCandidateArtApprovalStatus, resetCandidateArtApprovalStatus } = require('../server');
+    try {
+      // Simulate a future unapproved candidate on P5-ART-08 ([3,8] SOUTH)
+      setCandidateArtApprovalStatus('P5-ART-08', 'REVIEW REQUIRED');
+      const simAtlas = buildWorldVisualAtlas(db, { useCandidateArt: false });
+      const tileByCoord = new Map(simAtlas.tiles.map(t => [`${t.x},${t.y}`, t]));
+
+      // Unapproved P5-ART-08 ([3,8] SOUTH) falls back to its safe approved fallback in normal mode
+      assert.equal(tileByCoord.get('3,8').views.SOUTH.imageUrl, '/lab-assets/images/perspective/transition_plains_to_swamp_pov.jpg');
+      // Approved P5-ART-13 ([9,7] SOUTH) continues serving its permanent approved asset
+      assert.equal(tileByCoord.get('9,7').views.SOUTH.imageUrl, '/lab-assets/images/perspective/watchpost_9_7_south_river_gorge.jpg');
+      assert.equal(tileByCoord.get('9,7').views.SOUTH.artApprovalStatus, 'APPROVED');
+    } finally {
+      resetCandidateArtApprovalStatus();
+    }
+
+    // Verify resetCandidateArtApprovalStatus() restores the permanent owner-approved Phase 5.2 baseline
+    for (const item of getCandidateArtApprovalStatus()) {
+      assert.equal(item.status, 'APPROVED', `${item.id} must remain APPROVED after resetCandidateArtApprovalStatus()`);
+      if (item.id === 'P5-ART-04') {
+        assert.equal(item.approvalMode, 'RESTRICTED_WITH_REPLACEMENT');
+        assert.equal(item.replacementCandidate.status, 'APPROVED');
+      }
+    }
   });
 });

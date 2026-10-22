@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-21T21:06:19.780Z",
+  "generatedAt": "2026-10-22T07:30:48.009Z",
   "areasVerified": 15,
   "screenshots": [
     "01_area01_world_travel_continuity.png",
@@ -55,6 +55,22 @@
       "noViewportRightDeckOverlap": true,
       "topDeckFits": true,
       "movementDeckFits": true
+    },
+    "1366x768": {
+      "vw": 1366,
+      "vh": 768,
+      "scrollW": 1366,
+      "scrollH": 768,
+      "noHorizontalOverflow": true,
+      "viewportVisible": true
+    },
+    "390x844": {
+      "vw": 390,
+      "vh": 844,
+      "scrollW": 390,
+      "scrollH": 844,
+      "noHorizontalOverflow": true,
+      "viewportVisible": true
     }
   },
   "monsterCutoutDomChecks": [
@@ -192,10 +208,10 @@
     }
   ],
   "performanceMetrics": {
-    "JSHeapUsedSizeMB": 1.92,
-    "JSHeapTotalSizeMB": 3,
-    "Nodes": 1712,
-    "JSEventListeners": 72
+    "JSHeapUsedSizeMB": 2.6,
+    "JSHeapTotalSizeMB": 3.75,
+    "Nodes": 3222,
+    "JSEventListeners": 97
   },
   "consoleErrorsCount": 0,
   "pageExceptionsCount": 0,

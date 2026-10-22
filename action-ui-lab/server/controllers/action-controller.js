@@ -26,11 +26,12 @@ function createActionController({ db, userId, options = {} }) {
     try {
       if (action === 'SET_ART_PREVIEW_MODE') {
         const enabled = Boolean(payload.enabled || payload.useCandidateArt);
-        setCandidateArtPreviewMode(enabled);
+        setCandidateArtPreviewMode(enabled, db);
         return res.json({
           ok: true,
           artPreviewMode: enabled ? 'CANDIDATES_STAGED' : 'APPROVED_DEFAULT',
           state: buildClientState(db, userId, {
+            useCandidateArt: enabled,
             infoMessage: enabled
               ? 'Candidate Art Preview Mode enabled (REVIEW REQUIRED staging active).'
               : 'Approved Default Art Mode restored.'

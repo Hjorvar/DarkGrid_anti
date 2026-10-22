@@ -131,4 +131,41 @@ describe('Track 4 — Monster Artwork Inventory & RGBA Cutout Validation Suite',
       );
     }
   });
+
+  it('5. All 37 verified RGBA monster cutouts resolve valid grounding anchors & adaptive scale across all 14 activated Phase 5 environment paintings', () => {
+    const { CANDIDATE_ART_INVENTORY, computeSceneStageAnchor } = require('../scene-catalog');
+    const { resolveMonsterIntegratedProfile } = require('../server/services/monster-profile-service');
+    const { getMonsterAssetManifest } = require('../monster-size-catalog');
+    const manifest = getMonsterAssetManifest();
+    const verifiedMonsters = manifest.monsters.filter(m => m.cutoutAsset && m.cutoutAsset.hasVerifiedCutout);
+    assert.equal(verifiedMonsters.length, 37, 'Must verify all 37 RGBA monster cutouts (not a 12-item subset)');
+
+    const allPhase5Art = [];
+    for (const cand of CANDIDATE_ART_INVENTORY) {
+      allPhase5Art.push(cand);
+      if (cand.replacementCandidate) {
+        allPhase5Art.push({
+          ...cand.replacementCandidate,
+          targetBiome: cand.targetBiome
+        });
+      }
+    }
+    assert.equal(allPhase5Art.length, 14, 'Must verify all 13 Phase 5 paintings plus P5-ART-04-REPL');
+
+    for (const cand of allPhase5Art) {
+      assert.equal(cand.status, 'APPROVED', `${cand.id} must be permanently APPROVED`);
+      const terrain = cand.targetBiome.includes('->') ? cand.targetBiome.split('->')[0] : cand.targetBiome;
+      const stageAnchor = computeSceneStageAnchor(cand.candidateKey, terrain, null, false);
+      assert.ok(stageAnchor && stageAnchor.stageFloorY >= 75 && stageAnchor.stageFloorY <= 90, `Invalid stageAnchor for ${cand.id}`);
+      for (const m of verifiedMonsters) {
+        const profile = resolveMonsterIntegratedProfile(m.slug, Boolean(m.isFlying), m.slug, {
+          sceneTerrain: terrain,
+          tileX: 7,
+          tileY: 4
+        });
+        assert.equal(profile.hasIntegratedCutout, true, `${m.slug} must have integrated cutout on ${cand.id}`);
+        assert.ok(profile.adaptiveScale && profile.adaptiveScale.visibleHeightPx > 40, `${m.slug} must compute valid visibleHeightPx on ${cand.id}`);
+      }
+    }
+  });
 });

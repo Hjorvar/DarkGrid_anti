@@ -28,10 +28,28 @@ function renderAdventureOverlays(state) {
   return uiCallbacks.renderAdventureOverlays(state);
 }
 
+function getClientArtPreviewQuerySuffix() {
+  if (typeof window === 'undefined' || !window.location || !window.location.search) return '';
+  const params = new URLSearchParams(window.location.search);
+  const ap = params.get('artPreview');
+  const uca = params.get('useCandidateArt');
+  if (ap !== null) return `?artPreview=${encodeURIComponent(ap)}`;
+  if (uca !== null) return `?useCandidateArt=${encodeURIComponent(uca)}`;
+  return '';
+}
+
 export async function fetchInitialState() {
   cancelActiveCombatSequence();
   try {
-    const res = await fetch('/api/state');
+    const suffix = getClientArtPreviewQuerySuffix();
+    if (suffix.includes("candidates") || suffix.includes("=1")) {
+      await fetch('/api/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'SET_ART_PREVIEW_MODE', payload: { enabled: true } })
+      }).catch(() => {});
+    }
+    const res = await fetch(`/api/state${suffix}`);
     const data = await res.json();
     if (data && data.state) {
       renderGameState(data.state, { skipSequence: true });
@@ -242,4 +260,8 @@ export function forceTriggerDiscovery(discoveryId = null) {
 
 export function setDeterministicSeed(seed) {
   return dispatchAction('SET_DETERMINISTIC_SEED', { seed: Number(seed || 4201) });
+}
+
+export function setArtPreviewMode(enabled) {
+  return dispatchAction('SET_ART_PREVIEW_MODE', { enabled: Boolean(enabled), useCandidateArt: Boolean(enabled) });
 }

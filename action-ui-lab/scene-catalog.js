@@ -27,7 +27,30 @@ const {
   evaluateTransitionContinuity
 } = require('./travel-continuity');
 
+const fs = require('node:fs');
+const path = require('node:path');
 const SCENE_MODES = ['A', 'B', 'C', 'LEGACY'];
+const LAB_ROOT_DIR = __dirname;
+const REPO_ROOT_DIR = path.resolve(LAB_ROOT_DIR, '..');
+const assetExistsCache = new Map();
+
+function resolveExistingAssetUrl(preferredUrl, fallbackUrl = '/images/terrain/terrain_plains.webp') {
+  if (!preferredUrl || typeof preferredUrl !== 'string') return fallbackUrl;
+  if (assetExistsCache.has(preferredUrl)) {
+    return assetExistsCache.get(preferredUrl) ? preferredUrl : fallbackUrl;
+  }
+  let diskPath;
+  if (preferredUrl.startsWith('/lab-assets/art-candidates/')) {
+    diskPath = path.join(LAB_ROOT_DIR, 'docs/phase-5/art-candidates', preferredUrl.replace('/lab-assets/art-candidates/', ''));
+  } else if (preferredUrl.startsWith('/lab-assets/')) {
+    diskPath = path.join(LAB_ROOT_DIR, 'public', preferredUrl.replace('/lab-assets/', ''));
+  } else {
+    diskPath = path.join(REPO_ROOT_DIR, 'public', preferredUrl.replace(/^\//, ''));
+  }
+  const exists = fs.existsSync(diskPath);
+  assetExistsCache.set(preferredUrl, exists);
+  return exists ? preferredUrl : fallbackUrl;
+}
 
 let isBuildingAtlas = false;
 let latestLiveViewportContext = null;
@@ -300,7 +323,7 @@ const DEFAULT_SCENE_VARIANTS = [
     tile_id: null,
     variant_index: 3,
     variant_key: 'forest_tangled_canopy',
-    image_path: '/lab-assets/images/perspective/ancient_oak_7_3_south.jpg',
+    image_path: '/lab-assets/images/terrain/forest_tangled_canopy_pov.jpg',
     title: 'Mirkwood — Tangled Old-Growth',
     subtitle: 'Dense primeval oak canopy where overarching mossy root-arches and ancient trunks blot out the sky',
     atmosphere_profile: 'forest-canopy',
@@ -882,6 +905,153 @@ const DEFAULT_SCENE_VARIANTS = [
     terrain_type: 'FOREST',
     location_key: 'POV_POOL',
     tile_id: null,
+    variant_index: 11,
+    variant_key: 'forest_misty_birch_hollow_pov',
+    image_path: '/lab-assets/images/terrain/forest_misty_birch_hollow_pov.jpg',
+    title: 'Mirkwood — Misty Birch Hollow',
+    subtitle: 'Pale peeling birch trunks, damp bracken ferns, and mossy granite stones along a quiet woodland hollow',
+    atmosphere_profile: 'forest-deep',
+    lighting_tint: 'rgba(44, 80, 58, 0.11)',
+    mist_style: 'deep-forest',
+    focal_x: 50,
+    focal_y: 62,
+    camera_type: 'POV',
+    environment_scope: 'OUTDOOR',
+    view_category: 'GENERIC_TERRAIN',
+    directionality: 'OMNIDIRECTIONAL',
+    has_directional_landmark: 0,
+    safe_for_pov_fallback: 1
+  },
+  {
+    terrain_type: 'PLAINS',
+    location_key: 'POV_POOL',
+    tile_id: null,
+    variant_index: 11,
+    variant_key: 'plains_rutted_wagon_track_pov',
+    image_path: '/lab-assets/images/terrain/plains_rutted_wagon_track_pov.jpg',
+    title: 'Verdant Plains — Rutted Wagon Track',
+    subtitle: 'Rain-filled cart ruts and weathered wooden fence posts winding across windswept frontier grasslands',
+    atmosphere_profile: 'plains-open',
+    lighting_tint: 'rgba(165, 155, 120, 0.09)',
+    mist_style: 'light-haze',
+    focal_x: 50,
+    focal_y: 62,
+    camera_type: 'POV',
+    environment_scope: 'OUTDOOR',
+    view_category: 'GENERIC_TERRAIN',
+    directionality: 'OMNIDIRECTIONAL',
+    has_directional_landmark: 0,
+    safe_for_pov_fallback: 1
+  },
+  {
+    terrain_type: 'PLAINS',
+    location_key: 'POV_POOL',
+    tile_id: null,
+    variant_index: 12,
+    variant_key: 'plains_open_moorland_swell_pov',
+    image_path: '/lab-assets/images/terrain/plains_open_moorland_swell_pov.jpg',
+    title: 'Verdant Plains — Open Moorland Swell',
+    subtitle: 'Wide windswept grassland swells, scattered grey boulders, and dark purple heather under brooding clouds',
+    atmosphere_profile: 'plains-heath',
+    lighting_tint: 'rgba(150, 148, 125, 0.09)',
+    mist_style: 'light-haze',
+    focal_x: 50,
+    focal_y: 62,
+    camera_type: 'POV',
+    environment_scope: 'OUTDOOR',
+    view_category: 'GENERIC_TERRAIN',
+    directionality: 'OMNIDIRECTIONAL',
+    has_directional_landmark: 0,
+    safe_for_pov_fallback: 1
+  },
+  {
+    terrain_type: 'PLAINS',
+    location_key: 'POV_POOL',
+    tile_id: null,
+    variant_index: 13,
+    variant_key: 'plains_lone_barrow_horizon_pov',
+    image_path: '/lab-assets/images/terrain/plains_lone_barrow_horizon_pov.jpg',
+    title: 'Windblown Heath — Lone Barrow Horizon',
+    subtitle: 'Narrow heather footpath leading toward an ancient turf-covered burial mound on the northeastern horizon',
+    atmosphere_profile: 'plains-moor',
+    lighting_tint: 'rgba(135, 148, 160, 0.10)',
+    mist_style: 'moor-mist',
+    focal_x: 50,
+    focal_y: 62,
+    camera_type: 'POV',
+    environment_scope: 'OUTDOOR',
+    view_category: 'LANDMARK',
+    directionality: 'LANDMARK_LOCKED',
+    has_directional_landmark: 1,
+    safe_for_pov_fallback: 0
+  },
+  {
+    terrain_type: 'SWAMP',
+    location_key: 'POV_POOL',
+    tile_id: null,
+    variant_index: 11,
+    variant_key: 'swamp_sunken_roots_channel_pov',
+    image_path: '/lab-assets/images/terrain/swamp_sunken_roots_channel_pov.jpg',
+    title: 'Rotting Fen — Sunken Roots Channel',
+    subtitle: 'Shallow black bog channel flanked by knotted bog-willow roots, reeds, and drifting green fen mist',
+    atmosphere_profile: 'swamp-mire',
+    lighting_tint: 'rgba(64, 92, 62, 0.13)',
+    mist_style: 'swamp-fog',
+    focal_x: 50,
+    focal_y: 62,
+    camera_type: 'POV',
+    environment_scope: 'OUTDOOR',
+    view_category: 'GENERIC_TERRAIN',
+    directionality: 'OMNIDIRECTIONAL',
+    has_directional_landmark: 0,
+    safe_for_pov_fallback: 1
+  },
+  {
+    terrain_type: 'HILLS',
+    location_key: 'POV_POOL',
+    tile_id: null,
+    variant_index: 12,
+    variant_key: 'hills_windswept_scree_pass_pov',
+    image_path: '/lab-assets/images/terrain/hills_windswept_scree_pass_pov.jpg',
+    title: 'Raven Crags — Windswept Scree Pass',
+    subtitle: 'Shattered dark-slate scree slope and frost-bitten heather winding through a narrow highland pass',
+    atmosphere_profile: 'hills-crag',
+    lighting_tint: 'rgba(112, 120, 134, 0.11)',
+    mist_style: 'moor-mist',
+    focal_x: 50,
+    focal_y: 62,
+    camera_type: 'POV',
+    environment_scope: 'OUTDOOR',
+    view_category: 'GENERIC_TERRAIN',
+    directionality: 'OMNIDIRECTIONAL',
+    has_directional_landmark: 0,
+    safe_for_pov_fallback: 1
+  },
+  {
+    terrain_type: 'JUNGLE',
+    location_key: 'POV_POOL',
+    tile_id: null,
+    variant_index: 11,
+    variant_key: 'jungle_briar_thicket_pov',
+    image_path: '/lab-assets/images/terrain/jungle_briar_thicket_pov.jpg',
+    title: 'Venomous Jungle — Briar & Vine Thicket',
+    subtitle: 'Coiled thorny briars, hanging lianas, and damp root-choked earth beneath a suffocating jungle canopy',
+    atmosphere_profile: 'jungle',
+    lighting_tint: 'rgba(46, 86, 52, 0.13)',
+    mist_style: 'deep-forest',
+    focal_x: 50,
+    focal_y: 62,
+    camera_type: 'POV',
+    environment_scope: 'OUTDOOR',
+    view_category: 'GENERIC_TERRAIN',
+    directionality: 'OMNIDIRECTIONAL',
+    has_directional_landmark: 0,
+    safe_for_pov_fallback: 1
+  },
+  {
+    terrain_type: 'FOREST',
+    location_key: 'POV_POOL',
+    tile_id: null,
     variant_index: 10,
     variant_key: 'forest_crossroads_lateral_pov',
     image_path: '/lab-assets/images/perspective/crossroads_7_5_lateral.jpg',
@@ -1352,7 +1522,7 @@ const DEFAULT_PERSPECTIVE_VIEWS = [
     tile_y: 7,
     facing: 'SOUTH',
     view_key: 'fp_watchpost_9_7_south',
-    image_path: '/lab-assets/images/perspective/watchpost_9_7_river_flank.jpg',
+    image_path: '/lab-assets/images/perspective/watchpost_9_7_south_river_gorge.jpg',
     view_title: 'At Bridge East Watchpost — Looking South Over Broken River Parapet',
     view_subtitle: 'Looking South across the shattered stone parapet wall into the dark, mist-shrouded rapids of the Blackwater River',
     landmarks_visible: 'Collapsed Watchpost Parapet & Mossy Stones (Foreground), Impassable Blackwater River Gorge (Below South)',
@@ -2429,7 +2599,7 @@ const DEFAULT_POV_CONTEXT_RULES = [
     to_terrain: 'PLAINS',
     to_passable: 1,
     facing: null,
-    image_path: '/lab-assets/images/terrain/swamp_willow_boardwalk_pov.jpg',
+    image_path: '/lab-assets/images/perspective/transition_swamp_to_plains_pov.jpg',
     view_title: 'Fen Border — Climbing the Timber Causeway Out of the Marsh',
     view_subtitle: 'Standing on the half-sunken timber causeway in the willow mire, looking toward the drier lowland border ahead',
     landmarks_visible: 'Sunken Marsh Boardwalk & Willow Fen Edge (Foreground), Lowland Border Ahead',
@@ -2475,7 +2645,7 @@ const DEFAULT_POV_CONTEXT_RULES = [
     to_terrain: 'FOREST',
     to_passable: 1,
     facing: null,
-    image_path: '/lab-assets/images/terrain/forest_pine_ravine.jpg',
+    image_path: '/lab-assets/images/perspective/transition_hills_to_forest_pov.jpg',
     view_title: 'Highland Descent — Ravine Into Mirkwood Forest',
     view_subtitle: 'Descending between jagged highland boulders and mossy ravine ledges straight into the dark firs and pines of Mirkwood ahead',
     landmarks_visible: 'Rocky Highland Ravine Ledges (Foreground), Dark Fir & Pine Canopy of Mirkwood (Ahead)',
@@ -2498,7 +2668,7 @@ const DEFAULT_POV_CONTEXT_RULES = [
     to_terrain: 'HILLS',
     to_passable: 1,
     facing: null,
-    image_path: '/lab-assets/images/terrain/hills_highland_ridge_pov.jpg',
+    image_path: '/lab-assets/images/perspective/transition_plains_to_hills_pov.jpg',
     view_title: 'Western Foothills — Ascending Toward Raven Crags',
     view_subtitle: 'The open grassy track climbs onto cracked grey flagstones winding up along the windswept highland ridge of Raven Crags',
     landmarks_visible: 'Grassy Foothill Flagstones (Foreground), Windswept Highland Ridge of Raven Crags (Ahead)',
@@ -2521,7 +2691,7 @@ const DEFAULT_POV_CONTEXT_RULES = [
     to_terrain: 'PLAINS',
     to_passable: 1,
     facing: null,
-    image_path: '/images/terrain/terrain_plains.webp',
+    image_path: '/lab-assets/images/perspective/transition_hills_to_plains_pov.jpg',
     view_title: 'Eastern Foothills — Descending Onto the Verdant Plains',
     view_subtitle: 'Looking past rocky foothill boulders as the highland track opens out into the wide windswept grasslands of the Verdant Plains',
     landmarks_visible: 'Rocky Foothill Boulders (Foreground), Open Windswept Grasslands (Ahead)',
@@ -2544,7 +2714,7 @@ const DEFAULT_POV_CONTEXT_RULES = [
     to_terrain: 'SWAMP',
     to_passable: 1,
     facing: null,
-    image_path: '/lab-assets/images/perspective/transition_plains_to_swamp_pov.jpg',
+    image_path: '/lab-assets/images/perspective/transition_hills_to_swamp_pov.jpg',
     view_title: 'Southern Crags — Descending Into the Rotting Fen',
     view_subtitle: 'Looking South down the rocky highland slope as dry stone gives way to stagnant marsh water, crooked bog willows, and drifting green fen mist ahead',
     landmarks_visible: 'Rocky Foothill Slope (Foreground), Stagnant Waters & Willows of the Rotting Fen (Ahead)',
@@ -3888,120 +4058,226 @@ function resolveSceneModeCCore(db, current, ahead1, left1, right1, facing, seed,
   };
 }
 
+function resolveEffectiveTier4Pool(terrain, useCandidateArt, currentTile, facing, options = {}) {
+  const rawPool = CANDIDATE_TIER4_POOLS[terrain];
+  if (!rawPool) return null;
+  const coordFacingKey = currentTile ? `${Number(currentTile.x)},${Number(currentTile.y)}:${facing}` : '';
+
+  return rawPool.map(entry => {
+    const candidateItem = entry.artId ? CANDIDATE_BY_ID.get(entry.artId) : CANDIDATE_BY_KEY.get(entry.variantKey);
+    if (!candidateItem) {
+      return {
+        variantKey: entry.variantKey,
+        imageUrl: resolveExistingAssetUrl(entry.imageUrl),
+        status: 'APPROVED',
+        candidateItem: null
+      };
+    }
+
+    const itemApproved = candidateItem.status === 'APPROVED';
+    const shouldActivate = Boolean(useCandidateArt || itemApproved);
+    if (!shouldActivate) {
+      const fbUrl = entry.fallbackImageUrl || candidateItem.currentApprovedFallback;
+      return {
+        variantKey: entry.fallbackVariantKey || candidateItem.targetSlotKey || entry.variantKey,
+        imageUrl: resolveExistingAssetUrl(fbUrl),
+        status: 'APPROVED',
+        candidateItem
+      };
+    }
+
+    const mode = (options && options.p5Art04Mode) || candidateItem.approvalMode || 'DEFAULT';
+    if (candidateItem.id === 'P5-ART-04' && candidateItem.replacementCandidate) {
+      const inRestrictedSet = Array.isArray(candidateItem.restrictedViewpoints) &&
+        candidateItem.restrictedViewpoints.includes(coordFacingKey);
+      if (mode === 'REPLACEMENT' || (mode === 'RESTRICTED_WITH_REPLACEMENT' && !inRestrictedSet)) {
+        const repl = candidateItem.replacementCandidate;
+        const replApproved = repl.status === 'APPROVED';
+        if (!replApproved && !useCandidateArt) {
+          return {
+            variantKey: entry.fallbackVariantKey || 'plains_windblown_heath_pov',
+            imageUrl: resolveExistingAssetUrl(candidateItem.currentApprovedFallback),
+            status: 'APPROVED',
+            candidateItem: repl
+          };
+        }
+        const replTargetUrl = replApproved ? (repl.approvedUrl || repl.candidateUrl) : repl.candidateUrl;
+        return {
+          variantKey: repl.candidateKey,
+          imageUrl: resolveExistingAssetUrl(replTargetUrl, candidateItem.currentApprovedFallback),
+          status: replApproved ? 'APPROVED' : repl.status,
+          candidateItem: repl
+        };
+      }
+      if (mode === 'RESTRICTED' && !inRestrictedSet) {
+        return {
+          variantKey: entry.fallbackVariantKey || 'plains_windblown_heath_pov',
+          imageUrl: resolveExistingAssetUrl(candidateItem.currentApprovedFallback),
+          status: 'APPROVED',
+          candidateItem
+        };
+      }
+    }
+
+    const targetUrl = itemApproved ? (candidateItem.approvedUrl || candidateItem.candidateUrl) : candidateItem.candidateUrl;
+    return {
+      variantKey: candidateItem.candidateKey,
+      imageUrl: resolveExistingAssetUrl(targetUrl, candidateItem.currentApprovedFallback),
+      status: itemApproved ? 'APPROVED' : candidateItem.status,
+      candidateItem
+    };
+  });
+}
+
 function resolveSceneModeC(db, current, ahead1, left1, right1, facing, seed, inActiveCombat = false, behindOverride = null, options = {}) {
   const baseScene = resolveSceneModeCCore(db, current, ahead1, left1, right1, facing, seed, inActiveCombat);
   const continuityMeta = buildSceneContinuityMetadata(db, current, ahead1, left1, right1, facing, behindOverride);
-  const useCandidateArt = Boolean(options && options.useCandidateArt !== undefined ? options.useCandidateArt : candidateArtPreviewMode);
+  const useCandidateArt = Boolean(
+    options && options.useCandidateArt !== undefined
+      ? options.useCandidateArt
+      : getCandidateArtPreviewMode(db)
+  );
   const stagedCandidate = resolveStagedCandidateForScene(baseScene, current, facing);
 
-  let resolvedImageUrl = baseScene.imageUrl;
+  let resolvedImageUrl = resolveExistingAssetUrl(baseScene.imageUrl);
   let resolvedVariantKey = baseScene.variantKey;
   let artApprovalStatus = 'APPROVED';
+  let activeCandidate = stagedCandidate;
 
-  if (useCandidateArt) {
-    if (baseScene.povTier === 4 && current && CANDIDATE_TIER4_POOLS[current.terrain]) {
-      const pool = CANDIDATE_TIER4_POOLS[current.terrain];
-      const idx = computeDeterministicVariantIndex(
-        Number(current.x || 0),
-        Number(current.y || 0),
-        pool.length,
-        facing
+  if (baseScene.povTier === 4 && current && CANDIDATE_TIER4_POOLS[current.terrain]) {
+    const pool = resolveEffectiveTier4Pool(current.terrain, useCandidateArt, current, facing, options);
+    const idx = computeDeterministicVariantIndex(
+      Number(current.x || 0),
+      Number(current.y || 0),
+      pool.length,
+      facing
+    );
+    const sameTileFpRows = db.prepare(`
+      SELECT facing, view_key, image_path FROM lab_perspective_views
+      WHERE tile_x = ? AND tile_y = ? AND facing != ? AND is_active = 1
+    `).all(Number(current.x || 0), Number(current.y || 0), facing);
+    const sameTileFp = new Set(sameTileFpRows.map(r => {
+      const fpCand = CANDIDATE_BY_SLOT_KEY.get(r.view_key);
+      if (!fpCand) return r.image_path;
+      if (fpCand.status === 'APPROVED') return fpCand.approvedUrl || fpCand.candidateUrl;
+      if (useCandidateArt) return fpCand.candidateUrl;
+      return fpCand.currentApprovedFallback || r.image_path;
+    }));
+    const nonTier4Facings = new Set(sameTileFpRows.map(r => r.facing));
+    const otherNeighbors = [
+      { tile: left1, dir: { NORTH: 'WEST', EAST: 'NORTH', SOUTH: 'EAST', WEST: 'SOUTH' }[facing] },
+      { tile: right1, dir: { NORTH: 'EAST', EAST: 'SOUTH', SOUTH: 'WEST', WEST: 'NORTH' }[facing] },
+      { tile: behindOverride, dir: { NORTH: 'SOUTH', EAST: 'WEST', SOUTH: 'NORTH', WEST: 'EAST' }[facing] }
+    ];
+    for (const item of otherNeighbors) {
+      if (!item.tile || !item.dir || nonTier4Facings.has(item.dir)) continue;
+      const adjPassable = item.tile.isPassable ? 1 : 0;
+      const adjRules = db.prepare(`
+        SELECT rule_key, image_path FROM lab_pov_context_rules
+        WHERE is_active = 1
+          AND (from_terrain IS NULL OR from_terrain = ?)
+          AND (from_feature IS NULL OR from_feature = ?)
+          AND (to_terrain IS NULL OR to_terrain = ?)
+          AND (to_passable IS NULL OR to_passable = ?)
+        ORDER BY pov_tier ASC, priority DESC, id ASC
+      `).all(
+        current.terrain || '',
+        current.feature || '',
+        item.tile.terrain || '',
+        adjPassable
       );
-      const sameTileFpRows = db.prepare(`
-        SELECT facing, image_path FROM lab_perspective_views
-        WHERE tile_x = ? AND tile_y = ? AND facing != ? AND is_active = 1
-      `).all(Number(current.x || 0), Number(current.y || 0), facing);
-      const sameTileFp = new Set(sameTileFpRows.map(r => r.image_path));
-      const nonTier4Facings = new Set(sameTileFpRows.map(r => r.facing));
-      const otherNeighbors = [
-        { tile: left1, dir: { NORTH: 'WEST', EAST: 'NORTH', SOUTH: 'EAST', WEST: 'SOUTH' }[facing] },
-        { tile: right1, dir: { NORTH: 'EAST', EAST: 'SOUTH', SOUTH: 'WEST', WEST: 'NORTH' }[facing] },
-        { tile: behindOverride, dir: { NORTH: 'SOUTH', EAST: 'WEST', SOUTH: 'NORTH', WEST: 'EAST' }[facing] }
-      ];
-      for (const item of otherNeighbors) {
-        if (!item.tile || !item.dir || nonTier4Facings.has(item.dir)) continue;
-        const adjPassable = item.tile.isPassable ? 1 : 0;
-        const adjRules = db.prepare(`
-          SELECT rule_key, image_path FROM lab_pov_context_rules
-          WHERE is_active = 1
-            AND (from_terrain IS NULL OR from_terrain = ?)
-            AND (from_feature IS NULL OR from_feature = ?)
-            AND (to_terrain IS NULL OR to_terrain = ?)
-            AND (to_passable IS NULL OR to_passable = ?)
-          ORDER BY pov_tier ASC, priority DESC, id ASC
-        `).all(
-          current.terrain || '',
-          current.feature || '',
-          item.tile.terrain || '',
-          adjPassable
-        );
-        const matchedAdj = adjRules.find(r => {
-          if (r.rule_key === 'pov_forest_track_east') {
-            return Number(current.x) === 7 && Number(current.y) === 5;
-          }
-          if (r.rule_key === 'pov_forest_facing_crag_wall') {
-            return Number(item.tile.x) === 6 && Number(item.tile.y) === 5;
-          }
-          return true;
-        });
-        if (matchedAdj && matchedAdj.image_path) {
-          nonTier4Facings.add(item.dir);
-          const cand = CANDIDATE_BY_SLOT_KEY.get(matchedAdj.rule_key);
-          sameTileFp.add(cand ? cand.candidateUrl : matchedAdj.image_path);
+      const matchedAdj = adjRules.find(r => {
+        if (r.rule_key === 'pov_forest_track_east') {
+          return Number(current.x) === 7 && Number(current.y) === 5;
+        }
+        if (r.rule_key === 'pov_forest_facing_crag_wall') {
+          return Number(item.tile.x) === 6 && Number(item.tile.y) === 5;
+        }
+        return true;
+      });
+      if (matchedAdj && matchedAdj.image_path) {
+        nonTier4Facings.add(item.dir);
+        const cand = CANDIDATE_BY_SLOT_KEY.get(matchedAdj.rule_key);
+        if (!cand) {
+          sameTileFp.add(matchedAdj.image_path);
+        } else if (cand.status === 'APPROVED') {
+          sameTileFp.add(cand.approvedUrl || cand.candidateUrl);
+        } else if (useCandidateArt) {
+          sameTileFp.add(cand.candidateUrl);
+        } else {
+          sameTileFp.add(cand.currentApprovedFallback || matchedAdj.image_path);
         }
       }
-      const otherTier4Imgs = new Set();
-      for (const otherF of ['NORTH', 'EAST', 'SOUTH', 'WEST']) {
-        if (otherF === facing || nonTier4Facings.has(otherF)) continue;
-        const oIdx = computeDeterministicVariantIndex(Number(current.x || 0), Number(current.y || 0), pool.length, otherF);
-        if (pool[oIdx]) otherTier4Imgs.add(pool[oIdx].imageUrl);
+    }
+    const otherTier4Imgs = new Set();
+    for (const otherF of ['NORTH', 'EAST', 'SOUTH', 'WEST']) {
+      if (otherF === facing || nonTier4Facings.has(otherF)) continue;
+      const oPool = resolveEffectiveTier4Pool(current.terrain, useCandidateArt, current, otherF, options);
+      const oIdx = computeDeterministicVariantIndex(Number(current.x || 0), Number(current.y || 0), oPool.length, otherF);
+      if (oPool[oIdx]) otherTier4Imgs.add(oPool[oIdx].imageUrl);
+    }
+    let chosen = pool[idx] || pool[0];
+    if (chosen && sameTileFp.has(chosen.imageUrl)) {
+      for (let offset = 1; offset < pool.length; offset++) {
+        const alt = pool[(idx + offset) % pool.length];
+        if (alt && !sameTileFp.has(alt.imageUrl) && !otherTier4Imgs.has(alt.imageUrl)) {
+          chosen = alt;
+          break;
+        }
       }
-      let chosen = pool[idx] || pool[0];
-      if (chosen && sameTileFp.has(chosen.imageUrl)) {
+      if (sameTileFp.has(chosen.imageUrl)) {
         for (let offset = 1; offset < pool.length; offset++) {
           const alt = pool[(idx + offset) % pool.length];
-          if (alt && !sameTileFp.has(alt.imageUrl) && !otherTier4Imgs.has(alt.imageUrl)) {
+          if (alt && !sameTileFp.has(alt.imageUrl)) {
             chosen = alt;
             break;
           }
         }
-        if (sameTileFp.has(chosen.imageUrl)) {
-          for (let offset = 1; offset < pool.length; offset++) {
-            const alt = pool[(idx + offset) % pool.length];
-            if (alt && !sameTileFp.has(alt.imageUrl)) {
-              chosen = alt;
-              break;
-            }
-          }
-        }
       }
-      if (chosen) {
-        resolvedImageUrl = chosen.imageUrl;
-        resolvedVariantKey = chosen.variantKey;
-        artApprovalStatus = chosen.status || 'APPROVED';
-      }
-    } else if (stagedCandidate) {
-      resolvedImageUrl = stagedCandidate.candidateUrl;
+    }
+    if (chosen) {
+      resolvedImageUrl = chosen.imageUrl;
+      resolvedVariantKey = chosen.variantKey;
+      artApprovalStatus = chosen.status || 'APPROVED';
+      activeCandidate = chosen.candidateItem || null;
+    }
+  } else if (stagedCandidate) {
+    if (stagedCandidate.status === 'APPROVED') {
+      resolvedImageUrl = resolveExistingAssetUrl(stagedCandidate.approvedUrl || stagedCandidate.candidateUrl, stagedCandidate.currentApprovedFallback);
+      resolvedVariantKey = useCandidateArt ? stagedCandidate.candidateKey : baseScene.variantKey;
+      artApprovalStatus = 'APPROVED';
+    } else if (useCandidateArt) {
+      resolvedImageUrl = resolveExistingAssetUrl(stagedCandidate.candidateUrl, stagedCandidate.currentApprovedFallback);
       resolvedVariantKey = stagedCandidate.candidateKey;
       artApprovalStatus = 'REVIEW REQUIRED';
+    } else {
+      resolvedImageUrl = resolveExistingAssetUrl(stagedCandidate.currentApprovedFallback || baseScene.imageUrl);
+      resolvedVariantKey = baseScene.variantKey;
+      artApprovalStatus = 'APPROVED';
     }
   }
+
+  const approvedImageUrl = artApprovalStatus === 'APPROVED'
+    ? resolvedImageUrl
+    : resolveExistingAssetUrl((activeCandidate && activeCandidate.currentApprovedFallback) || baseScene.imageUrl);
 
   const finalScene = {
     ...baseScene,
     ...continuityMeta,
     variantKey: resolvedVariantKey,
     imageUrl: resolvedImageUrl,
-    approvedImageUrl: baseScene.imageUrl,
+    approvedImageUrl,
     artApprovalStatus,
-    candidatePreview: stagedCandidate ? {
-      id: stagedCandidate.id,
-      candidateKey: stagedCandidate.candidateKey,
-      fileName: stagedCandidate.fileName,
-      candidateUrl: stagedCandidate.candidateUrl,
-      status: stagedCandidate.status,
-      category: stagedCandidate.category,
-      purpose: stagedCandidate.purpose
+    candidateArtId: activeCandidate ? activeCandidate.id : null,
+    candidatePreview: activeCandidate ? {
+      id: activeCandidate.id,
+      candidateKey: activeCandidate.candidateKey,
+      fileName: activeCandidate.fileName,
+      candidateUrl: activeCandidate.candidateUrl,
+      approvedUrl: activeCandidate.approvedUrl || null,
+      status: activeCandidate.status,
+      category: activeCandidate.category,
+      purpose: activeCandidate.purpose
     } : null
   };
 
@@ -4790,23 +5066,35 @@ function resolvePointOfInterest(currentTile, aheadTile, facing = 'NORTH') {
  *  - Preview/Staging mode (`useCandidateArt: true` or `?artPreview=candidates`) activates the 13 candidate paintings.
  */
 let candidateArtPreviewMode = false;
+const dbCandidatePreviewModeMap = new WeakMap();
 
-function setCandidateArtPreviewMode(enabled) {
-  candidateArtPreviewMode = Boolean(enabled);
+function setCandidateArtPreviewMode(enabled, db = null) {
+  const flag = Boolean(enabled);
+  if (db && typeof db === 'object') {
+    dbCandidatePreviewModeMap.set(db, flag);
+    return flag;
+  }
+  candidateArtPreviewMode = flag;
   return candidateArtPreviewMode;
 }
 
-function getCandidateArtPreviewMode() {
+function getCandidateArtPreviewMode(db = null) {
+  if (db && typeof db === 'object' && dbCandidatePreviewModeMap.has(db)) {
+    return Boolean(dbCandidatePreviewModeMap.get(db));
+  }
   return candidateArtPreviewMode;
 }
 
 const CANDIDATE_ART_INVENTORY = [
   {
     id: 'P5-ART-01',
+    recommendation: 'RECOMMEND APPROVAL',
     candidateKey: 'forest_tangled_canopy_pov',
     fileName: 'forest_tangled_canopy_pov.jpg',
     candidateUrl: '/lab-assets/art-candidates/forest_tangled_canopy_pov.jpg',
+    approvedUrl: '/lab-assets/images/terrain/forest_tangled_canopy_pov.jpg',
     diskRelativePath: 'docs/phase-5/art-candidates/forest_tangled_canopy_pov.jpg',
+    approvedDiskRelativePath: 'public/images/terrain/forest_tangled_canopy_pov.jpg',
     consolidatedFrom: ['forest_tangled_canopy_pov.jpg', 'forest_mossy_oak_glade_pov.jpg'],
     category: 'GENERIC_BIOME_POV',
     targetBiome: 'FOREST',
@@ -4819,15 +5107,18 @@ const CANDIDATE_ART_INVENTORY = [
     height: 768,
     aspectRatio: 1.792,
     sha256: 'eb2d3361e8da951baf2179d16ee4b9464b98d22407c1a20f4e5b50002fad659f',
-    status: 'REVIEW REQUIRED',
+    status: 'APPROVED',
     purpose: 'Replaces the borrowed [7,3] SOUTH Ancient Oak root-arch in the generic FOREST Tier 4 pool with a landmark-free mossy oak canopy trail.'
   },
   {
     id: 'P5-ART-02',
+    recommendation: 'RECOMMEND APPROVAL',
     candidateKey: 'forest_misty_birch_hollow_pov',
     fileName: 'forest_misty_birch_hollow_pov.jpg',
     candidateUrl: '/lab-assets/art-candidates/forest_misty_birch_hollow_pov.jpg',
+    approvedUrl: '/lab-assets/images/terrain/forest_misty_birch_hollow_pov.jpg',
     diskRelativePath: 'docs/phase-5/art-candidates/forest_misty_birch_hollow_pov.jpg',
+    approvedDiskRelativePath: 'public/images/terrain/forest_misty_birch_hollow_pov.jpg',
     consolidatedFrom: ['forest_misty_birch_hollow_pov.jpg', 'forest_mossy_glade_pov.jpg'],
     category: 'GENERIC_BIOME_POV',
     targetBiome: 'FOREST',
@@ -4840,15 +5131,18 @@ const CANDIDATE_ART_INVENTORY = [
     height: 768,
     aspectRatio: 1.792,
     sha256: '8908f382462d7bc812e4a3598727908280d42edebd5f435f0745d00d405665d4',
-    status: 'REVIEW REQUIRED',
+    status: 'APPROVED',
     purpose: 'Expands the FOREST Tier 4 POV pool to 4 distinct landmark-free woodland paintings so all 4 cardinal directions on interior forest tiles can have unique views.'
   },
   {
     id: 'P5-ART-03',
+    recommendation: 'RECOMMEND APPROVAL',
     candidateKey: 'plains_rutted_wagon_track_pov',
     fileName: 'plains_rutted_wagon_track_pov.jpg',
     candidateUrl: '/lab-assets/art-candidates/plains_rutted_wagon_track_pov.jpg',
+    approvedUrl: '/lab-assets/images/terrain/plains_rutted_wagon_track_pov.jpg',
     diskRelativePath: 'docs/phase-5/art-candidates/plains_rutted_wagon_track_pov.jpg',
+    approvedDiskRelativePath: 'public/images/terrain/plains_rutted_wagon_track_pov.jpg',
     consolidatedFrom: ['plains_rutted_wagon_track_pov.jpg', 'plains_old_cart_track_pov.jpg'],
     category: 'GENERIC_BIOME_POV',
     targetBiome: 'PLAINS',
@@ -4861,15 +5155,36 @@ const CANDIDATE_ART_INVENTORY = [
     height: 768,
     aspectRatio: 1.792,
     sha256: '49cd02962052f725866220496afaa11e3ad27ab1f2016e49f8685e8b6b72ccd1',
-    status: 'REVIEW REQUIRED',
+    status: 'APPROVED',
     purpose: 'Adds a mud-rutted frontier wagon track POV to the PLAINS Tier 4 pool, reducing repetition across the 64 passable plains tiles.'
   },
   {
     id: 'P5-ART-04',
+    recommendation: 'RECOMMEND RESTRICTED USE',
+    approvalMode: 'RESTRICTED_WITH_REPLACEMENT',
+    restrictedViewpoints: ['12,1:SOUTH', '12,2:NORTH', '13,2:WEST'],
+    replacementCandidate: {
+      id: 'P5-ART-04-REPL',
+      candidateKey: 'plains_open_moorland_swell_pov',
+      fileName: 'plains_open_moorland_swell_pov.jpg',
+      candidateUrl: '/lab-assets/art-candidates/plains_open_moorland_swell_pov.jpg',
+      approvedUrl: '/lab-assets/images/terrain/plains_open_moorland_swell_pov.jpg',
+      diskRelativePath: 'docs/phase-5/art-candidates/plains_open_moorland_swell_pov.jpg',
+      approvedDiskRelativePath: 'public/images/terrain/plains_open_moorland_swell_pov.jpg',
+      width: 1376,
+      height: 768,
+      aspectRatio: 1.792,
+      sha256: 'a85aa292751f0b2f84f0df2e444c819ce4fe82629dd15aa577be6e3a5d352a12',
+      status: 'APPROVED',
+      recommendation: 'RECOMMEND APPROVAL (AS TIER 4 PLAINS REPLACEMENT)',
+      purpose: 'Landmark-free open moorland swell POV replacement candidate for generic PLAINS Tier 4 slot 4.'
+    },
     candidateKey: 'plains_lone_barrow_horizon_pov',
     fileName: 'plains_lone_barrow_horizon_pov.jpg',
     candidateUrl: '/lab-assets/art-candidates/plains_lone_barrow_horizon_pov.jpg',
+    approvedUrl: '/lab-assets/images/terrain/plains_lone_barrow_horizon_pov.jpg',
     diskRelativePath: 'docs/phase-5/art-candidates/plains_lone_barrow_horizon_pov.jpg',
+    approvedDiskRelativePath: 'public/images/terrain/plains_lone_barrow_horizon_pov.jpg',
     consolidatedFrom: ['plains_lone_barrow_horizon_pov.jpg', 'plains_standing_stones_heath_pov.jpg'],
     category: 'GENERIC_BIOME_POV',
     targetBiome: 'PLAINS',
@@ -4882,15 +5197,18 @@ const CANDIDATE_ART_INVENTORY = [
     height: 768,
     aspectRatio: 1.792,
     sha256: '3c836270a1eb0ca9bfb413ed03b8c14e6a75c849c06f6379e77a9c8722f075f7',
-    status: 'REVIEW REQUIRED',
+    status: 'APPROVED',
     purpose: 'Completes a 4-image PLAINS Tier 4 POV pool with a heather footpath and distant horizon barrow.'
   },
   {
     id: 'P5-ART-05',
+    recommendation: 'RECOMMEND APPROVAL',
     candidateKey: 'swamp_sunken_roots_channel_pov',
     fileName: 'swamp_sunken_roots_channel_pov.jpg',
     candidateUrl: '/lab-assets/art-candidates/swamp_sunken_roots_channel_pov.jpg',
+    approvedUrl: '/lab-assets/images/terrain/swamp_sunken_roots_channel_pov.jpg',
     diskRelativePath: 'docs/phase-5/art-candidates/swamp_sunken_roots_channel_pov.jpg',
+    approvedDiskRelativePath: 'public/images/terrain/swamp_sunken_roots_channel_pov.jpg',
     consolidatedFrom: ['swamp_sunken_roots_channel_pov.jpg', 'swamp_drowned_willows_pov.jpg'],
     category: 'GENERIC_BIOME_POV',
     targetBiome: 'SWAMP',
@@ -4903,15 +5221,18 @@ const CANDIDATE_ART_INVENTORY = [
     height: 768,
     aspectRatio: 1.792,
     sha256: '457f66a2ff5859d61d9ffb9a9a53319137de2423cca15ef92f8ae588610713e0',
-    status: 'REVIEW REQUIRED',
+    status: 'APPROVED',
     purpose: 'Provides a dedicated temperate bog-willow and sunken-root channel POV for Rotting Fen (`swamp_overgrown_bog`).'
   },
   {
     id: 'P5-ART-06',
+    recommendation: 'RECOMMEND APPROVAL',
     candidateKey: 'hills_windswept_scree_pass_pov',
     fileName: 'hills_windswept_scree_pass_pov.jpg',
     candidateUrl: '/lab-assets/art-candidates/hills_windswept_scree_pass_pov.jpg',
+    approvedUrl: '/lab-assets/images/terrain/hills_windswept_scree_pass_pov.jpg',
     diskRelativePath: 'docs/phase-5/art-candidates/hills_windswept_scree_pass_pov.jpg',
+    approvedDiskRelativePath: 'public/images/terrain/hills_windswept_scree_pass_pov.jpg',
     consolidatedFrom: ['hills_windswept_scree_pass_pov.jpg', 'hills_windswept_scree_pov.jpg', 'hills_cairn_pass_pov.jpg'],
     category: 'GENERIC_BIOME_POV',
     targetBiome: 'HILLS',
@@ -4924,15 +5245,18 @@ const CANDIDATE_ART_INVENTORY = [
     height: 768,
     aspectRatio: 1.792,
     sha256: '43b78a3874b4374372c0825b63d98ad8d7d60a3b1586df0983a7b72f314e3bdc',
-    status: 'REVIEW REQUIRED',
+    status: 'APPROVED',
     purpose: 'Completes a 4-image HILLS Tier 4 POV pool for Raven Crags with a shattered dark-slate scree pass.'
   },
   {
     id: 'P5-ART-07',
+    recommendation: 'RECOMMEND APPROVAL',
     candidateKey: 'jungle_briar_thicket_pov',
     fileName: 'jungle_briar_thicket_pov.jpg',
     candidateUrl: '/lab-assets/art-candidates/jungle_briar_thicket_pov.jpg',
+    approvedUrl: '/lab-assets/images/terrain/jungle_briar_thicket_pov.jpg',
     diskRelativePath: 'docs/phase-5/art-candidates/jungle_briar_thicket_pov.jpg',
+    approvedDiskRelativePath: 'public/images/terrain/jungle_briar_thicket_pov.jpg',
     consolidatedFrom: ['jungle_briar_thicket_pov.jpg'],
     category: 'GENERIC_BIOME_POV',
     targetBiome: 'JUNGLE',
@@ -4945,15 +5269,18 @@ const CANDIDATE_ART_INVENTORY = [
     height: 768,
     aspectRatio: 1.792,
     sha256: 'f062ab2fcaea5a715bbac5a330a307f9d326191c486c0f3ab61e43072d11dd87',
-    status: 'REVIEW REQUIRED',
+    status: 'APPROVED',
     purpose: 'Provides a dedicated briar-and-vine mire POV for `jungle_shadowed_hollow` in the Venomous Jungle.'
   },
   {
     id: 'P5-ART-08',
+    recommendation: 'RECOMMEND APPROVAL',
     candidateKey: 'transition_hills_to_swamp_pov',
     fileName: 'transition_hills_to_swamp_pov.jpg',
     candidateUrl: '/lab-assets/art-candidates/transition_hills_to_swamp_pov.jpg',
+    approvedUrl: '/lab-assets/images/perspective/transition_hills_to_swamp_pov.jpg',
     diskRelativePath: 'docs/phase-5/art-candidates/transition_hills_to_swamp_pov.jpg',
+    approvedDiskRelativePath: 'public/images/perspective/transition_hills_to_swamp_pov.jpg',
     consolidatedFrom: ['transition_hills_to_swamp_pov.jpg'],
     category: 'BIOME_TRANSITION_POV',
     targetBiome: 'HILLS->SWAMP',
@@ -4966,15 +5293,18 @@ const CANDIDATE_ART_INVENTORY = [
     height: 768,
     aspectRatio: 1.792,
     sha256: '9572bc5b658839cd528deff060bff7eff1d1bd47e1c6bd1023e2a86503bc95e8',
-    status: 'REVIEW REQUIRED',
+    status: 'APPROVED',
     purpose: 'Depicts rocky highland slate and heather in the foreground descending directly into the black marsh water and bog-willows of Rotting Fen.'
   },
   {
     id: 'P5-ART-09',
+    recommendation: 'RECOMMEND APPROVAL',
     candidateKey: 'transition_swamp_to_plains_pov',
     fileName: 'transition_swamp_to_plains_pov.jpg',
     candidateUrl: '/lab-assets/art-candidates/transition_swamp_to_plains_pov.jpg',
+    approvedUrl: '/lab-assets/images/perspective/transition_swamp_to_plains_pov.jpg',
     diskRelativePath: 'docs/phase-5/art-candidates/transition_swamp_to_plains_pov.jpg',
+    approvedDiskRelativePath: 'public/images/perspective/transition_swamp_to_plains_pov.jpg',
     consolidatedFrom: ['transition_swamp_to_plains_pov.jpg'],
     category: 'BIOME_TRANSITION_POV',
     targetBiome: 'SWAMP->PLAINS',
@@ -4987,15 +5317,18 @@ const CANDIDATE_ART_INVENTORY = [
     height: 768,
     aspectRatio: 1.792,
     sha256: 'e7e245af6a216d7298c6fd13a3444a1d0f156891d80c187c39ae8cf624ff0e6c',
-    status: 'REVIEW REQUIRED',
+    status: 'APPROVED',
     purpose: 'Depicts sunken marsh timbers and black mud in the foreground climbing an embankment onto open windswept grassland ahead.'
   },
   {
     id: 'P5-ART-10',
+    recommendation: 'RECOMMEND APPROVAL',
     candidateKey: 'transition_hills_to_forest_pov',
     fileName: 'transition_hills_to_forest_pov.jpg',
     candidateUrl: '/lab-assets/art-candidates/transition_hills_to_forest_pov.jpg',
+    approvedUrl: '/lab-assets/images/perspective/transition_hills_to_forest_pov.jpg',
     diskRelativePath: 'docs/phase-5/art-candidates/transition_hills_to_forest_pov.jpg',
+    approvedDiskRelativePath: 'public/images/perspective/transition_hills_to_forest_pov.jpg',
     consolidatedFrom: ['transition_hills_to_forest_pov.jpg'],
     category: 'BIOME_TRANSITION_POV',
     targetBiome: 'HILLS->FOREST',
@@ -5008,15 +5341,18 @@ const CANDIDATE_ART_INVENTORY = [
     height: 768,
     aspectRatio: 1.792,
     sha256: '0dde8059fe9258090d4c26206253246181c088e8241278a3008a066262cc9ff9',
-    status: 'REVIEW REQUIRED',
+    status: 'APPROVED',
     purpose: 'Depicts rocky highland slate boulders in the foreground descending directly into the dark firs and mossy oaks of Mirkwood ahead.'
   },
   {
     id: 'P5-ART-11',
+    recommendation: 'RECOMMEND APPROVAL',
     candidateKey: 'transition_plains_to_hills_pov',
     fileName: 'transition_plains_to_hills_pov.jpg',
     candidateUrl: '/lab-assets/art-candidates/transition_plains_to_hills_pov.jpg',
+    approvedUrl: '/lab-assets/images/perspective/transition_plains_to_hills_pov.jpg',
     diskRelativePath: 'docs/phase-5/art-candidates/transition_plains_to_hills_pov.jpg',
+    approvedDiskRelativePath: 'public/images/perspective/transition_plains_to_hills_pov.jpg',
     consolidatedFrom: ['transition_plains_to_hills_pov.jpg'],
     category: 'BIOME_TRANSITION_POV',
     targetBiome: 'PLAINS->HILLS',
@@ -5029,15 +5365,18 @@ const CANDIDATE_ART_INVENTORY = [
     height: 768,
     aspectRatio: 1.792,
     sha256: '782ae2b0f7ff67e1e64e268f5e2aa3a440a010078ef05e3f87bbbe077c8d534c',
-    status: 'REVIEW REQUIRED',
+    status: 'APPROVED',
     purpose: 'Depicts windswept grassland and heather in the foreground climbing rocky slate foothills toward the jagged peaks of Raven Crags.'
   },
   {
     id: 'P5-ART-12',
+    recommendation: 'RECOMMEND APPROVAL',
     candidateKey: 'transition_hills_to_plains_pov',
     fileName: 'transition_hills_to_plains_pov.jpg',
     candidateUrl: '/lab-assets/art-candidates/transition_hills_to_plains_pov.jpg',
+    approvedUrl: '/lab-assets/images/perspective/transition_hills_to_plains_pov.jpg',
     diskRelativePath: 'docs/phase-5/art-candidates/transition_hills_to_plains_pov.jpg',
+    approvedDiskRelativePath: 'public/images/perspective/transition_hills_to_plains_pov.jpg',
     consolidatedFrom: ['transition_hills_to_plains_pov.jpg'],
     category: 'BIOME_TRANSITION_POV',
     targetBiome: 'HILLS->PLAINS',
@@ -5050,15 +5389,18 @@ const CANDIDATE_ART_INVENTORY = [
     height: 768,
     aspectRatio: 1.792,
     sha256: '6ccfc2b7c0d985363fc2c10d2575fa5b7af69e903850823b4bc79030c3f0a0b2',
-    status: 'REVIEW REQUIRED',
+    status: 'APPROVED',
     purpose: 'Depicts weathered highland boulders and slate ledges in the foreground descending onto wide windswept frontier grasslands.'
   },
   {
     id: 'P5-ART-13',
+    recommendation: 'RECOMMEND APPROVAL',
     candidateKey: 'watchpost_9_7_south_river_gorge',
     fileName: 'watchpost_9_7_south_river_gorge.jpg',
     candidateUrl: '/lab-assets/art-candidates/watchpost_9_7_south_river_gorge.jpg',
+    approvedUrl: '/lab-assets/images/perspective/watchpost_9_7_south_river_gorge.jpg',
     diskRelativePath: 'docs/phase-5/art-candidates/watchpost_9_7_south_river_gorge.jpg',
+    approvedDiskRelativePath: 'public/images/perspective/watchpost_9_7_south_river_gorge.jpg',
     consolidatedFrom: ['watchpost_9_7_south_river_gorge.jpg'],
     category: 'LANDMARK_BESPOKE_POV',
     targetBiome: 'UNDERGROUND_RUINS',
@@ -5071,10 +5413,14 @@ const CANDIDATE_ART_INVENTORY = [
     height: 768,
     aspectRatio: 1.792,
     sha256: 'e13f6b0ec81a3e4494f76aa19a2bbfda44a82bfbf72d4db3f7b26cceaef73321',
-    status: 'REVIEW REQUIRED',
+    status: 'APPROVED',
     purpose: 'Distinguishes [9,7] SOUTH from [9,7] NORTH with a bespoke southern gorge view featuring a wedged garrison pike and breached parapet.'
   }
 ];
+
+const CANDIDATE_BY_ID = new Map(
+  CANDIDATE_ART_INVENTORY.map(item => [item.id, item])
+);
 
 const CANDIDATE_BY_SLOT_KEY = new Map(
   CANDIDATE_ART_INVENTORY.map(item => [item.targetSlotKey, item])
@@ -5088,34 +5434,104 @@ const CANDIDATE_TIER4_POOLS = {
   FOREST: [
     { variantKey: 'forest_deep_boughs', imageUrl: '/images/terrain/terrain_forest.webp', status: 'APPROVED' },
     { variantKey: 'forest_pine_ravine', imageUrl: '/lab-assets/images/terrain/forest_pine_ravine.jpg', status: 'APPROVED' },
-    { variantKey: 'forest_tangled_canopy_pov', imageUrl: '/lab-assets/art-candidates/forest_tangled_canopy_pov.jpg', status: 'REVIEW REQUIRED' },
-    { variantKey: 'forest_misty_birch_hollow_pov', imageUrl: '/lab-assets/art-candidates/forest_misty_birch_hollow_pov.jpg', status: 'REVIEW REQUIRED' }
+    { variantKey: 'forest_tangled_canopy_pov', imageUrl: '/lab-assets/images/terrain/forest_tangled_canopy_pov.jpg', status: 'APPROVED', artId: 'P5-ART-01', fallbackVariantKey: 'forest_tangled_canopy', fallbackImageUrl: '/lab-assets/images/perspective/ancient_oak_7_3_south.jpg' },
+    { variantKey: 'forest_misty_birch_hollow_pov', imageUrl: '/lab-assets/images/terrain/forest_misty_birch_hollow_pov.jpg', status: 'APPROVED', artId: 'P5-ART-02', fallbackVariantKey: 'forest_deep_boughs', fallbackImageUrl: '/images/terrain/terrain_forest.webp' }
   ],
   PLAINS: [
     { variantKey: 'plains_windswept_trail', imageUrl: '/images/terrain/terrain_plains.webp', status: 'APPROVED' },
     { variantKey: 'plains_windblown_heath_pov', imageUrl: '/lab-assets/images/terrain/plains_windblown_heath_pov.jpg', status: 'APPROVED' },
-    { variantKey: 'plains_rutted_wagon_track_pov', imageUrl: '/lab-assets/art-candidates/plains_rutted_wagon_track_pov.jpg', status: 'REVIEW REQUIRED' },
-    { variantKey: 'plains_lone_barrow_horizon_pov', imageUrl: '/lab-assets/art-candidates/plains_lone_barrow_horizon_pov.jpg', status: 'REVIEW REQUIRED' }
+    { variantKey: 'plains_rutted_wagon_track_pov', imageUrl: '/lab-assets/images/terrain/plains_rutted_wagon_track_pov.jpg', status: 'APPROVED', artId: 'P5-ART-03', fallbackVariantKey: 'plains_windswept_trail', fallbackImageUrl: '/images/terrain/terrain_plains.webp' },
+    { variantKey: 'plains_lone_barrow_horizon_pov', imageUrl: '/lab-assets/images/terrain/plains_lone_barrow_horizon_pov.jpg', status: 'APPROVED', artId: 'P5-ART-04', fallbackVariantKey: 'plains_windblown_heath_pov', fallbackImageUrl: '/lab-assets/images/terrain/plains_windblown_heath_pov.jpg' }
   ],
   SWAMP: [
     { variantKey: 'swamp_drowned_mire', imageUrl: '/images/terrain/terrain_swamp.webp', status: 'APPROVED' },
     { variantKey: 'swamp_overgrown_bog', imageUrl: '/lab-assets/images/perspective/transition_plains_to_swamp_pov.jpg', status: 'APPROVED' },
     { variantKey: 'swamp_willow_boardwalk_pov', imageUrl: '/lab-assets/images/terrain/swamp_willow_boardwalk_pov.jpg', status: 'APPROVED' },
-    { variantKey: 'swamp_sunken_roots_channel_pov', imageUrl: '/lab-assets/art-candidates/swamp_sunken_roots_channel_pov.jpg', status: 'REVIEW REQUIRED' }
+    { variantKey: 'swamp_sunken_roots_channel_pov', imageUrl: '/lab-assets/images/terrain/swamp_sunken_roots_channel_pov.jpg', status: 'APPROVED', artId: 'P5-ART-05', fallbackVariantKey: 'swamp_overgrown_bog', fallbackImageUrl: '/lab-assets/images/perspective/transition_plains_to_swamp_pov.jpg' }
   ],
   HILLS: [
     { variantKey: 'hills_deadwood_pass', imageUrl: '/images/terrain/terrain_fallback_v1_scorched.webp', status: 'APPROVED' },
     { variantKey: 'hills_raven_crags_ravine_pov', imageUrl: '/lab-assets/images/terrain/hills_raven_crags_ravine_pov.jpg', status: 'APPROVED' },
     { variantKey: 'hills_highland_ridge_pov', imageUrl: '/lab-assets/images/terrain/hills_highland_ridge_pov.jpg', status: 'APPROVED' },
-    { variantKey: 'hills_windswept_scree_pass_pov', imageUrl: '/lab-assets/art-candidates/hills_windswept_scree_pass_pov.jpg', status: 'REVIEW REQUIRED' }
+    { variantKey: 'hills_windswept_scree_pass_pov', imageUrl: '/lab-assets/images/terrain/hills_windswept_scree_pass_pov.jpg', status: 'APPROVED', artId: 'P5-ART-06', fallbackVariantKey: 'hills_highland_ridge_pov', fallbackImageUrl: '/lab-assets/images/terrain/hills_highland_ridge_pov.jpg' }
   ],
   JUNGLE: [
     { variantKey: 'jungle_primeval', imageUrl: '/images/terrain/terrain_jungle.webp', status: 'APPROVED' },
     { variantKey: 'jungle_shadowed_hollow', imageUrl: '/lab-assets/images/perspective/transition_swamp_to_jungle_pov.jpg', status: 'APPROVED' },
     { variantKey: 'jungle_venomous_trail_pov', imageUrl: '/lab-assets/images/terrain/jungle_venomous_trail_pov.jpg', status: 'APPROVED' },
-    { variantKey: 'jungle_briar_thicket_pov', imageUrl: '/lab-assets/art-candidates/jungle_briar_thicket_pov.jpg', status: 'REVIEW REQUIRED' }
+    { variantKey: 'jungle_briar_thicket_pov', imageUrl: '/lab-assets/images/terrain/jungle_briar_thicket_pov.jpg', status: 'APPROVED', artId: 'P5-ART-07', fallbackVariantKey: 'jungle_shadowed_hollow', fallbackImageUrl: '/lab-assets/images/perspective/transition_swamp_to_jungle_pov.jpg' }
   ]
 };
+
+function syncCandidateTier4PoolsStatus() {
+  for (const entries of Object.values(CANDIDATE_TIER4_POOLS)) {
+    for (const entry of entries) {
+      if (entry.artId && CANDIDATE_BY_ID.has(entry.artId)) {
+        entry.status = CANDIDATE_BY_ID.get(entry.artId).status;
+      }
+    }
+  }
+}
+
+function setCandidateArtApprovalStatus(idOrMap, status = 'APPROVED', options = {}) {
+  if (idOrMap && typeof idOrMap === 'object' && !Array.isArray(idOrMap)) {
+    for (const [id, st] of Object.entries(idOrMap)) {
+      setCandidateArtApprovalStatus(id, st, options);
+    }
+    return getCandidateArtApprovalStatus();
+  }
+  if (Array.isArray(idOrMap)) {
+    for (const id of idOrMap) {
+      setCandidateArtApprovalStatus(id, status, options);
+    }
+    return getCandidateArtApprovalStatus();
+  }
+  const normId = String(idOrMap || "").toUpperCase();
+  const normStatus = status === 'APPROVED' ? 'APPROVED' : 'REVIEW REQUIRED';
+  const item = CANDIDATE_BY_ID.get(normId) || CANDIDATE_BY_KEY.get(String(idOrMap || ""));
+  if (item) {
+    item.status = normStatus;
+    if (options && options.approvalMode) {
+      item.approvalMode = options.approvalMode;
+    }
+    if (item.replacementCandidate && options && options.approveReplacement !== undefined) {
+      item.replacementCandidate.status = options.approveReplacement ? 'APPROVED' : 'REVIEW REQUIRED';
+    }
+  }
+  syncCandidateTier4PoolsStatus();
+  return getCandidateArtApprovalStatus();
+}
+
+function resetCandidateArtApprovalStatus(options = {}) {
+  const targetStatus = (options && options.status === 'REVIEW REQUIRED') ? 'REVIEW REQUIRED' : 'APPROVED';
+  const targetMode = (options && options.approvalMode) || (targetStatus === 'APPROVED' ? 'RESTRICTED_WITH_REPLACEMENT' : 'DEFAULT');
+  for (const item of CANDIDATE_ART_INVENTORY) {
+    item.status = targetStatus;
+    if (item.id === 'P5-ART-04') {
+      item.approvalMode = targetMode;
+      if (item.replacementCandidate) {
+        item.replacementCandidate.status = targetStatus;
+      }
+    }
+  }
+  syncCandidateTier4PoolsStatus();
+  return getCandidateArtApprovalStatus();
+}
+
+function getCandidateArtApprovalStatus() {
+  return CANDIDATE_ART_INVENTORY.map(item => ({
+    id: item.id,
+    candidateKey: item.candidateKey,
+    fileName: item.fileName,
+    category: item.category,
+    targetBiome: item.targetBiome,
+    status: item.status,
+    recommendation: item.recommendation,
+    approvalMode: item.approvalMode || null,
+    currentApprovedFallback: item.currentApprovedFallback,
+    replacementCandidate: item.replacementCandidate ? { ...item.replacementCandidate } : null
+  }));
+}
 
 function resolveStagedCandidateForScene(baseScene, current, facing) {
   if (!baseScene) return null;
@@ -5128,8 +5544,8 @@ function resolveStagedCandidateForScene(baseScene, current, facing) {
       facing
     );
     const chosen = pool[idx];
-    if (chosen && chosen.status === 'REVIEW REQUIRED') {
-      return CANDIDATE_BY_KEY.get(chosen.variantKey) || null;
+    if (chosen && (chosen.artId || CANDIDATE_BY_KEY.has(chosen.variantKey))) {
+      return (chosen.artId && CANDIDATE_BY_ID.get(chosen.artId)) || CANDIDATE_BY_KEY.get(chosen.variantKey) || null;
     }
     return null;
   }
@@ -5249,7 +5665,7 @@ function classifyViewCoverageQuality(sceneC, currentTile, aheadTile) {
 }
 
 function buildWorldVisualAtlas(db, options = {}) {
-  const useCandidateArt = Boolean(options && options.useCandidateArt !== undefined ? options.useCandidateArt : candidateArtPreviewMode);
+  const useCandidateArt = Boolean(options && options.useCandidateArt !== undefined ? options.useCandidateArt : getCandidateArtPreviewMode(db));
   const rawTiles = db.prepare('SELECT * FROM map_tiles ORDER BY y ASC, x ASC').all();
   const tileByCoord = new Map();
   for (const t of rawTiles) {
@@ -5312,7 +5728,7 @@ function buildWorldVisualAtlas(db, options = {}) {
         const behind1 = getNeighbor(t.x, t.y, vMeta.behind);
         const seed = ((t.x * 73856093) ^ (t.y * 19349663)) >>> 0;
 
-        const sceneC = resolveSceneModeC(db, current, ahead1, left1, right1, facing, seed, false, behind1, { useCandidateArt });
+        const sceneC = resolveSceneModeC(db, current, ahead1, left1, right1, facing, seed, false, behind1, { ...options, useCandidateArt });
       const quality = classifyViewCoverageQuality(sceneC, current, ahead1);
       const poi = resolvePointOfInterest(current, ahead1, facing);
       const effectProfile = resolveAtmosphereEffectProfile(sceneC.atmosphereProfile, current, ahead1, facing);
@@ -5457,9 +5873,90 @@ function buildWorldVisualAtlas(db, options = {}) {
       pointsOfInterestCount: POINTS_OF_INTEREST.length,
       candidateArtCount: CANDIDATE_ART_INVENTORY.length,
       candidatePreviewSlotsCount,
+      auditMetrics: computeAtlasAuditMetrics(atlasTiles, useCandidateArt),
       biomeBreakdown
     },
     tiles: atlasTiles
+  };
+}
+
+function computeAtlasAuditMetrics(atlasTiles, useCandidateArt = false) {
+  let brokenImageReference = 0;
+  let validApprovedFallback = 0;
+  let candidateArtPending = 0;
+  let wrongScene = 0;
+  let exactDuplicate = 0;
+  let tier4SameTileDuplicates = 0;
+  let cornerBarrierOrTransitionPairs = 0;
+  let acceptableReuse = 0;
+  let bespokeSingleUse = 0;
+  const globalUrlCounts = new Map();
+
+  for (const t of atlasTiles) {
+    if (!t.isPassable) continue;
+    for (const dir of ['NORTH', 'EAST', 'SOUTH', 'WEST']) {
+      const v = t.views[dir];
+      globalUrlCounts.set(v.imageUrl, (globalUrlCounts.get(v.imageUrl) || 0) + 1);
+    }
+  }
+
+  for (const t of atlasTiles) {
+    if (!t.isPassable) continue;
+    const urlFacings = new Map();
+    for (const dir of ['NORTH', 'EAST', 'SOUTH', 'WEST']) {
+      const u = t.views[dir].imageUrl;
+      if (!urlFacings.has(u)) urlFacings.set(u, []);
+      urlFacings.get(u).push(dir);
+    }
+    for (const dir of ['NORTH', 'EAST', 'SOUTH', 'WEST']) {
+      const v = t.views[dir];
+      if (!v.imageUrl || typeof v.imageUrl !== "string") {
+        brokenImageReference++;
+      }
+      if (!v.visuallyAppropriate || !v.neighborConsistent || v.qualityGrade === 'D') {
+        wrongScene++;
+      }
+      if (v.candidatePreview && v.candidatePreview.status === 'REVIEW REQUIRED' && v.imageUrl === v.approvedImageUrl) {
+        candidateArtPending++;
+        validApprovedFallback++;
+      }
+      const sharedDirs = urlFacings.get(v.imageUrl) || [];
+      if (sharedDirs.length > 1) {
+        exactDuplicate++;
+        const anyTier4 = sharedDirs.some(d => t.views[d].povTier === 4);
+        if (anyTier4) tier4SameTileDuplicates++;
+        else cornerBarrierOrTransitionPairs++;
+      } else if ((globalUrlCounts.get(v.imageUrl) || 0) > 1) {
+        acceptableReuse++;
+      } else {
+        bespokeSingleUse++;
+      }
+    }
+  }
+
+  return {
+    BROKEN_IMAGE_REFERENCE: brokenImageReference,
+    VALID_APPROVED_FALLBACK: validApprovedFallback,
+    CANDIDATE_ART_PENDING: candidateArtPending,
+    WRONG_SCENE: wrongScene,
+    EXACT_DUPLICATE: exactDuplicate,
+    EXACT_DUPLICATE_TIER4: tier4SameTileDuplicates,
+    CORNER_BARRIER_OR_TRANSITION_PAIRS: cornerBarrierOrTransitionPairs,
+    ACCEPTABLE_REUSE: acceptableReuse,
+    BESPOKE_SINGLE_USE: bespokeSingleUse
+  };
+}
+
+function evaluateWorldArtAudit(db, options = {}) {
+  const atlas = buildWorldVisualAtlas(db, options);
+  return {
+    artPreviewMode: atlas.artPreviewMode,
+    totalPassableViewpoints: atlas.totalPassableViewpoints,
+    uniqueImagesCount: atlas.summary.uniqueImagesCount,
+    grades: atlas.summary.grades,
+    tiers: atlas.summary.tiers,
+    auditMetrics: atlas.summary.auditMetrics,
+    candidateApprovalStatus: getCandidateArtApprovalStatus()
   };
 }
 
@@ -5480,6 +5977,10 @@ module.exports = {
   NAMED_CORRIDORS,
   setCandidateArtPreviewMode,
   getCandidateArtPreviewMode,
+  setCandidateArtApprovalStatus,
+  getCandidateArtApprovalStatus,
+  resetCandidateArtApprovalStatus,
+  evaluateWorldArtAudit,
   normalizeSceneMode,
   computeDeterministicVariantIndex,
   computeSceneStageAnchor,

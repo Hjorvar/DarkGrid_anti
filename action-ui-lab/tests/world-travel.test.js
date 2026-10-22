@@ -757,7 +757,7 @@ describe('Darkgrid Action UI Lab — Track 1: World Travel, Continuity & Stabili
     // 4. C3/C4: HILLS <-> SWAMP transitions at y=8 <-> y=9 and [7,9] NORTH South Gate approach
     const stHillsToSwamp = await apiAction('TELEPORT_TO_TILE', { x: 3, y: 8, facing: 'SOUTH' });
     assert.equal(stHillsToSwamp.viewportScene.scenes.C.variantKey, 'pov_transition_hills_to_swamp');
-    assert.equal(stHillsToSwamp.viewportScene.scenes.C.imageUrl, '/lab-assets/images/perspective/transition_plains_to_swamp_pov.jpg');
+    assert.equal(stHillsToSwamp.viewportScene.scenes.C.imageUrl, '/lab-assets/images/perspective/transition_hills_to_swamp_pov.jpg');
 
     const stSwampToHills = await apiAction('TELEPORT_TO_TILE', { x: 3, y: 9, facing: 'NORTH' });
     assert.equal(stSwampToHills.viewportScene.scenes.C.variantKey, 'pov_transition_swamp_to_hills');

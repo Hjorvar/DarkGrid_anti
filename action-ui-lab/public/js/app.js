@@ -49,7 +49,8 @@ import {
   resolveDiscoveryChoiceClick,
   dismissActiveDiscovery,
   forceTriggerDiscovery,
-  setDeterministicSeed
+  setDeterministicSeed,
+  setArtPreviewMode
 } from './api/client.js';
 import {
   syncEffectsButtons,
@@ -217,6 +218,7 @@ if (typeof window !== 'undefined') {
     dismissActiveDiscovery,
     forceTriggerDiscovery,
     setDeterministicSeed,
+    setArtPreviewMode,
     syncEffectsButtons,
     stopAtmosphericParticleLoop,
     setAtmosphericEffectsMode,

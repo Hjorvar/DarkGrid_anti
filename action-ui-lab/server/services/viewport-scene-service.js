@@ -88,7 +88,7 @@ function inspectSceneTile(db, tx, ty, cardinalDirection = null) {
   };
 }
 
-function buildViewportScene(db, currentTile, facing, directions, activeEncounter, sceneMode = 'C') {
+function buildViewportScene(db, currentTile, facing, directions, activeEncounter, sceneMode = 'C', options = {}) {
   const normFacing = normalizeFacing(facing);
   const normSceneMode = normalizeSceneMode(sceneMode);
   const relMap = getRelativeCardinalMap(normFacing);
@@ -122,7 +122,7 @@ function buildViewportScene(db, currentTile, facing, directions, activeEncounter
   // Resolve all four implementations so the UI can compare Mode A, Mode B, Mode C, and Legacy seamlessly
   const sceneA = resolveSceneModeA(db, current, ahead1, left1, right1, normFacing, seed, isInCombat);
   const sceneB = resolveSceneModeB(db, current, ahead1, left1, right1, normFacing, seed);
-  const sceneC = resolveSceneModeC(db, current, ahead1, left1, right1, normFacing, seed, isInCombat);
+  const sceneC = resolveSceneModeC(db, current, ahead1, left1, right1, normFacing, seed, isInCombat, behind1, options);
   const sceneLegacy = resolveSceneModeLegacy(current, ahead1, normFacing, isTerrainTransitionAhead, isAheadBlocked);
   const scenes = {
     A: sceneA,
@@ -207,6 +207,9 @@ function buildViewportScene(db, currentTile, facing, directions, activeEncounter
     facing: normFacing,
     facingMeta: FACING_VECTORS[normFacing],
     sceneMode: normSceneMode,
+    sceneKey: activeScene ? activeScene.variantKey : null,
+    artApprovalStatus: activeScene ? activeScene.artApprovalStatus : 'APPROVED',
+    candidateArtId: activeScene && activeScene.candidatePreview ? activeScene.candidatePreview.id : null,
     activeScene,
     scenes,
     effectProfile,

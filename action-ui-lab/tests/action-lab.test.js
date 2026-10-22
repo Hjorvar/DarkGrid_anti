@@ -1006,7 +1006,7 @@ describe('Darkgrid Action UI Lab — First-Person Facing, Map Viewport, Encounte
       WEST: '/lab-assets/images/perspective/watchpost_9_7_west.jpg',
       EAST: '/lab-assets/images/perspective/watchpost_9_7_east.jpg',
       NORTH: '/lab-assets/images/perspective/watchpost_9_7_river_flank.jpg',
-      SOUTH: '/lab-assets/images/perspective/watchpost_9_7_river_flank.jpg'
+      SOUTH: '/lab-assets/images/perspective/watchpost_9_7_south_river_gorge.jpg'
     };
     for (const [dir, expectedUrl] of Object.entries(expectedWatchpost)) {
       const st = await apiAction('TELEPORT_TO_TILE', { x: 9, y: 7, facing: dir });

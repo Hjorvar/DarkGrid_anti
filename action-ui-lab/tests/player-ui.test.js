@@ -261,4 +261,53 @@ describe('Darkgrid Action UI Lab — Player Experience & UI Overhaul (Track 2)',
     assert.ok(cssContent.includes('.dev-mode-collapsed .dm-action-tile.is-contextual-inactive'), 'CSS should hide contextual inactive slots in Player Mode');
     assert.ok(cssContent.includes('.dm-movement-deck.is-combat-locked .dm-pad-grid'), 'CSS should collapse disabled movement pad grid during active melee combat');
   });
+
+  it('13. Live Equipment Preference, Shield AC Rules (PASSIVE AC / STOWED / 2H LOCKED) & Combat Stance Lock', async () => {
+    const http = require('node:http');
+    const { createLabApp } = require('../server');
+    const app = createLabApp({ dbPath: ':memory:' });
+    const db = app.locals.db;
+    const srv = http.createServer(app);
+    await new Promise(r => srv.listen(0, '127.0.0.1', r));
+    const url = `http://127.0.0.1:${srv.address().port}`;
+    try {
+      const post = async (action, payload = {}) => {
+        const r = await fetch(`${url}/api/action`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, payload }) });
+        return r.json();
+      };
+      // 1. Default Fighter in MELEE stance with 1H Longsword + Light Steel Shield (+1 AC)
+      let res = await post('STANCE', { primaryWeapon: 'MELEE' });
+      assert.equal(res.ok, true);
+      assert.equal(res.state.character.primary_weapon, 'MELEE');
+      assert.equal(res.state.combatStats.isRangedActive, false);
+      const meleeShieldAC = res.state.combatStats.heroAC;
+      assert.ok(res.state.equipment.shield, 'Fighter should have shield equipped');
+      const shieldBonus = Number(res.state.equipment.shield.ac_bonus || 1);
+
+      // 2. Switch to RANGED stance (2H Shortbow) -> Shield is STOWED, AC drops by shieldBonus
+      res = await post('STANCE', { primaryWeapon: 'RANGED' });
+      assert.equal(res.ok, true);
+      assert.equal(res.state.character.primary_weapon, 'RANGED');
+      assert.equal(res.state.combatStats.isRangedActive, true);
+      assert.equal(res.state.combatStats.heroAC, meleeShieldAC - shieldBonus, 'Ranged 2H bow stance must exclude stowed shield AC');
+
+      // 3. Switch back to MELEE stance and equip a 2H Melee weapon -> Shield is 2H LOCKED, AC drops by shieldBonus
+      res = await post('STANCE', { primaryWeapon: 'MELEE' });
+      const twoHandDef = db.prepare("SELECT id, name FROM item_definitions WHERE category = 'WEAPON' AND weapon_range_type = 'MELEE' AND is_two_handed = 1 LIMIT 1").get();
+      assert.ok(twoHandDef, 'Database should contain a 2H melee weapon definition');
+      const charId = res.state.character.id;
+      const ins = db.prepare("INSERT INTO item_instances (item_definition_id, owner_type, owner_character_id, equipped_slot) VALUES (?, 'CHARACTER', ?, NULL)").run(twoHandDef.id, charId);
+      res = await post('EQUIP', { itemInstanceId: Number(ins.lastInsertRowid) });
+      assert.equal(res.ok, true);
+      assert.equal(Boolean(res.state.combatStats.activeWeapon.is_two_handed), true);
+      assert.equal(res.state.combatStats.heroAC, meleeShieldAC - shieldBonus, '2H melee weapon must exclude shield AC bonus');
+
+      // 4. Stage active combat and verify STANCE switch is locked during IN_COMBAT
+      await post('LAB_SCENARIO', { scenario: 'STAGE2_COMBAT', monsterName: 'Wolf' });
+      const lockedRes = await post('STANCE', { primaryWeapon: 'RANGED' });
+      assert.equal(lockedRes.ok, false, 'Cannot change weapon stance while engaged in active combat');
+    } finally {
+      await new Promise(r => srv.close(r));
+    }
+  });
 });
