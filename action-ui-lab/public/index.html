@@ -106,7 +106,10 @@
     </div>
 
     <!-- Always-Visible Player Header Actions + Lab Tools Progressive Disclosure Toggle -->
-    <div class="lab-header-actions" role="group" aria-label="Player Journal, Help, and Lab Tools Toggle">
+    <div class="lab-header-actions" role="group" aria-label="Player Account, Journal, Help, and Lab Tools Toggle">
+      <button type="button" class="lab-pill lab-pill-account" id="btn-open-account" onclick="openLabModal('account')" title="Open Account, Session & Custom Hero Creator" aria-label="Open Account and Hero Creator">
+        👤 <span id="lbl-header-account">Account</span>
+      </button>
       <button type="button" class="lab-pill lab-pill-journal" id="btn-open-journal" onclick="openLabModal('journal')" title="Open Expedition Journal & Exploration Progress [L]" aria-label="Open Expedition Journal [L]">
         📖 Journal <kbd class="pill-kbd">L</kbd>
       </button>

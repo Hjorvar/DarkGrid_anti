@@ -20,6 +20,15 @@ export const store = {
   cachedAtlasData: null,
   selectedAtlasCoord: { x: 7, y: 7 },
   currentAtlasFilter: 'ALL',
+  currentMarketFilter: 'ALL',
+  currentMarketTab: 'BUY_STANDARD',
+  charCreatorDraft: {
+    name: 'Vaelen Ironhand',
+    classType: 'FIGHTER',
+    stats: { strength: 16, constitution: 13, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 10 },
+    favoredEnemyType: 'ANIMAL',
+    primaryWeapon: 'MELEE'
+  },
   currentMonsterScaleMode: 'adaptive',
   isSizeComparisonLabOpen: false,
   currentSizeComparisonPreset: 'SIZE_PROGRESSION_5',

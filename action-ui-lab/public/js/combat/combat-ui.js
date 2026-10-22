@@ -403,24 +403,89 @@ export function handleSlot4Click() {
 
 export function renderFallenScreen(state) {
   const stage = document.getElementById('fp-center-stage');
+  if (!stage) return;
+  const labAllowed = state.labToolsAllowed !== false;
+  const quickAction = labAllowed ? 'REVIVE' : 'CREATE_CHARACTER';
+
+  if (state.mode === 'UNAUTHENTICATED') {
+    stage.innerHTML = `
+      <div class="fp-threat-whisper-plate" style="border-color: var(--accent-gold); max-width: 540px; padding: 18px 24px;">
+        <div style="font-size: 2rem; margin-bottom: 4px;">🔐</div>
+        <div style="font-family: var(--font-serif); font-size: 1.15rem; color: var(--accent-gold-bright); font-weight: 800;">
+          AUTHENTICATION REQUIRED
+        </div>
+        <p style="font-size: 0.84rem; color: var(--text-body); margin: 8px 0;">
+          Sign in or register an account to enter Oakhaven Sanctuary and forge your champion.
+        </p>
+        <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+          <button type="button" class="btn-action-gold" onclick="openLabModal('account')">
+            🔐 Sign In or Register Account
+          </button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  if (state.mode === 'NO_CHARACTER') {
+    const uName = state.currentUser ? state.currentUser.username : 'Adventurer';
+    stage.innerHTML = `
+      <div class="fp-threat-whisper-plate" style="border-color: var(--accent-gold); max-width: 540px; padding: 18px 24px;">
+        <div style="font-size: 2rem; margin-bottom: 4px;">⚒️</div>
+        <div style="font-family: var(--font-serif); font-size: 1.15rem; color: var(--accent-gold-bright); font-weight: 800;">
+          WELCOME, ${escapeHtml(uName.toUpperCase())}
+        </div>
+        <p style="font-size: 0.84rem; color: var(--text-body); margin: 8px 0;">
+          No living champion currently walks the realm under your banner. Forge a custom hero with the 71-point attribute creator or rise with a canonical class preset.
+        </p>
+        <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+          <button type="button" class="btn-action-gold" onclick="openLabModal('account')">
+            ⚒️ Open Hero Forge & Account
+          </button>
+          <button type="button" class="btn-action-stone" onclick="dispatchAction('${quickAction}', { classType: 'FIGHTER', useClassDefaults: true })">
+            ⚔️ Quick Start (Fighter)
+          </button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
   const fallen = state.fallen || { name: 'Fallen Hero', class: 'FIGHTER', level: 1, killer_name: 'a lurker in the dark' };
+  const events = Array.isArray(state.combatEvents) ? state.combatEvents.slice(-5) : [];
+  const finalLogHtml = events.length > 0
+    ? `
+      <div style="margin-top:8px; padding:6px 10px; background:rgba(10,12,18,0.82); border:1px solid var(--border-iron); border-radius:4px; text-align:left; max-height:95px; overflow-y:auto;">
+        <div style="font-size:0.68rem; color:var(--accent-gold); font-family:var(--font-serif); font-weight:700; margin-bottom:3px;">📜 Final Battle Chronicle</div>
+        ${events.map(ev => `<div style="font-size:0.71rem; color:var(--text-muted); line-height:1.35;">• ${escapeHtml(ev.public_text)}</div>`).join('')}
+      </div>
+    `
+    : '';
+
   stage.innerHTML = `
-    <div class="fp-threat-whisper-plate" style="border-color: var(--accent-crimson-bright); max-width: 520px; padding: 18px 24px;">
+    <div class="fp-threat-whisper-plate" style="border-color: var(--accent-crimson-bright); max-width: 560px; padding: 18px 24px;">
       <div style="font-size: 2.2rem; margin-bottom: 4px;">💀</div>
       <div style="font-family: var(--font-serif); font-size: 1.2rem; color: #fca5a5; font-weight: 800;">
         YOU HAVE FALLEN IN BATTLE
       </div>
-      <p style="font-size: 0.86rem; color: var(--text-body); margin: 8px 0;">
-        <strong>${escapeHtml(fallen.name)}</strong> (${escapeHtml(fallen.class)} • Level ${fallen.level}) was slain by <strong>${escapeHtml(fallen.killer_name || 'an unknown horror')}</strong>.
+      <p style="font-size: 0.85rem; color: var(--text-body); margin: 6px 0;">
+        <strong>${escapeHtml(fallen.name)}</strong> (${escapeHtml(fallen.class)} • Level ${fallen.level}) was slain by <strong>${escapeHtml(fallen.killer_name || 'an unknown horror')}</strong>${fallen.tile_name ? ` at <strong>${escapeHtml(fallen.tile_name)}</strong>` : ''}.
       </p>
-      <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
-        <button type="button" class="btn-action-gold" onclick="dispatchAction('REVIVE', { classType: 'FIGHTER' })">
+      <div style="font-size:0.74rem; color:var(--text-muted); font-family:var(--font-mono);">
+        Final Record: ${Number(fallen.xp || 0)} XP • ${Number(fallen.gold || 0)} Gold (Claimed by the survivor)
+      </div>
+      ${finalLogHtml}
+      <div style="display: flex; justify-content: center; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+        <button type="button" class="btn-action-gold" onclick="openLabModal('account')">
+          ⚒️ Forge Custom Hero
+        </button>
+        <button type="button" class="btn-action-gold" onclick="dispatchAction('${quickAction}', { classType: 'FIGHTER', useClassDefaults: true })">
           ⚔️ Rise Again (Fighter)
         </button>
-        <button type="button" class="btn-action-stone" onclick="dispatchAction('REVIVE', { classType: 'RANGER' })">
+        <button type="button" class="btn-action-stone" onclick="dispatchAction('${quickAction}', { classType: 'RANGER', useClassDefaults: true })">
           🏹 Rise Again (Ranger)
         </button>
-        <button type="button" class="btn-action-stone" onclick="dispatchAction('REVIVE', { classType: 'CLERIC' })">
+        <button type="button" class="btn-action-stone" onclick="dispatchAction('${quickAction}', { classType: 'CLERIC', useClassDefaults: true })">
           ✨ Rise Again (Cleric)
         </button>
       </div>

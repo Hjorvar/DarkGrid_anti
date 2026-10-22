@@ -45,14 +45,23 @@
 
 .dm-hero-meta {
   min-width: 0;
+  flex: 1 1 auto;
+}
+
+.dm-hero-name-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  flex-wrap: nowrap;
 }
 
 .dm-hero-name {
   font-family: var(--font-serif);
-  font-size: clamp(0.88rem, 1.5vh, 1rem);
+  font-size: clamp(0.86rem, 1.45vh, 0.96rem);
   font-weight: 700;
   color: var(--text-heading);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -459,7 +468,8 @@
 
 .dm-hero-identity {
   order: 1;
-  flex: 0 1 225px;
+  flex: 0 1 285px;
+  min-width: 215px;
 }
 
 .dm-vitals-readout {

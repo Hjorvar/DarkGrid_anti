@@ -21,7 +21,7 @@ const { normalizeFacing } = require('../services/facing-service');
 const { ensureLivingHero } = require('../services/sandbox-db-service');
 const { buildClientState } = require('../services/client-state-service');
 
-function handleAdventureScenarioAction({ db, userId, options = {}, action, payload, character, currentFacing, res }) {
+function handleAdventureScenarioAction({ db, userId, options = {}, action, payload, character, currentFacing, labToolsAllowed = false, res }) {
       // 11b. ADVENTURE EXPERIENCE ACTIONS (Isolated Lab-Only Layer — Phases 3, 5, 6, 8, 9)
       if (action === 'SET_ADVENTURE_MODE') {
         const currentTile = getTileById(db, character.tile_id);
@@ -38,6 +38,7 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
         return res.json({
           ok: true,
           state: buildClientState(db, userId, {
+            labToolsAllowed,
             infoMessage: nextEnabled
               ? 'Enabled Adventure Experience — Experimental (environmental discoveries, tension cues, choices & expedition journal active).'
               : 'Switched to Current Experience (baseline Lab exploration without experimental overlays).'
@@ -46,12 +47,59 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
       }
 
       if (action === 'START_EXPEDITION' || action === 'RESET_EXPEDITION') {
+        if (payload.deterministicSeed !== undefined && !labToolsAllowed) {
+          return res.status(403).json({
+            ok: false,
+            error: 'Forbidden: Deterministic seed is restricted to Lab Tools mode.',
+            state: buildClientState(db, userId, {
+              labToolsAllowed: false,
+              errorMessage: 'Forbidden: Deterministic seed is restricted to Lab Tools mode.'
+            })
+          });
+        }
+
         const requestedKey = payload.expeditionKey || 'MIRKWOOD_EXPEDITION';
         const expDef = EXPEDITION_DEFINITIONS[requestedKey] || EXPEDITION_DEFINITIONS.MIRKWOOD_EXPEDITION;
         const startFacing = normalizeFacing(
           payload.facing || (action === 'RESET_EXPEDITION' ? 'NORTH' : (expDef.startTile.facing || 'NORTH'))
         );
         const startTile = getTileByCoords(db, expDef.startTile.x, expDef.startTile.y);
+
+        if (!labToolsAllowed) {
+          const activeEnc = db.prepare(`
+            SELECT id, status FROM encounters
+            WHERE character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT')
+            LIMIT 1
+          `).get(character.id);
+          if (activeEnc) {
+            return res.status(400).json({
+              ok: false,
+              error: 'Cannot start or reset an expedition while engaged in an encounter.',
+              state: buildClientState(db, userId, {
+                labToolsAllowed: false,
+                errorMessage: 'Cannot start or reset an expedition while engaged in an encounter.'
+              })
+            });
+          }
+
+          const currentTile = getTileById(db, character.tile_id);
+          const currentAdv = getOrCreateAdventureState(character.id, currentTile);
+          resetAdventureState(character.id, {
+            enabled: action === 'START_EXPEDITION' ? true : currentAdv.enabled,
+            expeditionKey: expDef.expeditionKey,
+            deterministicSeed: null
+          });
+
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              labToolsAllowed: false,
+              infoMessage: action === 'RESET_EXPEDITION'
+                ? `Expedition journal reset for ${expDef.title}.`
+                : `${expDef.briefingTitle}: ${expDef.briefingText}`
+            })
+          });
+        }
 
         db.prepare(`
           UPDATE encounters SET status = 'ESCAPED'
@@ -75,6 +123,7 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
         return res.json({
           ok: true,
           state: buildClientState(db, userId, {
+            labToolsAllowed,
             infoMessage: action === 'RESET_EXPEDITION'
               ? `Expedition reset: returned to Oakhaven Sanctuary [7,7] for ${expDef.title}.`
               : `${expDef.briefingTitle}: ${expDef.briefingText}`,
@@ -97,6 +146,7 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
         return res.json({
           ok: true,
           state: buildClientState(db, userId, {
+            labToolsAllowed,
             infoMessage: `${result.outcomeTitle}: ${result.outcomeText}`,
             fxCue: {
               type: 'DISCOVERY_RESOLVED',
@@ -119,11 +169,21 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
         }
         return res.json({
           ok: true,
-          state: buildClientState(db, userId)
+          state: buildClientState(db, userId, { labToolsAllowed })
         });
       }
 
       if (action === 'FORCE_DISCOVERY') {
+        if (!labToolsAllowed) {
+          return res.status(403).json({
+            ok: false,
+            error: 'Forbidden: Forced discovery staging is restricted to Lab Tools mode.',
+            state: buildClientState(db, userId, {
+              labToolsAllowed: false,
+              errorMessage: 'Forbidden: Forced discovery staging is restricted to Lab Tools mode.'
+            })
+          });
+        }
         const currentTile = getTileById(db, character.tile_id);
         const advState = getOrCreateAdventureState(character.id, currentTile);
         advState.enabled = true;
@@ -135,6 +195,7 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
         return res.json({
           ok: true,
           state: buildClientState(db, userId, {
+            labToolsAllowed,
             infoMessage: forced
               ? `Director Triggered Discovery: ${forced.title} (${forced.tier}).`
               : `No eligible wilderness discovery on ${currentTile ? currentTile.name : 'this tile'} (step outside safe sanctuary to trigger).`
@@ -143,12 +204,23 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
       }
 
       if (action === 'SET_DETERMINISTIC_SEED') {
+        if (!labToolsAllowed) {
+          return res.status(403).json({
+            ok: false,
+            error: 'Forbidden: Deterministic seed control is restricted to Lab Tools mode.',
+            state: buildClientState(db, userId, {
+              labToolsAllowed: false,
+              errorMessage: 'Forbidden: Deterministic seed control is restricted to Lab Tools mode.'
+            })
+          });
+        }
         const currentTile = getTileById(db, character.tile_id);
         const advState = getOrCreateAdventureState(character.id, currentTile);
         advState.deterministicSeed = Number(payload.seed || 4201);
         return res.json({
           ok: true,
           state: buildClientState(db, userId, {
+            labToolsAllowed,
             infoMessage: `Deterministic Adventure Seed set to ${advState.deterministicSeed}.`
           })
         });
@@ -158,6 +230,16 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
       // LAB DIRECTOR ACTIONS (For instant UI testing of any scenario!)
       // =====================================================================
       if (action === 'LAB_SCENARIO') {
+        if (!labToolsAllowed) {
+          return res.status(403).json({
+            ok: false,
+            error: 'Forbidden: Lab scenario and debug actions are disabled for player accounts.',
+            state: buildClientState(db, userId, {
+              labToolsAllowed: false,
+              errorMessage: 'Forbidden: Lab scenario and debug actions are disabled for player accounts.'
+            })
+          });
+        }
         const scenario = payload.scenario;
 
         // Clear any active encounter and pending victory first

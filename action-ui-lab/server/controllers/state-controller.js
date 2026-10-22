@@ -28,10 +28,14 @@ const {
 } = require('../../monster-size-catalog');
 const { INTEGRATED_MONSTER_PROFILES } = require('../services/monster-profile-service');
 const { buildClientState } = require('../services/client-state-service');
+const {
+  isLabToolsAllowedForUser,
+  resolveRequestUserId
+} = require('../services/legacy-compatibility-service');
 
 const LAB_ROOT = path.join(__dirname, '../..');
 
-function createStateControllers({ db, userId }) {
+function createStateControllers({ db, userId, options = {} }) {
   function getIndexPage(req, res) {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     res.sendFile('public/index.html', { root: LAB_ROOT, dotfiles: 'allow' });
@@ -43,10 +47,12 @@ function createStateControllers({ db, userId }) {
 
   function getState(req, res) {
     try {
-      const hasExplicitParam = req.query.artPreview !== undefined || req.query.useCandidateArt !== undefined;
+      const effectiveUserId = resolveRequestUserId(req, db, userId, options);
+      const labToolsAllowed = isLabToolsAllowedForUser(db, effectiveUserId, options, req);
+      const hasExplicitParam = labToolsAllowed && (req.query.artPreview !== undefined || req.query.useCandidateArt !== undefined);
       const wantCandidates = req.query.artPreview === 'candidates' || req.query.artPreview === '1' || req.query.useCandidateArt === '1';
-      const useCandidateArt = hasExplicitParam ? wantCandidates : getCandidateArtPreviewMode(db);
-      const state = buildClientState(db, userId, { useCandidateArt });
+      const useCandidateArt = labToolsAllowed ? (hasExplicitParam ? wantCandidates : getCandidateArtPreviewMode(db)) : false;
+      const state = buildClientState(db, effectiveUserId, { useCandidateArt, labToolsAllowed });
       res.json({ ok: true, state });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });

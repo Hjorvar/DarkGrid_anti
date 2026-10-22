@@ -8,7 +8,10 @@ function renderViewportCenterStage(state) {
 }
 
 export function toggleDevToolsDrawer(forceCollapsed = null) {
-  if (typeof forceCollapsed === 'boolean') {
+  const labAllowed = !store.currentState || store.currentState.labToolsAllowed !== false;
+  if (!labAllowed) {
+    store.devToolsCollapsed = true;
+  } else if (typeof forceCollapsed === 'boolean') {
     store.devToolsCollapsed = forceCollapsed;
   } else {
     store.devToolsCollapsed = !store.devToolsCollapsed;
@@ -25,6 +28,7 @@ export function toggleDevToolsDrawer(forceCollapsed = null) {
   }
   const btn = document.getElementById('btn-toggle-devtools');
   if (btn) {
+    btn.style.display = labAllowed ? '' : 'none';
     btn.setAttribute('aria-expanded', String(!store.devToolsCollapsed));
     btn.classList.toggle('is-active', !store.devToolsCollapsed);
     const lbl = document.getElementById('lbl-toggle-devtools');
@@ -39,6 +43,14 @@ export function toggleDevToolsDrawer(forceCollapsed = null) {
 
 export function syncUiModeClasses(state) {
   if (!state) return;
+  const labAllowed = state.labToolsAllowed !== false;
+  const devBtn = document.getElementById('btn-toggle-devtools');
+  if (devBtn) {
+    devBtn.style.display = labAllowed ? '' : 'none';
+  }
+  if (!labAllowed && !store.devToolsCollapsed) {
+    toggleDevToolsDrawer(true);
+  }
   const enc = state.encounter;
   const isCombatStage2 = Boolean(enc && enc.status === 'IN_COMBAT');
   const isCombatStage1 = Boolean(enc && enc.status === 'DISCOVERED');

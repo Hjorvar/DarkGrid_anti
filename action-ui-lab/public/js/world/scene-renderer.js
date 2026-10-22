@@ -521,6 +521,15 @@ export function renderViewportCenterStage(state) {
     const lootHtml = (victory.lootedItems && victory.lootedItems.length > 0)
       ? `<div style="margin-top: 4px; color: var(--accent-gold-bright); font-size: 0.8rem;">📦 Looted: <strong>${victory.lootedItems.map(escapeHtml).join(', ')}</strong></div>`
       : `<div style="margin-top: 3px; color: var(--text-muted); font-size: 0.76rem;">No items found on the remains.</div>`;
+    const levelUpHtml = victory.leveledUp
+      ? `<div style="margin-top: 4px; padding: 3px 10px; background: rgba(234,179,8,0.22); border: 1px solid #facc15; border-radius: 4px; color: #fef08a; font-size: 0.78rem; font-weight: 700;">🎉 LEVEL UP! Reached Level ${victory.newLevel} (+${victory.hpGain} Max HP)</div>`
+      : '';
+    const bountySlainHtml = victory.bountyInfo
+      ? `<div style="margin-top: 4px; color: #86efac; font-size: 0.76rem; font-weight: 700;">🎯 Warrant Target Slain: ${escapeHtml(victory.bountyInfo.customName)} — Return to Oakhaven Sanctuary to claim ${victory.bountyInfo.rewardGold} Gold!</div>`
+      : '';
+    const avengedHtml = (victory.persistentInfo && Array.isArray(victory.persistentInfo.avengedHeroes) && victory.persistentInfo.avengedHeroes.length > 0)
+      ? `<div style="margin-top: 3px; color: #fca5a5; font-size: 0.75rem;">⚔️ Fallen Avenged: <strong>${victory.persistentInfo.avengedHeroes.map(h => escapeHtml(typeof h === 'string' ? h : (h.name || ''))).join(', ')}</strong> (${victory.persistentInfo.killCount} kills ended)</div>`
+      : '';
     const combatRet = adv && adv.combatReturnContext;
     const returnBearingDir = (combatRet && combatRet.restoredFacing) || state.facing || 'NORTH';
     const returnBearingLabel = (FACING_META[returnBearingDir] && FACING_META[returnBearingDir].label) || returnBearingDir;
@@ -562,6 +571,9 @@ export function renderViewportCenterStage(state) {
             <span style="color: #93c5fd;">✨ +${victory.xpAwarded} XP</span>
             <span style="color: var(--accent-gold-bright);">🪙 +${victory.goldLooted} Gold</span>
           </div>
+          ${levelUpHtml}
+          ${bountySlainHtml}
+          ${avengedHtml}
           ${lootHtml}
           <div class="fp-combat-return-line" style="margin-top: 4px; font-size: 0.73rem; color: #fde68a;">
             🧭 Ground secured at <strong>${escapeHtml(returnPlaceName)}</strong> • Bearings restored (<strong>${escapeHtml(returnBearingLabel)}</strong>)
