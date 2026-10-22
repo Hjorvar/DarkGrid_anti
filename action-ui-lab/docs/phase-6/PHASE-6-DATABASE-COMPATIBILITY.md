@@ -7,7 +7,7 @@
 
 ## 1. Compatibility Strategy
 
-Phase 6 follows a **strictly non-destructive, additive adapter strategy** (`ensureNonDestructiveLabAdapter` in `action-ui-lab/server/services/legacy-compatibility-service.js`). It operates directly on any database created by Darkgrid's canonical migrations (`db/migrations/001_initial.sql` through `004_phase4_depth_and_bounties.sql`) without dropping, resetting, or altering any existing legacy columns or records.
+Phase 6 follows a **strictly non-destructive, additive adapter strategy** (`ensureNonDestructiveLabAdapter` in `action-ui-lab/server/services/legacy-compatibility-service.js`). It operates directly on any database created by Darkgrid's canonical migrations (`db/migrations/001_initial_schema.sql` through `013_production_blaze_hardening.sql` and `db/seeds/001_seed_world.sql` through `010_seed_night_work_loot_and_30_monsters.sql` via `src/db/migrate.js`) without dropping, resetting, or altering any existing legacy columns or records.
 
 ### 1.1 Verified Legacy Tables (14/14 Present)
 All 14 core tables are verified via `GET /api/legacy-audit` (`verifyLegacyDatabaseCompatibility`):
@@ -18,7 +18,7 @@ All 14 core tables are verified via `GET /api/legacy-audit` (`verifyLegacyDataba
 5. `terrain_artworks` (terrain and landmark artwork mappings)
 6. `monsters` (`98` canonical monsters with CR, subtypes, damage dice, 9 health bracket descriptions, and special abilities)
 7. `characters` (all canonical attributes, class, level, XP, gold, HP, `favored_enemy_type`, `favored_enemy_subtype`, `cleric_heal_uses`, `primary_weapon`, `killed_by_monster_instance_id`, `died_at`)
-8. `item_definitions` (`29` canonical weapons, armor, shields, potions, and magical accessories)
+8. `item_definitions` (`113` canonical weapons, armor, shields, potions, and magical accessories)
 9. `item_instances` (character and persistent-monster owned items with `equipped_slot` and `modifications` JSON)
 10. `encounters` (`DISCOVERED`, `IN_COMBAT`, `VICTORY`, `DEFEAT`, `ESCAPED`, `IGNORED`)
 11. `combat_events` (round-by-round narrative and structured event log)
@@ -38,7 +38,7 @@ When `ensureNonDestructiveLabAdapter(db)` connects to a Darkgrid SQLite database
 | `characters.pending_victory_encounter_id` | `INTEGER DEFAULT NULL` | Persists post-combat Victory banner across reloads until player steps forward or dismisses | Ignored by legacy SSR app; safe default `NULL` |
 | `characters.scene_mode` | `TEXT NOT NULL DEFAULT 'C'` | Persists POV scene mode (`A`, `B`, `C`, `LEGACY`) | Ignored by legacy SSR app; safe default `'C'` |
 | `trg_cleanup_market_listings_before_item_delete` | `BEFORE DELETE ON item_instances` trigger | Deletes historical `market_listings` rows referencing an `item_instance_id` before that item instance is destroyed during permadeath's 50% item destruction roll | Prevents `FOREIGN KEY constraint failed` during permadeath if a hero dies carrying a previously purchased resale relic |
-| `scene_catalog` tables | `CREATE TABLE IF NOT EXISTS ...` | Stores read-only multi-variant POV scene catalog metadata | Completely independent of legacy tables |
+| `scene_variants` & `tile_directional_overrides` | `CREATE TABLE IF NOT EXISTS ...` (`initSceneCatalogTables`) | Stores read-only multi-variant POV scene catalog metadata | Completely independent of legacy tables |
 
 ---
 

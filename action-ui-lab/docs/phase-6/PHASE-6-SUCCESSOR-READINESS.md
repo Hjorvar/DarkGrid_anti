@@ -11,7 +11,7 @@
 | Readiness Criterion | Requirement | Evidence / Verification | Status |
 |---|---|---|---|
 | **1. Original Game Untouched** | Zero modifications to `src/`, `db/`, root `public/`, or production data | `git status` shows only `action-ui-lab/` files modified/added; `npm test` passes `228/228` | **PASS** |
-| **2. Phase 5.2B Baseline Preserved** | `112/112` existing Lab tests and `640/640` world viewpoints pass | `123/123` Lab tests pass (`112` baseline + `11` Phase 6); `verify-art-approval.js` passes `640/640` (`D=0`) | **PASS** |
+| **2. Phase 5.2B Baseline Preserved** | `112/112` existing Lab tests and `640/640` world viewpoints pass | `130/130` Lab tests pass (`112` baseline + `11` Phase 6 + `7` Phase 6.1); `phase-5-world.test.js` (`evaluateWorldArtAudit`) passes `640/640` (`D=0`) | **PASS** |
 | **3. Auth & Multi-User Sessions** | Real user accounts, `bcrypt`, Firebase upgrade bridge, and `SqliteSessionStore` (`__session`) | Verified in `phase-6-legacy-integration.test.js` Tests 2 & 4 | **PASS** |
 | **4. Character & Class Parity** | 71-point point-buy, 1-living-hero rule, Fighter/Ranger/Cleric mechanics, Saving Throws, INT XP scaling | Verified in `phase-6-legacy-integration.test.js` Tests 3, 5, 6, 7 & 11 | **PASS** |
 | **5. Inventory, 9-Slot Gear & Global Resale Market** | 9 equipment slots, stance lock, CHA shop pricing, starter protection, `market_listings` 125% global resale | Verified in `phase-6-legacy-integration.test.js` Tests 7 & 11 | **PASS** |

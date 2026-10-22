@@ -36,7 +36,7 @@ During the independent visual audit of the Phase 6 screenshots (`action-ui-lab/d
 ### 1.3 Workflow 3: Oakhaven Market (`[M]`)
 - **Phase 6 Issues Found:**
   1. **Raw JSON Array Displayed to Players:** Every market row printed raw JSON `["FIGHTER","RANGER","CLERIC"]` directly in the item subtitle (`AC +0 • Max DEX 99 • ["FIGHTER","RANGER","CLERIC"]`).
-  2. **Misleading Consignment Description:** The Sell tab header stated *"Consign unequipped gear for 50% gold value"* even though canonical `src/domain/market/index.js` pays **50%** for mundane items and **40%** for magical (`+1`/`+2`/`+3`) items (resold at **125%** in the Consigned Relics tab).
+  2. **Misleading Consignment Description:** The Sell tab header stated *"Consign unequipped gear for 50% gold value"* even though canonical `src/domain/economy/shop.js` pays **50%** for mundane items and **40%** for magical (`is_magical = 1`) items (resold at **125%** in the Consigned Relics tab via `market_listings`).
   3. **Dense Unstructured Text:** Weapon damage, armor AC, Max DEX, and class restrictions were concatenated into a single grey string.
 - **Phase 6.1 Polish Applied:**
   1. Added `formatAllowedClassesLabel(rawClasses)` and `buildItemStatChipsHtml(it)` in `inventory-ui.js`.
@@ -48,11 +48,11 @@ During the independent visual audit of the Phase 6 screenshots (`action-ui-lab/d
 
 ### 1.4 Workflow 4: The Watcher's Board (`[J]`)
 - **Phase 6 Issues Found:**
-  1. **Missing Warrant Fields (`undefined`):** The frontend referenced `c.title` and `c.region_name`, whereas SQLite `bounty_contracts` stores `target_title`, `monster_name`, and `direction_hint`, causing `📜 undefined` and `Region: undefined` to render in the Phase 6 screenshot.
+  1. **Missing Warrant Fields (`undefined`):** Some UI templates referenced `c.title`, `c.description`, and `c.region_name`, whereas SQLite `hunting_contracts` stores `contract_title`, `contract_description`, `custom_name`, and `target_region`, causing `📜 undefined` and `Region: undefined` if unnormalized.
   2. **Grammar Bug in Canonical Seed Descriptions:** Vowel-initial monsters produced `"a Assassin Vine"` and `"a Owlbear"` in warrant descriptions.
   3. **Card Layout:** `.warrant-card` lacked vertical flex direction (`flex-direction: column`), causing header, metadata, and description to squeeze horizontally.
 - **Phase 6.1 Polish Applied:**
-  1. Normalized `bountyContracts` and `wildernessThreats` in `client-state-service.js` (`normalizeBountyContractForUi` & `normalizeThreatRumorForUi`), providing computed `contract_title`, `target_region`, `monster_name`, `target_title`, and fixing `\ba ([AEIOUaeiou])` grammar to `an $1`.
+  1. Normalized `bountyContracts` and `wildernessThreats` in `client-state-service.js` (`normalizeContractGrammar`), providing both `title`/`contract_title`, `description`/`contract_description`, `region_name`/`target_region`, and fixing `\b([Aa])\s+([aeiouAEIOU])` grammar to `$1n $2`.
   2. Styled `.warrant-card` with vertical stacking (`flex-direction: column`), distinct `.warrant-header`, `.warrant-meta-row` (`🗺️ Region` and `👾 Quarry`), and italicized lore quote.
 - **Verified Screenshot:**
   - `action-ui-lab/docs/phase-6.1/screenshots/04-watchers-board-polished.png` (`1920x1080`)
@@ -63,6 +63,6 @@ During the independent visual audit of the Phase 6 screenshots (`action-ui-lab/d
   2. **Developer Toggle Visible to Production Players:** The `🛠️ Lab Tools [\`]` button and ``[`]`` shortcut were exposed even when `labToolsAllowed` was `false`.
 - **Phase 6.1 Polish Applied:**
   1. Widened `.dm-identity-block` (`max-width: 245px`) and `.dm-hero-name` (`max-width: 195px`) in `character.css`, verified programmatically in headless Chrome (`scrollWidth <= clientWidth`).
-  2. Hidden `#btn-toggle-devtools` and disabled the ``[`]`` shortcut when `state.session.labToolsAllowed === false`.
+  2. Hidden `#btn-toggle-devtools` and disabled the ``[`]`` shortcut when `state.labToolsAllowed === false`.
 - **Verified Screenshot:**
   - `action-ui-lab/docs/phase-6.1/screenshots/05-combat-presentation.png` (`1920x1080`)

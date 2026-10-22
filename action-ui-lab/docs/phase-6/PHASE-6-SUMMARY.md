@@ -29,7 +29,7 @@ Phase 6 transformed `action-ui-lab/` from a single-user visual and gameplay prot
 
 ## 2. Verification & Regression Metrics
 
-- **Adventure Lab Test Suite (`node --test action-ui-lab/tests/*.test.js`):** `123 / 123 PASS` (`112` baseline + `11` Phase 6 integration & browser QA tests)
-- **World Viewpoints & Art Approval (`node action-ui-lab/scripts/verify-art-approval.js`):** `640 / 640 PASS` (`A=57, B=160, C=423, D=0`, `0` broken references)
+- **Adventure Lab Test Suite (`node --test --test-concurrency=2 action-ui-lab/tests/*.test.js`):** `130 / 130 PASS` (`112` baseline + `11` Phase 6 + `7` Phase 6.1 hardening tests)
+- **World Viewpoints & Art Approval (`action-ui-lab/tests/phase-5-world.test.js` / `evaluateWorldArtAudit`):** `640 / 640 PASS` (`A=57, B=160, C=423, D=0`, `0` broken references)
 - **Original Darkgrid Test Suite (`npm test`):** `228 / 228 PASS`
 - **Live Headless Chrome Browser QA:** `0` console errors, `0` uncaught page exceptions, `0` failed network requests, `0px` page scroll overflow.
