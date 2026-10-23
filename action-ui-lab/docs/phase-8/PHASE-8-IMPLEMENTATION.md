@@ -22,7 +22,7 @@ flowchart TD
 
 ## 2. Database Schema & Non-Destructive Adapter (`016_phase8_topdown_world_and_quests.sql`)
 
-Created [`db/migrations/016_phase8_topdown_world_and_quests.sql`](file:///C:/Users/hih/.gemini/antigravity/worktrees/antiDark/expand_goblin_forest_worldtree/db/migrations/016_phase8_topdown_world_and_quests.sql) and synchronized [`action-ui-lab/server/services/legacy-compatibility-service.js`](file:///C:/Users/hih/.gemini/antigravity/worktrees/antiDark/expand_goblin_forest_worldtree/action-ui-lab/server/services/legacy-compatibility-service.js):
+Created [`db/migrations/016_phase8_topdown_world_and_quests.sql`](file:///C:/Users/hih/Documents/antiDark/db/migrations/016_phase8_topdown_world_and_quests.sql) and synchronized [`action-ui-lab/server/services/legacy-compatibility-service.js`](file:///C:/Users/hih/Documents/antiDark/action-ui-lab/server/services/legacy-compatibility-service.js):
 
 1. **Authoritative `map_tiles` Columns:**
    - `region_key TEXT NOT NULL DEFAULT 'BLACKWOOD_FOREST'`
@@ -46,7 +46,7 @@ Created [`db/migrations/016_phase8_topdown_world_and_quests.sql`](file:///C:/Use
 
 ## 3. 30×30 Goblin Forest Geography & Three Routes (`topdown-world-service.js`)
 
-Implemented in [`action-ui-lab/server/services/topdown-world-service.js`](file:///C:/Users/hih/.gemini/antigravity/worktrees/antiDark/expand_goblin_forest_worldtree/action-ui-lab/server/services/topdown-world-service.js):
+Implemented in [`action-ui-lab/server/services/topdown-world-service.js`](file:///C:/Users/hih/Documents/antiDark/action-ui-lab/server/services/topdown-world-service.js):
 
 - **Dimensions:** `30×30` (`900` tiles, `x = 0..29`, `y = 0..29`), with `681` connected passable tiles and `219` impassable barrier tiles (outer cliffs/brambles, Blackwater River channel, Stonefang Crag, Whispering Crags, Thornbriar Thickets, and Stronghold Palisades).
 - **Key Locations & 13 Landmarks:**
@@ -72,13 +72,13 @@ Implemented in [`action-ui-lab/server/services/topdown-world-service.js`](file:/
 
 ## 4. Camera Viewport, Smooth Movement & Discovery (`topdown-renderer.js`)
 
-Implemented in [`action-ui-lab/public/js/world/topdown-renderer.js`](file:///C:/Users/hih/.gemini/antigravity/worktrees/antiDark/expand_goblin_forest_worldtree/action-ui-lab/public/js/world/topdown-renderer.js):
+Implemented in [`action-ui-lab/public/js/world/topdown-renderer.js`](file:///C:/Users/hih/Documents/antiDark/action-ui-lab/public/js/world/topdown-renderer.js):
 
 - **Viewport Sizing (`computeCameraViewportMetrics`):** Displays `~11.5 × 8.5` tiles on desktop regardless of total map size (`tileSize` clamped to `46..96px`).
 - **Camera Centering & Clamping:** Keeps the hero centered in the interior of the map while clamping `camPxX` and `camPxY` to `[0, worldPixelSize - viewportSize]` near outer borders so no void space is shown outside the 30×30 world.
 - **Smooth Movement Interpolation:** Interpolates `(heroVisualX, heroVisualY)` over `145ms` (`easeOutCubic`) on single-tile steps while snapping immediately on scenario/teleport jumps (`dist > 2.2`).
 - **Camera-Offset Hit Testing (`clientPointToGridCoord`):** Translates mouse coordinates using `mx + camPxX` and `my + camPxY` so clicking adjacent passable tiles steps accurately at any camera offset.
 - **Discovery & Light Fog of War:**
-  - `getVisionRadiusForClass(heroClass)` in [`topdown-world-service.js`](file:///C:/Users/hih/.gemini/antigravity/worktrees/antiDark/expand_goblin_forest_worldtree/action-ui-lab/server/services/topdown-world-service.js) grants `RANGER` a `4`-tile scouting radius (`dx² + dy² <= 18`) vs `3` tiles (`dx² + dy² <= 10`) for `FIGHTER` and `CLERIC`.
+  - `getVisionRadiusForClass(heroClass)` in [`topdown-world-service.js`](file:///C:/Users/hih/Documents/antiDark/action-ui-lab/server/services/topdown-world-service.js) grants `RANGER` a `4`-tile scouting radius (`dx² + dy² <= 18`) vs `3` tiles (`dx² + dy² <= 10`) for `FIGHTER` and `CLERIC`.
   - Unexplored tiles render under a dark shroud (`rgba(5, 8, 7, 0.84)`); explored tiles outside current vision render in dimmed memory (`rgba(6, 10, 9, 0.36)`); tiles within active vision render at full clarity.
   - Region Map (`renderRegionMapCanvas`) renders a 30×30 overview inside the `Map [M]` modal showing discovered trails, discovered landmarks, Oakhaven, hero position, and Goblin Stronghold (only once discovered).
