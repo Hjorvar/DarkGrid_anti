@@ -68,7 +68,10 @@ const {
   buildClassAbilitySummary
 } = require('./legacy-compatibility-service');
 const {
+  STRONGHOLD_BOSS_PROFILE,
+  isGoblinStrongholdTile,
   syncCharacterQuestState,
+  getCharacterQuests,
   buildTopdownMapPayload
 } = require('./topdown-world-service');
 
@@ -287,34 +290,30 @@ function buildClientState(db, userId, extra = {}) {
     maxDivineCharges: clericDivineInfo ? clericDivineInfo.maxCharges : 0
   });
   const shopStock = isSafeCity ? getCityStoreStock(db, effectiveHero) : null;
-  const bountyContracts = isSafeCity
-    ? getOrGenerateContracts(db, effectiveHero).map(c => {
-        const cleanDesc = normalizeContractGrammar(c.contract_description || c.description || '');
-        return {
-          ...c,
-          title: c.title || c.contract_title || 'Hunting Warrant',
-          contract_title: c.contract_title || c.title || 'Hunting Warrant',
-          description: cleanDesc,
-          contract_description: cleanDesc,
-          region_name: c.region_name || c.target_region || 'The Wilds',
-          target_region: c.target_region || c.region_name || 'The Wilds'
-        };
-      })
-    : [];
-  const wildernessThreats = isSafeCity
-    ? getWildernessThreats(db).map(t => {
-        const dir = t.direction || t.compassDirection || t.compass_direction || 'Wilderness';
-        const kc = Number(t.killCount || t.kill_count || 1);
-        return {
-          ...t,
-          direction: dir,
-          compassDirection: dir,
-          compass_direction: dir,
-          killCount: kc,
-          kill_count: kc
-        };
-      })
-    : [];
+  const bountyContracts = getOrGenerateContracts(db, effectiveHero).map(c => {
+    const cleanDesc = normalizeContractGrammar(c.contract_description || c.description || '');
+    return {
+      ...c,
+      title: c.title || c.contract_title || 'Hunting Warrant',
+      contract_title: c.contract_title || c.title || 'Hunting Warrant',
+      description: cleanDesc,
+      contract_description: cleanDesc,
+      region_name: c.region_name || c.target_region || 'The Wilds',
+      target_region: c.target_region || c.region_name || 'The Wilds'
+    };
+  });
+  const wildernessThreats = getWildernessThreats(db).map(t => {
+    const dir = t.direction || t.compassDirection || t.compass_direction || 'Wilderness';
+    const kc = Number(t.killCount || t.kill_count || 1);
+    return {
+      ...t,
+      direction: dir,
+      compassDirection: dir,
+      compass_direction: dir,
+      killCount: kc,
+      kill_count: kc
+    };
+  });
   const activeContract = getActiveContractForCharacter(db, character.id);
   const minimap = getMinimapData(db, currentTile, 2);
   const directions = getAvailableDirections(db, currentTile);
@@ -349,8 +348,16 @@ function buildClientState(db, userId, extra = {}) {
     } else if (activeEncounter.status === 'IN_COMBAT') {
       const cleanMonsterName = (activeEncounter.monster_name || '').replace(/\[.*?\]/g, '').trim();
       const cleanBaseMonsterName = (activeEncounter.base_monster_name || activeEncounter.monster_name || '').replace(/\[.*?\]/g, '').trim();
-      const cleanSlug = activeEncounter.imageSlug || cleanBaseMonsterName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-      const imageUrl = activeEncounter.imageUrl || (`/images/monsters/${cleanSlug}.png`);
+      const isStrongholdBoss =
+        activeEncounter.custom_title === STRONGHOLD_BOSS_PROFILE.customTitle ||
+        /Warchief Grak/i.test(cleanMonsterName) ||
+        Boolean(currentTile && isGoblinStrongholdTile(currentTile) && activeEncounter.monster_instance_id);
+      const cleanSlug = isStrongholdBoss
+        ? STRONGHOLD_BOSS_PROFILE.combatImageSlug
+        : (activeEncounter.imageSlug || cleanBaseMonsterName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''));
+      const imageUrl = isStrongholdBoss
+        ? STRONGHOLD_BOSS_PROFILE.combatImageUrl
+        : (activeEncounter.imageUrl || (`/images/monsters/${cleanSlug}.png`));
       const isAirborne = Boolean(
         activeEncounter.movement_type === 'FLY' ||
         activeEncounter.movement_type === 'FLYING' ||
@@ -493,6 +500,7 @@ function buildClientState(db, userId, extra = {}) {
 
   const compendiumKnowledge = getCharacterCompendiumKnowledge(db, effectiveHero);
   const quest = syncCharacterQuestState(db, character.id);
+  const quests = getCharacterQuests(db, character.id);
   const topdownMap = buildTopdownMapPayload(db, effectiveHero, currentTile);
 
   return {
@@ -509,6 +517,7 @@ function buildClientState(db, userId, extra = {}) {
     viewportScene,
     topdownMap,
     quest,
+    quests,
     character: {
       id: effectiveHero.id,
       name: effectiveHero.name,

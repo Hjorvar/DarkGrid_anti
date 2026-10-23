@@ -22,6 +22,8 @@ import {
   renderModalContent,
   selectAtlasTile,
   setAtlasFilter,
+  setQuestsModalTab,
+  renderRegionMapModal,
   renderAtlasModal,
   renderVisualQaModal,
   renderJournalModal,
@@ -159,7 +161,7 @@ export function renderGameState(state, options = {}) {
   renderMinimap(state);
   renderActionDeckAndPad(state);
 
-  if (store.currentOpenModal === 'journal' || store.currentOpenModal === 'director' || store.currentOpenModal === 'help' || store.currentOpenModal === 'account' || store.currentOpenModal === 'create-character' || store.currentOpenModal === 'character' || store.currentOpenModal === 'quests') {
+  if (store.currentOpenModal === 'journal' || store.currentOpenModal === 'director' || store.currentOpenModal === 'help' || store.currentOpenModal === 'account' || store.currentOpenModal === 'create-character' || store.currentOpenModal === 'character' || store.currentOpenModal === 'quests' || store.currentOpenModal === 'bounties' || store.currentOpenModal === 'map') {
     renderModalContent(store.currentOpenModal);
   }
 
@@ -210,6 +212,8 @@ if (typeof window !== 'undefined') {
     renderModalContent,
     selectAtlasTile,
     setAtlasFilter,
+    setQuestsModalTab,
+    renderRegionMapModal,
     renderAtlasModal,
     renderVisualQaModal,
     renderJournalModal,

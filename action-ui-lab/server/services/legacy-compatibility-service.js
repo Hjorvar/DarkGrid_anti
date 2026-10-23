@@ -112,6 +112,37 @@ function ensureNonDestructiveLabAdapter(db) {
     db.exec('ALTER TABLE encounters ADD COLUMN second_wind_used INTEGER NOT NULL DEFAULT 0;');
   }
 
+  const tileCols = db.prepare('PRAGMA table_info(map_tiles)').all().map(c => c.name);
+  if (tileCols.length > 0) {
+    if (!tileCols.includes('region_key')) {
+      db.exec("ALTER TABLE map_tiles ADD COLUMN region_key TEXT NOT NULL DEFAULT 'GOBLIN_FOREST';");
+    }
+    if (!tileCols.includes('biome')) {
+      db.exec("ALTER TABLE map_tiles ADD COLUMN biome TEXT NOT NULL DEFAULT 'FOREST';");
+    }
+    if (!tileCols.includes('visual_type')) {
+      db.exec('ALTER TABLE map_tiles ADD COLUMN visual_type TEXT DEFAULT NULL;');
+    }
+    if (!tileCols.includes('visual_kind')) {
+      db.exec('ALTER TABLE map_tiles ADD COLUMN visual_kind TEXT DEFAULT NULL;');
+    }
+    if (!tileCols.includes('path_connections')) {
+      db.exec("ALTER TABLE map_tiles ADD COLUMN path_connections TEXT NOT NULL DEFAULT '[]';");
+    }
+    if (!tileCols.includes('is_landmark')) {
+      db.exec('ALTER TABLE map_tiles ADD COLUMN is_landmark INTEGER NOT NULL DEFAULT 0;');
+    }
+    if (!tileCols.includes('landmark_key')) {
+      db.exec('ALTER TABLE map_tiles ADD COLUMN landmark_key TEXT DEFAULT NULL;');
+    }
+    if (!tileCols.includes('encounter_profile_key')) {
+      db.exec("ALTER TABLE map_tiles ADD COLUMN encounter_profile_key TEXT DEFAULT 'GOBLIN_FOREST';");
+    }
+    if (!tileCols.includes('boss_key')) {
+      db.exec('ALTER TABLE map_tiles ADD COLUMN boss_key TEXT DEFAULT NULL;');
+    }
+  }
+
   // Ensure session, idempotency, and monster knowledge tables exist
   db.exec(`
     CREATE TABLE IF NOT EXISTS user_sessions (

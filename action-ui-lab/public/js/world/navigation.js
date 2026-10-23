@@ -32,7 +32,7 @@ export function renderActionDeckAndPad(state) {
   const slot3 = document.getElementById('action-slot-3');
   const slot4 = document.getElementById('action-slot-4');
 
-  const shCoord = (state.topdownMap && state.topdownMap.strongholdCoord) || { x: 7, y: 1 };
+  const shCoord = (state.topdownMap && state.topdownMap.strongholdCoord) || { x: 15, y: 2 };
   const isAtStrongholdGate = Boolean(
     state.topdownMap &&
     !state.topdownMap.bossSlain &&
@@ -180,8 +180,11 @@ export function renderActionDeckAndPad(state) {
   document.getElementById('lbl-strafe-left').textContent = `West`;
   document.getElementById('lbl-strafe-right').textContent = `East`;
 
-  document.getElementById('pad-center-glyph').textContent = fMeta.arrow;
-  document.getElementById('pad-center-lbl').textContent = state.currentTile ? `[${state.currentTile.x},${state.currentTile.y}]` : facing;
+  const isPlayerMode = store.devToolsCollapsed !== false;
+  document.getElementById('pad-center-glyph').textContent = isPlayerMode ? '🧭' : fMeta.arrow;
+  document.getElementById('pad-center-lbl').textContent = isPlayerMode
+    ? (state.isSafeCity ? 'Town' : 'Wilds')
+    : (state.currentTile ? `[${state.currentTile.x},${state.currentTile.y}]` : facing);
 
   const dirs = state.directions || {};
   const mapTiles = (state.topdownMap && Array.isArray(state.topdownMap.tiles)) ? state.topdownMap.tiles : [];
@@ -227,11 +230,13 @@ export function renderActionDeckAndPad(state) {
     packLbl.textContent = `Inventory (${state.inventory.length})`;
   }
   const questsLbl = document.getElementById('util-quests-lbl');
-  if (questsLbl && state.quest) {
-    if (state.quest.status === 'COMPLETED') {
+  if (questsLbl) {
+    const q = state.quest || {};
+    const activeCount = (q.status === 'ACTIVE' ? 1 : 0) + (state.activeContract ? 1 : 0);
+    if (q.status === 'COMPLETED') {
       questsLbl.textContent = 'Quests (!)';
-    } else if (state.quest.status === 'ACTIVE') {
-      questsLbl.textContent = 'Quests (1)';
+    } else if (activeCount > 0) {
+      questsLbl.textContent = `Quests (${activeCount})`;
     } else {
       questsLbl.textContent = 'Quests';
     }
@@ -337,12 +342,16 @@ export function renderActionDeckAndPad(state) {
     fwdBtn.classList.toggle('is-primary-move', canAdvance);
   }
 
-  // Sanctuary vs Wilderness Utility Drawer Priority
+  // Sanctuary vs Wilderness Utility Drawer Priority (Shop only visible in Oakhaven)
   const marketBtn = document.getElementById('util-btn-market');
   const boardBtn = document.getElementById('util-btn-board');
-  [marketBtn, boardBtn].forEach(btn => {
-    if (!btn) return;
-    btn.classList.toggle('is-sanctuary-highlight', Boolean(state.isSafeCity));
-    btn.classList.toggle('is-town-only-away', !state.isSafeCity);
-  });
+  if (marketBtn) {
+    marketBtn.hidden = !state.isSafeCity;
+    marketBtn.classList.toggle('is-sanctuary-highlight', Boolean(state.isSafeCity));
+    marketBtn.classList.toggle('is-town-only-away', !state.isSafeCity);
+  }
+  if (boardBtn) {
+    boardBtn.classList.toggle('is-sanctuary-highlight', Boolean(state.isSafeCity));
+    boardBtn.classList.remove('is-town-only-away');
+  }
 }

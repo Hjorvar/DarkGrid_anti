@@ -7,6 +7,16 @@ function renderViewportCenterStage(state) {
   return uiCallbacks.renderViewportCenterStage(state);
 }
 
+function shouldShowDevToolsButton(labAllowed) {
+  if (!labAllowed) return false;
+  if (!store.devToolsCollapsed) return true;
+  if (typeof window !== 'undefined' && window.location && window.location.search) {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('dev') === '1' || params.get('lab') === '1') return true;
+  }
+  return false;
+}
+
 export function toggleDevToolsDrawer(forceCollapsed = null) {
   const labAllowed = !store.currentState || store.currentState.labToolsAllowed !== false;
   if (!labAllowed) {
@@ -28,7 +38,7 @@ export function toggleDevToolsDrawer(forceCollapsed = null) {
   }
   const btn = document.getElementById('btn-toggle-devtools');
   if (btn) {
-    btn.style.display = labAllowed ? '' : 'none';
+    btn.style.display = shouldShowDevToolsButton(labAllowed) ? '' : 'none';
     btn.setAttribute('aria-expanded', String(!store.devToolsCollapsed));
     btn.classList.toggle('is-active', !store.devToolsCollapsed);
     const lbl = document.getElementById('lbl-toggle-devtools');
@@ -46,7 +56,7 @@ export function syncUiModeClasses(state) {
   const labAllowed = state.labToolsAllowed !== false;
   const devBtn = document.getElementById('btn-toggle-devtools');
   if (devBtn) {
-    devBtn.style.display = labAllowed ? '' : 'none';
+    devBtn.style.display = shouldShowDevToolsButton(labAllowed) ? '' : 'none';
   }
   if (!labAllowed && !store.devToolsCollapsed) {
     toggleDevToolsDrawer(true);

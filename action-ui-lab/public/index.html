@@ -106,17 +106,20 @@
     </div>
 
     <!-- Always-Visible Player Header Actions + Lab Tools Progressive Disclosure Toggle -->
-    <div class="lab-header-actions" role="group" aria-label="Player Account, Quests, Menu, and Lab Tools Toggle">
-      <button type="button" class="lab-pill lab-pill-account" id="btn-open-account" onclick="openLabModal('account')" title="Open Account, Session & Custom Hero Creator" aria-label="Open Account and Hero Creator">
-        <span id="lbl-header-account">Menu</span>
+    <div class="lab-header-actions" role="group" aria-label="Player Account, Map, Quests, Menu, and Lab Tools Toggle">
+      <button type="button" class="lab-pill lab-pill-map" id="btn-open-map" onclick="openLabModal('map')" title="Open Region Map [M]" aria-label="Open Region Map [M]">
+        Map <kbd class="pill-kbd">M</kbd>
       </button>
-      <button type="button" class="lab-pill lab-pill-journal" id="btn-open-journal" onclick="openLabModal('quests')" title="Open Quests [J]" aria-label="Open Quests [J]">
+      <button type="button" class="lab-pill lab-pill-journal" id="btn-open-journal" onclick="openLabModal('quests')" title="Open Quests &amp; Bounties [J]" aria-label="Open Quests and Bounties [J]">
         Quests <kbd class="pill-kbd">J</kbd>
       </button>
-      <button type="button" class="lab-pill lab-pill-help" id="btn-open-help" onclick="openLabModal('help')" title="Open Controls & Guide [?]" aria-label="Open Controls Help [?]">
+      <button type="button" class="lab-pill lab-pill-account" id="btn-open-account" onclick="openLabModal('account')" title="Open Account, Session &amp; Custom Hero Creator" aria-label="Open Account and Hero Creator">
+        <span id="lbl-header-account">Menu</span>
+      </button>
+      <button type="button" class="lab-pill lab-pill-help" id="btn-open-help" onclick="openLabModal('help')" title="Open Controls &amp; Guide [?]" aria-label="Open Controls Help [?]">
         Controls <kbd class="pill-kbd">?</kbd>
       </button>
-      <button type="button" class="lab-pill lab-pill-devtools-toggle" id="btn-toggle-devtools" onclick="toggleDevToolsDrawer()" aria-expanded="false" aria-controls="lab-devtools-drawer" title="Toggle Developer & Lab Tools Drawer [Backquote / `]">
+      <button type="button" class="lab-pill lab-pill-devtools-toggle" id="btn-toggle-devtools" onclick="toggleDevToolsDrawer()" aria-expanded="false" aria-controls="lab-devtools-drawer" title="Toggle Developer &amp; Lab Tools Drawer [Backquote / `]" style="display:none;">
         <span id="lbl-toggle-devtools">Lab Tools</span> <kbd class="pill-kbd">`</kbd>
       </button>
     </div>
@@ -297,6 +300,11 @@
 
           <!-- Legacy Only: Procedural SVG Overlay (Disabled in Modes A, B & C) -->
           <div class="fp-scene-svg-wrap" id="fp-scene-svg-wrap"></div>
+        </div>
+
+        <!-- Layer 1b: Phase 8 2D Top-Down Camera Viewport Stage -->
+        <div class="topdown-map-stage" id="topdown-map-stage">
+          <canvas class="topdown-map-canvas" id="topdown-map-canvas" aria-label="Goblin Forest Top-Down World View"></canvas>
         </div>
 
         <div class="fp-scene-vignette"></div>
@@ -554,29 +562,33 @@
 
             <div class="dm-pad-spacer" aria-hidden="true"></div>
           </div>
+        </div>
 
-          <!-- Simplified Exploration Drawer Strip: Hero, Inventory, Quests, Menu (+ Shop in Town) -->
-          <div class="dm-utility-strip" role="group" aria-label="Hero, Inventory, Quests, and Menu">
-            <button type="button" class="dm-util-btn" id="util-btn-hero" onclick="openLabModal('character')" title="Open Hero Sheet [C]">
-              <span>Hero</span>
-              <span class="util-hotkey">C</span>
-            </button>
-            <button type="button" class="dm-util-btn" id="util-btn-pack" onclick="openLabModal('backpack')" title="Open Inventory & Equipment [B]">
-              <span id="util-pack-lbl">Inventory</span>
-              <span class="util-hotkey">B</span>
-            </button>
-            <button type="button" class="dm-util-btn" id="util-btn-board" onclick="openLabModal('quests')" title="Open Quests [J]">
-              <span id="util-quests-lbl">Quests</span>
-              <span class="util-hotkey">J</span>
-            </button>
-            <button type="button" class="dm-util-btn" id="util-btn-market" onclick="openLabModal('market')" title="Open Town Shop [M]">
-              <span>Shop</span>
-              <span class="util-hotkey">M</span>
-            </button>
-            <button type="button" class="dm-util-btn" id="util-btn-menu" onclick="openLabModal('account')" title="Open Game Menu & Hero Select">
-              <span>Menu</span>
-            </button>
-          </div>
+        <!-- 4. Simplified Exploration Drawer Strip: Hero, Inventory, Quests, Map, Menu (+ Shop in Oakhaven) -->
+        <div class="dm-utility-strip" id="dm-utility-strip" role="group" aria-label="Hero, Inventory, Quests, Map, and Menu">
+          <button type="button" class="dm-util-btn" id="util-btn-hero" onclick="openLabModal('character')" title="Open Hero Sheet [C]">
+            <span>Hero</span>
+            <span class="util-hotkey">C</span>
+          </button>
+          <button type="button" class="dm-util-btn" id="util-btn-pack" onclick="openLabModal('backpack')" title="Open Inventory &amp; Equipment [B]">
+            <span id="util-pack-lbl">Inventory</span>
+            <span class="util-hotkey">B</span>
+          </button>
+          <button type="button" class="dm-util-btn" id="util-btn-board" onclick="openLabModal('quests')" title="Open Quests &amp; Bounties [J]">
+            <span id="util-quests-lbl">Quests</span>
+            <span class="util-hotkey">J</span>
+          </button>
+          <button type="button" class="dm-util-btn" id="util-btn-map" onclick="openLabModal('map')" title="Open Region Map [M]">
+            <span>Map</span>
+            <span class="util-hotkey">M</span>
+          </button>
+          <button type="button" class="dm-util-btn" id="util-btn-market" onclick="openLabModal('market')" title="Open Oakhaven Shop">
+            <span>Shop</span>
+            <span class="util-hotkey">O</span>
+          </button>
+          <button type="button" class="dm-util-btn" id="util-btn-menu" onclick="openLabModal('account')" title="Open Game Menu &amp; Hero Select">
+            <span>Menu</span>
+          </button>
         </div>
 
       </aside>

@@ -1,29 +1,30 @@
 /**
- * DARKGRID — TOP-DOWN EXPLORATION EXPERIMENT 1
- * Comprehensive Integration, Rules & Headless Chrome Visual QA Suite
+ * DARKGRID — TOP-DOWN EXPLORATION & PHASE 8 PARITY SUITE
  *
- * Verifies all 16 criteria from Section 11:
- *   1. Game starts at the exact same Action UI entrypoint (`createLabApp`).
- *   2. Existing character system & 72-point creator work (Fighter, Ranger, Cleric).
- *   3. Town (`Oakhaven` [7,7]) navigation, free healing (`REST`), Shop (`BUY`/`SELL`).
- *   4. Quest (`The Goblin Chieftain`) states: `NOT_ACCEPTED` -> `ACTIVE` -> `COMPLETED` -> `REWARD_CLAIMED`.
- *   5. Pre-acceptance boss kill edge case: defeating the boss before accepting the quest does NOT revive the boss and allows immediate completion & reward claim.
- *   6. Travel into Goblin Forest (`Blackwood Forest`, 8x7 = 56 tiles) and back to Town.
- *   7. Grid movement (1 move = 1 tile, cardinal directions update position & facing).
- *   8. Impassable tiles (`Stonefang Crag` [6,5], `Blackwater River` [8,6], Dense Woods, outer boundary) block movement.
- *   9. Goblin Forest encounter weights (~80% Goblin, ~15% Forest Animals, ~5% Other) and pacing (not every step).
- *  10. Combat uses the full Phase 7C engine (Fighter Second Wind, Ranger Favored Enemy/Opening Shot, Cleric Divine Charges/Battle Prayer/Smite/Divine Shield).
- *  11. Goblin Stronghold boss (`Warchief Grak the Goblin Chieftain`) is at fixed landmark [7,1], does not trigger as a random encounter on step, is engaged via `ENGAGE_STRONGHOLD_BOSS`, and stays dead permanently after victory.
- *  12. Inventory, equipment, and healing potions work both in exploration and combat.
- *  13. Permadeath & Nemesis persistence rules remain intact.
+ * Verifies core top-down exploration, town, quest, stronghold boss, and Phase 7C parity
+ * on the expanded 30×30 (900-tile) Goblin Forest world.
  */
 
 const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { createLabApp } = require('../server');
-const { selectGoblinForestMonster } = require('../server/services/topdown-world-service');
+const {
+  selectGoblinForestMonster,
+  ROUTE_A_MAIN_TRAIL,
+  ROUTE_C_EASTERN_RIVER
+} = require('../server/services/topdown-world-service');
 
-describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold & Phase 7C Parity', () => {
+function stepDirection(from, to) {
+  const dx = to[0] - from[0];
+  const dy = to[1] - from[1];
+  if (dx === 0 && dy === -1) return 'NORTH';
+  if (dx === 0 && dy === 1) return 'SOUTH';
+  if (dx === 1 && dy === 0) return 'EAST';
+  if (dx === -1 && dy === 0) return 'WEST';
+  throw new Error(`Non-adjacent step from [${from}] to [${to}]`);
+}
+
+describe('Top-Down Exploration — Town, 30×30 Goblin Forest, Stronghold & Phase 7C Parity', () => {
   let server;
   let baseUrl;
   let db;
@@ -70,22 +71,22 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
     return { status: res.status, ...json };
   }
 
-  it('1. Initializes at Oakhaven [7,7] with 8x7 (56-tile) Top-Down Map and The Goblin Chieftain quest', async () => {
+  it('1. Initializes at Oakhaven [15,27] with 30x30 (900-tile) Top-Down Map and The Goblin Chieftain quest', async () => {
     const state = await getState();
     assert.equal(state.mode, 'CITY');
     assert.equal(state.isSafeCity, true);
     assert.equal(state.currentTile.name, 'Oakhaven');
-    assert.equal(state.currentTile.x, 7);
-    assert.equal(state.currentTile.y, 7);
+    assert.equal(state.currentTile.x, 15);
+    assert.equal(state.currentTile.y, 27);
 
-    // Top-down map payload has 8x7 = 56 tiles
+    // Top-down map payload has 30x30 = 900 tiles
     assert.ok(state.topdownMap, 'topdownMap payload should exist');
-    assert.equal(state.topdownMap.bounds.cols, 8);
-    assert.equal(state.topdownMap.bounds.rows, 7);
-    assert.equal(state.topdownMap.tiles.length, 56);
+    assert.equal(state.topdownMap.bounds.cols, 30);
+    assert.equal(state.topdownMap.bounds.rows, 30);
+    assert.equal(state.topdownMap.tiles.length, 900);
     assert.equal(state.topdownMap.bossSlain, false);
-    assert.deepEqual(state.topdownMap.strongholdCoord, { x: 7, y: 1 });
-    assert.deepEqual(state.topdownMap.townCoord, { x: 7, y: 7 });
+    assert.deepEqual(state.topdownMap.strongholdCoord, { x: 15, y: 2 });
+    assert.deepEqual(state.topdownMap.townCoord, { x: 15, y: 27 });
 
     // Quest initial state
     assert.ok(state.quest, 'quest payload should exist');
@@ -98,58 +99,52 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
     assert.equal(state.quest.canAccept, true);
   });
 
-  it('2. Enforces 8x7 region boundaries and impassable obstacles while allowing multi-path forest navigation', async () => {
+  it('2. Enforces 30x30 region boundaries and impassable obstacles while allowing multi-path forest navigation', async () => {
     const resetRes = await postAction('LAB_SCENARIO', { scenario: 'RESET_WORLD' });
-    if (!resetRes.ok) console.error('RESET_WORLD ERROR:', resetRes.error);
     assert.equal(resetRes.ok, true);
 
-    // Moving South from Oakhaven [7,7] to [7,8] is outside the 8x7 experiment region and must be blocked
+    // Moving South from Oakhaven [15,27] into Southern Border Woods [15,28] is impassable and must be blocked
     const southBlocked = await postAction('MOVE', { direction: 'SOUTH' });
     assert.equal(southBlocked.ok, false);
-    assert.equal(southBlocked.state.currentTile.x, 7);
-    assert.equal(southBlocked.state.currentTile.y, 7);
+    assert.equal(southBlocked.state.currentTile.x, 15);
+    assert.equal(southBlocked.state.currentTile.y, 27);
 
-    // Move North from Oakhaven [7,7] -> Oakhaven North Gate [7,6] (1 move = 1 tile)
+    // Move North from Oakhaven [15,27] -> Oakhaven North Gate [15,26] (1 move = 1 tile)
     const stepGate = await postAction('MOVE', { direction: 'NORTH', testForceEncounter: false });
     assert.equal(stepGate.ok, true);
-    assert.equal(stepGate.state.currentTile.x, 7);
-    assert.equal(stepGate.state.currentTile.y, 6);
+    assert.equal(stepGate.state.currentTile.x, 15);
+    assert.equal(stepGate.state.currentTile.y, 26);
     assert.equal(stepGate.state.facing, 'NORTH');
 
-    // Move North to Blackwood Crossroads [7,5]
+    // Move North to King's Road South [15,25] -> [15,24] -> Blackwood Crossroads [15,23]
+    await postAction('MOVE', { direction: 'NORTH', testForceEncounter: false });
+    await postAction('MOVE', { direction: 'NORTH', testForceEncounter: false });
     const stepCross = await postAction('MOVE', { direction: 'NORTH', testForceEncounter: false });
     assert.equal(stepCross.ok, true);
-    assert.equal(stepCross.state.currentTile.x, 7);
-    assert.equal(stepCross.state.currentTile.y, 5);
+    assert.equal(stepCross.state.currentTile.x, 15);
+    assert.equal(stepCross.state.currentTile.y, 23);
+    assert.equal(stepCross.state.currentTile.name, 'Blackwood Crossroads');
 
-    // Move West into Stonefang Crag [6,5] (Impassable MOUNTAINS) -> Blocked!
-    const cragBlocked = await postAction('MOVE', { direction: 'WEST', testForceEncounter: false });
-    assert.equal(cragBlocked.ok, false);
-    assert.equal(cragBlocked.state.currentTile.x, 7);
-    assert.equal(cragBlocked.state.currentTile.y, 5);
+    // Move West from Crossroads [15,23] along the Western Trail [14,23] -> [13,23] -> [12,23] -> [12,22], then try North into Stonefang Crag [12,21] -> Blocked!
+    await postAction('MOVE', { direction: 'WEST', testForceEncounter: false });
+    await postAction('MOVE', { direction: 'WEST', testForceEncounter: false });
+    await postAction('MOVE', { direction: 'WEST', testForceEncounter: false });
+    const stepBeforeCrag = await postAction('MOVE', { direction: 'NORTH', testForceEncounter: false });
+    assert.equal(stepBeforeCrag.ok, true);
+    assert.equal(stepBeforeCrag.state.currentTile.x, 12);
+    assert.equal(stepBeforeCrag.state.currentTile.y, 22);
 
-    // Take the Western Bypass Trail: South to [7,6] -> West to [6,6] -> West to [5,6] -> North to [5,5] -> North to [5,4]
-    const backToGate = await postAction('MOVE', { direction: 'SOUTH', testForceEncounter: false });
-    assert.equal(backToGate.ok, true);
-    const westEdge = await postAction('MOVE', { direction: 'WEST', testForceEncounter: false });
-    assert.equal(westEdge.ok, true);
-    assert.equal(westEdge.state.currentTile.x, 6);
-    assert.equal(westEdge.state.currentTile.y, 6);
-    assert.equal(westEdge.state.facing, 'WEST');
+    const cragBlocked = await postAction('MOVE', { direction: 'NORTH', testForceEncounter: false });
+    assert.equal(cragBlocked.ok, false, 'Stonefang Crag [12,21] must block movement');
+    assert.equal(cragBlocked.state.currentTile.x, 12);
+    assert.equal(cragBlocked.state.currentTile.y, 22);
 
-    const westTrail = await postAction('MOVE', { direction: 'WEST', testForceEncounter: false });
-    assert.equal(westTrail.ok, true);
-    assert.equal(westTrail.state.currentTile.x, 5);
-    assert.equal(westTrail.state.currentTile.y, 6);
-
-    // Return to Oakhaven [7,7]
-    await postAction('MOVE', { direction: 'EAST', testForceEncounter: false });
-    await postAction('MOVE', { direction: 'EAST', testForceEncounter: false });
-    const inTown = await postAction('MOVE', { direction: 'SOUTH', testForceEncounter: false });
+    // Return to Oakhaven [15,27]
+    const inTown = await postAction('TELEPORT_TO_TILE', { x: 15, y: 27, facing: 'NORTH' });
     assert.equal(inTown.ok, true);
     assert.equal(inTown.state.isSafeCity, true);
-    assert.equal(inTown.state.currentTile.x, 7);
-    assert.equal(inTown.state.currentTile.y, 7);
+    assert.equal(inTown.state.currentTile.x, 15);
+    assert.equal(inTown.state.currentTile.y, 27);
   });
 
   it('3. Verifies Goblin Forest encounter distribution (~80% Goblin, ~15% Forest Animals, ~5% Other)', () => {
@@ -159,7 +154,6 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
     const totalSamples = 1000;
 
     for (let i = 0; i < totalSamples; i++) {
-      // Deterministic pseudo-random generator over [0, 1)
       const u1 = ((i * 9301 + 49297) % 233280) / 233280;
       const u2 = (((i + 77) * 9301 + 49297) % 233280) / 233280;
       let call = 0;
@@ -180,7 +174,7 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
     assert.ok(otherPct >= 2 && otherPct <= 9, `Expected ~5% other, got ${otherPct.toFixed(1)}%`);
   });
 
-  it('4. Completes full Town -> Accept Quest -> Goblin Forest -> Stronghold Boss -> Town Reward loop', async () => {
+  it('4. Completes full Town -> Accept Quest -> Route A (Main Forest Trail) -> Stronghold Boss -> Town Reward loop', async () => {
     const resetRes = await postAction('LAB_SCENARIO', { scenario: 'RESET_WORLD' });
     assert.equal(resetRes.ok, true);
 
@@ -189,18 +183,19 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
     assert.equal(acceptRes.ok, true);
     assert.equal(acceptRes.state.quest.status, 'ACTIVE');
 
-    // Travel North along the central trail to Goblin Stronghold [7,1]
-    for (let expectedY = 6; expectedY >= 1; expectedY--) {
-      const step = await postAction('MOVE', { direction: 'NORTH', testForceEncounter: false });
-      assert.equal(step.ok, true);
-      assert.equal(step.state.currentTile.x, 7);
-      assert.equal(step.state.currentTile.y, expectedY);
+    // Walk along ROUTE_A_MAIN_TRAIL from [15,27] to Goblin Stronghold [15,2]
+    for (let i = 1; i < ROUTE_A_MAIN_TRAIL.length; i++) {
+      const dir = stepDirection(ROUTE_A_MAIN_TRAIL[i - 1], ROUTE_A_MAIN_TRAIL[i]);
+      const step = await postAction('MOVE', { direction: dir, testForceEncounter: false });
+      assert.equal(step.ok, true, `Route A step ${i} (${dir}) should succeed`);
+      assert.equal(step.state.currentTile.x, ROUTE_A_MAIN_TRAIL[i][0]);
+      assert.equal(step.state.currentTile.y, ROUTE_A_MAIN_TRAIL[i][1]);
     }
 
-    // At [7,1] Goblin Stronghold: stepping onto the entrance does NOT auto-trigger a random encounter
+    // At [15,2] Goblin Stronghold: stepping onto the entrance does NOT auto-trigger a random encounter
     const atStronghold = await getState();
-    assert.equal(atStronghold.currentTile.x, 7);
-    assert.equal(atStronghold.currentTile.y, 1);
+    assert.equal(atStronghold.currentTile.x, 15);
+    assert.equal(atStronghold.currentTile.y, 2);
     assert.equal(atStronghold.currentTile.name, 'Goblin Stronghold');
     assert.equal(atStronghold.encounter, null);
     assert.equal(atStronghold.topdownMap.bossSlain, false);
@@ -211,6 +206,7 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
     assert.equal(engageBoss.state.mode, 'IN_COMBAT');
     assert.ok(engageBoss.state.encounter, 'Boss encounter should be active');
     assert.match(engageBoss.state.encounter.monsterName, /Warchief Grak|Goblin/i);
+    assert.equal(engageBoss.state.encounter.imageUrl, '/images/monsters/goblin.png', 'Boss uses Goblin portrait');
 
     // Boost hero strength & HP in DB to guarantee a clean victory over the Chieftain
     const heroId = engageBoss.state.character.id;
@@ -225,25 +221,24 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
       const atk = await postAction('ATTACK');
       assert.equal(atk.ok, true);
       combatState = atk.state;
-      // Keep HP topped up during test loop
       db.prepare('UPDATE characters SET current_hp = 60 WHERE id = ?').run(heroId);
     }
 
     assert.notEqual(combatState.mode, 'IN_COMBAT', 'Boss should be defeated');
     assert.equal(combatState.topdownMap.bossSlain, true, 'Boss should be marked slain on the world map');
     assert.equal(combatState.quest.status, 'COMPLETED', 'Quest should transition to COMPLETED');
-    assert.equal(combatState.currentTile.x, 7, 'Hero remains at [7,1] after combat');
-    assert.equal(combatState.currentTile.y, 1, 'Hero remains at [7,1] after combat');
+    assert.equal(combatState.currentTile.x, 15, 'Hero remains at [15,2] after combat');
+    assert.equal(combatState.currentTile.y, 2, 'Hero remains at [15,2] after combat');
 
     // Attempting to engage the Stronghold boss again must fail because the boss is permanently slain
     const engageAgain = await postAction('ENGAGE_STRONGHOLD_BOSS');
     assert.equal(engageAgain.ok, false);
 
-    // Travel South back to Oakhaven [7,7]
-    for (let expectedY = 2; expectedY <= 7; expectedY++) {
-      const step = await postAction('MOVE', { direction: 'SOUTH', testForceEncounter: false });
+    // Travel back along Route A to Oakhaven [15,27]
+    for (let i = ROUTE_A_MAIN_TRAIL.length - 1; i >= 1; i--) {
+      const dir = stepDirection(ROUTE_A_MAIN_TRAIL[i], ROUTE_A_MAIN_TRAIL[i - 1]);
+      const step = await postAction('MOVE', { direction: dir, testForceEncounter: false });
       assert.equal(step.ok, true);
-      assert.equal(step.state.currentTile.y, expectedY);
     }
 
     // Claim quest reward in Oakhaven
@@ -258,17 +253,13 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
     const resetRes = await postAction('LAB_SCENARIO', { scenario: 'RESET_WORLD' });
     assert.equal(resetRes.ok, true);
 
-    // Verify quest is NOT_ACCEPTED
     const initial = await getState();
     assert.equal(initial.quest.status, 'NOT_ACCEPTED');
     assert.equal(initial.topdownMap.bossSlain, false);
 
-    // Walk to Stronghold [7,1] without accepting quest
-    for (let y = 6; y >= 1; y--) {
-      await postAction('MOVE', { direction: 'NORTH', testForceEncounter: false });
-    }
+    // Teleport to Stronghold [15,2] without accepting quest
+    await postAction('TELEPORT_TO_TILE', { x: 15, y: 2, facing: 'NORTH' });
 
-    // Engage and defeat boss while quest is still NOT_ACCEPTED
     const engage = await postAction('ENGAGE_STRONGHOLD_BOSS');
     assert.equal(engage.ok, true);
     const heroId = engage.state.character.id;
@@ -283,10 +274,8 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
     assert.equal(st.quest.bossSlain, true);
     assert.equal(st.quest.status, 'NOT_ACCEPTED');
 
-    // Return to Oakhaven [7,7]
-    for (let y = 2; y <= 7; y++) {
-      await postAction('MOVE', { direction: 'SOUTH', testForceEncounter: false });
-    }
+    // Return to Oakhaven [15,27]
+    await postAction('TELEPORT_TO_TILE', { x: 15, y: 27, facing: 'NORTH' });
 
     // Accepting the quest now immediately transitions to COMPLETED without reviving the boss
     const acceptAfterKill = await postAction('ACCEPT_QUEST');
@@ -294,7 +283,6 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
     assert.equal(acceptAfterKill.state.quest.status, 'COMPLETED');
     assert.equal(acceptAfterKill.state.topdownMap.bossSlain, true);
 
-    // Claiming reward succeeds immediately
     const claim = await postAction('CLAIM_QUEST_REWARD');
     assert.equal(claim.ok, true);
     assert.equal(claim.state.quest.status, 'REWARD_CLAIMED');
@@ -303,7 +291,6 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
   it('6. Preserves Town Rest (free healing), Shop Buy/Sell, Inventory Equip/Unequip, and Healing Potions', async () => {
     await postAction('LAB_SCENARIO', { scenario: 'RESET_WORLD' });
 
-    // Simulate wound and rest in Oakhaven
     const wound = await postAction('LAB_SCENARIO', { scenario: 'WOUNDED' });
     assert.equal(wound.ok, true);
     assert.ok(wound.state.character.current_hp < wound.state.character.max_hp);
@@ -312,7 +299,6 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
     assert.equal(restRes.ok, true);
     assert.equal(restRes.state.character.current_hp, restRes.state.character.max_hp);
 
-    // Drink healing potion when wounded outside combat
     await postAction('LAB_SCENARIO', { scenario: 'WOUNDED' });
     const beforePotions = (await getState()).potionCount;
     assert.ok(beforePotions > 0, 'Hero starts with healing potions');
@@ -320,7 +306,6 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
     assert.equal(drinkRes.ok, true);
     assert.equal(drinkRes.state.potionCount, beforePotions - 1);
 
-    // Shop Buy & Inventory Equip/Unequip
     const st = await getState();
     assert.ok(st.shopStock && st.shopStock.standardItems.length > 0, 'Town shop should be stocked');
     const firstAffordable = st.shopStock.standardItems.find((item) => item.buy_price <= st.character.gold);
@@ -330,7 +315,6 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
     assert.equal(buyRes.ok, true);
     assert.equal(buyRes.state.character.gold, st.character.gold - firstAffordable.buy_price);
 
-    // Unequip and re-equip main-hand weapon
     const eqWeapon = buyRes.state.equipment.meleeWeapon;
     assert.ok(eqWeapon, 'Fighter has a melee weapon equipped');
     const unequipRes = await postAction('UNEQUIP', { itemInstanceId: eqWeapon.id });
@@ -343,18 +327,15 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
   });
 
   it('7. Preserves Phase 7C Class Abilities (Fighter Second Wind, Ranger Favored Enemy, Cleric Divine Charges/Prayer/Smite/Shield)', async () => {
-    // 7a. Cleric Divine Combat Abilities
     const switchCleric = await postAction('LAB_SCENARIO', { scenario: 'SWITCH_CLASS', classType: 'CLERIC' });
     assert.equal(switchCleric.ok, true);
     assert.equal(switchCleric.state.character.class, 'CLERIC');
     assert.ok(switchCleric.state.clericDivineInfo.currentCharges > 0, 'Cleric has Divine Charges');
 
-    // Start a Goblin combat encounter in Blackwood Forest
     const goblinCombat = await postAction('LAB_SCENARIO', { scenario: 'STAGE2_COMBAT', monsterName: 'Goblin' });
     assert.equal(goblinCombat.ok, true);
     assert.equal(goblinCombat.state.mode, 'IN_COMBAT');
     const clericId = goblinCombat.state.character.id;
-    // Give Goblin high HP so we can test Divine Shield + Battle Prayer + Smite in sequence
     db.prepare('UPDATE encounters SET current_monster_hp = 40, monster_max_hp = 40 WHERE id = ?').run(goblinCombat.state.encounter.id);
     db.prepare('UPDATE characters SET current_hp = 6 WHERE id = ?').run(clericId);
 
@@ -372,13 +353,11 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
     assert.equal(smiteRes.ok, true);
     assert.equal(smiteRes.state.clericDivineInfo.currentCharges, chargesBefore - 4);
 
-    // 7b. Ranger Favored Enemy & Ranged Stance
     const switchRanger = await postAction('LAB_SCENARIO', { scenario: 'SWITCH_CLASS', classType: 'RANGER' });
     assert.equal(switchRanger.ok, true);
     assert.equal(switchRanger.state.character.class, 'RANGER');
     assert.ok(switchRanger.state.character.favored_enemy_family, 'Ranger has a Favored Enemy family');
 
-    // 7c. Fighter Second Wind at Level 3+
     const switchFighter = await postAction('LAB_SCENARIO', { scenario: 'SWITCH_CLASS', classType: 'FIGHTER' });
     assert.equal(switchFighter.ok, true);
     assert.equal(switchFighter.state.character.class, 'FIGHTER');
@@ -391,14 +370,12 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
     await postAction('LAB_SCENARIO', { scenario: 'SWITCH_CLASS', classType: 'FIGHTER' });
     await postAction('LAB_SCENARIO', { scenario: 'RESET_WORLD' });
 
-    // Trigger combat in Goblin Forest [7,5]
     const combatStart = await postAction('LAB_SCENARIO', { scenario: 'STAGE2_COMBAT', monsterName: 'Hobgoblin' });
     assert.equal(combatStart.ok, true);
     assert.equal(combatStart.state.mode, 'IN_COMBAT');
     const doomedHeroId = combatStart.state.character.id;
     const encId = combatStart.state.encounter.id;
 
-    // Set hero to 1 HP and AC 1, and boost monster attack/HP so the monster slays the hero
     db.prepare('UPDATE characters SET current_hp = 1, dexterity = 4 WHERE id = ?').run(doomedHeroId);
     db.prepare('UPDATE encounters SET current_monster_hp = 50, monster_max_hp = 50 WHERE id = ?').run(encId);
 
@@ -413,47 +390,38 @@ describe('Top-Down Exploration Experiment 1 — Town, Goblin Forest, Stronghold 
     assert.equal(st.fallen.id, doomedHeroId);
     assert.equal(st.fallen.is_alive, 0);
 
-    // Verify a persistent Nemesis monster_instance was created/updated on the tile
     const nemesisRow = db.prepare('SELECT * FROM monster_instances WHERE id = ?').get(st.fallen.killed_by_monster_instance_id);
     assert.ok(nemesisRow, 'Persistent Nemesis monster instance should exist in DB');
     assert.equal(nemesisRow.status, 'ACTIVE');
     assert.ok(nemesisRow.kill_count >= 1, 'Nemesis kill_count should be incremented');
 
-    // Revive a new hero in Oakhaven and reset world for clean state
     const reviveRes = await postAction('REVIVE', { classType: 'FIGHTER' });
     assert.equal(reviveRes.ok, true);
     assert.equal(reviveRes.state.mode, 'CITY');
     await postAction('LAB_SCENARIO', { scenario: 'RESET_WORLD' });
   });
 
-  it('9. Verifies Eastern Ravine & Old Log Crossing [9,3] route, blocks mid-combat ENGAGE_STRONGHOLD_BOSS exploit, and attaches combatSequence', async () => {
+  it('9. Verifies Eastern River Route (Old Stone Bridge [19,25] & Old Log Crossing [20,9]), blocks mid-combat ENGAGE_STRONGHOLD_BOSS exploit, and attaches combatSequence', async () => {
     await postAction('LAB_SCENARIO', { scenario: 'RESET_WORLD' });
 
-    // Walk the Eastern Route: [7,7] -> [8,7] Stone Bridge -> [9,7] Watchpost -> [9,6] Lower Ravine -> [10,6] -> [10,5] -> [10,4] -> [10,3] -> [9,3] Old Log Crossing -> [8,3] -> [7,3]
-    const easternSteps = ['EAST', 'EAST', 'NORTH', 'EAST', 'NORTH', 'NORTH', 'NORTH', 'WEST', 'WEST', 'WEST'];
-    const expectedCoords = [
-      [8, 7], [9, 7], [9, 6], [10, 6], [10, 5], [10, 4], [10, 3], [9, 3], [8, 3], [7, 3]
-    ];
-
-    for (let i = 0; i < easternSteps.length; i++) {
-      const stepRes = await postAction('MOVE', { direction: easternSteps[i], testForceEncounter: false });
-      assert.equal(stepRes.ok, true, `Step ${i} (${easternSteps[i]}) should be passable`);
-      assert.equal(stepRes.state.currentTile.x, expectedCoords[i][0]);
-      assert.equal(stepRes.state.currentTile.y, expectedCoords[i][1]);
+    // Walk along ROUTE_C_EASTERN_RIVER from [15,27] across Old Stone Bridge [19,25] and Old Log Crossing [20,9] to [15,2]
+    for (let i = 1; i < ROUTE_C_EASTERN_RIVER.length; i++) {
+      const dir = stepDirection(ROUTE_C_EASTERN_RIVER[i - 1], ROUTE_C_EASTERN_RIVER[i]);
+      const stepRes = await postAction('MOVE', { direction: dir, testForceEncounter: false });
+      assert.equal(stepRes.ok, true, `Route C step ${i} (${dir}) should be passable`);
+      assert.equal(stepRes.state.currentTile.x, ROUTE_C_EASTERN_RIVER[i][0]);
+      assert.equal(stepRes.state.currentTile.y, ROUTE_C_EASTERN_RIVER[i][1]);
     }
 
-    // Verify [9,4] and [9,5] are impassable river tiles in topdownMap
-    const stateAtOak = await getState();
-    const tile94 = stateAtOak.topdownMap.tiles.find((t) => t.x === 9 && t.y === 4);
-    const tile95 = stateAtOak.topdownMap.tiles.find((t) => t.x === 9 && t.y === 5);
-    assert.equal(tile94.isPassable, false);
-    assert.equal(tile95.isPassable, false);
+    // Verify non-bridge river tiles [19,24] and [20,8] are impassable river tiles in topdownMap
+    const st = await getState();
+    const river1 = st.topdownMap.tiles.find((t) => t.x === 19 && t.y === 24);
+    const river2 = st.topdownMap.tiles.find((t) => t.x === 20 && t.y === 8);
+    assert.equal(river1.isPassable, false);
+    assert.equal(river2.isPassable, false);
+    assert.equal(st.currentTile.x, 15);
+    assert.equal(st.currentTile.y, 2);
 
-    // Move North to [7,2] -> [7,1] Goblin Stronghold
-    await postAction('MOVE', { direction: 'NORTH', testForceEncounter: false });
-    await postAction('MOVE', { direction: 'NORTH', testForceEncounter: false });
-
-    // Engage boss and verify combatSequence is attached and calling ENGAGE_STRONGHOLD_BOSS again mid-combat is rejected
     const engage = await postAction('ENGAGE_STRONGHOLD_BOSS');
     assert.equal(engage.ok, true);
     assert.ok(engage.state.combatSequence, 'ENGAGE_STRONGHOLD_BOSS should attach combatSequence');

@@ -16,7 +16,12 @@ const {
   isAuthRequired,
   ensureNonDestructiveLabAdapter
 } = require('./legacy-compatibility-service');
-const { applyTopdownExperimentWorld, ensureStrongholdBossInstance } = require('./topdown-world-service');
+const {
+  applyTopdownExperimentWorld,
+  ensureStrongholdBossInstance,
+  recordTileDiscovery,
+  syncCharacterQuestState
+} = require('./topdown-world-service');
 
 const DATA_DIR = path.join(__dirname, '../../data');
 const DEFAULT_DB_PATH = path.join(DATA_DIR, 'action_lab.sqlite');
@@ -135,6 +140,8 @@ function ensureLivingHero(db, userId, classOverride = null, sceneModeOverride = 
     hero.id
   );
   ensureStrongholdBossInstance(db, { respawnIfDefeated: true });
+  recordTileDiscovery(db, hero);
+  syncCharacterQuestState(db, hero.id);
 
   // Add one extra healing potion so the player has 3 potions to test with
   const potionDef = db.prepare("SELECT id FROM item_definitions WHERE name = 'Minor Healing Potion'").get();

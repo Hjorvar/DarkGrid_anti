@@ -52,7 +52,10 @@ function inspectSceneTile(db, tx, ty, cardinalDirection = null) {
   const art = getTerrainArtworkForTile(db, tile);
   const legacyUrl = art ? art.imageUrl : '/images/terrain/terrain_fallback.webp';
   const variant = resolveTileVariant(db, tile);
-  const resolvedUrl = variant && variant.imageUrl ? variant.imageUrl : legacyUrl;
+  const isStrongholdTile = tile.feature === 'GOBLIN_STRONGHOLD' || tile.feature === 'STRONGHOLD_BASTION';
+  const resolvedUrl = isStrongholdTile
+    ? '/images/terrain/terrain_town_gates.webp'
+    : (variant && variant.imageUrl ? variant.imageUrl : legacyUrl);
 
   const persistent = db.prepare(
     "SELECT id, kill_count, custom_title FROM monster_instances WHERE tile_id = ? AND status = 'ACTIVE'"
@@ -137,6 +140,11 @@ function buildViewportScene(db, currentTile, facing, directions, activeEncounter
   const pointOfInterest = isInCombat ? null : resolvePointOfInterest(current, ahead1, normFacing);
   for (const sc of Object.values(scenes)) {
     if (sc) {
+      if (current.feature === 'GOBLIN_STRONGHOLD') {
+        sc.imageUrl = '/images/terrain/terrain_town_gates.webp';
+        sc.primaryUrl = '/images/terrain/terrain_town_gates.webp';
+        sc.horizonUrl = '/images/terrain/terrain_forest.webp';
+      }
       sc.effectProfile = resolveAtmosphereEffectProfile(sc.atmosphereProfile, current, ahead1, normFacing);
       sc.pointOfInterest = pointOfInterest;
     }
@@ -208,6 +216,7 @@ function buildViewportScene(db, currentTile, facing, directions, activeEncounter
     facingMeta: FACING_VECTORS[normFacing],
     sceneMode: normSceneMode,
     sceneKey: activeScene ? activeScene.variantKey : null,
+    primaryUrl: activeScene ? (activeScene.imageUrl || activeScene.primaryUrl) : current.imageUrl,
     artApprovalStatus: activeScene ? activeScene.artApprovalStatus : 'APPROVED',
     candidateArtId: activeScene && activeScene.candidatePreview ? activeScene.candidatePreview.id : null,
     activeScene,

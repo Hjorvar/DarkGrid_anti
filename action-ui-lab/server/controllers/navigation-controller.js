@@ -36,6 +36,8 @@ const { inspectSceneTile } = require('../services/viewport-scene-service');
 const { buildClientState } = require('../services/client-state-service');
 const {
   isCoordInTopdownRegion,
+  recordTileDiscovery,
+  computePhase8StepEncounterChance,
   checkGoblinForestEncounter
 } = require('../services/topdown-world-service');
 
@@ -217,6 +219,7 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
             effectiveFacing,
             character.id
           );
+          recordTileDiscovery(tx, character, targetTile.x, targetTile.y);
 
           // Roll for encounter on the new tile unless safe city or Stronghold entrance
           if (!(targetTile.terrain === 'CITY' && targetTile.is_safe === 1)) {
@@ -234,7 +237,15 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
               pacingDecision = computeEncounterPacingChance(tx, character, currentTile, targetTile, {
                 bypassedPreviousEncounter: bypassedEncounter
               });
-              encounterOpts.forcedChance = pacingDecision.chancePercent;
+              const calibratedChance = computePhase8StepEncounterChance(
+                tx,
+                character,
+                currentTile,
+                targetTile,
+                pacingDecision.chancePercent
+              );
+              pacingDecision.chancePercent = calibratedChance;
+              encounterOpts.forcedChance = calibratedChance;
             }
             spawnedEncounter = checkGoblinForestEncounter(tx, character, targetTile, encounterOpts);
           } else {
@@ -363,10 +374,11 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
           targetFacing,
           character.id
         );
+        recordTileDiscovery(db, character, targetTile.x, targetTile.y);
         return res.json({
           ok: true,
           state: buildClientState(db, userId, {
-            infoMessage: `Atlas Teleport: Positioned at ${targetTile.name} [${targetTile.x}, ${targetTile.y}] Facing ${targetFacing}.`,
+            infoMessage: targetTile.description || `Arrived at ${targetTile.name}.`,
             fxCue: { type: 'STEP', moveKind: 'FORWARD' }
           })
         });

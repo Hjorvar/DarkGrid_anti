@@ -1632,7 +1632,7 @@
 }
 
 .dm-util-btn.is-town-only-away {
-  opacity: 0.72;
+  display: none !important;
 }
 
 /* Hide POI trigger wrap during Stage 1 Threat so encounter box is clean */
@@ -1640,14 +1640,18 @@
   display: none !important;
 }
 
-/* 2x2 Utility Drawer Strip so narrow right deck never clips Board [J] */
+/* 2x3 Utility Drawer Strip for Hero, Inventory, Quests, Map, Shop, Menu */
 .dm-utility-strip {
   grid-template-columns: repeat(2, 1fr);
   gap: 4px;
+  background: rgba(11, 15, 22, 0.92);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 6px;
 }
 
 /* ==========================================================================
-   TOP-DOWN EXPLORATION EXPERIMENT 1 — 2D MAP CANVAS & SIMPLIFIED EXPLORATION UI
+   PHASE 8 — 2D CAMERA VIEWPORT, FOG OF WAR & SIMPLIFIED EXPLORATION UI
    ========================================================================== */
 .topdown-map-stage {
   position: absolute;
@@ -1665,6 +1669,18 @@
   display: block;
 }
 
+.topdown-contextual-overlay {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 18;
+  display: flex;
+  justify-content: center;
+  width: 92%;
+  pointer-events: none;
+}
+
 /* In Exploration/Town mode (when not in Stage 2 combat), the 2D Top-Down Canvas is the primary view */
 .fp-viewport-frame:not(.scene-state-combat) #fp-terrain-img,
 .fp-viewport-frame:not(.scene-state-combat) #fp-terrain-img-prev,
@@ -1675,10 +1691,23 @@
   pointer-events: none !important;
 }
 
-/* In Stage 2 Combat, dim the top-down canvas into the background so the Darkgrid monster artwork & combat HUD take center stage */
+/* Section 13.3: In Stage 2 Combat, completely hide the top-down canvas so there is zero bleed-through behind combat art */
 .fp-viewport-frame.scene-state-combat .topdown-map-stage {
-  opacity: 0.14;
-  pointer-events: none;
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Section 8 & 14: Hide First-Person TURN Q/E buttons in Player Mode and hide Movement Pad during active Combat */
+.dev-mode-collapsed #pad-turn-left,
+.dev-mode-collapsed #pad-turn-right {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.ui-combat-stage2 #dm-movement-deck {
+  display: none !important;
 }
 
 /* Section 8 Simplified Exploration UI:

@@ -20,7 +20,15 @@ const { lookupMonsterSizeEntry } = require('../../monster-size-catalog');
 const { normalizeFacing } = require('../services/facing-service');
 const { ensureLivingHero } = require('../services/sandbox-db-service');
 const { buildClientState } = require('../services/client-state-service');
-const { ensureStrongholdBossInstance, STRONGHOLD_BOSS_PROFILE } = require('../services/topdown-world-service');
+const {
+  TOWN_COORD,
+  NORTH_GATE_COORD,
+  STRONGHOLD_COORD,
+  STRONGHOLD_BOSS_PROFILE,
+  ensureStrongholdBossInstance,
+  recordTileDiscovery,
+  syncCharacterQuestState
+} = require('../services/topdown-world-service');
 
 function handleAdventureScenarioAction({ db, userId, options = {}, action, payload, character, currentFacing, labToolsAllowed = false, res }) {
       // 11b. ADVENTURE EXPERIENCE ACTIONS (Isolated Lab-Only Layer — Phases 3, 5, 6, 8, 9)
@@ -251,14 +259,15 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
         db.prepare('UPDATE characters SET pending_victory_encounter_id = NULL WHERE id = ?').run(character.id);
 
         if (scenario === 'TELEPORT') {
-          const tx = Number(payload.x ?? 7);
-          const ty = Number(payload.y ?? 7);
+          const tx = Number(payload.x ?? TOWN_COORD.x);
+          const ty = Number(payload.y ?? TOWN_COORD.y);
           const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
           const targetTile = getTileByCoords(db, tx, ty);
           if (!targetTile) {
             throw new Error(`No map tile found at (${tx}, ${ty}).`);
           }
           db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(targetTile.id, targetFacing, character.id);
+          recordTileDiscovery(db, character, targetTile.x, targetTile.y);
           return res.json({
             ok: true,
             state: buildClientState(db, userId, {
@@ -269,10 +278,12 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
         }
 
         if (scenario === 'CITY') {
-          const cityTile = db.prepare("SELECT id FROM map_tiles WHERE terrain = 'CITY' AND is_safe = 1 LIMIT 1").get();
+          const cityTile = getTileByCoords(db, TOWN_COORD.x, TOWN_COORD.y)
+            || db.prepare("SELECT * FROM map_tiles WHERE terrain = 'CITY' AND is_safe = 1 LIMIT 1").get();
           const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
           if (cityTile) {
             db.prepare('UPDATE characters SET tile_id = ?, current_hp = max_hp, facing = ? WHERE id = ?').run(cityTile.id, targetFacing, character.id);
+            recordTileDiscovery(db, character, cityTile.x, cityTile.y);
           }
           return res.json({
             ok: true,
@@ -284,75 +295,128 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
         }
 
         if (scenario === 'NORTH_GATE' || scenario === 'GATE') {
-          const gateTile = getTileByCoords(db, 7, 6);
+          const gateTile = getTileByCoords(db, NORTH_GATE_COORD.x, NORTH_GATE_COORD.y);
           const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
           if (gateTile) {
             db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(gateTile.id, targetFacing, character.id);
+            recordTileDiscovery(db, character, gateTile.x, gateTile.y);
           }
           return res.json({
             ok: true,
             state: buildClientState(db, userId, {
-              infoMessage: `Positioned at Oakhaven North Gate [7, 6] Facing ${targetFacing} (North: Mirkwood Crossroads, South: Oakhaven Sanctuary).`,
+              infoMessage: `Positioned at Oakhaven North Gate [${NORTH_GATE_COORD.x}, ${NORTH_GATE_COORD.y}] Facing ${targetFacing}.`,
               fxCue: { type: 'STEP', moveKind: 'FORWARD' }
             })
           });
         }
 
         if (scenario === 'BRIDGE') {
-          const bridgeTile = getTileByCoords(db, 8, 7);
+          const bridgeTile = getTileByCoords(db, 19, 25);
           const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'EAST';
           if (bridgeTile) {
             db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(bridgeTile.id, targetFacing, character.id);
+            recordTileDiscovery(db, character, bridgeTile.x, bridgeTile.y);
           }
           return res.json({
             ok: true,
             state: buildClientState(db, userId, {
-              infoMessage: `Positioned at The Old Stone Bridge [8, 7] Facing ${targetFacing} (East: Watchpost, West: Oakhaven, N/S: Blackwater River).`,
+              infoMessage: `Positioned at The Old Stone Bridge [19, 25] Facing ${targetFacing} (East: Abandoned Watchpost, West: Oakhaven, N/S: Blackwater River).`,
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
+        if (scenario === 'WATCHPOST' || scenario === 'ABANDONED_WATCHPOST') {
+          const wpTile = getTileByCoords(db, 21, 25);
+          const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
+          if (wpTile) {
+            db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(wpTile.id, targetFacing, character.id);
+            recordTileDiscovery(db, character, wpTile.x, wpTile.y);
+          }
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: `Positioned at Abandoned Watchpost [21, 25] Facing ${targetFacing}.`,
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
+        if (scenario === 'BROKEN_SHRINE' || scenario === 'SHRINE') {
+          const shrineTile = getTileByCoords(db, 7, 17);
+          const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
+          if (shrineTile) {
+            db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(shrineTile.id, targetFacing, character.id);
+            recordTileDiscovery(db, character, shrineTile.x, shrineTile.y);
+          }
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: `Positioned at The Broken Shrine [7, 17] Facing ${targetFacing}.`,
               fxCue: { type: 'STEP', moveKind: 'FORWARD' }
             })
           });
         }
 
         if (scenario === 'ANCIENT_OAK' || scenario === 'OAK') {
-          const oakTile = getTileByCoords(db, 7, 3);
+          const oakTile = getTileByCoords(db, 15, 15);
           const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
           if (oakTile) {
             db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(oakTile.id, targetFacing, character.id);
+            recordTileDiscovery(db, character, oakTile.x, oakTile.y);
           }
           return res.json({
             ok: true,
             state: buildClientState(db, userId, {
-              infoMessage: `Positioned at The Primeval Black Oak [7, 3] Facing ${targetFacing}.`,
+              infoMessage: `Positioned at Ancient Black Oak [15, 15] Facing ${targetFacing}.`,
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
+        if (scenario === 'HUNTING_GROUNDS' || scenario === 'GOBLIN_HUNTING_GROUNDS') {
+          const hgTile = getTileByCoords(db, 15, 9);
+          const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
+          if (hgTile) {
+            db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(hgTile.id, targetFacing, character.id);
+            recordTileDiscovery(db, character, hgTile.x, hgTile.y);
+          }
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: `Positioned at Goblin Hunting Grounds [15, 9] Facing ${targetFacing}.`,
               fxCue: { type: 'STEP', moveKind: 'FORWARD' }
             })
           });
         }
 
         if (scenario === 'DEADMANS_MIRE' || scenario === 'MIRE') {
-          const mireTile = getTileByCoords(db, 4, 11);
+          const mireTile = getTileByCoords(db, 7, 17);
           const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
           if (mireTile) {
             db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(mireTile.id, targetFacing, character.id);
+            recordTileDiscovery(db, character, mireTile.x, mireTile.y);
           }
           return res.json({
             ok: true,
             state: buildClientState(db, userId, {
-              infoMessage: `Positioned at Deadman’s Mire Sunken Ruins [4, 11] Facing ${targetFacing}.`,
+              infoMessage: `Positioned at The Broken Shrine [7, 17] Facing ${targetFacing}.`,
               fxCue: { type: 'STEP', moveKind: 'FORWARD' }
             })
           });
         }
 
         if (scenario === 'STRONGHOLD' || scenario === 'GOBLIN_STRONGHOLD') {
-          const shTile = getTileByCoords(db, 7, 1);
+          const shTile = getTileByCoords(db, STRONGHOLD_COORD.x, STRONGHOLD_COORD.y);
           const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
           if (shTile) {
             db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(shTile.id, targetFacing, character.id);
+            recordTileDiscovery(db, character, shTile.x, shTile.y);
           }
           return res.json({
             ok: true,
             state: buildClientState(db, userId, {
-              infoMessage: 'Positioned at Goblin Stronghold Gate [7, 1].',
+              infoMessage: `Positioned at Goblin Stronghold Gate [${STRONGHOLD_COORD.x}, ${STRONGHOLD_COORD.y}].`,
               fxCue: { type: 'STEP', moveKind: 'FORWARD' }
             })
           });
@@ -361,33 +425,41 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
         if (scenario === 'RESET_WORLD') {
           db.prepare("UPDATE monster_instances SET status = 'DEFEATED' WHERE status = 'ACTIVE'").run();
           db.prepare("UPDATE encounters SET status = 'ESCAPED' WHERE status IN ('DISCOVERED', 'IN_COMBAT')").run();
-          const cityTile = db.prepare("SELECT id FROM map_tiles WHERE terrain = 'CITY' AND is_safe = 1 LIMIT 1").get();
+          const cityTile = getTileByCoords(db, TOWN_COORD.x, TOWN_COORD.y)
+            || db.prepare("SELECT * FROM map_tiles WHERE terrain = 'CITY' AND is_safe = 1 LIMIT 1").get();
           if (cityTile) {
             db.prepare("UPDATE characters SET tile_id = ?, current_hp = max_hp, facing = 'NORTH', pending_victory_encounter_id = NULL, quest_goblin_chieftain_status = 'NOT_ACCEPTED', goblin_chieftain_slain = 0 WHERE id = ?").run(cityTile.id, character.id);
           }
+          try {
+            db.prepare('DELETE FROM character_quests WHERE character_id = ?').run(character.id);
+            db.prepare('DELETE FROM character_discovered_tiles WHERE character_id = ?').run(character.id);
+          } catch {
+            // Ignore if tables not present
+          }
           ensureStrongholdBossInstance(db, { forceRespawn: true });
+          recordTileDiscovery(db, character, TOWN_COORD.x, TOWN_COORD.y);
+          syncCharacterQuestState(db, character.id);
           resetAdventureState(character.id);
           return res.json({
             ok: true,
             state: buildClientState(db, userId, {
-              infoMessage: 'Sandbox world reset: restored Goblin Stronghold Chieftain, reset quest state, and returned to Oakhaven Sanctuary.',
+              infoMessage: 'Sandbox world reset: restored Goblin Stronghold Chieftain, reset quest & discovery state, and returned to Oakhaven Sanctuary.',
               fxCue: { type: 'HEAL' }
             })
           });
         }
 
         if (scenario === 'WILDERNESS' || scenario === 'TEST_CORRIDOR') {
-          // Place at (7, 5) Mirkwood Forest where:
-          // North = Mirkwood Forest, West = Stonefang Crag (Blocked), South = Oakhaven North Gate, East = Mirkwood Forest (toward River)
-          const wildTile = getTileByCoords(db, 7, 5) || db.prepare("SELECT * FROM map_tiles WHERE terrain = 'FOREST' AND is_safe = 0 AND is_passable = 1 LIMIT 1").get();
+          const wildTile = getTileByCoords(db, 15, 23) || db.prepare("SELECT * FROM map_tiles WHERE terrain = 'FOREST' AND is_safe = 0 AND is_passable = 1 LIMIT 1").get();
           const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
           if (wildTile) {
             db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(wildTile.id, targetFacing, character.id);
+            recordTileDiscovery(db, character, wildTile.x, wildTile.y);
           }
           return res.json({
             ok: true,
             state: buildClientState(db, userId, {
-              infoMessage: `Positioned at Mirkwood Crossroads [7, 5] Facing ${targetFacing} (Ahead: Forest, West: Crag Obstacle, South: Gate).`,
+              infoMessage: `Positioned at Blackwood Crossroads [15, 23] Facing ${targetFacing}.`,
               fxCue: { type: 'STEP', moveKind: 'FORWARD' }
             })
           });
@@ -428,20 +500,21 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
           let relocatedFromSafe = false;
           if (!tile || tile.is_safe === 1) {
             relocatedFromSafe = true;
-            tile = getTileByCoords(db, 7, 5) || db.prepare("SELECT * FROM map_tiles WHERE terrain IN ('FOREST', 'SWAMP', 'HILLS') AND is_safe = 0 AND is_passable = 1 LIMIT 1").get();
+            tile = getTileByCoords(db, 15, 23) || db.prepare("SELECT * FROM map_tiles WHERE terrain IN ('FOREST', 'SWAMP', 'HILLS') AND is_safe = 0 AND is_passable = 1 LIMIT 1").get();
           }
           const liveCharRow = db.prepare('SELECT facing FROM characters WHERE id = ?').get(character.id);
           const heroFacing = normalizeFacing((liveCharRow && liveCharRow.facing) || character.facing || 'NORTH');
           let targetFacing = 'NORTH';
           if (payload.facing) {
             targetFacing = normalizeFacing(payload.facing);
-          } else if (tile && (tile.terrain === 'BRIDGE' || (tile.x === 8 && tile.y === 7))) {
+          } else if (tile && (tile.terrain === 'BRIDGE' || (tile.x === 19 && tile.y === 25))) {
             targetFacing = (heroFacing === 'EAST' || heroFacing === 'WEST') ? heroFacing : 'EAST';
           } else if (payload.preserveFacing && !relocatedFromSafe) {
             targetFacing = heroFacing;
           }
           if (tile) {
             db.prepare('UPDATE characters SET tile_id = ?, facing = ?, current_hp = max_hp WHERE id = ?').run(tile.id, targetFacing, character.id);
+            recordTileDiscovery(db, character, tile.x, tile.y);
             // Clear any leftover persistent monster_instances on the test tile so scenario spawn is clean and predictable
             db.prepare("UPDATE monster_instances SET status = 'DEFEATED' WHERE tile_id = ? AND status = 'ACTIVE' AND (custom_title IS NULL OR custom_title != ?)").run(tile.id, STRONGHOLD_BOSS_PROFILE.customTitle);
           }

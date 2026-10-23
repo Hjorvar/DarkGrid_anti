@@ -20,14 +20,29 @@ import {
 import { renderViewportCenterStage } from '../world/scene-renderer.js';
 
 let shortcutsInitialized = false;
+let lastRepeatMoveAt = 0;
+const KEY_REPEAT_MOVE_INTERVAL_MS = 165;
 
 export function setupKeyboardShortcuts() {
   if (shortcutsInitialized) return;
   shortcutsInitialized = true;
 
   document.addEventListener('keydown', (e) => {
-    if (e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
     if (isEditableTarget(e.target)) return;
+
+    const isMoveKey = ['w', 'W', 'ArrowUp', 's', 'S', 'ArrowDown', 'a', 'A', 'ArrowLeft', 'd', 'D', 'ArrowRight'].includes(e.key);
+    if (e.repeat) {
+      if (!isMoveKey) return;
+      const now = performance.now();
+      if (now - lastRepeatMoveAt < KEY_REPEAT_MOVE_INTERVAL_MS || store.isBusy) {
+        e.preventDefault();
+        return;
+      }
+      lastRepeatMoveAt = now;
+    } else if (isMoveKey) {
+      lastRepeatMoveAt = performance.now();
+    }
 
     const backdrop = document.getElementById('lab-modal-backdrop');
     const modalOpen = backdrop && !backdrop.hidden;
@@ -81,13 +96,17 @@ export function setupKeyboardShortcuts() {
         break;
       case 'q':
       case 'Q':
-        e.preventDefault();
-        dispatchTurn('LEFT');
+        if (!store.devToolsCollapsed) {
+          e.preventDefault();
+          dispatchTurn('LEFT');
+        }
         break;
       case 'e':
       case 'E':
-        e.preventDefault();
-        dispatchTurn('RIGHT');
+        if (!store.devToolsCollapsed) {
+          e.preventDefault();
+          dispatchTurn('RIGHT');
+        }
         break;
       case ' ':
       case '1':
@@ -164,7 +183,14 @@ export function setupKeyboardShortcuts() {
       case 'm':
       case 'M':
         e.preventDefault();
-        openLabModal('market');
+        openLabModal('map');
+        break;
+      case 'o':
+      case 'O':
+        if (store.currentState && store.currentState.isSafeCity) {
+          e.preventDefault();
+          openLabModal('market');
+        }
         break;
       case 'j':
       case 'J':

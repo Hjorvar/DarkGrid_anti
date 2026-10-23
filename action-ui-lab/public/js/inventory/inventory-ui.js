@@ -153,7 +153,7 @@ export function renderMarketModal(titleEl, bodyEl, hero) {
   if (!st.isSafeCity || !st.shopStock) {
     bodyEl.innerHTML = `
       <div class="lab-item-row">
-        <span>Return to Oakhaven Sanctuary [7,7] to trade with the Quartermaster and inspect the Global Magical Resale Market.</span>
+        <span>Return to Oakhaven Sanctuary to trade with the Quartermaster and inspect the Global Magical Resale Market.</span>
         ${st.labToolsAllowed ? `<button type="button" class="btn-action-gold" onclick="triggerLabScenario('CITY')">Teleport to Oakhaven</button>` : ''}
       </div>
     `;
@@ -289,22 +289,20 @@ export function renderMarketModal(titleEl, bodyEl, hero) {
   bodyEl.innerHTML = `${tabHeaderHtml}${filterBarHtml}${rowsHtml}`;
 }
 
-export function renderBountiesModal(titleEl, bodyEl) {
-  titleEl.textContent = `🎯 The Watcher's Board & Wilderness Intelligence`;
+export function renderBountiesSectionHtml() {
   const st = store.currentState || {};
-  if (!st.isSafeCity) {
-    bodyEl.innerHTML = `
-      <div class="lab-item-row">
-        <span>Visit Oakhaven Sanctuary [7,7] to inspect hunting contracts and wilderness threat reports.</span>
-        ${st.labToolsAllowed ? `<button type="button" class="btn-action-gold" onclick="triggerLabScenario('CITY')">Teleport to Oakhaven</button>` : ''}
-      </div>
-    `;
-    return;
-  }
-
+  const isSafeCity = Boolean(st.isSafeCity);
   const contracts = st.bountyContracts || [];
   const activeContract = st.activeContract || null;
   const threats = st.wildernessThreats || [];
+
+  const cityNoticeHtml = !isSafeCity ? `
+    <div class="lab-item-row" style="margin-bottom:10px; border-color:rgba(197, 160, 89, 0.35);">
+      <span style="font-size:0.78rem; color:var(--text-muted);">
+        You are currently in the wilderness. Return to <strong>Oakhaven Sanctuary</strong> to accept a new hunting warrant from The Watcher’s Board.
+      </span>
+    </div>
+  ` : '';
 
   const activeBannerHtml = activeContract ? `
     <div class="qa-card" style="border-color:var(--accent-gold); margin-bottom:10px;">
@@ -313,7 +311,7 @@ export function renderBountiesModal(titleEl, bodyEl) {
         <span class="lab-badge" style="color:#fde68a;">${escapeHtml(activeContract.status || 'ACTIVE')}</span>
       </div>
       <div class="warrant-meta-row" style="margin-top:4px;">
-        <span>🗺️ Region: <strong>${escapeHtml(activeContract.target_region || activeContract.region_name || 'Wilderness')}</strong></span>
+        <span>🗺️ Region: <strong>${escapeHtml(activeContract.target_region || activeContract.region_name || 'Blackwood Forest')}</strong></span>
         ${activeContract.custom_name ? `<span>👹 Quarry: <strong>${escapeHtml(activeContract.custom_name)}</strong> (${escapeHtml(activeContract.base_monster_name || 'Monster')})</span>` : ''}
         <span>🪙 Reward: <strong style="color:var(--accent-gold-bright); font-family:var(--font-mono);">${activeContract.reward_gold} gp</strong></span>
       </div>
@@ -328,7 +326,7 @@ export function renderBountiesModal(titleEl, bodyEl) {
 
   const contractsHtml = contracts.map(c => {
     const title = c.contract_title || c.title || `${c.custom_name || 'Quarry'} — ${c.base_monster_name || 'Target'}`;
-    const region = c.target_region || c.region_name || 'Surrounding Wilds';
+    const region = c.target_region || c.region_name || 'Blackwood Forest';
     const desc = c.contract_description || c.description || '';
     const isThisActive = c.status === 'ACTIVE' || c.status === 'ACCEPTED' || (activeContract && activeContract.id === c.id);
     return `
@@ -341,7 +339,7 @@ export function renderBountiesModal(titleEl, bodyEl) {
           </div>
           <div style="display:flex; gap:8px; align-items:center;">
             <span class="item-price-tag">🪙 ${c.reward_gold} gp</span>
-            ${c.status === 'AVAILABLE' && !activeContract ? `
+            ${c.status === 'AVAILABLE' && !activeContract && isSafeCity ? `
               <button type="button" class="btn-action-gold" style="padding: 4px 12px; font-size: 0.75rem;" onclick="dispatchAction('ACCEPT_BOUNTY', { contractId: ${c.id} })">Accept Warrant</button>
             ` : ''}
             ${isThisActive ? `
@@ -381,19 +379,25 @@ export function renderBountiesModal(titleEl, bodyEl) {
       }).join('')
     : `<div class="lab-item-row"><span style="color:var(--text-muted);">No persistent hero-slayers currently reported in the surrounding wilds.</span></div>`;
 
-  bodyEl.innerHTML = `
+  return `
+    ${cityNoticeHtml}
     ${activeBannerHtml}
     <div style="font-family:var(--font-serif); font-size:0.82rem; color:var(--accent-gold); font-weight:700; margin-bottom:6px;">
-      🎯 Section A — Daily Hunting Warrants (Up to 3 Active Postings)
+      🎯 Daily Hunting Warrants — The Watcher’s Board (Optional Contracts)
     </div>
     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">
       ${contractsHtml || '<div class="lab-item-row"><span>No hunting contracts available.</span></div>'}
     </div>
     <div style="font-family:var(--font-serif); font-size:0.82rem; color:var(--accent-gold); font-weight:700; margin-bottom:6px;">
-      🧭 Section B — Wilderness Threat Intelligence (Secrecy-Preserving Compass Bearings)
+      🧭 Wilderness Threat Intelligence (Secrecy-Preserving Compass Bearings)
     </div>
     <div style="display:flex; flex-direction:column; gap:7px;">
       ${threatsHtml}
     </div>
   `;
+}
+
+export function renderBountiesModal(titleEl, bodyEl) {
+  titleEl.textContent = `🎯 The Watcher's Board & Wilderness Intelligence`;
+  bodyEl.innerHTML = renderBountiesSectionHtml();
 }

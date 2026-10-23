@@ -136,8 +136,17 @@ export function dispatchRelativeMove(relative) {
   return dispatchAction('MOVE', { relative, direction });
 }
 
+let lastMoveDispatchedAt = 0;
+const MIN_MOVE_DISPATCH_INTERVAL_MS = 95;
+
 export function dispatchMove(direction) {
   if (!store.currentState || store.currentState.mode === 'FALLEN') return Promise.resolve();
+  if (store.isBusy) return Promise.resolve();
+  const enc = store.currentState.encounter;
+  if (enc && (enc.status === 'IN_COMBAT' || enc.isAmbush)) return Promise.resolve();
+  const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+  if (now - lastMoveDispatchedAt < MIN_MOVE_DISPATCH_INTERVAL_MS) return Promise.resolve();
+  lastMoveDispatchedAt = now;
   store.isPoiPlaqueOpen = false;
   return dispatchAction('MOVE', { direction });
 }

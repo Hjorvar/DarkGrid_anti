@@ -161,6 +161,15 @@ function handleCombatAction({ db, userId, options, action, payload, character, l
     const hpDelta = (resultState.character ? resultState.character.current_hp : prevHp) - prevHp;
 
     if (resultState.character && resultState.character.is_alive === 0) {
+      // Ensure pre-seeded Stronghold Boss receives +10% Nemesis max_hp boost on first hero kill
+      const encRow = db.prepare('SELECT monster_instance_id FROM encounters WHERE id = ?').get(activeEnc.id);
+      if (encRow && encRow.monster_instance_id) {
+        const inst = db.prepare('SELECT id, kill_count, max_hp FROM monster_instances WHERE id = ? AND status = \'ACTIVE\'').get(encRow.monster_instance_id);
+        if (inst && inst.kill_count === 1 && inst.max_hp <= 14) {
+          const boostedHp = Math.ceil(inst.max_hp * 1.10);
+          db.prepare('UPDATE monster_instances SET max_hp = ?, current_hp = ? WHERE id = ?').run(boostedHp, boostedHp, inst.id);
+        }
+      }
       recordEncounterOutcome(
         character.id,
         currentTile,

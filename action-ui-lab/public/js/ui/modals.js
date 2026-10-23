@@ -1,15 +1,29 @@
 /**
- * DARKGRID ADVENTURE LAB — Modal System (Character, Pack, Market, Bounties, Atlas, QA, Journal, Director, Help) (ES Module)
+ * DARKGRID ADVENTURE LAB — Modal System (Character, Pack, Market, Quests & Bounties, Region Map, Atlas, QA, Journal, Director, Help) (ES Module)
  */
 import { store, FACING_META } from '../state/store.js';
 import { escapeHtml, sanitizePlayerContinuityText } from './utils.js';
 import { renderCharacterModal, renderAccountAndCreatorModal } from '../character/character-ui.js';
-import { renderBackpackModal, renderMarketModal, renderBountiesModal } from '../inventory/inventory-ui.js';
+import { renderBackpackModal, renderMarketModal, renderBountiesModal, renderBountiesSectionHtml } from '../inventory/inventory-ui.js';
+import { renderRegionMapCanvas } from '../world/topdown-renderer.js';
+
+export function setQuestsModalTab(tabKey) {
+  store.currentQuestsTab = tabKey === 'BOUNTIES' ? 'BOUNTIES' : 'QUESTS';
+  if (store.currentOpenModal === 'quests' || store.currentOpenModal === 'bounties') {
+    const titleEl = document.getElementById('lab-modal-title');
+    const bodyEl = document.getElementById('lab-modal-body');
+    if (titleEl && bodyEl) renderQuestsModal(titleEl, bodyEl);
+  }
+}
 
 export function openLabModal(modalName) {
   const labAllowed = !store.currentState || store.currentState.labToolsAllowed !== false;
   if (!labAllowed && ['director', 'atlas', 'qa'].includes(modalName)) {
     return;
+  }
+  if (modalName === 'bounties') {
+    store.currentQuestsTab = 'BOUNTIES';
+    modalName = 'quests';
   }
   store.currentOpenModal = modalName;
   const backdrop = document.getElementById('lab-modal-backdrop');
@@ -27,7 +41,8 @@ export function openLabModal(modalName) {
       modalName === 'character' ||
       modalName === 'market' ||
       modalName === 'bounties' ||
-      modalName === 'quests'
+      modalName === 'quests' ||
+      modalName === 'map'
     );
   }
   backdrop.hidden = false;
@@ -47,6 +62,10 @@ export function renderModalContent(modalName) {
 
   if (modalName === 'account' || modalName === 'create-character') {
     renderAccountAndCreatorModal(titleEl, bodyEl);
+    return;
+  }
+  if (modalName === 'map') {
+    renderRegionMapModal(titleEl, bodyEl);
     return;
   }
   if (modalName === 'atlas') {
@@ -83,28 +102,145 @@ export function renderModalContent(modalName) {
     renderBackpackModal(titleEl, bodyEl);
   } else if (modalName === 'market') {
     renderMarketModal(titleEl, bodyEl, hero);
-  } else if (modalName === 'quests') {
+  } else if (modalName === 'quests' || modalName === 'bounties') {
     renderQuestsModal(titleEl, bodyEl);
-  } else if (modalName === 'bounties') {
-    renderBountiesModal(titleEl, bodyEl);
+  }
+}
+
+export function renderRegionMapModal(titleEl, bodyEl) {
+  titleEl.textContent = '🗺️ Region Map — Blackwood / Goblin Forest [M]';
+  const st = store.currentState || {};
+  const mapData = st.topdownMap || {};
+  const regionMap = mapData.regionMap || {};
+  const discoveredLandmarks = regionMap.discoveredLandmarks || [];
+  const shDiscovered = Boolean(regionMap.strongholdDiscovered);
+  const currentTileName = (st.currentTile && st.currentTile.name) || 'Oakhaven';
+
+  const landmarkRowsHtml = discoveredLandmarks.map(lm => {
+    const isStronghold = lm.landmarkKey === 'GOBLIN_STRONGHOLD';
+    const isCity = lm.landmarkKey === 'OAKHAVEN_CITY';
+    const badgeColor = isStronghold
+      ? (mapData.bossSlain ? '#86efac' : '#fca5a5')
+      : (isCity ? '#fde047' : '#e6be6e');
+    const badgeText = isStronghold
+      ? (mapData.bossSlain ? 'Stronghold Cleared' : 'Goblin Stronghold')
+      : (isCity ? 'Safe Sanctuary' : 'Discovered Landmark');
+    return `
+      <div class="qa-card" style="padding: 8px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <div>
+          <div style="font-family:var(--font-serif); font-size:0.84rem; font-weight:700; color:var(--text-heading);">
+            ${isCity ? '🏰' : (isStronghold ? '👹' : '🏛️')} ${escapeHtml(lm.name)}
+          </div>
+        </div>
+        <span class="lab-badge" style="color:${badgeColor}; border-color:${badgeColor}66; font-size:0.68rem;">
+          ${escapeHtml(badgeText)}
+        </span>
+      </div>
+    `;
+  }).join('');
+
+  bodyEl.innerHTML = `
+    <div class="atlas-summary-strip" style="margin-bottom: 12px;">
+      <div class="atlas-stat-pill">
+        <span class="stat-val" style="color:var(--accent-gold-bright);">${escapeHtml(currentTileName)}</span>
+        <span class="stat-lbl">Current Position</span>
+      </div>
+      <div class="atlas-stat-pill">
+        <span class="stat-val">${regionMap.discoveryPercent || 0}%</span>
+        <span class="stat-lbl">Forest Explored (${regionMap.discoveredPassableCount || 0}/${regionMap.totalPassableCount || 152})</span>
+      </div>
+      <div class="atlas-stat-pill">
+        <span class="stat-val">${discoveredLandmarks.length}</span>
+        <span class="stat-lbl">Landmarks Discovered</span>
+      </div>
+      <div class="atlas-stat-pill">
+        <span class="stat-val" style="color:${shDiscovered ? (mapData.bossSlain ? '#86efac' : '#fca5a5') : '#94a3b8'};">
+          ${shDiscovered ? (mapData.bossSlain ? 'Cleared' : 'Discovered') : 'Unknown'}
+        </span>
+        <span class="stat-lbl">Goblin Stronghold</span>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: minmax(0, auto) minmax(260px, 1fr); gap:16px; align-items:start;">
+      <div class="qa-card" style="padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
+        <canvas id="region-map-overview-canvas" style="border-radius:6px; box-shadow:0 8px 24px rgba(0,0,0,0.85);"></canvas>
+        <div style="display:flex; flex-wrap:wrap; gap:12px; font-size:0.70rem; color:var(--text-muted); font-family:var(--font-mono);">
+          <span>🔵 Your Hero</span>
+          <span>🟡 Oakhaven Sanctuary</span>
+          <span>🟤 Known Trails</span>
+          <span>🏛️ Landmarks</span>
+          ${shDiscovered ? '<span>🔴 Goblin Stronghold</span>' : '<span>⬛ Unexplored Forest</span>'}
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="qa-card" style="padding:12px 14px;">
+          <div style="font-family:var(--font-serif); font-size:0.86rem; font-weight:700; color:var(--accent-gold-bright); margin-bottom:6px;">
+            🧭 Known Routes Through Blackwood Forest
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px; font-size:0.76rem; color:var(--text-body); line-height:1.4;">
+            <div><strong style="color:#fde68a;">Main Forest Trail (Central):</strong> Leads North from Oakhaven North Gate through Blackwood Crossroads and the Ancient Black Oak.</div>
+            <div><strong style="color:#86efac;">Western Wilderness Route:</strong> Branches West from the Crossroads past The Broken Shrine and Old Charcoal Camp.</div>
+            <div><strong style="color:#93c5fd;">Eastern River Route:</strong> Crosses The Old Stone Bridge past the Abandoned Watchpost along the river gorge to the Old Log Crossing.</div>
+          </div>
+        </div>
+
+        <div style="font-family:var(--font-serif); font-size:0.84rem; font-weight:700; color:var(--accent-gold);">
+          🏛️ Discovered Landmarks (${discoveredLandmarks.length})
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; max-height:280px; overflow-y:auto;">
+          ${landmarkRowsHtml}
+        </div>
+      </div>
+    </div>
+  `;
+
+  const rCanvas = document.getElementById('region-map-overview-canvas');
+  if (rCanvas) {
+    renderRegionMapCanvas(rCanvas, st);
   }
 }
 
 export function renderQuestsModal(titleEl, bodyEl) {
-  titleEl.textContent = 'Quests — Oakhaven & Blackwood Forest [J]';
+  titleEl.textContent = '📜 Quests & Bounties — Oakhaven & Blackwood Forest [J]';
   const st = store.currentState || {};
-  const q = st.quest || {
-    key: 'THE_GOBLIN_CHIEFTAIN',
-    title: 'The Goblin Chieftain',
-    description: 'A goblin chieftain has taken control of an old stronghold deep within Blackwood Forest. Travelers are disappearing. Find the stronghold and defeat the chieftain.',
-    status: 'NOT_ACCEPTED',
-    statusLabel: 'Not Accepted',
-    bossSlain: false,
-    rewardGold: 100,
-    rewardXp: 120,
-    canAccept: Boolean(st.isSafeCity),
-    canClaimReward: false
-  };
+  const activeTab = store.currentQuestsTab === 'BOUNTIES' ? 'BOUNTIES' : 'QUESTS';
+  const questsList = Array.isArray(st.quests) && st.quests.length > 0
+    ? st.quests
+    : [st.quest || {
+        key: 'THE_GOBLIN_CHIEFTAIN',
+        title: 'The Goblin Chieftain',
+        description: 'A goblin chieftain has taken control of an old stronghold deep within Blackwood Forest. Travelers are disappearing. Find the stronghold and defeat the chieftain.',
+        status: 'NOT_ACCEPTED',
+        statusLabel: 'Not Accepted',
+        bossSlain: false,
+        rewardGold: 100,
+        rewardXp: 120,
+        canAccept: Boolean(st.isSafeCity),
+        canClaimReward: false
+      }];
+  const bountyContracts = st.bountyContracts || [];
+
+  const tabBarHtml = `
+    <div class="market-toolbar" style="margin-bottom: 12px;">
+      <div class="market-tab-group">
+        <button type="button" id="tab-btn-story-quests" class="lab-btn ${activeTab === 'QUESTS' ? 'is-active-mode' : ''}" onclick="setQuestsModalTab('QUESTS')">
+          📜 Quests (${questsList.length})
+        </button>
+        <button type="button" id="tab-btn-bounties" class="lab-btn ${activeTab === 'BOUNTIES' ? 'is-active-mode' : ''}" onclick="setQuestsModalTab('BOUNTIES')">
+          🎯 Bounties (${bountyContracts.length})
+        </button>
+      </div>
+      <span style="font-size:0.75rem; color:var(--text-muted);">
+        ${activeTab === 'QUESTS' ? 'Story & Regional Quests' : 'The Watcher’s Board Hunting Warrants'}
+      </span>
+    </div>
+  `;
+
+  if (activeTab === 'BOUNTIES') {
+    bodyEl.innerHTML = `${tabBarHtml}${renderBountiesSectionHtml()}`;
+    return;
+  }
 
   const statusColorMap = {
     NOT_ACCEPTED: '#94a3b8',
@@ -112,82 +248,86 @@ export function renderQuestsModal(titleEl, bodyEl) {
     COMPLETED: '#86efac',
     REWARD_CLAIMED: '#60a5fa'
   };
-  const badgeColor = statusColorMap[q.status] || '#fde68a';
 
-  let actionSectionHtml = '';
-  if (q.status === 'NOT_ACCEPTED') {
-    if (st.isSafeCity) {
+  const questsCardsHtml = questsList.map(q => {
+    const badgeColor = statusColorMap[q.status] || '#fde68a';
+    let actionSectionHtml = '';
+    if (q.status === 'NOT_ACCEPTED') {
+      if (st.isSafeCity) {
+        actionSectionHtml = `
+          <button type="button" class="btn-action-gold" id="modal-btn-accept-quest" style="padding: 7px 16px; font-size: 0.82rem;" onclick="dispatchAction('ACCEPT_QUEST', { questKey: '${escapeHtml(q.key || 'THE_GOBLIN_CHIEFTAIN')}' })">
+            ${q.bossSlain ? 'Report Chieftain Slain & Accept Quest' : `Accept Quest: ${escapeHtml(q.title)}`}
+          </button>
+        `;
+      } else {
+        actionSectionHtml = `
+          <div style="font-size: 0.78rem; color: var(--text-muted);">
+            Return to <strong>Oakhaven Sanctuary</strong> to formally accept this quest from Captain Vane (or venture North to the <strong>Goblin Stronghold</strong>).
+          </div>
+        `;
+      }
+    } else if (q.status === 'ACTIVE') {
       actionSectionHtml = `
-        <button type="button" class="btn-action-gold" id="modal-btn-accept-quest" style="padding: 7px 16px; font-size: 0.82rem;" onclick="dispatchAction('ACCEPT_QUEST')">
-          ${q.bossSlain ? 'Report Chieftain Slain & Accept Quest' : 'Accept Quest: The Goblin Chieftain'}
-        </button>
-      `;
-    } else {
-      actionSectionHtml = `
-        <div style="font-size: 0.78rem; color: var(--text-muted);">
-          Return to <strong>Oakhaven Sanctuary [7, 7]</strong> to formally accept this quest from Captain Vane (or venture directly to the Goblin Stronghold at <strong>[7, 1]</strong>).
+        <div style="font-size: 0.80rem; color: #fde68a;">
+          <strong>Objective:</strong> Travel North through Blackwood Forest along the forest trails to the <strong>Goblin Stronghold</strong> and defeat <strong>Warchief Grak the Goblin Chieftain</strong>.
         </div>
       `;
-    }
-  } else if (q.status === 'ACTIVE') {
-    actionSectionHtml = `
-      <div style="font-size: 0.80rem; color: #fde68a;">
-        <strong>Objective:</strong> Travel North through Blackwood Forest to the <strong>Goblin Stronghold [7, 1]</strong> and defeat <strong>Warchief Grak the Goblin Chieftain</strong>.
-      </div>
-    `;
-  } else if (q.status === 'COMPLETED') {
-    if (st.isSafeCity) {
-      actionSectionHtml = `
-        <button type="button" class="btn-action-gold" id="modal-btn-claim-quest-reward" style="padding: 7px 16px; font-size: 0.82rem;" onclick="dispatchAction('CLAIM_QUEST_REWARD')">
-          Claim Reward (+${q.rewardGold} Gold, +${q.rewardXp} XP)
-        </button>
-      `;
-    } else {
+    } else if (q.status === 'COMPLETED') {
+      if (st.isSafeCity) {
+        actionSectionHtml = `
+          <button type="button" class="btn-action-gold" id="modal-btn-claim-quest-reward" style="padding: 7px 16px; font-size: 0.82rem;" onclick="dispatchAction('CLAIM_QUEST_REWARD', { questKey: '${escapeHtml(q.key || 'THE_GOBLIN_CHIEFTAIN')}' })">
+            Claim Reward (+${q.rewardGold} Gold, +${q.rewardXp} XP)
+          </button>
+        `;
+      } else {
+        actionSectionHtml = `
+          <div style="font-size: 0.80rem; color: #86efac; font-weight: 600;">
+            Warchief Grak is slain! Return South to <strong>Oakhaven Sanctuary</strong> to claim your reward (+${q.rewardGold} Gold &amp; +${q.rewardXp} XP).
+          </div>
+        `;
+      }
+    } else if (q.status === 'REWARD_CLAIMED') {
       actionSectionHtml = `
         <div style="font-size: 0.80rem; color: #86efac; font-weight: 600;">
-          Warchief Grak is slain! Return South to <strong>Oakhaven Sanctuary [7, 7]</strong> to claim your reward (+${q.rewardGold} Gold &amp; +${q.rewardXp} XP).
+          Quest Complete &amp; Reward Claimed — Oakhaven honors your victory over the Goblin Stronghold!
         </div>
       `;
     }
-  } else if (q.status === 'REWARD_CLAIMED') {
-    actionSectionHtml = `
-      <div style="font-size: 0.80rem; color: #86efac; font-weight: 600;">
-        Quest Complete &amp; Reward Claimed — Oakhaven honors your victory over the Goblin Stronghold!
+
+    return `
+      <div class="qa-card" style="padding: 16px 18px; border-color: var(--border-gold);">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px; margin-bottom: 12px;">
+          <div>
+            <div style="font-family: var(--font-serif); font-size: 1.05rem; font-weight: 800; color: var(--accent-gold-bright);">
+              ${escapeHtml(q.title)}
+            </div>
+            <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">
+              Given by ${escapeHtml(q.giverName || 'Captain Vane')} • ${escapeHtml(q.giverLocation || 'Oakhaven Sanctuary')} • Target: ${escapeHtml(q.targetLocation || 'Goblin Stronghold')}
+            </div>
+          </div>
+          <span class="lab-badge" id="quest-status-badge" style="font-size: 0.75rem; padding: 4px 10px; color: ${badgeColor}; border-color: ${badgeColor};">
+            Status: ${escapeHtml(q.statusLabel)}
+          </span>
+        </div>
+
+        <p style="font-size: 0.86rem; color: var(--text-body); line-height: 1.5; font-style: italic; margin: 0 0 14px 0; padding: 10px 14px; background: rgba(9, 12, 18, 0.65); border-left: 3px solid var(--accent-gold); border-radius: 4px;">
+          “${escapeHtml(q.description)}”
+        </p>
+
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; font-family: var(--font-mono); font-size: 0.80rem;">
+          <span style="color: var(--accent-gold-bright);">Reward: <strong>+${q.rewardGold} Gold</strong></span>
+          <span style="color: #93c5fd;">Experience: <strong>+${q.rewardXp} XP</strong></span>
+          <span style="color: ${q.bossSlain ? '#86efac' : '#fca5a5'};">Stronghold Chieftain: <strong>${q.bossSlain ? 'Defeated' : 'Alive in Northern Stronghold'}</strong></span>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--border-subtle);">
+          ${actionSectionHtml}
+        </div>
       </div>
     `;
-  }
+  }).join('');
 
-  bodyEl.innerHTML = `
-    <div class="qa-card" style="padding: 16px 18px; border-color: var(--border-gold);">
-      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px; margin-bottom: 12px;">
-        <div>
-          <div style="font-family: var(--font-serif); font-size: 1.05rem; font-weight: 800; color: var(--accent-gold-bright);">
-            ${escapeHtml(q.title)}
-          </div>
-          <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">
-            Given by Captain Vane • Oakhaven Sanctuary [7, 7] • Target: Goblin Stronghold [7, 1]
-          </div>
-        </div>
-        <span class="lab-badge" id="quest-status-badge" style="font-size: 0.75rem; padding: 4px 10px; color: ${badgeColor}; border-color: ${badgeColor};">
-          Status: ${escapeHtml(q.statusLabel)}
-        </span>
-      </div>
-
-      <p style="font-size: 0.86rem; color: var(--text-body); line-height: 1.5; font-style: italic; margin: 0 0 14px 0; padding: 10px 14px; background: rgba(9, 12, 18, 0.65); border-left: 3px solid var(--accent-gold); border-radius: 4px;">
-        “${escapeHtml(q.description)}”
-      </p>
-
-      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; font-family: var(--font-mono); font-size: 0.80rem;">
-        <span style="color: var(--accent-gold-bright);">Reward: <strong>+${q.rewardGold} Gold</strong></span>
-        <span style="color: #93c5fd;">Experience: <strong>+${q.rewardXp} XP</strong></span>
-        <span style="color: ${q.bossSlain ? '#86efac' : '#fca5a5'};">Stronghold Chieftain: <strong>${q.bossSlain ? 'Defeated' : 'Alive at [7, 1]'}</strong></span>
-      </div>
-
-      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--border-subtle);">
-        ${actionSectionHtml}
-      </div>
-    </div>
-  `;
+  bodyEl.innerHTML = `${tabBarHtml}${questsCardsHtml}`;
 }
 
 export function selectAtlasTile(x, y) {
@@ -645,7 +785,7 @@ export function renderDirectorModal(titleEl, bodyEl) {
         <div class="qa-card-title"><span>⚡ Core Scenario Staging</span></div>
         <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
           <button type="button" class="btn-action-gold" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('CITY'); closeLabModal();">🏰 Oakhaven Safe City</button>
-          <button type="button" class="btn-action-stone" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('WILDERNESS'); closeLabModal();">🌲 Forest Trail [7,6]</button>
+          <button type="button" class="btn-action-stone" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('WILDERNESS'); closeLabModal();">🌲 Forest Trail</button>
           <button type="button" class="btn-action-stone" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('SHADOW'); closeLabModal();">👁️ Shadow in Mist</button>
           <button type="button" class="btn-action-gold" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('COMBAT'); closeLabModal();">⚔️ Stage Active Combat</button>
           <button type="button" class="btn-action-stone" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('WOUNDED'); closeLabModal();">🩸 Critical HP (3 HP)</button>
@@ -719,52 +859,50 @@ export function renderHelpModal(titleEl, bodyEl) {
   titleEl.textContent = '❓ Controls, Tactical Guide & Keyboard Shortcuts [?]';
   bodyEl.innerHTML = `
     <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:6px;">
-      Darkgrid Adventure Lab can be played entirely with the mouse or with rapid first-person keyboard controls.
+      Darkgrid can be played entirely with the mouse (clicking adjacent tiles or directional buttons) or with keyboard controls.
     </div>
 
     <div class="director-modal-grid" id="help-controls-grid">
       <div class="qa-card">
-        <div class="qa-card-title"><span>🧭 First-Person Navigation</span></div>
+        <div class="qa-card-title"><span>🧭 Top-Down World Navigation</span></div>
         <div style="display:flex; flex-direction:column; gap:5px; font-size:0.76rem; color:var(--text-body); margin-top:4px;">
-          <div><kbd class="help-kbd">W</kbd> / <kbd class="help-kbd">↑</kbd> — Step Forward (relative to hero facing)</div>
-          <div><kbd class="help-kbd">S</kbd> / <kbd class="help-kbd">↓</kbd> — Step Backward (retreat one tile)</div>
-          <div><kbd class="help-kbd">A</kbd> / <kbd class="help-kbd">←</kbd> — Turn 90° Counter-Clockwise</div>
-          <div><kbd class="help-kbd">D</kbd> / <kbd class="help-kbd">→</kbd> — Turn 90° Clockwise</div>
-          <div><kbd class="help-kbd">Q</kbd> / <kbd class="help-kbd">E</kbd> — Strafe Left / Strafe Right</div>
+          <div><kbd class="help-kbd">W</kbd> / <kbd class="help-kbd">↑</kbd> — Move North (one tile)</div>
+          <div><kbd class="help-kbd">S</kbd> / <kbd class="help-kbd">↓</kbd> — Move South (one tile)</div>
+          <div><kbd class="help-kbd">A</kbd> / <kbd class="help-kbd">←</kbd> — Move West (one tile)</div>
+          <div><kbd class="help-kbd">D</kbd> / <kbd class="help-kbd">→</kbd> — Move East (one tile)</div>
+          <div><strong>Mouse Click</strong> — Click any adjacent passable tile on the map to step there</div>
         </div>
       </div>
 
       <div class="qa-card">
         <div class="qa-card-title"><span>⚔️ Tactical Action Deck</span></div>
         <div style="display:flex; flex-direction:column; gap:5px; font-size:0.76rem; color:var(--text-body); margin-top:4px;">
-          <div><kbd class="help-kbd">Space</kbd> / <kbd class="help-kbd">1</kbd> — Primary Action (Strike / Engage / Rest / Inspect)</div>
+          <div><kbd class="help-kbd">Space</kbd> / <kbd class="help-kbd">1</kbd> — Primary Action (Strike / Engage / Challenge Boss / Rest / Inspect)</div>
           <div><kbd class="help-kbd">2</kbd> — Drink Healing Potion Flask</div>
           <div><kbd class="help-kbd">3</kbd> / <kbd class="help-kbd">R</kbd> — Swap Weapon Stance (Melee ⇄ Ranged, outside combat)</div>
           <div><kbd class="help-kbd">4</kbd> / <kbd class="help-kbd">F</kbd> — Flee Battle (2-step confirm) / Slip Past / Cleric Heal</div>
-          <div><kbd class="help-kbd">I</kbd> — Inspect Landmark Point of Interest (when available)</div>
+          <div><kbd class="help-kbd">5</kbd> / <kbd class="help-kbd">6</kbd> / <kbd class="help-kbd">7</kbd> — Cleric Divine Combat (Battle Prayer / Smite / Divine Shield)</div>
         </div>
       </div>
 
       <div class="qa-card">
         <div class="qa-card-title"><span>🎒 Champion & World Drawers</span></div>
         <div style="display:flex; flex-direction:column; gap:5px; font-size:0.76rem; color:var(--text-body); margin-top:4px;">
-          <div><kbd class="help-kbd">C</kbd> — Open Champion Sheet (Attributes & Modifiers)</div>
-          <div><kbd class="help-kbd">B</kbd> — Open Equipment & Backpack</div>
-          <div><kbd class="help-kbd">M</kbd> — Open Oakhaven Market</div>
-          <div><kbd class="help-kbd">J</kbd> — Open The Watcher’s Board (Bounty Contracts)</div>
-          <div><kbd class="help-kbd">L</kbd> — Open Expedition Journal & Adventure Memory</div>
-          <div><kbd class="help-kbd">H</kbd> — Expand / Collapse Bottom Chronicle History</div>
+          <div><kbd class="help-kbd">C</kbd> — Open Hero Sheet (Attributes &amp; Modifiers)</div>
+          <div><kbd class="help-kbd">B</kbd> — Open Inventory &amp; Equipment</div>
+          <div><kbd class="help-kbd">J</kbd> — Open Quests &amp; Bounties (Story Quests &amp; Watcher’s Board)</div>
+          <div><kbd class="help-kbd">M</kbd> — Open Region Map (Discovered Trails &amp; Landmarks)</div>
+          <div><kbd class="help-kbd">O</kbd> — Open Oakhaven Shop (when in Oakhaven Sanctuary)</div>
         </div>
       </div>
 
       <div class="qa-card">
-        <div class="qa-card-title"><span>🛠️ Lab & Developer Tools</span></div>
+        <div class="qa-card-title"><span>🛠️ Developer &amp; Inspection Shortcuts</span></div>
         <div style="display:flex; flex-direction:column; gap:5px; font-size:0.76rem; color:var(--text-body); margin-top:4px;">
-          <div><kbd class="help-kbd">~</kbd> / <kbd class="help-kbd">\`</kbd> — Toggle Lab Tools Drawer (Player vs. Developer Mode)</div>
-          <div><kbd class="help-kbd">G</kbd> — Open Lab Director (Stage Combat, Cutouts & Discoveries)</div>
-          <div><kbd class="help-kbd">V</kbd> — Open 15×15 World Visual Atlas Inspector</div>
-          <div><kbd class="help-kbd">Z</kbd> — Toggle PF1e Monster Size & Scaling Comparison Arena</div>
-          <div><kbd class="help-kbd">Esc</kbd> — Close active Modal, Landmark Plaque, or Size Arena</div>
+          <div><kbd class="help-kbd">~</kbd> / <kbd class="help-kbd">\`</kbd> — Toggle Developer Tools Drawer</div>
+          <div><kbd class="help-kbd">I</kbd> — Inspect Landmark Point of Interest (when available)</div>
+          <div><kbd class="help-kbd">H</kbd> — Expand / Collapse Bottom Chronicle History</div>
+          <div><kbd class="help-kbd">Esc</kbd> — Close active Modal or Landmark Plaque</div>
         </div>
       </div>
     </div>
