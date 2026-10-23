@@ -18,6 +18,7 @@ const {
   performCityRest,
   getClericSelfHealInfo,
   getClericRemainingHealUses,
+  getClericDivineChargeInfo,
   useConsumable,
   getEffectiveStats,
   reconcileCharacterHpOnLoad,
@@ -151,12 +152,22 @@ router.get('/game', (req, res) => {
   const monsterKnowledge = revealedMonster ? evaluateHeroMonsterKnowledge(req.db, effectiveHero, revealedMonster) : null;
   const compendiumKnowledge = getCharacterCompendiumKnowledge(req.db, effectiveHero);
 
-  // Cleric healing info
+  // Cleric healing & Divine Charges info
   let clericHealInfo = null;
+  let clericDivineInfo = null;
   if ((character.class || '').toUpperCase() === 'CLERIC') {
     clericHealInfo = {
       ...getClericSelfHealInfo(character.level),
       remainingUses: getClericRemainingHealUses(character)
+    };
+    const baseDivine = getClericDivineChargeInfo(effectiveHero, equipment);
+    const activeShieldTurns = combatState && combatState.clericDivine
+      ? Number(combatState.clericDivine.divineShieldTurns || 0)
+      : 0;
+    clericDivineInfo = {
+      ...baseDivine,
+      divineShieldTurns: activeShieldTurns,
+      divineShieldActive: activeShieldTurns > 0
     };
   }
 
@@ -244,6 +255,7 @@ router.get('/game', (req, res) => {
     rangedAttackBonus,
     heroAC,
     clericHealInfo,
+    clericDivineInfo,
     isSafeCity,
     shopStock,
     bountyContracts,
@@ -429,7 +441,7 @@ router.post('/game/encounter/investigate', (req, res) => {
 });
 
 /**
- * Combat Action: ATTACK
+ * Combat Action: ATTACK (or Cleric divine technique: BATTLE_PRAYER, SMITE, DIVINE_SHIELD)
  */
 router.post('/game/combat/attack', (req, res) => {
   const character = getLivingCharacterByUserId(req.db, req.user.id);
@@ -439,9 +451,39 @@ router.post('/game/combat/attack', (req, res) => {
 
   const encounterId = parseInt(req.body.encounterId, 10);
   const round = req.body.round ? parseInt(req.body.round, 10) : undefined;
+  const requestedAction = (req.body.action || 'ATTACK').toUpperCase().trim();
+  const allowedAttackRouteActions = ['ATTACK', 'BATTLE_PRAYER', 'SMITE', 'DIVINE_SHIELD'];
+  const combatAction = allowedAttackRouteActions.includes(requestedAction) ? requestedAction : 'ATTACK';
 
   try {
-    const state = executeCombatRound(req.db, character.id, encounterId, 'ATTACK', { expectedRound: round });
+    const state = executeCombatRound(req.db, character.id, encounterId, combatAction, { expectedRound: round });
+    if (state.character.is_alive === 0) {
+      return res.redirect('/game/fallen');
+    }
+    if (state.encounter.status === 'VICTORY') {
+      return res.redirect(`/game/victory?encounterId=${encounterId}`);
+    }
+    res.redirect('/game');
+  } catch (err) {
+    res.redirect(`/game?error=${encodeURIComponent(err.message)}`);
+  }
+});
+
+/**
+ * Combat Action: Cleric Divine Technique (BATTLE_PRAYER, SMITE, DIVINE_SHIELD)
+ */
+router.post('/game/combat/divine', (req, res) => {
+  const character = getLivingCharacterByUserId(req.db, req.user.id);
+  if (!character) {
+    return res.redirect('/game');
+  }
+
+  const encounterId = parseInt(req.body.encounterId, 10);
+  const round = req.body.round ? parseInt(req.body.round, 10) : undefined;
+  const divineAction = (req.body.action || req.body.ability || '').toUpperCase().trim();
+
+  try {
+    const state = executeCombatRound(req.db, character.id, encounterId, divineAction, { expectedRound: round });
     if (state.character.is_alive === 0) {
       return res.redirect('/game/fallen');
     }

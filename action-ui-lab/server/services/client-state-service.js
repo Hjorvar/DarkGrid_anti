@@ -15,6 +15,7 @@ const {
   getActiveWeapon,
   getClericSelfHealInfo,
   getClericRemainingHealUses,
+  getClericDivineChargeInfo,
   getEffectiveStats,
   getHeroSavingThrows,
   reconcileCharacterHpOnLoad
@@ -239,10 +240,20 @@ function buildClientState(db, userId, extra = {}) {
     : calculateHeroAC(effectiveHero, equipment, isRangedActive, revealedMonster, activeWeapon, db);
 
   let clericHealInfo = null;
+  let clericDivineInfo = null;
   if ((effectiveHero.class || '').toUpperCase() === 'CLERIC') {
     clericHealInfo = {
       ...getClericSelfHealInfo(effectiveHero.level),
       remainingUses: getClericRemainingHealUses(effectiveHero)
+    };
+    const baseDivine = getClericDivineChargeInfo(effectiveHero, equipment);
+    const activeShieldTurns = combatState && combatState.clericDivine
+      ? Number(combatState.clericDivine.divineShieldTurns || 0)
+      : 0;
+    clericDivineInfo = {
+      ...baseDivine,
+      divineShieldTurns: activeShieldTurns,
+      divineShieldActive: activeShieldTurns > 0
     };
   }
 
@@ -266,7 +277,11 @@ function buildClientState(db, userId, extra = {}) {
     charisma: getAttributeTierLabel('charisma', effectiveHero.charisma)
   };
 
-  const classAbilities = buildClassAbilitySummary(effectiveHero, clericHealInfo, { secondWindUsed });
+  const classAbilities = buildClassAbilitySummary(effectiveHero, clericHealInfo, {
+    secondWindUsed,
+    divineCharges: clericDivineInfo ? clericDivineInfo.currentCharges : 0,
+    maxDivineCharges: clericDivineInfo ? clericDivineInfo.maxCharges : 0
+  });
   const shopStock = isSafeCity ? getCityStoreStock(db, effectiveHero) : null;
   const bountyContracts = isSafeCity
     ? getOrGenerateContracts(db, effectiveHero).map(c => {
@@ -405,6 +420,8 @@ function buildClientState(db, userId, extra = {}) {
         heroStatusBadges: (combatState && Array.isArray(combatState.heroStatusBadges)) ? combatState.heroStatusBadges : [],
         secondWindUsed: Boolean(combatState && combatState.secondWindUsed),
         secondWindAvailable: Boolean(combatState && combatState.secondWindAvailable),
+        divineShieldTurns: clericDivineInfo ? clericDivineInfo.divineShieldTurns : 0,
+        divineShieldActive: Boolean(clericDivineInfo && clericDivineInfo.divineShieldActive),
         monsterKnowledge: {
           monsterFamily: knowledgeEval.monsterFamily,
           familyLabel: knowledgeEval.familyLabel,
@@ -517,6 +534,8 @@ function buildClientState(db, userId, extra = {}) {
       favored_enemy_type: effectiveHero.favored_enemy_type,
       favored_enemy_subtype: effectiveHero.favored_enemy_subtype || null,
       secondWindStatus,
+      divine_charges: Number(effectiveHero.divine_charges || 0),
+      max_divine_charges: Number(effectiveHero.max_divine_charges || 0),
       facing,
       sceneMode
     },
@@ -559,6 +578,8 @@ function buildClientState(db, userId, extra = {}) {
     potionCount: potions.length,
     combatPotionCount: combatPotions.length,
     clericHealInfo,
+    clericDivineInfo,
+    clericDivineChargeInfo: clericDivineInfo,
     currentTile,
     isSafeCity,
     terrainArtwork,

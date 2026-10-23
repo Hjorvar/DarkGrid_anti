@@ -95,6 +95,11 @@ export function executeCombatBeatVisual(state, seq, beat, displayedLogs) {
   const iconByType = {
     OPENING_SHOT: '🏹',
     HERO_ATTACK: '⚔️',
+    TURN_UNDEAD: '✨',
+    BATTLE_PRAYER: '🙏',
+    SMITE: '☀️',
+    DIVINE_SHIELD: '🛡️',
+    SECOND_WIND: '🛡️',
     MONSTER_ATTACK: '🩸',
     MONSTER_ABILITY: '⚡',
     STATUS_EFFECT: '☠️',
@@ -149,14 +154,37 @@ export function executeCombatBeatVisual(state, seq, beat, displayedLogs) {
   // 4. Trigger Actor Choreography, Exchange Banner & Floating Callout
   const exchEl = document.getElementById('seq-exchange-banner');
   if (beat.actor === 'HERO') {
-    if (beat.outcome === 'CRIT' || beat.outcome === 'HIT') {
-      triggerWeaponStrikeEffect(beat.outcome === 'CRIT');
-      spawnFloatingPopup(beat.popupLabel || 'Hit!', beat.outcome === 'CRIT' ? 'pop-crit' : 'pop-strike');
+    if (beat.outcome === 'SHIELD') {
+      flashViewportOverlay('heal');
+      spawnFloatingPopup(beat.popupLabel || '🛡️ Divine Shield (2 turns)', 'pop-heal');
       if (exchEl) {
-        exchEl.className = `fp-combat-exchange-banner ${beat.outcome === 'CRIT' ? 'exchange-crit' : 'exchange-hit'}`;
-        exchEl.textContent = beat.outcome === 'CRIT'
-          ? `💥 Critical Hit (${beat.popupLabel || 'Crit!'})`
-          : `⚔️ You struck (${beat.popupLabel || 'Hit!'})`;
+        exchEl.className = 'fp-combat-exchange-banner exchange-hit';
+        exchEl.textContent = '🛡️ Radiant barrier surrounds you (2 monster turns)';
+      }
+    } else if (beat.outcome === 'CRIT' || beat.outcome === 'HIT') {
+      const isSmite = beat.eventType === 'SMITE';
+      const isPrayer = beat.eventType === 'BATTLE_PRAYER';
+      triggerWeaponStrikeEffect(beat.outcome === 'CRIT' || isSmite);
+      if ((isPrayer && Number(beat.healed || 0) > 0) || isSmite) {
+        flashViewportOverlay('heal');
+      }
+      const popClass = isPrayer && Number(beat.healed || 0) > 0
+        ? 'pop-heal'
+        : (beat.outcome === 'CRIT' || isSmite ? 'pop-crit' : 'pop-strike');
+      spawnFloatingPopup(beat.popupLabel || 'Hit!', popClass);
+      if (exchEl) {
+        exchEl.className = `fp-combat-exchange-banner ${beat.outcome === 'CRIT' || isSmite ? 'exchange-crit' : 'exchange-hit'}`;
+        if (isSmite) {
+          exchEl.textContent = `☀️ Sacred Smite erupted (${beat.popupLabel || 'Radiant Strike!'})`;
+        } else if (isPrayer) {
+          exchEl.textContent = Number(beat.healed || 0) > 0
+            ? `🙏 Battle Prayer struck & restored +${beat.healed} HP`
+            : `🙏 Battle Prayer struck (${beat.popupLabel || 'Hit!'})`;
+        } else {
+          exchEl.textContent = beat.outcome === 'CRIT'
+            ? `💥 Critical Hit (${beat.popupLabel || 'Crit!'})`
+            : `⚔️ You struck (${beat.popupLabel || 'Hit!'})`;
+        }
       }
     } else if (beat.outcome === 'MISS') {
       const svg = document.getElementById('fp-slash-svg');
@@ -166,7 +194,7 @@ export function executeCombatBeatVisual(state, seq, beat, displayedLogs) {
         svg.classList.add('is-striking');
       }
       triggerMonsterDodgeEffect();
-      spawnFloatingPopup('Miss', 'pop-miss');
+      spawnFloatingPopup(beat.popupLabel || 'Miss', 'pop-miss');
       if (exchEl) {
         exchEl.className = 'fp-combat-exchange-banner exchange-miss';
         exchEl.textContent = '💨 Your attack missed — enemy evaded!';
@@ -188,11 +216,19 @@ export function executeCombatBeatVisual(state, seq, beat, displayedLogs) {
   } else if (beat.actor === 'MONSTER') {
     triggerMonsterLungeEffect();
     if (beat.outcome === 'HIT') {
-      flashViewportOverlay('blood');
-      spawnFloatingPopup(beat.popupLabel || `-${beat.hpDelta} HP`, 'pop-damage');
-      if (exchEl) {
-        exchEl.className = 'fp-combat-exchange-banner exchange-damage';
-        exchEl.textContent = `${exchEl.textContent ? exchEl.textContent + ' • ' : ''}🩸 Enemy struck for ${beat.hpDelta || 0} dmg`;
+      if (Number(beat.hpDelta || 0) > 0) {
+        flashViewportOverlay('blood');
+        spawnFloatingPopup(beat.popupLabel || `-${beat.hpDelta} HP`, 'pop-damage');
+        if (exchEl) {
+          exchEl.className = 'fp-combat-exchange-banner exchange-damage';
+          exchEl.textContent = `${exchEl.textContent ? exchEl.textContent + ' • ' : ''}🩸 Enemy struck for ${beat.hpDelta || 0} dmg`;
+        }
+      } else {
+        flashViewportOverlay('heal');
+        spawnFloatingPopup(beat.popupLabel || '🛡️ Shielded (0 HP)', 'pop-heal');
+        if (exchEl) {
+          exchEl.textContent = `${exchEl.textContent ? exchEl.textContent + ' • ' : ''}🛡️ Divine Shield absorbed the blow`;
+        }
       }
     } else if (beat.outcome === 'MISS') {
       spawnFloatingPopup('Miss', 'pop-miss');

@@ -48,7 +48,11 @@ const FORBIDDEN_CLIENT_FIELDS = new Set([
   'user_id',
   'userId',
   'character_id',
-  'characterId'
+  'characterId',
+  'divine_charges',
+  'divineCharges',
+  'max_divine_charges',
+  'maxDivineCharges'
 ]);
 
 const rateBuckets = new Map();

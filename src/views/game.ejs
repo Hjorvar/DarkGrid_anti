@@ -13,6 +13,7 @@
   const safeMeleeAtk = (typeof meleeAttackBonus !== 'undefined' && meleeAttackBonus !== null) ? (meleeAttackBonus >= 0 ? '+' + meleeAttackBonus : '' + meleeAttackBonus) : '+0';
   const safeRangedAtk = (typeof rangedAttackBonus !== 'undefined' && rangedAttackBonus !== null) ? (rangedAttackBonus >= 0 ? '+' + rangedAttackBonus : '' + rangedAttackBonus) : '+0';
   const safeClericHealInfo = (typeof clericHealInfo !== 'undefined') ? clericHealInfo : null;
+  const safeClericDivineChargeInfo = (typeof clericDivineChargeInfo !== 'undefined') ? clericDivineChargeInfo : null;
   const safeIsSafeCity = (typeof isSafeCity !== 'undefined') ? Boolean(isSafeCity) : (currentTile && currentTile.is_safe === 1 && currentTile.terrain === 'CITY');
   const safeShopStock = (typeof shopStock !== 'undefined') ? shopStock : null;
   const safeIsRangedActive = (typeof isRangedActive !== 'undefined') ? Boolean(isRangedActive) : false;
@@ -345,6 +346,11 @@
                           <div class="combat-event-row <%= (ev.event_type || '').toLowerCase() %>">
                             <% if (ev.event_type === 'OPENING_SHOT') { %>🏹 <% } %>
                             <% if (ev.event_type === 'HERO_ATTACK') { %>⚔️ <% } %>
+                            <% if (ev.event_type === 'TURN_UNDEAD') { %>✨ <% } %>
+                            <% if (ev.event_type === 'BATTLE_PRAYER') { %>🙏 <% } %>
+                            <% if (ev.event_type === 'SMITE') { %>☀️ <% } %>
+                            <% if (ev.event_type === 'DIVINE_SHIELD') { %>🛡️ <% } %>
+                            <% if (ev.event_type === 'SECOND_WIND') { %>🛡️ <% } %>
                             <% if (ev.event_type === 'MONSTER_ATTACK') { %>🩸 <% } %>
                             <% if (ev.event_type === 'MONSTER_ABILITY') { %>⚡ <% } %>
                             <% if (ev.event_type === 'STATUS_EFFECT') { %>☠️ <% } %>
@@ -413,6 +419,39 @@
                     🏃 Flee
                   </button>
                 </form>
+
+                <% if (character.class === 'CLERIC') {
+                     const currCharges = safeClericDivineChargeInfo ? Number(safeClericDivineChargeInfo.currentCharges || 0) : Number(character.divine_charges || 0);
+                     const maxCharges = safeClericDivineChargeInfo ? Number(safeClericDivineChargeInfo.maxCharges || 0) : Number(character.max_divine_charges || 0);
+                     const shieldTurns = (safeCombatState && Number(safeCombatState.divineShieldTurns || 0)) || 0;
+                %>
+                  <form action="/game/combat/battle-prayer" method="POST" class="combat-action-form form-battle-prayer">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                    <input type="hidden" name="encounterId" value="<%= encounter.id %>">
+                    <input type="hidden" name="round" value="<%= encounter.combat_round || 1 %>">
+                    <button type="submit" class="btn btn-secondary" <%= currCharges < 1 ? 'disabled' : '' %> title="Strike & Heal (Cost: 1 Divine Charge • <%= currCharges %>/<%= maxCharges %> remaining)">
+                      🙏 Battle Prayer (1)
+                    </button>
+                  </form>
+
+                  <form action="/game/combat/smite" method="POST" class="combat-action-form form-smite">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                    <input type="hidden" name="encounterId" value="<%= encounter.id %>">
+                    <input type="hidden" name="round" value="<%= encounter.combat_round || 1 %>">
+                    <button type="submit" class="btn btn-secondary" <%= currCharges < 1 ? 'disabled' : '' %> title="Sacred Radiant Strike (Cost: 1 Divine Charge • <%= currCharges %>/<%= maxCharges %> remaining)">
+                      ☀️ Smite (1)
+                    </button>
+                  </form>
+
+                  <form action="/game/combat/divine-shield" method="POST" class="combat-action-form form-divine-shield">
+                    <input type="hidden" name="_csrf" value="<%= locals.csrfToken || '' %>">
+                    <input type="hidden" name="encounterId" value="<%= encounter.id %>">
+                    <input type="hidden" name="round" value="<%= encounter.combat_round || 1 %>">
+                    <button type="submit" class="btn btn-secondary" <%= (currCharges < 2 || shieldTurns > 0) ? 'disabled' : '' %> title="Radiant Ward for 2 Monster Turns (Cost: 2 Divine Charges • <%= currCharges %>/<%= maxCharges %> remaining)">
+                      🛡️ Divine Shield (2)<%= shieldTurns > 0 ? ' [' + shieldTurns + 't]' : '' %>
+                    </button>
+                  </form>
+                <% } %>
               </div>
             </div>
 
@@ -653,6 +692,18 @@
               <div class="vital-gold-decor"><span class="status-alive-badge">● Alive</span></div>
             </div>
           </div>
+
+          <% if (character.class === 'CLERIC') {
+               const currCharges = safeClericDivineChargeInfo ? Number(safeClericDivineChargeInfo.currentCharges || 0) : Number(character.divine_charges || 0);
+               const maxCharges = safeClericDivineChargeInfo ? Number(safeClericDivineChargeInfo.maxCharges || 0) : Number(character.max_divine_charges || 0);
+          %>
+            <div class="vital-box" style="margin-top: 6px;">
+              <div class="vital-header-row">
+                <div class="vital-label">✨ Divine Charges</div>
+                <div class="vital-value" style="color: var(--accent-gold);"><%= currCharges %> / <%= maxCharges %></div>
+              </div>
+            </div>
+          <% } %>
         </div>
 
         <!-- Navigation Action Buttons (Modals) — Placed immediately below vitals for high accessibility -->

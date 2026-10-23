@@ -186,13 +186,27 @@ function calculateHeroAC(character, equippedArmor = null, equippedShield = null,
     shield = equippedArmor.shield || null;
     if (typeof equippedShield === 'boolean') {
       rangedActive = equippedShield;
-      targetMonster = (isRangedActive && typeof isRangedActive === 'object') ? isRangedActive : monster;
-      if (monster && typeof monster === 'object' && !activeWep && (monster.category === 'WEAPON' || monster.damage_dice !== undefined || monster.is_two_handed !== undefined)) {
-        activeWep = monster;
-        if (targetMonster === monster) targetMonster = null;
-      }
-      if (activeWeapon && typeof activeWeapon === 'object' && !('category' in activeWeapon) && ('victories' in activeWeapon || 'battleExperience' in activeWeapon || 'allowNameOnly' in activeWeapon)) {
-        opts = activeWeapon;
+      const fourthArg = isRangedActive;
+      const fifthArg = monster;
+      const sixthArg = activeWeapon;
+      const fourthIsWeapon = Boolean(
+        fourthArg && typeof fourthArg === 'object' &&
+        (fourthArg.category === 'WEAPON' || fourthArg.damage_dice !== undefined || fourthArg.is_two_handed !== undefined) &&
+        !fourthArg.creature_type && !fourthArg.monster_family
+      );
+      if (fourthIsWeapon) {
+        targetMonster = null;
+        activeWep = fourthArg;
+        opts = (fifthArg && typeof fifthArg === 'object') ? fifthArg : opts;
+      } else {
+        targetMonster = (fourthArg && typeof fourthArg === 'object') ? fourthArg : null;
+        if (fifthArg && typeof fifthArg === 'object' && (fifthArg.category === 'WEAPON' || fifthArg.damage_dice !== undefined || fifthArg.is_two_handed !== undefined)) {
+          activeWep = fifthArg;
+          opts = (sixthArg && typeof sixthArg === 'object') ? sixthArg : opts;
+        } else {
+          activeWep = null;
+          opts = (fifthArg && typeof fifthArg === 'object') ? fifthArg : opts;
+        }
       }
     } else if (equippedShield && typeof equippedShield === 'object' && ('creature_type' in equippedShield || 'armor_class' in equippedShield || 'descriptions' in equippedShield || 'monster_family' in equippedShield)) {
       targetMonster = equippedShield;

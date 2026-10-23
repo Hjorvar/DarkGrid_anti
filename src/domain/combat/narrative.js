@@ -173,6 +173,49 @@ function describePotionDrink() {
 }
 
 /**
+ * Generates Cleric Battle Prayer narrative (no raw numbers).
+ */
+function describeBattlePrayer(equippedWeapon, attackResult) {
+  if (attackResult && attackResult.isCrit) {
+    return `CRITICAL HIT! He cries out a prayer as his weapon strikes, drawing strength from his faith!`;
+  }
+  if (attackResult && attackResult.isHit) {
+    return `He cries out a prayer as his weapon strikes, drawing strength from his faith.`;
+  }
+  if (attackResult && attackResult.isFumble) {
+    return `FUMBLE! He cries out a prayer as he swings, but his footing slips and the sacred invocation dissipates.`;
+  }
+  return `He cries out a prayer as he strikes, but the blow misses its mark and no sacred strength is drawn.`;
+}
+
+/**
+ * Generates Cleric Smite narrative (no raw numbers).
+ */
+function describeSmite(equippedWeapon, attackResult, isUndead = false) {
+  if (attackResult && attackResult.isCrit) {
+    return isUndead
+      ? `CRITICAL HIT! His weapon erupts with sacred light, punishing the enemy with divine wrath as searing radiance purges the undead abomination!`
+      : `CRITICAL HIT! His weapon erupts with sacred light, punishing the enemy with divine wrath!`;
+  }
+  if (attackResult && attackResult.isHit) {
+    return isUndead
+      ? `His weapon erupts with sacred light, punishing the enemy with divine wrath as searing radiance scorches the undead!`
+      : `His weapon erupts with sacred light, punishing the enemy with divine wrath.`;
+  }
+  if (attackResult && attackResult.isFumble) {
+    return `FUMBLE! His weapon flares with sacred light, but the swing goes wide and the divine wrath spends itself in empty air.`;
+  }
+  return `His weapon flares with sacred light, but the strike is turned aside and the divine charge is spent.`;
+}
+
+/**
+ * Generates Cleric Divine Shield narrative (no raw numbers).
+ */
+function describeDivineShield() {
+  return `A radiant barrier surrounds the Cleric, shielding him from the enemy's assault.`;
+}
+
+/**
  * Generates flee narrative.
  */
 function describeFleeAttempt(freeAttackResult, survived) {
@@ -191,5 +234,8 @@ module.exports = {
   describeHeroAttack,
   describeMonsterAttack,
   describePotionDrink,
+  describeBattlePrayer,
+  describeSmite,
+  describeDivineShield,
   describeFleeAttempt
 };

@@ -12,8 +12,12 @@ const {
   getCharacterPotions,
   getActiveWeapon,
   getEffectiveStats,
+  calculateMaxDivineCharges,
+  clampDivineCharges,
+  getClericDivineChargeInfo,
   INACTIVE_CONSUMABLE_NAMES
 } = require('../character/rules');
+const { rollDice } = require('./dice');
 const {
   calculateHeroAttackBonus,
   calculateHeroAC,
@@ -27,6 +31,9 @@ const {
   describeHeroAttack,
   describeMonsterAttack,
   describePotionDrink,
+  describeBattlePrayer,
+  describeSmite,
+  describeDivineShield,
   describeFleeAttempt
 } = require('./narrative');
 const { handlePlayerDeath, handleMonsterDefeat } = require('../monsters/persistence');
@@ -41,6 +48,10 @@ const {
   getFighterSecondWindProfile,
   tryTriggerFighterSecondWind,
   resolveClericTurnUndead,
+  getClericBattlePrayerProfile,
+  getClericSmiteProfile,
+  getClericDivineShieldProfile,
+  applyDivineShieldMitigation,
   getActiveStatusModifiers,
   getPublicHeroStatusBadges,
   resolveCombatStartAura,
@@ -511,6 +522,9 @@ function getCombatState(db, characterId, encounterId) {
     ? (combatStatusState.secondWindUsed ? 'Spent' : 'Ready')
     : null;
 
+  const clericDivineInfo = getClericDivineChargeInfo(effectiveCharacter, equipment);
+  const divineShieldTurns = Math.max(0, Number(combatStatusState.divineShieldTurns || 0));
+
   return {
     character: effectiveCharacter,
     encounter,
@@ -527,20 +541,92 @@ function getCombatState(db, characterId, encounterId) {
     combatStatusState,
     monsterKnowledge,
     secondWindStatus,
-    secondWindUsed: Boolean(combatStatusState.secondWindUsed)
+    secondWindUsed: Boolean(combatStatusState.secondWindUsed),
+    divineCharges: clericDivineInfo.currentCharges,
+    maxDivineCharges: clericDivineInfo.maxCharges,
+    divineShieldTurns,
+    divineShieldActive: divineShieldTurns > 0,
+    clericDivine: {
+      ...clericDivineInfo,
+      divineShieldTurns,
+      divineShieldActive: divineShieldTurns > 0
+    }
   };
 }
 
 /**
- * Executes a single turn action in combat (ATTACK, DRINK_POTION, FLEE).
+ * Resolves the monster's configured multi-attack strike list for a round.
+ * Defaults to a single primary attack unless encounter/monster defines attack_count > 1 or an attacks array.
+ */
+function getMonsterStrikeConfigs(encounter) {
+  const baseAb = Number(encounter.monster_ab || 0);
+  const baseDice = encounter.monster_damage_dice || '1d4';
+  const strikes = [];
+
+  let parsedSpecial = null;
+  if (typeof encounter.special_abilities === 'string' && encounter.special_abilities.trim().startsWith('{')) {
+    try { parsedSpecial = JSON.parse(encounter.special_abilities); } catch { parsedSpecial = null; }
+  } else if (encounter.special_abilities && typeof encounter.special_abilities === 'object' && !Array.isArray(encounter.special_abilities)) {
+    parsedSpecial = encounter.special_abilities;
+  }
+
+  const customAttacks = Array.isArray(encounter.attacks)
+    ? encounter.attacks
+    : (parsedSpecial && Array.isArray(parsedSpecial.attacks) ? parsedSpecial.attacks : null);
+
+  if (customAttacks && customAttacks.length > 0) {
+    for (const atk of customAttacks) {
+      strikes.push({
+        attackBonus: atk && atk.attack_bonus !== undefined ? Number(atk.attack_bonus) : baseAb,
+        damageDice: (atk && atk.damage_dice) || baseDice,
+        label: (atk && atk.label) || null
+      });
+    }
+    return strikes;
+  }
+
+  const rawCount = Number(
+    encounter.attack_count ||
+    encounter.num_attacks ||
+    (parsedSpecial && (parsedSpecial.attack_count || parsedSpecial.num_attacks)) ||
+    1
+  );
+  const attackCount = Math.max(1, Math.min(6, Math.floor(Number.isFinite(rawCount) ? rawCount : 1)));
+  for (let i = 0; i < attackCount; i++) {
+    strikes.push({
+      attackBonus: baseAb,
+      damageDice: baseDice,
+      label: null
+    });
+  }
+  return strikes;
+}
+
+/**
+ * Executes a single turn action in combat (ATTACK, DRINK_POTION, FLEE, BATTLE_PRAYER, SMITE, DIVINE_SHIELD).
  * Thread-safe and atomic with idempotency protection.
  */
 function executeCombatRound(db, characterId, encounterId, action, options = {}) {
   const rng = options.rng || Math.random;
-  const normalizedAction = (action || '').toUpperCase().trim();
+  if (
+    Array.isArray(action) ||
+    (typeof action === 'string' && (action.includes('+') || action.includes(',') || action.includes('&'))) ||
+    (options && (options.combineWith || options.secondaryAction))
+  ) {
+    const err = new Error('Cannot combine multiple combat actions or divine techniques in a single turn.');
+    err.status = 400;
+    err.code = 'COMBINED_ACTIONS_FORBIDDEN';
+    throw err;
+  }
 
-  if (!['ATTACK', 'DRINK_POTION', 'FLEE'].includes(normalizedAction)) {
-    throw new Error(`Invalid combat action: ${action}. Allowed actions are ATTACK, DRINK_POTION, FLEE.`);
+  const normalizedAction = (action || '').toUpperCase().trim();
+  const ALLOWED_COMBAT_ACTIONS = ['ATTACK', 'DRINK_POTION', 'FLEE', 'BATTLE_PRAYER', 'SMITE', 'DIVINE_SHIELD'];
+  const CLERIC_DIVINE_ACTIONS = ['BATTLE_PRAYER', 'SMITE', 'DIVINE_SHIELD'];
+
+  if (!ALLOWED_COMBAT_ACTIONS.includes(normalizedAction)) {
+    const err = new Error(`Invalid combat action: ${action}. Allowed actions are ${ALLOWED_COMBAT_ACTIONS.join(', ')}.`);
+    err.status = 400;
+    throw err;
   }
 
   return withTransaction(db, (tx) => {
@@ -597,6 +683,57 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
     const effectiveHero = getEffectiveStats(character, equipment);
     attachBattleExperienceContext(tx, effectiveHero, encounter, equipment);
 
+    const isCleric = String(character.class || '').toUpperCase() === 'CLERIC';
+    if (isCleric && (character.divine_charges === null || character.divine_charges === undefined)) {
+      const initMaxCharges = calculateMaxDivineCharges(effectiveHero.level, 'CLERIC', getModifier(effectiveHero.wisdom));
+      try {
+        tx.prepare('UPDATE characters SET divine_charges = ? WHERE id = ? AND divine_charges IS NULL').run(initMaxCharges, character.id);
+      } catch {
+        // Ignore on minimal test schema without divine_charges column
+      }
+      character.divine_charges = initMaxCharges;
+      effectiveHero.divine_charges = initMaxCharges;
+    }
+
+    const requiredDivineCost = normalizedAction === 'DIVINE_SHIELD'
+      ? 2
+      : (normalizedAction === 'BATTLE_PRAYER' || normalizedAction === 'SMITE' ? 1 : 0);
+
+    if (CLERIC_DIVINE_ACTIONS.includes(normalizedAction)) {
+      if (!isCleric) {
+        const err = new Error('Only Clerics can invoke divine combat techniques.');
+        err.status = 400;
+        err.code = 'CLERIC_ONLY_ACTION';
+        throw err;
+      }
+      const maxCharges = calculateMaxDivineCharges(effectiveHero.level, 'CLERIC', getModifier(effectiveHero.wisdom));
+      const availableCharges = clampDivineCharges(character.divine_charges, maxCharges, true);
+      if (availableCharges < requiredDivineCost) {
+        const err = new Error(`Insufficient Divine Charges to use ${normalizedAction} (requires ${requiredDivineCost}, have ${availableCharges}).`);
+        err.status = 400;
+        err.code = 'INSUFFICIENT_DIVINE_CHARGES';
+        throw err;
+      }
+    }
+
+    function spendDivineChargesAtomically(cost) {
+      if (cost <= 0) return;
+      const spendRes = tx.prepare(`
+        UPDATE characters
+        SET divine_charges = divine_charges - ?
+        WHERE id = ? AND is_alive = 1 AND UPPER(class) = 'CLERIC' AND divine_charges >= ?
+      `).run(cost, character.id, cost);
+
+      if (spendRes.changes !== 1) {
+        const err = new Error('Insufficient Divine Charges to perform this divine technique.');
+        err.status = 400;
+        err.code = 'INSUFFICIENT_DIVINE_CHARGES';
+        throw err;
+      }
+      character.divine_charges = Math.max(0, Number(character.divine_charges) - cost);
+      effectiveHero.divine_charges = character.divine_charges;
+    }
+
     const { activeWeapon, isRangedActive } = getActiveWeapon(effectiveHero, equipment, encounter);
     const baseHeroAC = calculateHeroAC(effectiveHero, equipment, isRangedActive, encounter, activeWeapon);
     const baseHeroAB = calculateHeroAttackBonus(effectiveHero, activeWeapon, encounter, equipment);
@@ -632,16 +769,164 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       }
     }
 
+    const heroStartOfRoundHp = currentHeroHp;
+    const eligibleForLevel1SpikeGuard = (
+      Number(character.level || 1) <= 1 &&
+      roundNumber === 1 &&
+      heroStartOfRoundHp >= Math.max(6, Math.ceil((character.max_hp || 8) * 0.70))
+    );
+
+    function monsterAttackPhase() {
+      const currentMods = getActiveStatusModifiers(combatStatusState);
+      const effectiveHeroAC = baseHeroAC + currentMods.acMod;
+
+      const turnSpecials = resolveMonsterTurnSpecials({
+        character: effectiveHero,
+        equipment,
+        encounter,
+        combatState: combatStatusState,
+        roundNumber,
+        currentHeroHp,
+        currentMonsterHp,
+        monsterMaxHp,
+        rng,
+        logEvent
+      });
+      currentHeroHp = turnSpecials.newHeroHp;
+      currentMonsterHp = turnSpecials.newMonsterHp;
+
+      if (currentHeroHp > 0 && !turnSpecials.usedBreathOrVolley) {
+        const strikeConfigs = getMonsterStrikeConfigs(encounter);
+
+        for (let strikeIdx = 0; strikeIdx < strikeConfigs.length; strikeIdx++) {
+          if (currentHeroHp <= 0) break;
+          const strike = strikeConfigs[strikeIdx];
+          const monsterAttackRoll = resolveAttackRoll(
+            strike.attackBonus + turnSpecials.monsterAbBonus,
+            effectiveHeroAC,
+            rng
+          );
+          let rawMonsterDamage = 0;
+          let monsterDamage = 0;
+          let shieldMitigated = 0;
+          let shieldWasActive = false;
+
+          if (monsterAttackRoll.isHit) {
+            rawMonsterDamage = resolveDamage(strike.damageDice, monsterAttackRoll.isCrit, rng);
+            if (strikeIdx === 0 && turnSpecials.bonusDamageFormula) {
+              rawMonsterDamage += resolveDamage(turnSpecials.bonusDamageFormula, false, rng);
+            }
+            rawMonsterDamage = Math.max(1, rawMonsterDamage + turnSpecials.bloodFrenzyDmgBonus + bountyDamageBonus);
+            const shieldRes = applyDivineShieldMitigation(rawMonsterDamage, combatStatusState);
+            monsterDamage = shieldRes.finalDamage;
+            shieldMitigated = shieldRes.mitigated;
+            shieldWasActive = shieldRes.shieldActive;
+            currentHeroHp = Math.max(0, currentHeroHp - monsterDamage);
+          }
+
+          let attackNarrative = describeMonsterAttack(encounter, monsterAttackRoll);
+          if (monsterAttackRoll.isHit && shieldWasActive && shieldMitigated > 0) {
+            if (monsterDamage === 0) {
+              attackNarrative += ' Your radiant barrier completely turns aside the force of the blow!';
+            } else {
+              attackNarrative += ' Your radiant barrier absorbs part of the assault!';
+            }
+          }
+
+          logEvent('MONSTER_ATTACK', attackNarrative, {
+            isHit: monsterAttackRoll.isHit,
+            isCrit: monsterAttackRoll.isCrit,
+            rawDamage: rawMonsterDamage,
+            damage: monsterDamage,
+            divineShieldMitigated: shieldMitigated,
+            divineShieldActive: shieldWasActive,
+            strikeIndex: strikeIdx + 1,
+            totalStrikes: strikeConfigs.length
+          });
+
+          if (monsterAttackRoll.isHit && currentHeroHp > 0) {
+            const onHit = resolveMonsterOnHitEffects({
+              character: effectiveHero,
+              equipment,
+              encounter,
+              combatState: combatStatusState,
+              monsterAttackRoll,
+              heroAC: effectiveHeroAC,
+              currentHeroHp,
+              currentMonsterHp,
+              monsterMaxHp,
+              rng,
+              logEvent
+            });
+            currentHeroHp = onHit.newHeroHp;
+            currentMonsterHp = onHit.newMonsterHp;
+          }
+        }
+      }
+
+      // Decrement Divine Shield duration after monster turn concludes (lasting 2 monster turns including activation round)
+      if (Number(combatStatusState.divineShieldTurns || 0) > 0) {
+        combatStatusState.divineShieldTurns = Math.max(0, Number(combatStatusState.divineShieldTurns) - 1);
+        if (combatStatusState.divineShieldTurns === 0) {
+          combatStatusState.divineShieldReduction = 0;
+        }
+      }
+
+      // Resolve Fighter Second Wind AFTER complete monster multi-hit and immediate damage-rider sequence
+      const swRes = tryTriggerFighterSecondWind({
+        character: effectiveHero,
+        equipment,
+        encounter,
+        combatState: combatStatusState,
+        currentHeroHp,
+        maxHeroHp: character.max_hp,
+        rng,
+        logEvent
+      });
+      if (swRes.triggered) {
+        currentHeroHp = swRes.newHeroHp;
+      }
+
+      if (currentHeroHp <= 0 && eligibleForLevel1SpikeGuard && !combatStatusState.calcifyInstantDeath) {
+        currentHeroHp = 1;
+        logEvent('HERO_STATUS', "Death's Door! Sheer survival instinct keeps you standing at 1 HP after a lethal opening blow!", {
+          level1SpikeGuard: true
+        });
+      }
+
+      tx.prepare('UPDATE characters SET current_hp = ? WHERE id = ?').run(currentHeroHp, character.id);
+      tx.prepare('UPDATE encounters SET current_monster_hp = ? WHERE id = ?').run(currentMonsterHp, encounter.id);
+      updateEncounterCombatStateSql(tx, encounter.id, combatStatusState);
+
+      if (monsterInstance) {
+        tx.prepare('UPDATE monster_instances SET current_hp = ? WHERE id = ?').run(currentMonsterHp, monsterInstance.id);
+      }
+
+      return currentHeroHp <= 0;
+    }
+
     // =========================================================================
     // ACTION 1: FLEE
     // =========================================================================
     if (normalizedAction === 'FLEE') {
       const freeAttackRoll = resolveAttackRoll(encounter.monster_ab, heroAC, rng);
+      let rawFreeDamage = 0;
       let freeDamage = 0;
+      let shieldMitigated = 0;
 
       if (freeAttackRoll.isHit) {
-        freeDamage = resolveDamage(encounter.monster_damage_dice, freeAttackRoll.isCrit, rng) + bountyDamageBonus;
+        rawFreeDamage = resolveDamage(encounter.monster_damage_dice, freeAttackRoll.isCrit, rng) + bountyDamageBonus;
+        const shieldRes = applyDivineShieldMitigation(rawFreeDamage, combatStatusState);
+        freeDamage = shieldRes.finalDamage;
+        shieldMitigated = shieldRes.mitigated;
         currentHeroHp = Math.max(0, currentHeroHp - freeDamage);
+      }
+
+      if (Number(combatStatusState.divineShieldTurns || 0) > 0) {
+        combatStatusState.divineShieldTurns = Math.max(0, Number(combatStatusState.divineShieldTurns) - 1);
+        if (combatStatusState.divineShieldTurns === 0) {
+          combatStatusState.divineShieldReduction = 0;
+        }
       }
 
       if (freeAttackRoll.isHit) {
@@ -665,7 +950,9 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       logEvent('FLEE', fleeNarrative, {
         isHit: freeAttackRoll.isHit,
         isCrit: freeAttackRoll.isCrit,
+        rawDamage: rawFreeDamage,
         damage: freeDamage,
+        divineShieldMitigated: shieldMitigated,
         survived
       });
 
@@ -747,74 +1034,10 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
         actualHealed
       });
 
-      const currentMods = getActiveStatusModifiers(combatStatusState);
-      const effectiveHeroAC = baseHeroAC + currentMods.acMod;
-      const turnSpecials = resolveMonsterTurnSpecials({
-        character: effectiveHero,
-        equipment,
-        encounter,
-        combatState: combatStatusState,
-        roundNumber,
-        currentHeroHp,
-        currentMonsterHp,
-        monsterMaxHp,
-        rng,
-        logEvent
-      });
-      currentHeroHp = turnSpecials.newHeroHp;
-      currentMonsterHp = turnSpecials.newMonsterHp;
-
-      if (currentHeroHp > 0 && !turnSpecials.usedBreathOrVolley) {
-        const monsterAttackRoll = resolveAttackRoll(encounter.monster_ab + turnSpecials.monsterAbBonus, effectiveHeroAC, rng);
-        let monsterDamage = 0;
-
-        if (monsterAttackRoll.isHit) {
-          monsterDamage = resolveDamage(encounter.monster_damage_dice, monsterAttackRoll.isCrit, rng);
-          if (turnSpecials.bonusDamageFormula) {
-            monsterDamage += resolveDamage(turnSpecials.bonusDamageFormula, false, rng);
-          }
-          monsterDamage = Math.max(1, monsterDamage + turnSpecials.bloodFrenzyDmgBonus + bountyDamageBonus);
-          currentHeroHp = Math.max(0, currentHeroHp - monsterDamage);
-        }
-
-        logEvent('MONSTER_ATTACK', describeMonsterAttack(encounter, monsterAttackRoll), {
-          isHit: monsterAttackRoll.isHit,
-          isCrit: monsterAttackRoll.isCrit,
-          damage: monsterDamage
-        });
-
-        if (monsterAttackRoll.isHit && currentHeroHp > 0) {
-          const onHit = resolveMonsterOnHitEffects({
-            character: effectiveHero,
-            equipment,
-            encounter,
-            combatState: combatStatusState,
-            monsterAttackRoll,
-            heroAC: effectiveHeroAC,
-            currentHeroHp,
-            currentMonsterHp,
-            monsterMaxHp,
-            rng,
-            logEvent
-          });
-          currentHeroHp = onHit.newHeroHp;
-          currentMonsterHp = onHit.newMonsterHp;
-        }
-      }
-
-      // Fighter Second Wind check after monster turn sequence
-      const swAfterMonster = tryTriggerFighterSecondWind({
-        character: effectiveHero,
-        equipment,
-        encounter,
-        combatState: combatStatusState,
-        currentHeroHp,
-        maxHeroHp: character.max_hp,
-        rng,
-        logEvent
-      });
-      if (swAfterMonster.triggered) {
-        currentHeroHp = swAfterMonster.newHeroHp;
+      const heroDied = monsterAttackPhase();
+      if (heroDied) {
+        handlePlayerDeath(tx, character, encounter, encounter, monsterInstance, { rng });
+        return getCombatState(tx, characterId, encounterId);
       }
 
       if (currentHeroHp > 0) {
@@ -828,7 +1051,6 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
         });
         currentHeroHp = eor.newHeroHp;
 
-        // Fighter Second Wind check after end-of-round Poison/Bleed DoT ticks
         const swAfterDoT = tryTriggerFighterSecondWind({
           character: effectiveHero,
           equipment,
@@ -868,7 +1090,78 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
     }
 
     // =========================================================================
-    // ACTION 3: ATTACK
+    // ACTION 3: DIVINE SHIELD (Cleric Defensive Action, Cost: 2 Divine Charges)
+    // =========================================================================
+    if (normalizedAction === 'DIVINE_SHIELD') {
+      if (Number(combatStatusState.divineShieldTurns || 0) > 0) {
+        const err = new Error('Divine Shield is already active and cannot stack.');
+        err.status = 400;
+        err.code = 'DIVINE_SHIELD_ALREADY_ACTIVE';
+        throw err;
+      }
+      spendDivineChargesAtomically(requiredDivineCost);
+
+      if (combatStatusState.heroStatuses.paralyzed > 0) {
+        combatStatusState.heroStatuses.paralyzed = 0;
+      }
+
+      const shieldProfile = getClericDivineShieldProfile(effectiveHero, equipment);
+      // Non-stacking: sets duration to 2 monster turns (including activation round) and sets reduction
+      combatStatusState.divineShieldTurns = shieldProfile.durationTurns;
+      combatStatusState.divineShieldReduction = shieldProfile.damageReduction;
+
+      logEvent('DIVINE_SHIELD', describeDivineShield(), {
+        ability: 'DIVINE_SHIELD',
+        cost: shieldProfile.cost,
+        remainingDivineCharges: effectiveHero.divine_charges,
+        durationTurns: shieldProfile.durationTurns,
+        damageReduction: shieldProfile.damageReduction
+      });
+      updateEncounterCombatStateSql(tx, encounter.id, combatStatusState);
+
+      const heroDied = monsterAttackPhase();
+      if (heroDied) {
+        handlePlayerDeath(tx, character, encounter, encounter, monsterInstance, { rng });
+        return getCombatState(tx, characterId, encounterId);
+      }
+
+      if (currentHeroHp > 0) {
+        const eor = resolveEndOfRoundStatusTicks({
+          character: effectiveHero,
+          equipment,
+          combatState: combatStatusState,
+          currentHeroHp,
+          rng,
+          logEvent
+        });
+        currentHeroHp = eor.newHeroHp;
+      }
+
+      tx.prepare('UPDATE characters SET current_hp = ? WHERE id = ?').run(currentHeroHp, character.id);
+      updateEncounterCombatStateSql(tx, encounter.id, combatStatusState);
+
+      if (currentHeroHp <= 0) {
+        handlePlayerDeath(tx, character, encounter, encounter, monsterInstance, { rng });
+        return getCombatState(tx, characterId, encounterId);
+      }
+
+      tx.prepare(`
+        UPDATE encounters
+        SET combat_round = ?,
+            current_monster_hp = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(roundNumber + 1, currentMonsterHp, encounter.id);
+
+      if (monsterInstance) {
+        tx.prepare('UPDATE monster_instances SET current_hp = ? WHERE id = ?').run(currentMonsterHp, monsterInstance.id);
+      }
+
+      return getCombatState(tx, characterId, encounterId);
+    }
+
+    // =========================================================================
+    // ACTION 4: ATTACK / BATTLE_PRAYER / SMITE
     // =========================================================================
     const initiativeWinner = encounter.initiative_winner || 'HERO';
 
@@ -884,17 +1177,38 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
         return false;
       }
 
+      if (requiredDivineCost > 0) {
+        spendDivineChargesAtomically(requiredDivineCost);
+      }
+
       const currentMods = getActiveStatusModifiers(combatStatusState);
       const effectiveHeroAB = baseHeroAB + currentMods.atkMod;
       const effectiveMonsterAC = Math.max(1, (encounter.monster_ac || 10) - (combatStatusState.bloodFrenzyActive ? 2 : 0));
 
       const heroAttackRoll = resolveAttackRoll(effectiveHeroAB, effectiveMonsterAC, rng);
       let heroDamage = 0;
+      let weaponDamage = 0;
+      let radiantDamage = 0;
+      let prayerHealed = 0;
+      let rawPrayerHeal = 0;
+      let evaded = false;
+
+      const isBattlePrayer = normalizedAction === 'BATTLE_PRAYER';
+      const isSmite = normalizedAction === 'SMITE';
+      const prayerProfile = isBattlePrayer ? getClericBattlePrayerProfile(effectiveHero, equipment) : null;
+      const smiteProfile = isSmite ? getClericSmiteProfile(effectiveHero, equipment, encounter) : null;
 
       if (heroAttackRoll.isHit) {
         const damageFormula = getHeroDamageFormula(effectiveHero, activeWeapon, encounter, equipment);
         let rawHeroDamage = resolveDamage(damageFormula, heroAttackRoll.isCrit, rng);
         rawHeroDamage = Math.max(1, rawHeroDamage + currentMods.dmgMod);
+
+        let bonusRadiant = 0;
+        if (isSmite && smiteProfile) {
+          // Retain normal weapon critical-hit behavior; do NOT multiply bonus radiant dice on crit
+          const radiantRoll = rollDice(smiteProfile.radiantDice, rng, 1);
+          bonusRadiant = Math.max(1, radiantRoll.total + smiteProfile.flatRadiantBonus);
+        }
 
         const modResult = modifyHeroAttackDamageAndState({
           character: effectiveHero,
@@ -903,19 +1217,72 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
           combatState: combatStatusState,
           heroAttackRoll,
           rawHeroDamage,
+          bonusRadiantDamage: bonusRadiant,
+          forceMagical: isBattlePrayer || isSmite,
           currentMonsterHp,
           monsterMaxHp,
           logEvent
         });
         heroDamage = modResult.finalDamage;
+        weaponDamage = modResult.weaponDamage !== undefined ? modResult.weaponDamage : modResult.finalDamage;
+        radiantDamage = modResult.radiantDamage || 0;
         currentMonsterHp = modResult.newMonsterHp;
+        evaded = Boolean(modResult.evaded);
+
+        if (isBattlePrayer && prayerProfile && !evaded) {
+          // No critical-hit multiplication of Battle Prayer healing; capped at Max HP
+          const healRoll = rollDice(prayerProfile.dice, rng, 1);
+          rawPrayerHeal = Math.max(1, healRoll.total + prayerProfile.flatBonus);
+          const nextHeroHp = Math.min(character.max_hp, currentHeroHp + rawPrayerHeal);
+          prayerHealed = nextHeroHp - currentHeroHp;
+          currentHeroHp = nextHeroHp;
+          tx.prepare('UPDATE characters SET current_hp = ? WHERE id = ?').run(currentHeroHp, character.id);
+        }
       }
 
-      logEvent('HERO_ATTACK', describeHeroAttack(activeWeapon, heroAttackRoll), {
-        isHit: heroAttackRoll.isHit,
-        isCrit: heroAttackRoll.isCrit,
-        damage: heroDamage
-      });
+      const effectiveHit = Boolean(heroAttackRoll.isHit && !evaded);
+      const effectiveAttackResult = {
+        ...heroAttackRoll,
+        isHit: effectiveHit,
+        isCrit: Boolean(heroAttackRoll.isCrit && !evaded)
+      };
+
+      if (isBattlePrayer && prayerProfile) {
+        logEvent('BATTLE_PRAYER', describeBattlePrayer(activeWeapon, effectiveAttackResult), {
+          ability: 'BATTLE_PRAYER',
+          cost: prayerProfile.cost,
+          remainingDivineCharges: effectiveHero.divine_charges,
+          isHit: effectiveHit,
+          isCrit: effectiveAttackResult.isCrit,
+          damage: heroDamage,
+          weaponDamage,
+          healDice: prayerProfile.dice,
+          healFlatBonus: prayerProfile.flatBonus,
+          rawHeal: rawPrayerHeal,
+          healed: prayerHealed,
+          newHeroHp: currentHeroHp
+        });
+      } else if (isSmite && smiteProfile) {
+        logEvent('SMITE', describeSmite(activeWeapon, effectiveAttackResult, smiteProfile.isUndead), {
+          ability: 'SMITE',
+          cost: smiteProfile.cost,
+          remainingDivineCharges: effectiveHero.divine_charges,
+          isHit: effectiveHit,
+          isCrit: effectiveAttackResult.isCrit,
+          isUndead: smiteProfile.isUndead,
+          radiantDice: smiteProfile.radiantDice,
+          flatRadiantBonus: smiteProfile.flatRadiantBonus,
+          weaponDamage,
+          radiantDamage,
+          damage: heroDamage
+        });
+      } else {
+        logEvent('HERO_ATTACK', describeHeroAttack(activeWeapon, heroAttackRoll), {
+          isHit: heroAttackRoll.isHit,
+          isCrit: heroAttackRoll.isCrit,
+          damage: heroDamage
+        });
+      }
 
       checkMonsterHealthCondition(currentMonsterHp);
 
@@ -931,103 +1298,6 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       }
 
       return currentMonsterHp <= 0;
-    }
-
-    const heroStartOfRoundHp = currentHeroHp;
-    const eligibleForLevel1SpikeGuard = (
-      Number(character.level || 1) <= 1 &&
-      roundNumber === 1 &&
-      heroStartOfRoundHp >= Math.max(6, Math.ceil((character.max_hp || 8) * 0.70))
-    );
-
-    function monsterAttackPhase() {
-      const currentMods = getActiveStatusModifiers(combatStatusState);
-      const effectiveHeroAC = baseHeroAC + currentMods.acMod;
-
-      const turnSpecials = resolveMonsterTurnSpecials({
-        character: effectiveHero,
-        equipment,
-        encounter,
-        combatState: combatStatusState,
-        roundNumber,
-        currentHeroHp,
-        currentMonsterHp,
-        monsterMaxHp,
-        rng,
-        logEvent
-      });
-      currentHeroHp = turnSpecials.newHeroHp;
-      currentMonsterHp = turnSpecials.newMonsterHp;
-
-      if (currentHeroHp > 0 && !turnSpecials.usedBreathOrVolley) {
-        const monsterAttackRoll = resolveAttackRoll(encounter.monster_ab + turnSpecials.monsterAbBonus, effectiveHeroAC, rng);
-        let monsterDamage = 0;
-
-        if (monsterAttackRoll.isHit) {
-          monsterDamage = resolveDamage(encounter.monster_damage_dice, monsterAttackRoll.isCrit, rng);
-          if (turnSpecials.bonusDamageFormula) {
-            monsterDamage += resolveDamage(turnSpecials.bonusDamageFormula, false, rng);
-          }
-          monsterDamage = Math.max(1, monsterDamage + turnSpecials.bloodFrenzyDmgBonus + bountyDamageBonus);
-          currentHeroHp = Math.max(0, currentHeroHp - monsterDamage);
-        }
-
-        logEvent('MONSTER_ATTACK', describeMonsterAttack(encounter, monsterAttackRoll), {
-          isHit: monsterAttackRoll.isHit,
-          isCrit: monsterAttackRoll.isCrit,
-          damage: monsterDamage
-        });
-
-        if (monsterAttackRoll.isHit && currentHeroHp > 0) {
-          const onHit = resolveMonsterOnHitEffects({
-            character: effectiveHero,
-            equipment,
-            encounter,
-            combatState: combatStatusState,
-            monsterAttackRoll,
-            heroAC: effectiveHeroAC,
-            currentHeroHp,
-            currentMonsterHp,
-            monsterMaxHp,
-            rng,
-            logEvent
-          });
-          currentHeroHp = onHit.newHeroHp;
-          currentMonsterHp = onHit.newMonsterHp;
-        }
-      }
-
-      // Resolve Fighter Second Wind AFTER complete monster multi-hit and immediate damage-rider sequence
-      const swRes = tryTriggerFighterSecondWind({
-        character: effectiveHero,
-        equipment,
-        encounter,
-        combatState: combatStatusState,
-        currentHeroHp,
-        maxHeroHp: character.max_hp,
-        rng,
-        logEvent
-      });
-      if (swRes.triggered) {
-        currentHeroHp = swRes.newHeroHp;
-      }
-
-      if (currentHeroHp <= 0 && eligibleForLevel1SpikeGuard) {
-        currentHeroHp = 1;
-        logEvent('HERO_STATUS', "Death's Door! Sheer survival instinct keeps you standing at 1 HP after a lethal opening blow!", {
-          level1SpikeGuard: true
-        });
-      }
-
-      tx.prepare('UPDATE characters SET current_hp = ? WHERE id = ?').run(currentHeroHp, character.id);
-      tx.prepare('UPDATE encounters SET current_monster_hp = ? WHERE id = ?').run(currentMonsterHp, encounter.id);
-      updateEncounterCombatStateSql(tx, encounter.id, combatStatusState);
-
-      if (monsterInstance) {
-        tx.prepare('UPDATE monster_instances SET current_hp = ? WHERE id = ?').run(currentMonsterHp, monsterInstance.id);
-      }
-
-      return currentHeroHp <= 0;
     }
 
     if (initiativeWinner === 'HERO') {

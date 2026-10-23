@@ -114,6 +114,9 @@ import {
   handleSlot2Click,
   handleSlot3Click,
   handleSlot4Click,
+  handleBattlePrayerClick,
+  handleSmiteClick,
+  handleDivineShieldClick,
   renderFallenScreen
 } from './combat/combat-ui.js';
 import {
@@ -283,6 +286,9 @@ if (typeof window !== 'undefined') {
     handleSlot2Click,
     handleSlot3Click,
     handleSlot4Click,
+    handleBattlePrayerClick,
+    handleSmiteClick,
+    handleDivineShieldClick,
     renderFallenScreen,
     cancelActiveCombatSequence,
     playCombatSequence,

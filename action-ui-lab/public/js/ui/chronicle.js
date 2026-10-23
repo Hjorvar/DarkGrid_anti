@@ -62,6 +62,11 @@ export function renderBottomChronicle(state) {
     const iconByType = {
       OPENING_SHOT: '🏹',
       HERO_ATTACK: '⚔️',
+      TURN_UNDEAD: '✨',
+      BATTLE_PRAYER: '🙏',
+      SMITE: '☀️',
+      DIVINE_SHIELD: '🛡️',
+      SECOND_WIND: '🛡️',
       MONSTER_ATTACK: '🩸',
       MONSTER_ABILITY: '⚡',
       STATUS_EFFECT: '☠️',

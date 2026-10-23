@@ -8,7 +8,15 @@ import { toggleMonsterSizeComparisonLab } from '../combat/size-arena.js';
 import { closePoiPlaque, dispatchRelativeMove, dispatchTurn, triggerInspectPoi } from '../api/client.js';
 import { toggleChronicleHistory } from './chronicle.js';
 import { toggleDevToolsDrawer } from './hud.js';
-import { handleSlot1Click, handleSlot2Click, handleSlot3Click, handleSlot4Click } from '../combat/combat-ui.js';
+import {
+  handleSlot1Click,
+  handleSlot2Click,
+  handleSlot3Click,
+  handleSlot4Click,
+  handleBattlePrayerClick,
+  handleSmiteClick,
+  handleDivineShieldClick
+} from '../combat/combat-ui.js';
 import { renderViewportCenterStage } from '../world/scene-renderer.js';
 
 let shortcutsInitialized = false;
@@ -101,6 +109,18 @@ export function setupKeyboardShortcuts() {
       case 'F':
         e.preventDefault();
         handleSlot4Click();
+        break;
+      case '5':
+        e.preventDefault();
+        handleBattlePrayerClick();
+        break;
+      case '6':
+        e.preventDefault();
+        handleSmiteClick();
+        break;
+      case '7':
+        e.preventDefault();
+        handleDivineShieldClick();
         break;
       case 'i':
       case 'I':

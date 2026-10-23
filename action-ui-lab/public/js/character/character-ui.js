@@ -111,7 +111,7 @@ export function renderTopBarAndDeckSnapshot(state, { sequenceLock = false } = {}
   document.getElementById('hud-hero-name').textContent = hero.name;
   document.getElementById('hud-hero-class-lvl').textContent = `${hero.class} • LVL ${hero.level}`;
 
-  // Status badges + Second Wind indicator + Unspent Attribute Points indicator
+  // Status badges + Second Wind indicator + Cleric Divine Charges + Unspent Attribute Points indicator
   const statusContainer = document.getElementById('hud-status-pills');
   if (statusContainer) {
     const pills = [];
@@ -126,11 +126,26 @@ export function renderTopBarAndDeckSnapshot(state, { sequenceLock = false } = {}
         `<span style="background: ${swUsed ? 'rgba(71,85,105,0.35)' : 'rgba(22,163,74,0.24)'}; border: 1px solid ${swUsed ? '#64748b' : '#4ade80'}; color: ${swUsed ? '#cbd5e1' : '#86efac'}; padding: 1px 6px; border-radius: 3px; font-size: 0.66rem;" title="Fighter Second Wind status">🛡️ Second Wind: ${swUsed ? 'Spent' : 'Ready'}</span>`
       );
     }
+    if (hero.class === 'CLERIC') {
+      const dcInfo = state.clericDivineChargeInfo || {};
+      const currCharges = Number(dcInfo.currentCharges ?? hero.divine_charges ?? 0);
+      const maxCharges = Number(dcInfo.maxCharges ?? hero.max_divine_charges ?? 0);
+      const lowCharges = currCharges <= 0;
+      pills.push(
+        `<span id="hud-divine-charges-pill" style="background: ${lowCharges ? 'rgba(71,85,105,0.35)' : 'rgba(234,179,8,0.22)'}; border: 1px solid ${lowCharges ? '#64748b' : '#facc15'}; color: ${lowCharges ? '#cbd5e1' : '#fde68a'}; padding: 1px 6px; border-radius: 3px; font-size: 0.66rem; font-family: var(--font-mono);" title="Cleric Divine Charges — spent on Battle Prayer (1), Smite (1), and Divine Shield (2); recharged by resting in a city">✨ Charges: ${currCharges}/${maxCharges}</span>`
+      );
+    }
     if (enc && Array.isArray(enc.heroStatusBadges) && enc.heroStatusBadges.length > 0) {
       for (const b of enc.heroStatusBadges) {
-        pills.push(
-          `<span style="background: rgba(220,38,38,0.28); border: 1px solid #ef4444; color: #fca5a5; padding: 1px 6px; border-radius: 3px; font-size: 0.66rem;">⚠️ ${escapeHtml(b.label)}</span>`
-        );
+        if (b.key === 'DIVINE_SHIELD_ACTIVE') {
+          pills.push(
+            `<span id="hud-divine-shield-pill" style="background: rgba(56,189,248,0.24); border: 1px solid #38bdf8; color: #bae6fd; padding: 1px 6px; border-radius: 3px; font-size: 0.66rem;" title="Radiant barrier reducing incoming monster damage">🛡️ ${escapeHtml(b.label)}</span>`
+          );
+        } else {
+          pills.push(
+            `<span style="background: rgba(220,38,38,0.28); border: 1px solid #ef4444; color: #fca5a5; padding: 1px 6px; border-radius: 3px; font-size: 0.66rem;">⚠️ ${escapeHtml(b.label)}</span>`
+          );
+        }
       }
     }
     statusContainer.innerHTML = pills.join(' ');
@@ -385,6 +400,7 @@ export function renderCharacterModal(titleEl, bodyEl, hero, mods) {
         <div style="font-size:0.76rem; color:var(--text-muted); margin-top:2px;">
           Vitality: <strong style="color:#86efac;">${hero.current_hp}/${hero.max_hp} HP</strong> •
           Armor Class: <strong style="color:#93c5fd;">${cStats.heroAC || 10} AC</strong> •
+          ${hero.class === 'CLERIC' ? `Divine Charges: <strong style="color:#fde047;">${Number((st.clericDivineChargeInfo && st.clericDivineChargeInfo.currentCharges) ?? hero.divine_charges ?? 0)}/${Number((st.clericDivineChargeInfo && st.clericDivineChargeInfo.maxCharges) ?? hero.max_divine_charges ?? 0)}</strong> • ` : ''}
           Experience: <strong style="color:#fde68a;">${escapeHtml(xpReadout)}</strong> •
           Purse: <strong style="color:var(--accent-gold);">${hero.gold} gp</strong>
         </div>

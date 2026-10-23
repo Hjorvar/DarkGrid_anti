@@ -50,8 +50,13 @@ export function renderActionDeckAndPad(state) {
     slot1.disabled = false;
     document.getElementById('slot1-icon').textContent = '🛌';
     document.getElementById('slot1-title').textContent = 'Sanctuary Rest';
-    document.getElementById('slot1-sub').textContent = hero.current_hp < hero.max_hp ? 'Restore Full HP' : 'Full Vitality';
-    slot1.title = 'Rest at Oakhaven Sanctuary to restore full HP and Cleric prayers [Space / 1]';
+    const dcInfo = state.clericDivineChargeInfo || {};
+    const needCharges = hero.class === 'CLERIC' && Number(dcInfo.currentCharges ?? hero.divine_charges ?? 0) < Number(dcInfo.maxCharges ?? hero.max_divine_charges ?? 0);
+    const needPrayers = hero.class === 'CLERIC' && state.clericHealInfo && Number(state.clericHealInfo.remainingUses) < Number(state.clericHealInfo.maxUses);
+    document.getElementById('slot1-sub').textContent = (hero.current_hp < hero.max_hp || needCharges || needPrayers)
+      ? (hero.class === 'CLERIC' ? 'Restore HP & Charges' : 'Restore Full HP')
+      : 'Full Vitality';
+    slot1.title = 'Rest at Oakhaven Sanctuary to restore full HP, Cleric prayers, and Divine Charges [Space / 1]';
   } else if (poi && !state.victory) {
     slot1.disabled = false;
     document.getElementById('slot1-icon').textContent = '🔍';
@@ -213,6 +218,81 @@ export function renderActionDeckAndPad(state) {
     actionCard.classList.toggle('has-primary-slot', !slot1IsIdleFiller);
     actionCard.classList.toggle('is-stage1-deck', isStage1);
     actionCard.classList.toggle('is-stage2-deck', isStage2);
+  }
+
+  // Contextual Cleric Divine Combat Actions (Phase 7C)
+  const divineDeck = document.getElementById('dm-cleric-divine-deck');
+  const isClericInStage2 = Boolean(isStage2 && hero.class === 'CLERIC');
+  if (divineDeck) {
+    divineDeck.hidden = !isClericInStage2;
+    if (isClericInStage2) {
+      const dcInfo = state.clericDivineChargeInfo || {};
+      const currCharges = Number(dcInfo.currentCharges ?? hero.divine_charges ?? 0);
+      const maxCharges = Number(dcInfo.maxCharges ?? hero.max_divine_charges ?? 0);
+      const shieldTurns = Number(enc.divineShieldTurns || 0);
+
+      const chargesBadge = document.getElementById('deck-divine-charges-badge');
+      if (chargesBadge) {
+        chargesBadge.textContent = `Charges: ${currCharges} / ${maxCharges}`;
+        chargesBadge.classList.toggle('is-depleted', currCharges <= 0);
+      }
+
+      const shieldBanner = document.getElementById('deck-divine-shield-banner');
+      const shieldTurnsEl = document.getElementById('deck-divine-shield-turns');
+      if (shieldBanner) {
+        shieldBanner.hidden = shieldTurns <= 0;
+        if (shieldTurns > 0 && shieldTurnsEl) {
+          shieldTurnsEl.textContent = `${shieldTurns} monster turn${shieldTurns === 1 ? '' : 's'} remaining`;
+        }
+      }
+
+      const btnPrayer = document.getElementById('action-divine-prayer');
+      const subPrayer = document.getElementById('sub-divine-prayer');
+      if (btnPrayer) {
+        const canPray = currCharges >= 1;
+        btnPrayer.disabled = !canPray;
+        if (subPrayer) {
+          subPrayer.textContent = canPray ? '1 Charge • Strike & Heal' : '1 Charge (0 Left)';
+        }
+        btnPrayer.title = canPray
+          ? 'Battle Prayer (Cost: 1 Divine Charge) — Weapon strike infused with a healing prayer [5]'
+          : 'Requires 1 Divine Charge (Rest in a city to recharge)';
+      }
+
+      const btnSmite = document.getElementById('action-divine-smite');
+      const subSmite = document.getElementById('sub-divine-smite');
+      if (btnSmite) {
+        const canSmite = currCharges >= 1;
+        btnSmite.disabled = !canSmite;
+        if (subSmite) {
+          subSmite.textContent = canSmite ? '1 Charge • Sacred Light' : '1 Charge (0 Left)';
+        }
+        btnSmite.title = canSmite
+          ? 'Smite (Cost: 1 Divine Charge) — Weapon strike infused with sacred radiant light [6]'
+          : 'Requires 1 Divine Charge (Rest in a city to recharge)';
+      }
+
+      const btnShield = document.getElementById('action-divine-shield');
+      const subShield = document.getElementById('sub-divine-shield');
+      if (btnShield) {
+        const canShield = currCharges >= 2 && shieldTurns <= 0;
+        btnShield.disabled = !canShield;
+        if (subShield) {
+          if (shieldTurns > 0) {
+            subShield.textContent = `Active (${shieldTurns}t left)`;
+          } else if (currCharges < 2) {
+            subShield.textContent = '2 Charges (Low)';
+          } else {
+            subShield.textContent = '2 Charges • 2-Turn Ward';
+          }
+        }
+        btnShield.title = shieldTurns > 0
+          ? `Divine Shield is already active (${shieldTurns} monster turn${shieldTurns === 1 ? '' : 's'} remaining)`
+          : (currCharges >= 2
+            ? 'Divine Shield (Cost: 2 Divine Charges) — Radiant barrier reducing incoming damage for 2 monster turns [7]'
+            : 'Requires 2 Divine Charges (Rest in a city to recharge)');
+      }
+    }
   }
 
   // Highlight Move Forward [W] as Primary Exploration Action when path ahead is open

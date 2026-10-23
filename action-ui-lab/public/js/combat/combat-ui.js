@@ -255,7 +255,10 @@ export function buildCombatMonsterActorHtml(monster, state, { isSequenceFrame = 
     const monsterBeat = seq.beats.find(b => b.actor === 'MONSTER');
     const parts = [];
     if (heroBeat) {
-      if (heroBeat.outcome === 'CRIT') {
+      if (heroBeat.outcome === 'SHIELD') {
+        parts.push(`🛡️ Radiant barrier invoked (2 turns)`);
+        exchangeSummaryClass = 'exchange-hit';
+      } else if (heroBeat.outcome === 'CRIT') {
         parts.push(`💥 Critical Hit (${escapeHtml(heroBeat.popupLabel || 'Crit!')})`);
         exchangeSummaryClass = 'exchange-crit';
       } else if (heroBeat.outcome === 'HIT') {
@@ -276,6 +279,8 @@ export function buildCombatMonsterActorHtml(monster, state, { isSequenceFrame = 
       if (monsterBeat.outcome === 'HIT' && monsterBeat.hpDelta > 0) {
         parts.push(`🩸 Enemy dealt ${monsterBeat.hpDelta} dmg`);
         if (exchangeSummaryClass === 'exchange-miss') exchangeSummaryClass = 'exchange-damage';
+      } else if (monsterBeat.outcome === 'HIT' && monsterBeat.hpDelta === 0) {
+        parts.push(`🛡️ Divine Shield absorbed the blow`);
       } else if (monsterBeat.outcome === 'MISS') {
         parts.push(`🛡️ Evaded counterattack`);
       }
@@ -295,6 +300,13 @@ export function buildCombatMonsterActorHtml(monster, state, { isSequenceFrame = 
   const swChipHtml = (hero && hero.class === 'FIGHTER' && Number(hero.level || 1) >= 3)
     ? `<span class="fp-tactical-chip" style="color:${monster.secondWindUsed ? '#94a3b8' : '#86efac'};">🛡️ Second Wind: ${monster.secondWindUsed ? 'Spent' : 'Ready'}</span>`
     : '';
+  const dcInfo = (state && state.clericDivineChargeInfo) || {};
+  const currCharges = Number(dcInfo.currentCharges ?? (hero && hero.divine_charges) ?? 0);
+  const maxCharges = Number(dcInfo.maxCharges ?? (hero && hero.max_divine_charges) ?? 0);
+  const shieldTurns = Number((monster && monster.divineShieldTurns) || 0);
+  const clericChipHtml = (hero && hero.class === 'CLERIC')
+    ? `<span class="fp-tactical-chip" id="seq-divine-charges-chip" style="color:${currCharges > 0 ? '#fde68a' : '#94a3b8'};">✨ Charges: ${currCharges}/${maxCharges}</span>${shieldTurns > 0 ? `<span class="fp-tactical-chip" id="seq-divine-shield-chip" style="color:#bae6fd; border-color:rgba(56,189,248,0.55);">🛡️ Shield (${shieldTurns}t)</span>` : ''}`
+    : '';
 
   const knowledgeBadges = (monster && monster.monsterKnowledge && Array.isArray(monster.monsterKnowledge.badges))
     ? monster.monsterKnowledge.badges
@@ -307,7 +319,7 @@ export function buildCombatMonsterActorHtml(monster, state, { isSequenceFrame = 
     <div class="fp-combat-tactical-strip">
       <span class="fp-tactical-chip">⚔️ Round ${roundNum}</span>
       <span class="fp-tactical-chip" id="seq-condition-badge" style="color:${gemColor}; border-color:${gemColor}55;">● ${escapeHtml(bracketLabel)}</span>
-      ${swChipHtml}
+      ${swChipHtml}${clericChipHtml}
       <span class="fp-tactical-chip fp-tactical-hint">${isRanged ? '🏹' : '🗡️'} ${escapeHtml(weaponName)} (${escapeHtml(String(atkBonus))}) • [Space] Strike</span>
     </div>
   `;
@@ -412,6 +424,33 @@ export function handleSlot4Click() {
     dispatchAction('IGNORE');
   } else if (!enc && store.currentState.character.class === 'CLERIC') {
     dispatchAction('CLERIC_HEAL');
+  }
+}
+
+export function handleBattlePrayerClick() {
+  if (!store.currentState) return;
+  const enc = store.currentState.encounter;
+  const hero = store.currentState.character;
+  if (enc && enc.status === 'IN_COMBAT' && hero && hero.class === 'CLERIC') {
+    dispatchAction('BATTLE_PRAYER');
+  }
+}
+
+export function handleSmiteClick() {
+  if (!store.currentState) return;
+  const enc = store.currentState.encounter;
+  const hero = store.currentState.character;
+  if (enc && enc.status === 'IN_COMBAT' && hero && hero.class === 'CLERIC') {
+    dispatchAction('SMITE');
+  }
+}
+
+export function handleDivineShieldClick() {
+  if (!store.currentState) return;
+  const enc = store.currentState.encounter;
+  const hero = store.currentState.character;
+  if (enc && enc.status === 'IN_COMBAT' && hero && hero.class === 'CLERIC') {
+    dispatchAction('DIVINE_SHIELD');
   }
 }
 

@@ -454,6 +454,43 @@
               </div>
             </button>
           </div>
+
+          <!-- Contextual Cleric Divine Combat Techniques (Visible only for Cleric in Stage 2 Combat) -->
+          <div class="dm-cleric-divine-deck" id="dm-cleric-divine-deck" hidden role="group" aria-label="Cleric Divine Combat Techniques">
+            <div class="dm-divine-deck-header">
+              <span class="dm-divine-deck-title">✨ Divine Combat</span>
+              <span class="dm-divine-charges-badge" id="deck-divine-charges-badge">Charges: 10 / 10</span>
+            </div>
+            <div class="dm-divine-shield-banner" id="deck-divine-shield-banner" hidden role="status" aria-live="polite">
+              🛡️ Divine Shield Active — <span id="deck-divine-shield-turns">2 turns left</span>
+            </div>
+            <div class="dm-divine-actions-row">
+              <button type="button" class="dm-action-tile tile-divine-action" id="action-divine-prayer" onclick="handleBattlePrayerClick()">
+                <span class="tile-hotkey">5</span>
+                <div class="tile-icon-large">🙏</div>
+                <div>
+                  <div class="tile-action-name">Battle Prayer</div>
+                  <div class="tile-action-sub" id="sub-divine-prayer">1 Charge • Strike &amp; Heal</div>
+                </div>
+              </button>
+              <button type="button" class="dm-action-tile tile-divine-action" id="action-divine-smite" onclick="handleSmiteClick()">
+                <span class="tile-hotkey">6</span>
+                <div class="tile-icon-large">☀️</div>
+                <div>
+                  <div class="tile-action-name">Smite</div>
+                  <div class="tile-action-sub" id="sub-divine-smite">1 Charge • Sacred Light</div>
+                </div>
+              </button>
+              <button type="button" class="dm-action-tile tile-divine-action" id="action-divine-shield" onclick="handleDivineShieldClick()">
+                <span class="tile-hotkey">7</span>
+                <div class="tile-icon-large">🛡️</div>
+                <div>
+                  <div class="tile-action-name">Divine Shield</div>
+                  <div class="tile-action-sub" id="sub-divine-shield">2 Charges • 2-Turn Ward</div>
+                </div>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- 3. First-Person Navigation Pad (Turn Left/Right, Forward/Back, Strafe Left/Right) -->

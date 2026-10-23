@@ -35,6 +35,7 @@ function buildCombatSequence(db, encounterId, lastEventIdBefore, beforeSnap, aft
       let computedOutcome = 'HIT';
       if (currentBeat.actor === 'HERO') {
         if (currentBeat.kind === 'POTION_USED' || currentBeat.kind === 'SECOND_WIND') computedOutcome = 'HEAL';
+        else if (currentBeat.kind === 'DIVINE_SHIELD') computedOutcome = 'SHIELD';
         else if (currentBeat.isCrit) computedOutcome = 'CRIT';
         else if (currentBeat.isHit) computedOutcome = 'HIT';
         else computedOutcome = 'MISS';
@@ -74,42 +75,91 @@ function buildCombatSequence(db, encounterId, lastEventIdBefore, beforeSnap, aft
 
     const type = ev.event_type;
 
-    if (type === 'OPENING_SHOT' || type === 'HERO_ATTACK' || type === 'TURN_UNDEAD') {
+    if (
+      type === 'OPENING_SHOT' ||
+      type === 'HERO_ATTACK' ||
+      type === 'TURN_UNDEAD' ||
+      type === 'BATTLE_PRAYER' ||
+      type === 'SMITE' ||
+      type === 'DIVINE_SHIELD'
+    ) {
       flushBeat();
-      const isHit = type === 'TURN_UNDEAD'
-        ? Boolean(details.effect && details.effect !== 'RESISTED')
-        : Boolean(details.isHit);
-      const isCrit = Boolean(details.isCrit);
-      const paralyzedStun = Boolean(details.paralyzedStun);
-      let popupText = 'Miss';
-      let popupStyle = 'pop-miss';
-      if (type === 'TURN_UNDEAD') {
-        popupText = isHit ? '✨ Turn Undead!' : 'Unholy Resistance';
-        popupStyle = isHit ? 'pop-strike' : 'pop-miss';
-      } else if (paralyzedStun) {
-        popupText = '⚡ Broke Free!';
-        popupStyle = 'pop-strike';
-      } else if (isCrit) {
-        popupText = '💥 Critical Hit!';
-        popupStyle = 'pop-strike';
-      } else if (isHit) {
-        popupText = type === 'OPENING_SHOT' ? '🏹 Opening Hit!' : '⚔️ Hit!';
-        popupStyle = 'pop-strike';
-      }
+      if (type === 'DIVINE_SHIELD') {
+        currentBeat = {
+          actor: 'HERO',
+          kind: 'DIVINE_SHIELD',
+          isHit: true,
+          isCrit: false,
+          divineShield: true,
+          popupText: '🛡️ Divine Shield (2 turns)',
+          popupStyle: 'pop-heal',
+          heroHpAfterBeat: runningHeroHp,
+          conditionBracketAfterBeat: runningBracketKey,
+          conditionTextAfterBeat: runningConditionText,
+          events: [{ id: ev.id, round_number: ev.round_number, event_type: type, public_text: ev.public_text }]
+        };
+      } else {
+        const isHit = type === 'TURN_UNDEAD'
+          ? Boolean(details.effect && details.effect !== 'RESISTED')
+          : Boolean(details.isHit);
+        const isCrit = Boolean(details.isCrit);
+        const paralyzedStun = Boolean(details.paralyzedStun);
+        const healed = type === 'BATTLE_PRAYER' ? Number(details.healed || 0) : 0;
+        if (healed > 0) {
+          runningHeroHp = Math.min(beforeSnap.heroMaxHp, runningHeroHp + healed);
+        }
+        let popupText = 'Miss';
+        let popupStyle = 'pop-miss';
+        if (type === 'TURN_UNDEAD') {
+          popupText = isHit ? '✨ Turn Undead!' : 'Unholy Resistance';
+          popupStyle = isHit ? 'pop-strike' : 'pop-miss';
+        } else if (type === 'BATTLE_PRAYER') {
+          if (isHit) {
+            popupText = healed > 0
+              ? (isCrit ? `✨ Crit Prayer +${healed} HP!` : `✨ Battle Prayer +${healed} HP`)
+              : (isCrit ? '✨ Crit Prayer Hit!' : '✨ Prayer Strike!');
+            popupStyle = healed > 0 ? 'pop-heal' : 'pop-strike';
+          } else {
+            popupText = 'Prayer Missed';
+            popupStyle = 'pop-miss';
+          }
+        } else if (type === 'SMITE') {
+          if (isHit) {
+            const isUndead = Boolean(details.isUndead);
+            popupText = isCrit
+              ? (isUndead ? '☀️ CRIT HOLY SMITE!' : '☀️ Critical Smite!')
+              : (isUndead ? '☀️ Holy Smite!' : '☀️ Smite!');
+            popupStyle = 'pop-strike';
+          } else {
+            popupText = 'Smite Missed';
+            popupStyle = 'pop-miss';
+          }
+        } else if (paralyzedStun) {
+          popupText = '⚡ Broke Free!';
+          popupStyle = 'pop-strike';
+        } else if (isCrit) {
+          popupText = '💥 Critical Hit!';
+          popupStyle = 'pop-strike';
+        } else if (isHit) {
+          popupText = type === 'OPENING_SHOT' ? '🏹 Opening Hit!' : '⚔️ Hit!';
+          popupStyle = 'pop-strike';
+        }
 
-      currentBeat = {
-        actor: 'HERO',
-        kind: type,
-        isHit,
-        isCrit,
-        paralyzedStun,
-        popupText,
-        popupStyle,
-        heroHpAfterBeat: runningHeroHp,
-        conditionBracketAfterBeat: runningBracketKey,
-        conditionTextAfterBeat: runningConditionText,
-        events: [{ id: ev.id, round_number: ev.round_number, event_type: type, public_text: ev.public_text }]
-      };
+        currentBeat = {
+          actor: 'HERO',
+          kind: type,
+          isHit,
+          isCrit,
+          healed,
+          paralyzedStun,
+          popupText,
+          popupStyle,
+          heroHpAfterBeat: runningHeroHp,
+          conditionBracketAfterBeat: runningBracketKey,
+          conditionTextAfterBeat: runningConditionText,
+          events: [{ id: ev.id, round_number: ev.round_number, event_type: type, public_text: ev.public_text }]
+        };
+      }
     } else if (type === 'MONSTER_CONDITION' || type === 'CONDITION') {
       if (details.bracket !== undefined) {
         runningBracketKey = bracketNumToKey(details.bracket);
@@ -173,14 +223,22 @@ function buildCombatSequence(db, encounterId, lastEventIdBefore, beforeSnap, aft
           : Boolean(details.isHit);
         const isCrit = Boolean(details.isCrit);
         const dmg = Number(details.damage || 0);
+        const shieldMitigated = Number(details.divineShieldMitigated || 0);
         if (dmg > 0) {
           runningHeroHp = Math.max(0, runningHeroHp - dmg);
         }
         let popupText = 'Miss';
         let popupStyle = 'pop-miss';
         if (isHit && dmg > 0) {
-          popupText = isCrit ? `💥 Crit -${dmg} HP` : `-${dmg} HP`;
+          if (shieldMitigated > 0) {
+            popupText = isCrit ? `🛡️ Crit -${dmg} HP (Shielded)` : `🛡️ -${dmg} HP (Shielded)`;
+          } else {
+            popupText = isCrit ? `💥 Crit -${dmg} HP` : `-${dmg} HP`;
+          }
           popupStyle = 'pop-damage';
+        } else if (isHit && dmg === 0 && shieldMitigated > 0) {
+          popupText = '🛡️ Shielded (0 HP)';
+          popupStyle = 'pop-heal';
         } else if (type === 'MONSTER_ABILITY' && !isHit) {
           popupText = 'Resisted';
           popupStyle = 'pop-miss';

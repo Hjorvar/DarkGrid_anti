@@ -15,10 +15,37 @@ const { buyItem, sellItem } = require('../../../src/domain/economy/shop');
 const { acceptContract, abandonContract } = require('../../../src/domain/bounties/board');
 const { buildClientState } = require('../services/client-state-service');
 
+function assertCharacterOwnsItem(db, characterId, itemInstanceId) {
+  const id = Number(itemInstanceId);
+  if (!Number.isInteger(id) || id <= 0) {
+    const err = new Error('Invalid item instance ID.');
+    err.status = 400;
+    throw err;
+  }
+  const row = db.prepare('SELECT id, owner_type, owner_character_id FROM item_instances WHERE id = ?').get(id);
+  if (!row) {
+    const err = new Error('Item not found.');
+    err.status = 404;
+    throw err;
+  }
+  if (row.owner_type !== 'CHARACTER' || Number(row.owner_character_id) !== Number(characterId)) {
+    const err = new Error('Forbidden: Item does not belong to your active character.');
+    err.status = 403;
+    throw err;
+  }
+}
+
 function handleCharacterTownAction({ db, userId, action, payload, character, labToolsAllowed = false, res }) {
   // 7. CHARACTER STANCE: MELEE / RANGED
   if (action === 'STANCE') {
-    const stance = (payload.stance || 'MELEE').toUpperCase();
+    const activeEnc = getActiveEncounterForCharacter(db, character.id, character.class);
+    if (activeEnc) {
+      throw new Error('Cannot switch weapon stance while engaged in an encounter.');
+    }
+    const requestedStance = payload.primaryWeapon || payload.stance;
+    const stance = requestedStance
+      ? String(requestedStance).toUpperCase()
+      : (character.primary_weapon === 'RANGED' ? 'MELEE' : 'RANGED');
     setPrimaryWeaponPreference(db, character.id, stance);
     return res.json({
       ok: true,
@@ -52,11 +79,14 @@ function handleCharacterTownAction({ db, userId, action, payload, character, lab
       throw new Error('Cannot rest while an encounter is active.');
     }
     const result = performCityRest(db, character.id);
+    const clericNote = result.divineChargesRechargedTo !== null && result.divineChargesRechargedTo !== undefined
+      ? ` Divine Charges (${result.divineChargesRechargedTo}) and Self-Healing prayers (${result.clericUsesRechargedTo}) fully recharged.`
+      : '';
     return res.json({
       ok: true,
       state: buildClientState(db, userId, {
         labToolsAllowed,
-        infoMessage: `Rested peacefully in Oakhaven Sanctuary. Vitality restored to ${result.maxHp} HP.`,
+        infoMessage: `Rested peacefully in Oakhaven Sanctuary. Vitality restored to ${result.maxHp} HP.${clericNote}`,
         fxCue: { type: 'HEAL', healed: result.maxHp }
       })
     });
@@ -81,6 +111,7 @@ function handleCharacterTownAction({ db, userId, action, payload, character, lab
 
   // 10. INVENTORY: EQUIP / UNEQUIP
   if (action === 'EQUIP') {
+    assertCharacterOwnsItem(db, character.id, payload.itemInstanceId);
     equipItem(db, character.id, Number(payload.itemInstanceId), payload.targetSlot || null);
     return res.json({
       ok: true,
@@ -89,6 +120,7 @@ function handleCharacterTownAction({ db, userId, action, payload, character, lab
   }
 
   if (action === 'UNEQUIP') {
+    assertCharacterOwnsItem(db, character.id, payload.itemInstanceId);
     unequipItem(db, character.id, Number(payload.itemInstanceId));
     return res.json({
       ok: true,
@@ -111,6 +143,7 @@ function handleCharacterTownAction({ db, userId, action, payload, character, lab
   }
 
   if (action === 'SELL') {
+    assertCharacterOwnsItem(db, character.id, payload.itemInstanceId);
     const itemInstanceId = Number(payload.itemInstanceId);
     const result = sellItem(db, character.id, itemInstanceId);
     let msg = `Sold ${result.itemName} for ${result.goldEarned} gp.`;

@@ -80,6 +80,21 @@ function ensureNonDestructiveLabAdapter(db) {
   if (!cols.includes('favored_enemy_family')) {
     db.exec('ALTER TABLE characters ADD COLUMN favored_enemy_family TEXT DEFAULT NULL;');
   }
+  if (!cols.includes('divine_charges')) {
+    db.exec('ALTER TABLE characters ADD COLUMN divine_charges INTEGER DEFAULT NULL;');
+  }
+  db.exec(`
+    UPDATE characters
+    SET divine_charges = CASE
+      WHEN UPPER(class) = 'CLERIC' AND is_alive = 1 THEN
+        MAX(1, 6 + COALESCE(level, 1) + CASE
+          WHEN COALESCE(wisdom, 10) >= 10 THEN (COALESCE(wisdom, 10) - 10) / 2
+          ELSE -((11 - COALESCE(wisdom, 10)) / 2)
+        END)
+      ELSE 0
+    END
+    WHERE divine_charges IS NULL;
+  `);
 
   const monsterCols = db.prepare('PRAGMA table_info(monsters)').all().map(c => c.name);
   if (monsterCols.length > 0 && !monsterCols.includes('monster_family')) {
@@ -383,7 +398,7 @@ function verifyLegacyDatabaseCompatibility(db) {
     'strength', 'constitution', 'dexterity', 'intelligence', 'wisdom', 'charisma',
     'current_hp', 'max_hp', 'tile_id', 'favored_enemy_type', 'favored_enemy_subtype',
     'favored_enemy_family', 'attribute_points', 'initial_attributes_json',
-    'cleric_heal_uses', 'primary_weapon', 'killed_by_monster_instance_id', 'died_at',
+    'cleric_heal_uses', 'divine_charges', 'primary_weapon', 'killed_by_monster_instance_id', 'died_at',
     'facing', 'pending_victory_encounter_id', 'scene_mode'
   ];
   const missingCharCols = requiredCharCols.filter(c => !charCols.has(c));
@@ -524,9 +539,22 @@ function buildClassAbilitySummary(hero, clericHealInfo = null, combatOptions = {
 
   if (cls === 'CLERIC') {
     const healText = clericHealInfo
-      ? `${clericHealInfo.dice} + WIS mod (${clericHealInfo.remainingUses}/${clericHealInfo.maxUses} uses remaining)`
-      : '1d6 + WIS mod (2 uses per sanctuary rest)';
+      ? `Sacred prayer outside of combat (${clericHealInfo.remainingUses}/${clericHealInfo.maxUses} uses remaining)`
+      : 'Sacred prayer outside of combat (2 uses per sanctuary rest)';
+    const divineChargesCurrent = combatOptions && typeof combatOptions.divineCharges === 'number'
+      ? combatOptions.divineCharges
+      : Number(hero.divine_charges ?? 0);
+    const divineChargesMax = combatOptions && typeof combatOptions.maxDivineCharges === 'number'
+      ? combatOptions.maxDivineCharges
+      : Math.max(1, 6 + lvl + Math.floor(((Number(hero.wisdom || 10)) - 10) / 2));
     return [
+      {
+        name: 'Divine Charges (Holy Combat Techniques)',
+        active: divineChargesCurrent > 0,
+        statusBadge: `${divineChargesCurrent}/${divineChargesMax} Charges`,
+        currentTier: `Divine Charges: ${divineChargesCurrent}/${divineChargesMax} remaining (Recharges on City Rest)`,
+        detail: 'Sacred combat reservoir fueling Battle Prayer (1), Smite (1), and Divine Shield (2). Recharges only upon resting in a city sanctuary.'
+      },
       {
         name: 'Sacred Knowledge (Ecclesiastic Lore)',
         active: true,

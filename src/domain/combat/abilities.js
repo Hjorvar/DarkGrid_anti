@@ -43,6 +43,8 @@ function parseCombatStateJson(rawJson, encounterRow = null) {
     turnUndeadResolved: Boolean(parsed.turnUndeadResolved),
     turnUndeadPenaltyRounds: Number(parsed.turnUndeadPenaltyRounds || 0),
     turnUndeadAttackPenalty: Number(parsed.turnUndeadAttackPenalty || 0),
+    divineShieldTurns: Math.max(0, Math.floor(Number(parsed.divineShieldTurns || 0))),
+    divineShieldReduction: Math.max(0, Math.floor(Number(parsed.divineShieldReduction || 0))),
     calcifyInstantDeath: Boolean(parsed.calcifyInstantDeath),
     ferocityTriggered: Boolean(parsed.ferocityTriggered),
     bloodFrenzyActive: Boolean(parsed.bloodFrenzyActive),
@@ -61,7 +63,7 @@ function parseCombatStateJson(rawJson, encounterRow = null) {
       shaken: Number(parsed.heroStatuses?.shaken || 0),
       sickened: Number(parsed.heroStatuses?.sickened || 0),
       paralyzed: Number(parsed.heroStatuses?.paralyzed || 0),
-      calcifyStacks: Number(parsed.heroStatuses?.calcifyStacks || 0),
+      calcifyStacks: Number(parsed.heroStatuses?.calcifyStacks || parsed.heroStatuses?.calcifyStage || 0),
       petrifiedInstantDeath: Boolean(parsed.heroStatuses?.petrifiedInstantDeath),
       corroded: Boolean(parsed.heroStatuses?.corroded),
       drainStacks: Number(parsed.heroStatuses?.drainStacks || 0)
@@ -349,11 +351,165 @@ function resolveClericTurnUndead(character, equipment, encounter, combatState, l
 }
 
 /**
+ * Phase 7C Cleric Ability 1 — BATTLE PRAYER:
+ * Cost: 1 Divine Charge.
+ * On hit, deals normal weapon damage and heals the Cleric:
+ * - Level 1 base: 1d6 + max(0, WIS modifier)
+ * - Open-ended modest level scaling:
+ *   diceCount = 1 + floor(level / 5) -> 1d6 (L1-4), 2d6 (L5-9), 3d6 (L10-14), ...
+ *   flatBonus = max(0, WIS modifier) + floor((level - 1) / 2)
+ * - No healing on miss; no critical-hit multiplication of healing; capped at Max HP.
+ */
+function getClericBattlePrayerProfile(character, equipment = null) {
+  if (!character || String(character.class || '').toUpperCase() !== 'CLERIC') {
+    return {
+      available: false,
+      cost: 1,
+      dice: null,
+      diceCount: 0,
+      flatBonus: 0,
+      wisBonus: 0,
+      levelBonus: 0,
+      description: 'He cries out a prayer as his weapon strikes, drawing strength from his faith.'
+    };
+  }
+  const eff = getEffectiveStats(character, equipment);
+  const lvl = Math.max(1, Math.floor(Number(eff.level) || 1));
+  const wisMod = getModifier(eff.wisdom !== undefined ? eff.wisdom : 10);
+  const wisBonus = Math.max(0, wisMod);
+  const levelBonus = Math.floor((lvl - 1) / 2);
+  const diceCount = 1 + Math.floor(lvl / 5);
+  const dice = `${diceCount}d6`;
+  const flatBonus = wisBonus + levelBonus;
+
+  return {
+    available: true,
+    cost: 1,
+    dice,
+    diceCount,
+    flatBonus,
+    wisBonus,
+    levelBonus,
+    description: 'He cries out a prayer as his weapon strikes, drawing strength from his faith.'
+  };
+}
+
+/**
+ * Phase 7C Cleric Ability 2 — SMITE:
+ * Cost: 1 Divine Charge.
+ * On hit, deals regular weapon damage plus sacred radiant damage:
+ * - Level 1 base: 1d8 radiant damage (+1d8 additional radiant damage against Undead -> 2d8 total)
+ * - Open-ended modest level scaling:
+ *   baseRadiantDice = 1 + floor((level - 1) / 5) -> 1d8 (L1-5), 2d8 (L6-10), 3d8 (L11-15), ...
+ *   undeadExtraDice = isUndead ? 1 : 0 (+1d8 against Undead)
+ *   flatRadiantBonus = floor((level - 1) / 2)
+ * - Retain normal weapon critical-hit behavior; bonus radiant dice/bonus are NOT multiplied on crit.
+ */
+function getClericSmiteProfile(character, equipment = null, monster = null) {
+  if (!character || String(character.class || '').toUpperCase() !== 'CLERIC') {
+    return {
+      available: false,
+      cost: 1,
+      isUndead: false,
+      baseRadiantDiceCount: 0,
+      undeadExtraDiceCount: 0,
+      totalRadiantDiceCount: 0,
+      radiantDice: null,
+      flatRadiantBonus: 0,
+      description: 'His weapon erupts with sacred light, punishing the enemy with divine wrath.'
+    };
+  }
+  const eff = getEffectiveStats(character, equipment);
+  const lvl = Math.max(1, Math.floor(Number(eff.level) || 1));
+  const isUndead = Boolean(monster && doesMonsterMatchSacredKnowledge(monster));
+  const baseRadiantDiceCount = 1 + Math.floor((lvl - 1) / 5);
+  const undeadExtraDiceCount = isUndead ? 1 : 0;
+  const totalRadiantDiceCount = baseRadiantDiceCount + undeadExtraDiceCount;
+  const radiantDice = `${totalRadiantDiceCount}d8`;
+  const flatRadiantBonus = Math.floor((lvl - 1) / 2);
+
+  return {
+    available: true,
+    cost: 1,
+    isUndead,
+    baseRadiantDiceCount,
+    undeadExtraDiceCount,
+    totalRadiantDiceCount,
+    radiantDice,
+    flatRadiantBonus,
+    description: 'His weapon erupts with sacred light, punishing the enemy with divine wrath.'
+  };
+}
+
+/**
+ * Phase 7C Cleric Ability 3 — DIVINE SHIELD:
+ * Cost: 2 Divine Charges.
+ * Manual defensive combat action lasting 2 monster turns (including activation round).
+ * - Level 1 base: reduces incoming HP damage by 2 + max(0, WIS modifier) per damaging hit, minimum 0.
+ * - Open-ended modest level scaling:
+ *   damageReduction = 2 + max(0, WIS modifier) + floor((level - 1) / 3)
+ * - Non-stacking: re-casting resets duration to 2 monster turns with current reduction.
+ */
+function getClericDivineShieldProfile(character, equipment = null) {
+  if (!character || String(character.class || '').toUpperCase() !== 'CLERIC') {
+    return {
+      available: false,
+      cost: 2,
+      durationTurns: 2,
+      damageReduction: 0,
+      wisBonus: 0,
+      levelBonus: 0,
+      description: "A radiant barrier surrounds the Cleric, shielding him from the enemy's assault."
+    };
+  }
+  const eff = getEffectiveStats(character, equipment);
+  const lvl = Math.max(1, Math.floor(Number(eff.level) || 1));
+  const wisMod = getModifier(eff.wisdom !== undefined ? eff.wisdom : 10);
+  const wisBonus = Math.max(0, wisMod);
+  const levelBonus = Math.floor((lvl - 1) / 3);
+  const damageReduction = 2 + wisBonus + levelBonus;
+
+  return {
+    available: true,
+    cost: 2,
+    durationTurns: 2,
+    damageReduction,
+    wisBonus,
+    levelBonus,
+    description: "A radiant barrier surrounds the Cleric, shielding him from the enemy's assault."
+  };
+}
+
+/**
+ * Applies active Cleric Divine Shield damage reduction to a single incoming monster damaging hit.
+ * Reduces incoming HP damage by divineShieldReduction down to a minimum of 0.
+ */
+function applyDivineShieldMitigation(rawDamage, combatState) {
+  const dmg = Math.max(0, Math.floor(Number(rawDamage) || 0));
+  const shieldActive = Boolean(combatState && Number(combatState.divineShieldTurns || 0) > 0);
+  if (!shieldActive || dmg <= 0) {
+    return {
+      finalDamage: dmg,
+      mitigated: 0,
+      shieldActive
+    };
+  }
+  const reduction = Math.max(0, Math.floor(Number(combatState.divineShieldReduction || 0)));
+  const finalDamage = Math.max(0, dmg - reduction);
+  const mitigated = dmg - finalDamage;
+  return {
+    finalDamage,
+    mitigated,
+    shieldActive: true
+  };
+}
+
+/**
  * Determines the damage types ('B', 'S', 'P') and magical status of a hero's attack.
  */
-function getWeaponCombatTraits(character, activeWeapon = null, monster = null) {
+function getWeaponCombatTraits(character, activeWeapon = null, monster = null, options = {}) {
   const types = new Set();
-  let isMagical = false;
+  let isMagical = Boolean(options && options.forceMagical);
 
   if (activeWeapon) {
     if (Number(activeWeapon.is_magical) === 1 || Number(activeWeapon.enhancement_bonus || 0) > 0) {
@@ -877,6 +1033,16 @@ function getPublicHeroStatusBadges(combatState, character = null) {
     }
   }
 
+  if (Number(combatState.divineShieldTurns || 0) > 0) {
+    const turns = Number(combatState.divineShieldTurns);
+    badges.push({
+      key: 'DIVINE_SHIELD_ACTIVE',
+      label: `Divine Shield (${turns} ${turns === 1 ? 'turn' : 'turns'})`,
+      turnsRemaining: turns,
+      severity: 'success'
+    });
+  }
+
   if (s.paralyzed > 0) {
     badges.push({ key: 'PARALYZED', label: 'Paralyzed (Drink Potion or Flee still available!)', severity: 'danger' });
   }
@@ -980,6 +1146,8 @@ function modifyHeroAttackDamageAndState({
   combatState,
   heroAttackRoll,
   rawHeroDamage,
+  bonusRadiantDamage = 0,
+  forceMagical = false,
   currentMonsterHp,
   monsterMaxHp,
   logEvent
@@ -987,10 +1155,11 @@ function modifyHeroAttackDamageAndState({
   const profile = getMonsterAbilityProfile(encounter);
   const monsterName = encounter.monster_name || encounter.name || 'the creature';
   const monsterAC = encounter.monster_ac || encounter.armor_class || 12;
-  const traits = getWeaponCombatTraits(character, activeWeapon, encounter);
+  const traits = getWeaponCombatTraits(character, activeWeapon, encounter, { forceMagical });
+  const sacredBonus = Math.max(0, Math.floor(Number(bonusRadiantDamage) || 0));
 
   if (!heroAttackRoll.isHit) {
-    return { finalDamage: 0, newMonsterHp: currentMonsterHp, evaded: false };
+    return { finalDamage: 0, weaponDamage: 0, radiantDamage: 0, newMonsterHp: currentMonsterHp, evaded: false };
   }
 
   if (profile.evasion && !heroAttackRoll.isCrit) {
@@ -1001,7 +1170,7 @@ function modifyHeroAttackDamageAndState({
       logEvent('MONSTER_ABILITY', `Your strike passes through empty air as the ${monsterName} flickers out of phase at the last instant!`, {
         ability: profile.evasion.type, evaded: true
       });
-      return { finalDamage: 0, newMonsterHp: currentMonsterHp, evaded: true };
+      return { finalDamage: 0, weaponDamage: 0, radiantDamage: 0, newMonsterHp: currentMonsterHp, evaded: true };
     }
   }
 
@@ -1040,7 +1209,10 @@ function modifyHeroAttackDamageAndState({
     }
   }
 
-  let newMonsterHp = currentMonsterHp - damage;
+  const weaponDamageAfterMitigation = damage;
+  const totalDamage = weaponDamageAfterMitigation + sacredBonus;
+
+  let newMonsterHp = currentMonsterHp - totalDamage;
 
   if (
     profile.ferocity &&
@@ -1068,7 +1240,13 @@ function modifyHeroAttackDamageAndState({
     });
   }
 
-  return { finalDamage: damage, newMonsterHp, evaded: false };
+  return {
+    finalDamage: totalDamage,
+    weaponDamage: weaponDamageAfterMitigation,
+    radiantDamage: sacredBonus,
+    newMonsterHp,
+    evaded: false
+  };
 }
 
 /**
@@ -1101,10 +1279,14 @@ function resolveMonsterTurnSpecials({
 
   if (profile.attachDrain && combatState.stirgeAttached && newMonsterHp > 0 && newHeroHp > 0) {
     const drainRoll = rollDice(profile.attachDrain.drainFormula || '1d3', rng, 1);
-    newHeroHp = Math.max(0, newHeroHp - drainRoll.total);
+    const shieldRes = applyDivineShieldMitigation(drainRoll.total, combatState);
+    newHeroHp = Math.max(0, newHeroHp - shieldRes.finalDamage);
     combatState.stirgeDrainCount += 1;
     logEvent('MONSTER_ABILITY', `The attached ${monsterName} siphons hot blood through its barbed proboscis!`, {
-      ability: 'BLOOD_DRAIN', damage: drainRoll.total
+      ability: 'BLOOD_DRAIN',
+      rawDamage: drainRoll.total,
+      damage: shieldRes.finalDamage,
+      divineShieldMitigated: shieldRes.mitigated
     });
     if (combatState.stirgeDrainCount >= 2) {
       combatState.stirgeAttached = false;
@@ -1113,9 +1295,13 @@ function resolveMonsterTurnSpecials({
 
   if (combatState.heroStatuses.grabbed && combatState.heroStatuses.grabbed.constrictFormula && newMonsterHp > 0 && newHeroHp > 0) {
     const constrictRoll = rollDice(combatState.heroStatuses.grabbed.constrictFormula, rng, 1);
-    newHeroHp = Math.max(0, newHeroHp - constrictRoll.total);
+    const shieldRes = applyDivineShieldMitigation(constrictRoll.total, combatState);
+    newHeroHp = Math.max(0, newHeroHp - shieldRes.finalDamage);
     logEvent('MONSTER_ABILITY', `The ${monsterName} tightens its crushing hold around you!`, {
-      ability: 'CONSTRICT', damage: constrictRoll.total
+      ability: 'CONSTRICT',
+      rawDamage: constrictRoll.total,
+      damage: shieldRes.finalDamage,
+      divineShieldMitigated: shieldRes.mitigated
     });
   }
 
@@ -1127,16 +1313,26 @@ function resolveMonsterTurnSpecials({
     const rawBreath = rollDice(profile.cooldownSpecial.dmgFormula, rng, 1).total;
     const d20 = rollD20(rng);
     const saved = d20 === 20 || (d20 !== 1 && d20 + saves.ref >= profile.cooldownSpecial.refDc);
-    const breathDmg = saved ? Math.max(1, Math.floor(rawBreath * 0.5)) : rawBreath;
+    const breathAfterSave = saved ? Math.max(1, Math.floor(rawBreath * 0.5)) : rawBreath;
+    const shieldRes = applyDivineShieldMitigation(breathAfterSave, combatState);
+    const breathDmg = shieldRes.finalDamage;
     newHeroHp = Math.max(0, newHeroHp - breathDmg);
 
     if (saved) {
       logEvent('MONSTER_ABILITY', `The ${monsterName} unleashes its ${profile.cooldownSpecial.label.toLowerCase()}, but you dive aside to avoid the worst of the blast!`, {
-        ability: profile.cooldownSpecial.label, saved: true, damage: breathDmg
+        ability: profile.cooldownSpecial.label,
+        saved: true,
+        rawDamage: breathAfterSave,
+        damage: breathDmg,
+        divineShieldMitigated: shieldRes.mitigated
       });
     } else {
       logEvent('MONSTER_ABILITY', `The ${monsterName} engulfs you in a devastating ${profile.cooldownSpecial.label.toLowerCase()}!`, {
-        ability: profile.cooldownSpecial.label, saved: false, damage: breathDmg
+        ability: profile.cooldownSpecial.label,
+        saved: false,
+        rawDamage: breathAfterSave,
+        damage: breathDmg,
+        divineShieldMitigated: shieldRes.mitigated
       });
     }
   } else if (combatState.breathCooldown > 0) {
@@ -1198,18 +1394,26 @@ function resolveMonsterOnHitEffects({
   let newMonsterHp = currentMonsterHp;
 
   if (profile.elementalRider && newHeroHp > 0) {
-    const elemDmg = rollDice(profile.elementalRider.dmgFormula, rng, 1).total;
-    newHeroHp = Math.max(0, newHeroHp - elemDmg);
+    const rawElemDmg = rollDice(profile.elementalRider.dmgFormula, rng, 1).total;
+    const shieldRes = applyDivineShieldMitigation(rawElemDmg, combatState);
+    newHeroHp = Math.max(0, newHeroHp - shieldRes.finalDamage);
     logEvent('MONSTER_ABILITY', `Searing ${profile.elementalRider.element} from the ${monsterName}'s ${profile.elementalRider.label.toLowerCase()} burns into the wound!`, {
-      ability: profile.elementalRider.label, damage: elemDmg
+      ability: profile.elementalRider.label,
+      rawDamage: rawElemDmg,
+      damage: shieldRes.finalDamage,
+      divineShieldMitigated: shieldRes.mitigated
     });
   }
 
   if (profile.rend && newHeroHp > 0 && (monsterAttackRoll.isCrit || monsterAttackRoll.total >= heroAC + (profile.rend.margin || 4))) {
-    const rendDmg = rollDice(profile.rend.bonusDmgFormula, rng, 1).total;
-    newHeroHp = Math.max(0, newHeroHp - rendDmg);
+    const rawRendDmg = rollDice(profile.rend.bonusDmgFormula, rng, 1).total;
+    const shieldRes = applyDivineShieldMitigation(rawRendDmg, combatState);
+    newHeroHp = Math.max(0, newHeroHp - shieldRes.finalDamage);
     logEvent('MONSTER_ABILITY', `With vicious momentum, the ${monsterName} follows through with a tearing ${profile.rend.label.toLowerCase()}!`, {
-      ability: profile.rend.label, damage: rendDmg
+      ability: profile.rend.label,
+      rawDamage: rawRendDmg,
+      damage: shieldRes.finalDamage,
+      divineShieldMitigated: shieldRes.mitigated
     });
   }
 
@@ -1335,12 +1539,31 @@ function resolveMonsterOnHitEffects({
         logEvent('MONSTER_ABILITY', `Warning! Your flesh begins stiffening into gray stone from the ${monsterName}'s ${profile.calcify.label.toLowerCase()}!`, {
           ability: profile.calcify.label, status: 'CALCIFYING', stage: 1, saved: false
         });
-      } else {
-        const stoneDmg = rollDice(profile.calcify.stage2DmgFormula || '2d6', rng, 1).total;
-        newHeroHp = Math.max(0, newHeroHp - stoneDmg);
+      } else if (combatState.heroStatuses.calcifyStacks === 1) {
+        const rawStoneDmg = rollDice(profile.calcify.stage2DmgFormula || '2d6', rng, 1).total;
+        const shieldRes = applyDivineShieldMitigation(rawStoneDmg, combatState);
+        newHeroHp = Math.max(0, newHeroHp - shieldRes.finalDamage);
         combatState.heroStatuses.calcifyStacks = 0;
         logEvent('MONSTER_ABILITY', `Stone creeps across your limbs before cracking violently as you wrench yourself free in agony!`, {
-          ability: profile.calcify.label, status: 'CALCIFIED_BURST', stage: 2, damage: stoneDmg, saved: false
+          ability: profile.calcify.label,
+          status: 'CALCIFIED_BURST',
+          stage: 2,
+          rawDamage: rawStoneDmg,
+          damage: shieldRes.finalDamage,
+          divineShieldMitigated: shieldRes.mitigated,
+          saved: false
+        });
+      } else {
+        // Stage 3 petrification: instant non-HP death — Divine Shield cannot prevent petrification
+        combatState.calcifyInstantDeath = true;
+        combatState.heroStatuses.petrifiedInstantDeath = true;
+        newHeroHp = 0;
+        logEvent('MONSTER_ABILITY', `Cold stone claims your heart and lungs — you are turned completely into a lifeless stone statue!`, {
+          ability: profile.calcify.label,
+          status: 'PETRIFIED',
+          stage: 3,
+          instantDeath: true,
+          saved: false
         });
       }
     }
@@ -1437,6 +1660,10 @@ module.exports = {
   tryTriggerFighterSecondWind,
   resolveFighterSecondWind: tryTriggerFighterSecondWind,
   resolveClericTurnUndead,
+  getClericBattlePrayerProfile,
+  getClericSmiteProfile,
+  getClericDivineShieldProfile,
+  applyDivineShieldMitigation,
   getWeaponCombatTraits,
   getMonsterAbilityProfile,
   getActiveStatusModifiers,

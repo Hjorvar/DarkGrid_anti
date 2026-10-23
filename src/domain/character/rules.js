@@ -432,6 +432,107 @@ function getClericDivinePowerBonus(...args) {
 }
 
 /**
+ * Calculates maximum Divine Charges for a Cleric (Phase 7C):
+ * Max Divine Charges = max(1, 6 + Hero Level + WIS modifier)
+ * Uses effective WIS modifier (including equipment bonuses). Non-Clerics have 0 max charges.
+ * Supports:
+ * - calculateMaxDivineCharges(level, characterClass, effectiveWisMod)
+ * - calculateMaxDivineCharges(characterClass, level, effectiveWisMod)
+ * - calculateMaxDivineCharges(characterObject, equipmentOrNull)
+ */
+function calculateMaxDivineCharges(arg1, arg2, arg3) {
+  if (arg1 && typeof arg1 === 'object') {
+    const cls = String(arg1.class || '').toUpperCase();
+    if (cls !== 'CLERIC') return 0;
+    const eq = arg2 || arg1._equipment || null;
+    let wisScore = arg1.wisdom !== undefined ? Number(arg1.wisdom) : 10;
+    if (eq && typeof eq === 'object' && arg1.base_wisdom === undefined) {
+      const seen = new Set();
+      const slotProps = ['meleeWeapon', 'rangedWeapon', 'armor', 'shield', 'ring', 'cloak', 'neck', 'belt', 'feet'];
+      const items = [];
+      for (const p of slotProps) {
+        if (eq[p] && typeof eq[p] === 'object') items.push(eq[p]);
+      }
+      if (Array.isArray(eq.items)) {
+        for (const it of eq.items) {
+          if (it && typeof it === 'object' && it.equipped_slot) items.push(it);
+        }
+      }
+      for (const it of items) {
+        const key = it.instance_id || it.id || it;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        wisScore += extractItemStatBonuses(it).wisdom;
+      }
+    }
+    const lvl = Math.max(1, Math.floor(Number(arg1.level) || 1));
+    return calculateMaxDivineCharges(lvl, cls, getModifier(wisScore));
+  }
+
+  let level = arg1;
+  let characterClass = arg2;
+  const effectiveWisMod = arg3;
+
+  if (typeof arg1 === 'string' && Number.isNaN(Number(arg1))) {
+    characterClass = arg1;
+    level = arg2;
+  }
+
+  const cls = String(characterClass || '').toUpperCase();
+  if (cls !== 'CLERIC') {
+    return 0;
+  }
+
+  const lvl = Math.max(1, Math.floor(Number(level) || 1));
+  const wisMod = Math.floor(Number(effectiveWisMod) || 0);
+  return Math.max(1, 6 + lvl + wisMod);
+}
+
+/**
+ * Clamps current Divine Charges to [0, maxDivineCharges] without refilling when capacity grows.
+ * If currentCharges is null or undefined (uninitialized legacy row), initializes to maxDivineCharges.
+ */
+function clampDivineCharges(currentCharges, maxDivineCharges, isCleric = true) {
+  if (!isCleric) return 0;
+  const maxCharges = Math.max(0, Math.floor(Number(maxDivineCharges) || 0));
+  if (currentCharges === null || currentCharges === undefined) {
+    return maxCharges;
+  }
+  const cur = Math.floor(Number(currentCharges));
+  if (!Number.isFinite(cur)) {
+    return maxCharges;
+  }
+  return Math.max(0, Math.min(cur, maxCharges));
+}
+
+/**
+ * Returns structured Cleric Divine Charges state and ability availability.
+ */
+function getClericDivineChargeInfo(character, equipment = null) {
+  if (!character || String(character.class || '').toUpperCase() !== 'CLERIC') {
+    return {
+      currentCharges: 0,
+      maxCharges: 0,
+      canBattlePrayer: false,
+      canSmite: false,
+      canDivineShield: false,
+      costs: { BATTLE_PRAYER: 1, SMITE: 1, DIVINE_SHIELD: 2 }
+    };
+  }
+  const eff = getEffectiveStats(character, equipment || character._equipment || null);
+  const maxCharges = calculateMaxDivineCharges(eff.level, 'CLERIC', getModifier(eff.wisdom));
+  const currentCharges = clampDivineCharges(character.divine_charges, maxCharges, true);
+  return {
+    currentCharges,
+    maxCharges,
+    canBattlePrayer: currentCharges >= 1,
+    canSmite: currentCharges >= 1,
+    canDivineShield: currentCharges >= 2,
+    costs: { BATTLE_PRAYER: 1, SMITE: 1, DIVINE_SHIELD: 2 }
+  };
+}
+
+/**
  * Cleric Self-Healing tier information based on level.
  */
 function getClericSelfHealInfo(level) {
@@ -543,17 +644,35 @@ function performCityRest(db, characterId) {
     const eq = getCharacterEquipment(tx, characterId);
     const eff = getEffectiveStats(character, eq);
     const canonicalMaxHp = calculateCanonicalMaxHp(eff.level, eff.class, getModifier(eff.constitution));
+    const isCleric = String(eff.class || '').toUpperCase() === 'CLERIC';
+    const maxDivineCharges = isCleric
+      ? calculateMaxDivineCharges(eff.level, 'CLERIC', getModifier(eff.wisdom))
+      : 0;
 
-    tx.prepare(`
-      UPDATE characters
-      SET max_hp = ?, current_hp = ?, cleric_heal_uses = 0
-      WHERE id = ?
-    `).run(canonicalMaxHp, canonicalMaxHp, characterId);
+    try {
+      tx.prepare(`
+        UPDATE characters
+        SET max_hp = ?, current_hp = ?, cleric_heal_uses = 0, divine_charges = ?
+        WHERE id = ?
+      `).run(canonicalMaxHp, canonicalMaxHp, maxDivineCharges, characterId);
+    } catch {
+      tx.prepare(`
+        UPDATE characters
+        SET max_hp = ?, current_hp = ?, cleric_heal_uses = 0
+        WHERE id = ?
+      `).run(canonicalMaxHp, canonicalMaxHp, characterId);
+    }
 
+    const selfHealInfo = isCleric ? getClericSelfHealInfo(eff.level) : { maxUses: 0 };
     return {
+      healedToFull: true,
       currentHp: canonicalMaxHp,
       maxHp: canonicalMaxHp,
-      clericHealUses: 0
+      clericHealUses: 0,
+      clericUsesRechargedTo: selfHealInfo.maxUses,
+      divineCharges: maxDivineCharges,
+      divineChargesRechargedTo: maxDivineCharges,
+      maxDivineCharges
     };
   });
 }
@@ -648,18 +767,48 @@ function reconcileCharacterHpOnLoad(db, characterOrId) {
   const eff = getEffectiveStats(row, equipment);
   const canonicalMaxHp = calculateCanonicalMaxHp(eff.level, eff.class, getModifier(eff.constitution));
   const reconciledCurrentHp = applyEquipmentConHpClamp(row.current_hp, canonicalMaxHp);
+  const isCleric = String(eff.class || '').toUpperCase() === 'CLERIC';
+  const maxDivineCharges = isCleric
+    ? calculateMaxDivineCharges(eff.level, 'CLERIC', getModifier(eff.wisdom))
+    : 0;
+  const reconciledDivineCharges = clampDivineCharges(row.divine_charges, maxDivineCharges, isCleric);
 
-  if (Number(row.max_hp) !== canonicalMaxHp || Number(row.current_hp) !== reconciledCurrentHp) {
-    db.prepare(`
-      UPDATE characters
-      SET max_hp = ?, current_hp = ?
-      WHERE id = ? AND is_alive = 1
-    `).run(canonicalMaxHp, reconciledCurrentHp, charId);
+  if (
+    Number(row.max_hp) !== canonicalMaxHp ||
+    Number(row.current_hp) !== reconciledCurrentHp ||
+    row.divine_charges === null ||
+    row.divine_charges === undefined ||
+    Number(row.divine_charges) !== reconciledDivineCharges
+  ) {
+    try {
+      db.prepare(`
+        UPDATE characters
+        SET max_hp = ?, current_hp = ?, divine_charges = ?
+        WHERE id = ? AND is_alive = 1
+      `).run(canonicalMaxHp, reconciledCurrentHp, reconciledDivineCharges, charId);
+      row.divine_charges = reconciledDivineCharges;
+    } catch {
+      db.prepare(`
+        UPDATE characters
+        SET max_hp = ?, current_hp = ?
+        WHERE id = ? AND is_alive = 1
+      `).run(canonicalMaxHp, reconciledCurrentHp, charId);
+    }
     row.max_hp = canonicalMaxHp;
     row.current_hp = reconciledCurrentHp;
   }
 
+  row.max_divine_charges = maxDivineCharges;
   return row;
+}
+
+/**
+ * Fetches a character row by primary key ID, or null if not found.
+ */
+function getCharacterById(db, characterId) {
+  if (!db || !characterId) return null;
+  const id = typeof characterId === 'object' ? characterId.id : Number(characterId);
+  return db.prepare('SELECT * FROM characters WHERE id = ?').get(id) || null;
 }
 
 /**
@@ -684,12 +833,19 @@ function createCharacter(db, {
   name,
   classType,
   stats,
+  useClassDefaults,
   startingGold,
   favoredEnemyFamily,
   favoredEnemyType,
   favoredEnemySubtype,
   primaryWeapon
 }) {
+  if (!stats && useClassDefaults && classType) {
+    const preset = config.classBases[String(classType).toUpperCase().trim()];
+    if (preset) {
+      stats = { ...preset };
+    }
+  }
   const validation = validateCharacterCreation(classType, stats, name);
   if (!validation.valid) {
     const error = new Error(validation.errors.join(' '));
@@ -754,6 +910,9 @@ function createCharacter(db, {
     }
 
     const maxHp = calculateCanonicalMaxHp(1, validation.classType, getModifier(stats.constitution));
+    const initialDivineCharges = validation.classType === 'CLERIC'
+      ? calculateMaxDivineCharges(1, 'CLERIC', getModifier(stats.wisdom))
+      : 0;
     const goldToGrant = startingGold !== undefined ? startingGold : config.startingGold;
 
     let characterId;
@@ -765,14 +924,14 @@ function createCharacter(db, {
           current_hp, max_hp, tile_id,
           favored_enemy_type, favored_enemy_subtype, favored_enemy_family,
           attribute_points, initial_attributes_json,
-          cleric_heal_uses, primary_weapon
+          cleric_heal_uses, divine_charges, primary_weapon
         ) VALUES (
           ?, ?, ?, 1, 1, 0, ?,
           ?, ?, ?, ?, ?, ?,
           ?, ?, ?,
           ?, ?, ?,
           0, ?,
-          0, ?
+          0, ?, ?
         )
       `);
 
@@ -794,6 +953,7 @@ function createCharacter(db, {
         finalFavoredEnemySubtype,
         finalFavoredEnemyFamily,
         initialAttributesJson,
+        initialDivineCharges,
         chosenPrimary
       );
       characterId = Number(result.lastInsertRowid);
@@ -874,7 +1034,11 @@ function createCharacter(db, {
       insertItemStmt.run(potionDef.id, characterId, null, starterMeta);
     }
 
-    return tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
+    const createdRow = tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
+    if (createdRow) {
+      createdRow.max_divine_charges = initialDivineCharges;
+    }
+    return createdRow;
   });
 }
 
@@ -944,12 +1108,25 @@ function spendAttributePoint(db, characterId, attributeName) {
     const newCurrentHp = statCol === 'constitution'
       ? applyPermanentConHpIncrease(character.current_hp, oldMaxHp, newMaxHp)
       : applyEquipmentConHpClamp(character.current_hp, newMaxHp);
+    const isCleric = String(updated.class || '').toUpperCase() === 'CLERIC';
+    const newMaxDivineCharges = isCleric
+      ? calculateMaxDivineCharges(updated.level, 'CLERIC', getModifier(effAfter.wisdom))
+      : 0;
+    const newDivineCharges = clampDivineCharges(character.divine_charges, newMaxDivineCharges, isCleric);
 
-    tx.prepare(`
-      UPDATE characters
-      SET max_hp = ?, current_hp = ?
-      WHERE id = ?
-    `).run(newMaxHp, newCurrentHp, characterId);
+    try {
+      tx.prepare(`
+        UPDATE characters
+        SET max_hp = ?, current_hp = ?, divine_charges = ?
+        WHERE id = ?
+      `).run(newMaxHp, newCurrentHp, newDivineCharges, characterId);
+    } catch {
+      tx.prepare(`
+        UPDATE characters
+        SET max_hp = ?, current_hp = ?
+        WHERE id = ?
+      `).run(newMaxHp, newCurrentHp, characterId);
+    }
 
     const finalCharacter = tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
     const hpGain = Math.max(0, newMaxHp - oldMaxHp);
@@ -965,7 +1142,9 @@ function spendAttributePoint(db, characterId, attributeName) {
       hpGain,
       hpGained: hpGain,
       currentHp: finalCharacter.current_hp,
-      maxHp: finalCharacter.max_hp
+      maxHp: finalCharacter.max_hp,
+      divineCharges: finalCharacter.divine_charges ?? newDivineCharges,
+      maxDivineCharges: newMaxDivineCharges
     };
   });
 }
@@ -993,7 +1172,10 @@ function countMilestoneAttributePointsEarned(oldLevel, newLevel) {
  * - Recalculates canonical Max HP using effective CON modifier
  * - Adds levelHpDelta to Current HP without granting a free full heal
  */
-function applyCharacterLevelUp(db, characterId, newXpOverride = null) {
+function applyCharacterLevelUp(db, characterIdOrObj, newXpOverride = null) {
+  const characterId = characterIdOrObj && typeof characterIdOrObj === 'object'
+    ? characterIdOrObj.id
+    : characterIdOrObj;
   return withTransaction(db, (tx) => {
     const charRow = tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
     if (!charRow) return null;
@@ -1032,19 +1214,35 @@ function applyCharacterLevelUp(db, characterId, newXpOverride = null) {
       attributePointsEarned = countMilestoneAttributePointsEarned(oldLevel, newLevel);
     }
 
+    const isCleric = String(charRow.class || '').toUpperCase() === 'CLERIC';
+    const newMaxDivineCharges = isCleric
+      ? calculateMaxDivineCharges(newLevel, 'CLERIC', getModifier(eff.wisdom))
+      : 0;
+    const newDivineCharges = clampDivineCharges(charRow.divine_charges, newMaxDivineCharges, isCleric);
+
     try {
       tx.prepare(`
         UPDATE characters
         SET xp = ?, level = ?, current_hp = ?, max_hp = ?,
-            attribute_points = COALESCE(attribute_points, 0) + ?
+            attribute_points = COALESCE(attribute_points, 0) + ?,
+            divine_charges = ?
         WHERE id = ?
-      `).run(currentXp, newLevel, currentHp, maxHp, attributePointsEarned, characterId);
+      `).run(currentXp, newLevel, currentHp, maxHp, attributePointsEarned, newDivineCharges, characterId);
     } catch {
-      tx.prepare(`
-        UPDATE characters
-        SET xp = ?, level = ?, current_hp = ?, max_hp = ?
-        WHERE id = ?
-      `).run(currentXp, newLevel, currentHp, maxHp, characterId);
+      try {
+        tx.prepare(`
+          UPDATE characters
+          SET xp = ?, level = ?, current_hp = ?, max_hp = ?,
+              attribute_points = COALESCE(attribute_points, 0) + ?
+          WHERE id = ?
+        `).run(currentXp, newLevel, currentHp, maxHp, attributePointsEarned, characterId);
+      } catch {
+        tx.prepare(`
+          UPDATE characters
+          SET xp = ?, level = ?, current_hp = ?, max_hp = ?
+          WHERE id = ?
+        `).run(currentXp, newLevel, currentHp, maxHp, characterId);
+      }
     }
 
     const updated = tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
@@ -1062,7 +1260,9 @@ function applyCharacterLevelUp(db, characterId, newXpOverride = null) {
       currentHp: finalCurrentHp,
       newCurrentHp: finalCurrentHp,
       maxHp: finalMaxHp,
-      newMaxHp: finalMaxHp
+      newMaxHp: finalMaxHp,
+      divineCharges: updated && updated.divine_charges !== undefined ? updated.divine_charges : newDivineCharges,
+      maxDivineCharges: newMaxDivineCharges
     };
   });
 }
@@ -1290,15 +1490,30 @@ function equipItem(db, characterId, itemInstanceId, targetSlot) {
     const effAfter = getEffectiveStats(character, newEquipment);
     const newMaxHp = calculateCanonicalMaxHp(character.level, character.class, getModifier(effAfter.constitution));
     const newCurrentHp = applyEquipmentConHpClamp(character.current_hp, newMaxHp);
+    const isCleric = String(character.class || '').toUpperCase() === 'CLERIC';
+    const newMaxDivineCharges = isCleric
+      ? calculateMaxDivineCharges(character.level, 'CLERIC', getModifier(effAfter.wisdom))
+      : 0;
+    const newDivineCharges = clampDivineCharges(character.divine_charges, newMaxDivineCharges, isCleric);
 
-    tx.prepare(`
-      UPDATE characters
-      SET max_hp = ?, current_hp = ?
-      WHERE id = ?
-    `).run(newMaxHp, newCurrentHp, characterId);
+    try {
+      tx.prepare(`
+        UPDATE characters
+        SET max_hp = ?, current_hp = ?, divine_charges = ?
+        WHERE id = ?
+      `).run(newMaxHp, newCurrentHp, newDivineCharges, characterId);
+    } catch {
+      tx.prepare(`
+        UPDATE characters
+        SET max_hp = ?, current_hp = ?
+        WHERE id = ?
+      `).run(newMaxHp, newCurrentHp, characterId);
+    }
 
     newEquipment.maxHp = newMaxHp;
     newEquipment.currentHp = newCurrentHp;
+    newEquipment.divineCharges = newDivineCharges;
+    newEquipment.maxDivineCharges = newMaxDivineCharges;
     return newEquipment;
   });
 }
@@ -1341,15 +1556,30 @@ function unequipItem(db, characterId, itemInstanceId) {
     const effAfter = getEffectiveStats(character, newEquipment);
     const newMaxHp = calculateCanonicalMaxHp(character.level, character.class, getModifier(effAfter.constitution));
     const newCurrentHp = applyEquipmentConHpClamp(character.current_hp, newMaxHp);
+    const isCleric = String(character.class || '').toUpperCase() === 'CLERIC';
+    const newMaxDivineCharges = isCleric
+      ? calculateMaxDivineCharges(character.level, 'CLERIC', getModifier(effAfter.wisdom))
+      : 0;
+    const newDivineCharges = clampDivineCharges(character.divine_charges, newMaxDivineCharges, isCleric);
 
-    tx.prepare(`
-      UPDATE characters
-      SET max_hp = ?, current_hp = ?
-      WHERE id = ?
-    `).run(newMaxHp, newCurrentHp, characterId);
+    try {
+      tx.prepare(`
+        UPDATE characters
+        SET max_hp = ?, current_hp = ?, divine_charges = ?
+        WHERE id = ?
+      `).run(newMaxHp, newCurrentHp, newDivineCharges, characterId);
+    } catch {
+      tx.prepare(`
+        UPDATE characters
+        SET max_hp = ?, current_hp = ?
+        WHERE id = ?
+      `).run(newMaxHp, newCurrentHp, characterId);
+    }
 
     newEquipment.maxHp = newMaxHp;
     newEquipment.currentHp = newCurrentHp;
+    newEquipment.divineCharges = newDivineCharges;
+    newEquipment.maxDivineCharges = newMaxDivineCharges;
     return newEquipment;
   });
 }
@@ -1556,6 +1786,12 @@ function getEffectiveStats(character, equipment = null) {
     modifiers[stat] = getModifier(effectiveScores[stat]);
   }
 
+  const isCleric = String(character.class || '').toUpperCase() === 'CLERIC';
+  const maxDivineCharges = isCleric
+    ? calculateMaxDivineCharges(character.level || 1, 'CLERIC', modifiers.wisdom)
+    : 0;
+  const currentDivineCharges = clampDivineCharges(character.divine_charges, maxDivineCharges, isCleric);
+
   const result = {
     ...character,
     base_strength: baseScores.strength,
@@ -1583,6 +1819,8 @@ function getEffectiveStats(character, equipment = null) {
     wisdom_mod: modifiers.wisdom,
     charisma_mod: modifiers.charisma,
     modifiers,
+    divine_charges: currentDivineCharges,
+    max_divine_charges: maxDivineCharges,
     is_str_boosted: bonuses.strength > 0,
     is_con_boosted: bonuses.constitution > 0,
     is_dex_boosted: bonuses.dexterity > 0,
@@ -1819,11 +2057,15 @@ module.exports = {
   getRangerFavoredEnemyBonus,
   getClericHolyRadianceBonus,
   getClericDivinePowerBonus,
+  calculateMaxDivineCharges,
+  clampDivineCharges,
+  getClericDivineChargeInfo,
   getClericSelfHealInfo,
   getClericRemainingHealUses,
   performClericSelfHeal,
   performCityRest,
   validateCharacterCreation,
+  getCharacterById,
   getLivingCharacterByUserId,
   createCharacter,
   spendAttributePoint,

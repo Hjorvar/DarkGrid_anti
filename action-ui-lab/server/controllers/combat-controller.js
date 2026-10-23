@@ -98,8 +98,8 @@ function handleCombatAction({ db, userId, options, action, payload, character, l
     });
   }
 
-  // 4. COMBAT: ATTACK
-  if (action === 'ATTACK') {
+  // 4. COMBAT: ATTACK / BATTLE_PRAYER / SMITE / DIVINE_SHIELD
+  if (action === 'ATTACK' || action === 'BATTLE_PRAYER' || action === 'SMITE' || action === 'DIVINE_SHIELD') {
     const activeEnc = getActiveEncounterForCharacter(db, character.id, character.class);
     if (!activeEnc || activeEnc.status !== 'IN_COMBAT') {
       throw new Error('No active combat encounter.');
@@ -114,8 +114,9 @@ function handleCombatAction({ db, userId, options, action, payload, character, l
     };
     if (options.rng) roundOpts.rng = options.rng;
 
-    const resultState = executeCombatRound(db, character.id, activeEnc.id, 'ATTACK', roundOpts);
+    const resultState = executeCombatRound(db, character.id, activeEnc.id, action, roundOpts);
     const hpLost = Math.max(0, prevHp - (resultState.character ? resultState.character.current_hp : prevHp));
+    const hpDelta = (resultState.character ? resultState.character.current_hp : prevHp) - prevHp;
 
     if (resultState.character && resultState.character.is_alive === 0) {
       recordEncounterOutcome(
@@ -141,15 +142,16 @@ function handleCombatAction({ db, userId, options, action, payload, character, l
       const nextState = buildClientState(db, userId, {
         labToolsAllowed,
         victory: victoryData,
-        fxCue: { type: 'VICTORY', hpLost }
+        fxCue: { type: 'VICTORY', hpLost, hpDelta, divineAction: action !== 'ATTACK' ? action : null }
       });
       nextState.combatSequence = buildCombatSequence(db, activeEnc.id, lastEventIdBefore, beforeSnap, nextState);
       return res.json({ ok: true, state: nextState });
     }
 
+    const fxType = action === 'ATTACK' ? 'ATTACK_EXCHANGE' : action;
     const nextState = buildClientState(db, userId, {
       labToolsAllowed,
-      fxCue: { type: 'ATTACK_EXCHANGE', hpLost }
+      fxCue: { type: fxType, hpLost, hpDelta }
     });
     nextState.combatSequence = buildCombatSequence(db, activeEnc.id, lastEventIdBefore, beforeSnap, nextState);
     return res.json({ ok: true, staleRoundIgnored: nextState.combatSequence === null, state: nextState });
