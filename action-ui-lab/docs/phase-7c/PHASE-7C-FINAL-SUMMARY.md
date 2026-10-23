@@ -26,7 +26,7 @@ The canonical playable DarkGrid game is served via **`action-ui-lab`** on top of
 # 1. Run database migrations and seeds (idempotent, preserves existing heroes)
 npm run setup:db
 
-# 2. Start the canonical playable Action-UI-Lab server (http://localhost:3101)
+# 2. Start the canonical playable Action-UI-Lab server (http://localhost:3030)
 npm run start:lab
 
 # (Optional) Start with automatic file-watch reload in development

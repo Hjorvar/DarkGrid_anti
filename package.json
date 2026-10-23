@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
+    "start:lab": "node action-ui-lab/server.js",
+    "dev:lab": "node --watch action-ui-lab/server.js",
     "test": "node --require ./tests/test_helpers.js --test tests/*.test.js",
+    "test:lab": "node --test action-ui-lab/tests/action-lab.test.js action-ui-lab/tests/world-travel.test.js action-ui-lab/tests/player-ui.test.js",
     "db:setup": "node scripts/setup_db.js",
     "setup:db": "node scripts/setup_db.js",
     "db:world": "node scripts/generate_world_seed.js",
