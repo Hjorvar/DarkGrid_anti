@@ -227,8 +227,20 @@ function attachBattleExperienceContext(db, effectiveCharacter, encounter, equipm
 /**
  * Ensures Level 1 characters can never be in an Ambush state (even for pre-existing DB rows).
  */
+function hasExplicitAmbushOverride(encounter) {
+  if (!encounter || !encounter.combat_state_json) return false;
+  try {
+    const parsed = typeof encounter.combat_state_json === 'string'
+      ? JSON.parse(encounter.combat_state_json)
+      : encounter.combat_state_json;
+    return Boolean(parsed && (parsed.labForcedAmbush === true || parsed.allowLevel1Ambush === true));
+  } catch {
+    return false;
+  }
+}
+
 function enforceNoAmbushAtLevel1(db, character, encounter) {
-  if (character && Number(character.level || 1) <= 1 && encounter && Number(encounter.is_ambush) === 1) {
+  if (character && Number(character.level || 1) <= 1 && encounter && Number(encounter.is_ambush) === 1 && !hasExplicitAmbushOverride(encounter)) {
     db.prepare(`
       UPDATE encounters
       SET is_ambush = 0, spotted_by_hero = 0
@@ -378,6 +390,22 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
 
     // Initial engagement description
     const initialCondition = getConditionTextForBracket(encounter.monster_descriptions, initialBracket);
+    const isAmbushActiveAtStart = Number(encounter.is_ambush || 0) === 1 || Boolean(combatStatusState && combatStatusState.labForcedAmbush);
+    if (isAmbushActiveAtStart) {
+      const existingAmbushEvent = tx.prepare("SELECT COUNT(*) as c FROM combat_events WHERE encounter_id = ? AND event_type = 'AMBUSH'").get(encounterId).c;
+      if (existingAmbushEvent === 0) {
+        const ambushMonsterName = encounter.monster_name || 'creature';
+        tx.prepare(`
+          INSERT INTO combat_events (
+            encounter_id, round_number, event_type, public_text, details
+          ) VALUES (?, 1, 'AMBUSH', ?, ?)
+        `).run(
+          encounterId,
+          `AMBUSH! The ${ambushMonsterName} lunges from the shadows before you can react! Retreat is cut off for the first 2 combat rounds!`,
+          JSON.stringify({ isAmbush: true, fleeLockedRounds: 2, initiativeWinner })
+        );
+      }
+    }
     const existingEventsCount = tx.prepare("SELECT COUNT(*) as c FROM combat_events WHERE encounter_id = ? AND event_type = 'CONDITION'").get(encounterId).c;
 
     if (existingEventsCount === 0 && initialCondition) {
@@ -524,9 +552,26 @@ function getCombatState(db, characterId, encounterId) {
 
   const clericDivineInfo = getClericDivineChargeInfo(effectiveCharacter, equipment);
   const divineShieldTurns = Math.max(0, Number(combatStatusState.divineShieldTurns || 0));
+  const isAmbush = Number(encounter.is_ambush || 0) === 1 || Boolean(combatStatusState && combatStatusState.labForcedAmbush);
+  const currentRound = Math.max(1, Number(encounter.combat_round || 1));
+  const ambushFleeLockRoundsTotal = 2;
+  const ambushFleeLockedRoundsRemaining = (isAmbush && encounter.status === 'IN_COMBAT')
+    ? Math.max(0, (ambushFleeLockRoundsTotal + 1) - currentRound)
+    : 0;
+  const fleeLocked = ambushFleeLockedRoundsRemaining > 0;
+  const canFlee = encounter.status === 'IN_COMBAT' && !fleeLocked;
+  const fleeLockReason = fleeLocked
+    ? `AMBUSH! Retreat is cut off for the first ${ambushFleeLockRoundsTotal} combat rounds (${ambushFleeLockedRoundsRemaining} round${ambushFleeLockedRoundsRemaining === 1 ? '' : 's'} remaining).`
+    : null;
 
   return {
     character: effectiveCharacter,
+    isAmbush,
+    fleeLocked,
+    canFlee,
+    ambushFleeLockRoundsTotal,
+    ambushFleeLockedRoundsRemaining,
+    fleeLockReason,
     encounter,
     events,
     equipment,
@@ -909,6 +954,18 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
     // ACTION 1: FLEE
     // =========================================================================
     if (normalizedAction === 'FLEE') {
+      const isAmbushActive = Number(encounter.is_ambush || 0) === 1 || Boolean(combatStatusState && combatStatusState.labForcedAmbush);
+      if (isAmbushActive && roundNumber <= 2) {
+        const remainingLockedRounds = Math.max(1, 3 - roundNumber);
+        const err = new Error(
+          `AMBUSH! You cannot flee during the first 2 combat rounds of an ambush (${remainingLockedRounds} round${remainingLockedRounds === 1 ? '' : 's'} remaining before retreat opens).`
+        );
+        err.status = 400;
+        err.code = 'AMBUSH_FLEE_LOCKED';
+        err.fleeLocked = true;
+        err.ambushFleeLockedRoundsRemaining = remainingLockedRounds;
+        throw err;
+      }
       const freeAttackRoll = resolveAttackRoll(encounter.monster_ab, heroAC, rng);
       let rawFreeDamage = 0;
       let freeDamage = 0;

@@ -89,6 +89,12 @@ function ensureNonDestructiveLabAdapter(db) {
   if (!cols.includes('goblin_chieftain_slain')) {
     db.exec('ALTER TABLE characters ADD COLUMN goblin_chieftain_slain INTEGER NOT NULL DEFAULT 0;');
   }
+  if (!cols.includes('active_landmark_scene_key')) {
+    db.exec('ALTER TABLE characters ADD COLUMN active_landmark_scene_key TEXT DEFAULT NULL;');
+  }
+  if (!cols.includes('dismissed_landmark_tile_id')) {
+    db.exec('ALTER TABLE characters ADD COLUMN dismissed_landmark_tile_id INTEGER DEFAULT NULL;');
+  }
   db.exec(`
     UPDATE characters
     SET divine_charges = CASE
@@ -202,6 +208,39 @@ function ensureNonDestructiveLabAdapter(db) {
       }
     }
   }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS danger_zone_profiles (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      zone_key TEXT NOT NULL UNIQUE,
+      zone_name TEXT NOT NULL,
+      danger_level TEXT NOT NULL,
+      encounter_rate REAL NOT NULL DEFAULT 0.18,
+      ambush_share REAL NOT NULL DEFAULT 0.30,
+      min_steps_between_combats INTEGER NOT NULL DEFAULT 1,
+      streak_dampening_per_event REAL NOT NULL DEFAULT 0.08,
+      monster_pool_json TEXT NOT NULL DEFAULT '[]',
+      description TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS landmark_scene_definitions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      scene_key TEXT NOT NULL UNIQUE,
+      landmark_type TEXT NOT NULL,
+      category TEXT NOT NULL DEFAULT 'MAJOR_LANDMARK',
+      title TEXT NOT NULL,
+      subtitle TEXT NOT NULL DEFAULT '',
+      description TEXT NOT NULL DEFAULT '',
+      artwork_url TEXT NOT NULL,
+      is_major_landmark INTEGER NOT NULL DEFAULT 1,
+      auto_open_on_arrival INTEGER NOT NULL DEFAULT 1,
+      actions_json TEXT NOT NULL DEFAULT '[]',
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
 
   initSceneCatalogTables(db);
 }

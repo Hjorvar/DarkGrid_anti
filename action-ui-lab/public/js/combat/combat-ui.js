@@ -352,6 +352,11 @@ export function buildCombatMonsterActorHtml(monster, state, { isSequenceFrame = 
       </div>
 
       <div class="fp-monster-hud-plate">
+        ${monster.isAmbush ? (
+          (monster.fleeLocked || roundNum <= 2)
+            ? `<div class="fp-ambush-banner is-flee-locked" id="combat-ambush-banner">⚠️ <strong>AMBUSH!</strong> Caught off guard — Retreat is locked for ${monster.ambushFleeLockedRoundsRemaining || Math.max(1, 3 - roundNum)} more round${(monster.ambushFleeLockedRoundsRemaining || Math.max(1, 3 - roundNum)) === 1 ? '' : 's'} (Round ${roundNum}/2)!</div>`
+            : `<div class="fp-ambush-banner is-flee-unlocked" id="combat-ambush-banner">⚡ <strong>AMBUSH SURVIVED (Round ${roundNum})</strong> — Retreat path is now open [4 / F]!</div>`
+        ) : ''}
         <div class="fp-monster-title-row">
           <span style="color: ${escapeHtml(monster.monsterColor || '#c5a059')}; font-family: var(--font-mono);">[${escapeHtml(monster.monsterSymbol || 'M')}]</span>
           <span>${escapeHtml(monster.monsterName || 'Enemy')}</span>
@@ -420,6 +425,10 @@ export function handleSlot4Click() {
   if (!store.currentState) return;
   const enc = store.currentState.encounter;
   if (enc && enc.status === 'IN_COMBAT') {
+    if (enc.fleeLocked || (enc.isAmbush && Number(enc.combat_round || 1) <= 2)) {
+      dispatchAction('FLEE');
+      return;
+    }
     if (!store.fleeConfirmArmed) {
       store.fleeConfirmArmed = true;
       renderActionDeckAndPad(store.currentState);
@@ -433,7 +442,7 @@ export function handleSlot4Click() {
     store.fleeConfirmArmed = false;
     dispatchAction('FLEE');
   } else if (enc && enc.status === 'DISCOVERED' && !enc.isAmbush) {
-    dispatchAction('IGNORE');
+    dispatchAction('AVOID');
   } else if (!enc && store.currentState.character.class === 'CLERIC') {
     dispatchAction('CLERIC_HEAL');
   }

@@ -72,6 +72,8 @@ const {
   isGoblinStrongholdTile,
   syncCharacterQuestState,
   getCharacterQuests,
+  resolveTileDangerZone,
+  resolveLandmarkSceneState,
   buildTopdownMapPayload
 } = require('./topdown-world-service');
 
@@ -168,7 +170,12 @@ function buildClientState(db, userId, extra = {}) {
   // Rule D: Reconcile Max HP on load without healing Current HP
   character = reconcileCharacterHpOnLoad(db, character.id) || character;
 
-  const charRowRaw = db.prepare('SELECT facing, pending_victory_encounter_id, scene_mode FROM characters WHERE id = ?').get(character.id) || {};
+  let charRowRaw = {};
+  try {
+    charRowRaw = db.prepare('SELECT facing, pending_victory_encounter_id, scene_mode, active_landmark_scene_key, dismissed_landmark_tile_id FROM characters WHERE id = ?').get(character.id) || {};
+  } catch {
+    charRowRaw = db.prepare('SELECT facing, pending_victory_encounter_id, scene_mode FROM characters WHERE id = ?').get(character.id) || {};
+  }
   const facing = normalizeFacing(charRowRaw.facing || 'NORTH');
   const sceneMode = normalizeSceneMode(charRowRaw.scene_mode || 'C');
   let pendingVictoryEncounterId = charRowRaw.pending_victory_encounter_id || null;
@@ -193,6 +200,16 @@ function buildClientState(db, userId, extra = {}) {
     rawEncounterRow = db.prepare('SELECT is_ambush, spotted_by_hero, combat_state_json FROM encounters WHERE id = ?').get(activeEncounter.id);
   }
   let labForcedAmbush = false;
+  let parsedEncounterStateMeta = {};
+  if (rawEncounterRow && rawEncounterRow.combat_state_json) {
+    try {
+      parsedEncounterStateMeta = JSON.parse(rawEncounterRow.combat_state_json) || {};
+      labForcedAmbush = Boolean(parsedEncounterStateMeta && parsedEncounterStateMeta.labForcedAmbush);
+    } catch {
+      parsedEncounterStateMeta = {};
+      labForcedAmbush = false;
+    }
+  }
   if (rawEncounterRow && rawEncounterRow.combat_state_json) {
     try {
       const parsedState = JSON.parse(rawEncounterRow.combat_state_json);
@@ -341,6 +358,14 @@ function buildClientState(db, userId, extra = {}) {
         status: 'DISCOVERED',
         combat_round: 0,
         isAmbush: effectiveAmbush,
+        travelOutcome: effectiveAmbush ? 'AMBUSH' : 'ENCOUNTER',
+        spottedByHero: !effectiveAmbush,
+        ambushFoiledByRanger: Boolean(parsedEncounterStateMeta && parsedEncounterStateMeta.ambushFoiledByRanger),
+        situationalSummary: parsedEncounterStateMeta && parsedEncounterStateMeta.ambushFoiledByRanger
+          ? 'Your Ranger trail-sense catches movement in the brush before the ambush can spring!'
+          : (activeEncounter.isRangerSpecial
+            ? 'Your wilderness lore reads the creature’s tracks and posture from cover.'
+            : 'You spot movement ahead before the threat notices your approach.'),
         isRangerSpecial: Boolean(activeEncounter.isRangerSpecial),
         classKnowledgeNote: activeEncounter.classKnowledgeNote || null,
         resolvedDescription: activeEncounter.resolvedDescription
@@ -397,6 +422,13 @@ function buildClientState(db, userId, extra = {}) {
       safeEncounter = {
         id: activeEncounter.id,
         status: 'IN_COMBAT',
+        travelOutcome: ((combatState && combatState.isAmbush) || activeEncounter.isAmbush || Number(activeEncounter.is_ambush) === 1 || labForcedAmbush) ? 'AMBUSH' : 'ENCOUNTER',
+        isAmbush: Boolean((combatState && combatState.isAmbush) || activeEncounter.isAmbush || Number(activeEncounter.is_ambush) === 1 || labForcedAmbush),
+        fleeLocked: Boolean(combatState && combatState.fleeLocked),
+        canFlee: combatState ? Boolean(combatState.canFlee) : true,
+        ambushFleeLockRoundsTotal: combatState ? combatState.ambushFleeLockRoundsTotal : 2,
+        ambushFleeLockedRoundsRemaining: combatState ? combatState.ambushFleeLockedRoundsRemaining : 0,
+        fleeLockReason: combatState ? combatState.fleeLockReason : null,
         combat_round: activeEncounter.combat_round || 1,
         monsterId: activeEncounter.monster_id || null,
         monsterName: cleanMonsterName,
@@ -502,6 +534,14 @@ function buildClientState(db, userId, extra = {}) {
   const quest = syncCharacterQuestState(db, character.id);
   const quests = getCharacterQuests(db, character.id);
   const topdownMap = buildTopdownMapPayload(db, effectiveHero, currentTile);
+  const dangerZone = resolveTileDangerZone(db, currentTile);
+  const landmarkScene = resolveLandmarkSceneState(
+    db,
+    { ...character, ...charRowRaw },
+    currentTile,
+    safeEncounter,
+    resolvedVictory
+  );
 
   return {
     mode: safeEncounter ? safeEncounter.status : (isSafeCity ? 'CITY' : 'EXPLORATION'),
@@ -516,6 +556,8 @@ function buildClientState(db, userId, extra = {}) {
     sceneMode,
     viewportScene,
     topdownMap,
+    dangerZone,
+    landmarkScene,
     quest,
     quests,
     character: {

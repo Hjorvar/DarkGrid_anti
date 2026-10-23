@@ -68,7 +68,7 @@ function handleCombatAction({ db, userId, options, action, payload, character, l
     return res.json({ ok: true, state: nextState });
   }
   // 2. ENCOUNTER: INVESTIGATE / ENGAGE (Enter Stage 2 Combat)
-  if (action === 'INVESTIGATE' || action === 'ENGAGE') {
+  if (action === 'INVESTIGATE' || action === 'ENGAGE' || action === 'FIGHT') {
     const activeEnc = getActiveEncounterForCharacter(db, character.id, character.class);
     if (!activeEnc) {
       throw new Error('No active threat to engage.');
@@ -112,7 +112,7 @@ function handleCombatAction({ db, userId, options, action, payload, character, l
   }
 
   // 3. ENCOUNTER: IGNORE / BYPASS IN PLACE
-  if (action === 'IGNORE' || action === 'BYPASS') {
+  if (action === 'IGNORE' || action === 'BYPASS' || action === 'AVOID') {
     const activeEnc = getActiveEncounterForCharacter(db, character.id, character.class);
     if (!activeEnc) {
       throw new Error('No active threat to bypass.');

@@ -28,6 +28,7 @@ const {
   getEncounterById,
   investigateEncounter
 } = require('../../../src/domain/encounters/engine');
+const { startCombat } = require('../../../src/domain/combat/engine');
 
 const TOPDOWN_WORLD_VERSION = 'PHASE_8_30X30';
 
@@ -929,7 +930,231 @@ function ensurePhase8DefinitionsSeeded(db) {
  * subsequent calls on server restart do NOT overwrite `map_tiles`, character positions, boss status,
  * or quest progress unless `options.forceRebuild === true`.
  */
+const DANGER_ZONE_PROFILES = Object.freeze({
+  OAKHAVEN_SAFE: {
+    zoneKey: 'OAKHAVEN_SAFE',
+    zoneName: 'Oakhaven',
+    dangerLevel: 'NONE',
+    dangerLabel: 'None',
+    encounterRate: 0.0,
+    ambushShare: 0.0,
+    minStepsBetweenCombats: 0,
+    streakDampeningPerEvent: 0.0,
+    monsterPool: [],
+    description: 'The fortified sanctuary of Oakhaven. No monsters prowl within the palisade.'
+  },
+  GOBLIN_FOREST_ROAD: {
+    zoneKey: 'GOBLIN_FOREST_ROAD',
+    zoneName: 'Main Road in Goblin Forest',
+    dangerLevel: 'MEDIUM',
+    dangerLabel: 'Medium',
+    encounterRate: 0.18,
+    ambushShare: 0.28,
+    minStepsBetweenCombats: 1,
+    streakDampeningPerEvent: 0.07,
+    monsterPool: ['Goblin', 'Hobgoblin', 'Dire Rat', 'Wolf', 'Viper'],
+    description: 'Patrolled woodland roads and bridges threading through Blackwood Forest. Moderate risk of goblin scouts and predators.'
+  },
+  GOBLIN_FOREST_OFF_ROAD: {
+    zoneKey: 'GOBLIN_FOREST_OFF_ROAD',
+    zoneName: 'Off-Road Forest',
+    dangerLevel: 'HIGH',
+    dangerLabel: 'High',
+    encounterRate: 0.24,
+    ambushShare: 0.38,
+    minStepsBetweenCombats: 1,
+    streakDampeningPerEvent: 0.08,
+    monsterPool: ['Goblin', 'Hobgoblin', 'Wolf', 'Giant Spider', 'Stirge', 'Mite', 'Vegepygmy'],
+    description: 'Shadowed off-trail woodland and tangled undergrowth where lurking predators and goblin stalkers set traps.'
+  },
+  GOBLIN_HUNTING_GROUNDS: {
+    zoneKey: 'GOBLIN_HUNTING_GROUNDS',
+    zoneName: 'Goblin Hunting Grounds',
+    dangerLevel: 'VERY_HIGH',
+    dangerLabel: 'Very High',
+    encounterRate: 0.32,
+    ambushShare: 0.45,
+    minStepsBetweenCombats: 1,
+    streakDampeningPerEvent: 0.08,
+    monsterPool: ['Goblin', 'Hobgoblin', 'Bugbear', 'Worg', 'Wolf'],
+    description: 'Bone-strewn hunting grounds patrolled by goblin packs and worg riders.'
+  },
+  STRONGHOLD_APPROACH: {
+    zoneKey: 'STRONGHOLD_APPROACH',
+    zoneName: 'Near Goblin Stronghold',
+    dangerLevel: 'VERY_HIGH',
+    dangerLabel: 'Very High',
+    encounterRate: 0.34,
+    ambushShare: 0.48,
+    minStepsBetweenCombats: 1,
+    streakDampeningPerEvent: 0.08,
+    monsterPool: ['Goblin', 'Hobgoblin', 'Bugbear', 'Worg', 'Hobgoblin Captain'],
+    description: 'The heavily guarded northern perimeter surrounding the Goblin Stronghold. Sentry ambushes are frequent.'
+  }
+});
+
+const LANDMARK_SCENE_DEFINITIONS = Object.freeze({
+  OAKHAVEN: {
+    sceneKey: 'OAKHAVEN',
+    landmarkType: 'CITY',
+    category: 'CITY',
+    title: 'Oakhaven Sanctuary',
+    subtitle: 'Fortified Frontier Settlement',
+    description: 'Lantern light glows warm against the timber palisades of Oakhaven. Weary travellers mend their wounds at the hearth, trade steel and elixirs at the quartermaster’s stalls, and gather around the watch-board for news of the northern woods.',
+    artworkUrl: '/images/terrain/terrain_city_oakhaven.webp',
+    isMajorLandmark: true,
+    autoOpenOnArrival: true,
+    actions: [
+      { key: 'REST_HEAL', label: 'Rest / Heal', action: 'REST', style: 'primary' },
+      { key: 'OPEN_SHOP', label: 'Shop', modal: 'SHOP', style: 'secondary' },
+      { key: 'OPEN_QUESTS', label: 'Quests & Bounties', modal: 'BOUNTY', style: 'secondary' },
+      { key: 'CONTINUE_EXPLORING', label: 'Continue Exploring', action: 'DISMISS_LANDMARK_SCENE', style: 'ghost' }
+    ]
+  },
+  GOBLIN_STRONGHOLD: {
+    sceneKey: 'GOBLIN_STRONGHOLD',
+    landmarkType: 'BOSS_AREA',
+    category: 'BOSS_AREA',
+    title: 'Goblin Stronghold',
+    subtitle: 'Northern War-Stockade of Warchief Grak',
+    description: 'Sharpened timber stakes, skull-totems, and iron-bound war gates loom out of the northern mist. War-drums echo from within the stockade where Warchief Grak commands the Goblin Forest.',
+    artworkUrl: '/images/terrain/terrain_town_gates.webp',
+    isMajorLandmark: true,
+    autoOpenOnArrival: true,
+    actions: [
+      { key: 'CHALLENGE_CHIEFTAIN', label: 'Challenge the Goblin Chieftain', action: 'ENGAGE_STRONGHOLD_BOSS', style: 'danger' },
+      { key: 'CONTINUE_EXPLORING', label: 'Continue Exploring', action: 'DISMISS_LANDMARK_SCENE', style: 'ghost' }
+    ]
+  },
+  ANCIENT_DUNGEON_ENTRANCE: {
+    sceneKey: 'ANCIENT_DUNGEON_ENTRANCE',
+    landmarkType: 'DUNGEON_ENTRANCE',
+    category: 'DUNGEON_ENTRANCE',
+    title: 'Ancient Dungeon Entrance',
+    subtitle: 'Sealed Underworld Descent',
+    description: 'Weathered stone steps descend into yawning darkness beneath the roots of the mountain.',
+    artworkUrl: '/images/terrain/terrain_caves.webp',
+    isMajorLandmark: true,
+    autoOpenOnArrival: false,
+    actions: [
+      { key: 'CONTINUE_EXPLORING', label: 'Continue Exploring', action: 'DISMISS_LANDMARK_SCENE', style: 'ghost' }
+    ]
+  },
+  SUNKEN_CRYPT_ENTRANCE: {
+    sceneKey: 'SUNKEN_CRYPT_ENTRANCE',
+    landmarkType: 'CRYPT',
+    category: 'CRYPT',
+    title: 'Sunken Crypt',
+    subtitle: 'Forsaken Vault of the Restless Dead',
+    description: 'Cracked marble archways and cold sepulchral mist mark an ancient burial vault.',
+    artworkUrl: '/images/terrain/terrain_ruins.webp',
+    isMajorLandmark: true,
+    autoOpenOnArrival: false,
+    actions: [
+      { key: 'CONTINUE_EXPLORING', label: 'Continue Exploring', action: 'DISMISS_LANDMARK_SCENE', style: 'ghost' }
+    ]
+  }
+});
+
+function ensurePhase9DefinitionsSeeded(db) {
+  if (!db) return;
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS danger_zone_profiles (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        zone_key TEXT NOT NULL UNIQUE,
+        zone_name TEXT NOT NULL,
+        danger_level TEXT NOT NULL,
+        encounter_rate REAL NOT NULL DEFAULT 0.18,
+        ambush_share REAL NOT NULL DEFAULT 0.30,
+        min_steps_between_combats INTEGER NOT NULL DEFAULT 1,
+        streak_dampening_per_event REAL NOT NULL DEFAULT 0.08,
+        monster_pool_json TEXT NOT NULL DEFAULT '[]',
+        description TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS landmark_scene_definitions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        scene_key TEXT NOT NULL UNIQUE,
+        landmark_type TEXT NOT NULL,
+        category TEXT NOT NULL DEFAULT 'MAJOR_LANDMARK',
+        title TEXT NOT NULL,
+        subtitle TEXT NOT NULL DEFAULT '',
+        description TEXT NOT NULL DEFAULT '',
+        artwork_url TEXT NOT NULL,
+        is_major_landmark INTEGER NOT NULL DEFAULT 1,
+        auto_open_on_arrival INTEGER NOT NULL DEFAULT 1,
+        actions_json TEXT NOT NULL DEFAULT '[]',
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    const upsertZone = db.prepare(`
+      INSERT INTO danger_zone_profiles (
+        zone_key, zone_name, danger_level, encounter_rate, ambush_share,
+        min_steps_between_combats, streak_dampening_per_event, monster_pool_json, description
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(zone_key) DO UPDATE SET
+        zone_name = excluded.zone_name,
+        danger_level = excluded.danger_level,
+        encounter_rate = excluded.encounter_rate,
+        ambush_share = excluded.ambush_share,
+        min_steps_between_combats = excluded.min_steps_between_combats,
+        streak_dampening_per_event = excluded.streak_dampening_per_event,
+        monster_pool_json = excluded.monster_pool_json,
+        description = excluded.description
+    `);
+    for (const z of Object.values(DANGER_ZONE_PROFILES)) {
+      upsertZone.run(
+        z.zoneKey,
+        z.zoneName,
+        z.dangerLevel,
+        z.encounterRate,
+        z.ambushShare,
+        z.minStepsBetweenCombats,
+        z.streakDampeningPerEvent,
+        JSON.stringify(z.monsterPool || []),
+        z.description || ''
+      );
+    }
+
+    const upsertScene = db.prepare(`
+      INSERT INTO landmark_scene_definitions (
+        scene_key, landmark_type, category, title, subtitle, description,
+        artwork_url, is_major_landmark, auto_open_on_arrival, actions_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(scene_key) DO UPDATE SET
+        landmark_type = excluded.landmark_type,
+        category = excluded.category,
+        title = excluded.title,
+        subtitle = excluded.subtitle,
+        description = excluded.description,
+        artwork_url = excluded.artwork_url,
+        is_major_landmark = excluded.is_major_landmark,
+        auto_open_on_arrival = excluded.auto_open_on_arrival,
+        actions_json = excluded.actions_json
+    `);
+    for (const sc of Object.values(LANDMARK_SCENE_DEFINITIONS)) {
+      upsertScene.run(
+        sc.sceneKey,
+        sc.landmarkType,
+        sc.category,
+        sc.title,
+        sc.subtitle || '',
+        sc.description || '',
+        sc.artworkUrl,
+        sc.isMajorLandmark ? 1 : 0,
+        sc.autoOpenOnArrival ? 1 : 0,
+        JSON.stringify(sc.actions || [])
+      );
+    }
+  } catch {
+    // Graceful no-op if database is read-only
+  }
+}
+
 function applyTopdownExperimentWorld(db, options = {}) {
+  ensurePhase9DefinitionsSeeded(db);
   ensurePhase8DefinitionsSeeded(db);
 
   let currentVersion = null;
@@ -1620,6 +1845,200 @@ function selectGoblinForestMonster(db, heroLevelOrRng = 1, maybeRng = Math.rando
  * Computes calibrated Phase 8 Goblin Forest step encounter chance (0..100) so a normal
  * 25–30 step route from Oakhaven [15,27] to Goblin Stronghold [15,2] averages ~2.5–3.5 encounters.
  */
+function resolveTileDangerZone(db, tile) {
+  if (!tile || Number(tile.is_safe) === 1 || tile.terrain === 'CITY') {
+    return { ...DANGER_ZONE_PROFILES.OAKHAVEN_SAFE };
+  }
+  if (isGoblinStrongholdTile(tile)) {
+    return {
+      zoneKey: 'GOBLIN_STRONGHOLD_GATE',
+      zoneName: 'Goblin Stronghold Gate',
+      dangerLevel: 'VERY_HIGH',
+      dangerLabel: 'Major Landmark (Boss Gate)',
+      encounterRate: 0.0,
+      ambushShare: 0.0,
+      minStepsBetweenCombats: 0,
+      streakDampeningPerEvent: 0.0,
+      monsterPool: ['Hobgoblin Captain', 'Bugbear', 'Worg'],
+      description: 'The fortified inner stockade of Warchief Grak.'
+    };
+  }
+
+  const x = Number(tile.x);
+  const y = Number(tile.y);
+  const meta = TILE_META_BY_COORD.get(`${x},${y}`);
+  const landmarkKey = tile.landmark_key || (meta && meta.landmarkKey) || null;
+  const hasPathConnections = Boolean(
+    (meta && Array.isArray(meta.pathConnections) && meta.pathConnections.length > 0) ||
+    tile.feature === 'FOREST_TRAIL' ||
+    tile.terrain === 'BRIDGE'
+  );
+
+  let selectedKey = 'GOBLIN_FOREST_OFF_ROAD';
+  const distToStrongholdX = Math.abs(x - STRONGHOLD_COORD.x);
+  const distToStrongholdY = Math.abs(y - STRONGHOLD_COORD.y);
+
+  if ((distToStrongholdX <= 2 && distToStrongholdY <= 3) || (y <= 5 && x >= 12 && x <= 18)) {
+    selectedKey = 'STRONGHOLD_APPROACH';
+  } else if (landmarkKey === 'GOBLIN_HUNTING_GROUNDS' || (x >= 18 && x <= 24 && y >= 10 && y <= 15 && !hasPathConnections)) {
+    selectedKey = 'GOBLIN_HUNTING_GROUNDS';
+  } else if (hasPathConnections) {
+    selectedKey = 'GOBLIN_FOREST_ROAD';
+  } else {
+    selectedKey = 'GOBLIN_FOREST_OFF_ROAD';
+  }
+
+  const baseProfile = DANGER_ZONE_PROFILES[selectedKey] || DANGER_ZONE_PROFILES.GOBLIN_FOREST_ROAD;
+
+  if (db) {
+    try {
+      const dbRow = db.prepare('SELECT * FROM danger_zone_profiles WHERE zone_key = ?').get(selectedKey);
+      if (dbRow) {
+        let pool = baseProfile.monsterPool;
+        try {
+          const parsed = JSON.parse(dbRow.monster_pool_json || '[]');
+          if (Array.isArray(parsed) && parsed.length > 0) pool = parsed;
+        } catch {
+          // Use baseProfile pool
+        }
+        return {
+          ...baseProfile,
+          zoneName: dbRow.zone_name || baseProfile.zoneName,
+          dangerLevel: dbRow.danger_level || baseProfile.dangerLevel,
+          encounterRate: Number(dbRow.encounter_rate ?? baseProfile.encounterRate),
+          ambushShare: Number(dbRow.ambush_share ?? baseProfile.ambushShare),
+          minStepsBetweenCombats: Number(dbRow.min_steps_between_combats ?? baseProfile.minStepsBetweenCombats),
+          streakDampeningPerEvent: Number(dbRow.streak_dampening_per_event ?? baseProfile.streakDampeningPerEvent),
+          monsterPool: pool,
+          description: dbRow.description || baseProfile.description
+        };
+      }
+    } catch {
+      // Fallback to in-memory constant
+    }
+  }
+
+  return { ...baseProfile };
+}
+
+function computePhase9ThreatDecision(db, character, currentTile, targetTile, options = {}) {
+  const rng = options.rng || Math.random;
+  const zone = resolveTileDangerZone(db, targetTile);
+
+  if (!targetTile || Number(targetTile.is_safe) === 1 || isGoblinStrongholdTile(targetTile)) {
+    return {
+      outcome: 'NORMAL',
+      encounterChancePercent: 0,
+      ambushProbability: 0,
+      zone,
+      streakProtected: false,
+      ambushFoiledByRanger: false,
+      level1AmbushProtected: false
+    };
+  }
+
+  if (options.forcedChance !== undefined && Number(options.forcedChance) <= 0) {
+    return {
+      outcome: 'NORMAL',
+      encounterChancePercent: 0,
+      ambushProbability: 0,
+      zone,
+      streakProtected: false,
+      ambushFoiledByRanger: false,
+      level1AmbushProtected: false
+    };
+  }
+
+  const stepsSinceLastCombat = options.stepsSinceLastCombat !== undefined ? Number(options.stepsSinceLastCombat) : 99;
+  const recentThreatStreak = Math.max(0, Number(options.recentThreatStreak || 0));
+
+  if (
+    options.forcedChance === undefined &&
+    options.forceOutcome === undefined &&
+    stepsSinceLastCombat < Number(zone.minStepsBetweenCombats || 1)
+  ) {
+    return {
+      outcome: 'NORMAL',
+      encounterChancePercent: 0,
+      ambushProbability: 0,
+      zone,
+      streakProtected: true,
+      ambushFoiledByRanger: false,
+      level1AmbushProtected: false
+    };
+  }
+
+  const streakDampening = Math.min(0.14, recentThreatStreak * Number(zone.streakDampeningPerEvent || 0.07));
+  const effectiveZoneRate = Math.max(0.05, Number(zone.encounterRate || 0.18) - streakDampening);
+  const encounterChancePercent = options.forcedChance !== undefined
+    ? Math.max(0, Math.min(100, Number(options.forcedChance)))
+    : Math.round(effectiveZoneRate * 1000) / 10;
+
+  if (options.forceOutcome !== 'ENCOUNTER' && options.forceOutcome !== 'AMBUSH') {
+    const roll = rng() * 100;
+    if (roll >= encounterChancePercent) {
+      return {
+        outcome: 'NORMAL',
+        encounterChancePercent,
+        ambushProbability: zone.ambushShare,
+        zone,
+        streakProtected: false,
+        ambushFoiledByRanger: false,
+        level1AmbushProtected: false
+      };
+    }
+  }
+
+  const heroClass = String((character && character.class) || 'FIGHTER').toUpperCase();
+  const heroLevel = Number((character && character.level) || 1);
+  const wisMod = Math.floor(((Number((character && character.wisdom) || 10)) - 10) / 2);
+  const monsterInitBonus = Number((options.monster && options.monster.initiative_bonus) || 0);
+
+  let rawAmbushProb = Number(zone.ambushShare || 0.30) + (monsterInitBonus * 0.025) - (wisMod * 0.035);
+  if (heroClass === 'RANGER') {
+    rawAmbushProb -= 0.14;
+  }
+  rawAmbushProb = Math.max(0.06, Math.min(0.75, rawAmbushProb));
+
+  let wantsAmbush = false;
+  let ambushFoiledByRanger = false;
+  let level1AmbushProtected = false;
+
+  if (options.forceOutcome === 'AMBUSH' || options.forceAmbush === true) {
+    wantsAmbush = true;
+  } else if (options.forceOutcome === 'ENCOUNTER' || options.forceAmbush === false) {
+    wantsAmbush = false;
+  } else {
+    const ambushRoll = rng();
+    if (ambushRoll < rawAmbushProb) {
+      wantsAmbush = true;
+      // Ranger Class Identity: Trail-Sense Scouting converts 50% of potential Ambushes into spotted Encounters
+      if (heroClass === 'RANGER' && rng() < 0.50) {
+        wantsAmbush = false;
+        ambushFoiledByRanger = true;
+      }
+    }
+  }
+
+  let wouldHaveBeenAmbushAtLevel2Plus = wantsAmbush;
+  if (wantsAmbush && heroLevel <= 1 && !options.allowLevel1Ambush && !options.labForcedAmbush) {
+    // Preserve Level 1 Ambush Protection rule until owner approves changing it
+    wantsAmbush = false;
+    level1AmbushProtected = true;
+  }
+
+  return {
+    outcome: wantsAmbush ? 'AMBUSH' : 'ENCOUNTER',
+    encounterChancePercent,
+    ambushProbability: Number(rawAmbushProb.toFixed(3)),
+    zone,
+    streakProtected: false,
+    ambushFoiledByRanger,
+    level1AmbushProtected,
+    wouldHaveBeenAmbushAtLevel2Plus
+  };
+}
+
 function computePhase8StepEncounterChance(db, character, currentTile, targetTile, rawPacingChance = null) {
   if (!targetTile || targetTile.is_safe === 1 || isGoblinStrongholdTile(targetTile)) {
     return 0;
@@ -1633,7 +2052,8 @@ function computePhase8StepEncounterChance(db, character, currentTile, targetTile
   const isHuntingGrounds = Boolean(meta && meta.landmarkKey === 'GOBLIN_HUNTING_GROUNDS');
 
   // Base rate: 11.5% on trails, 14.5% off-trail in deep woods, 20% at Goblin Hunting Grounds
-  let chance = isHuntingGrounds ? 20 : (isTrail ? 11.5 : 14.5);
+  const zone = resolveTileDangerZone(db, targetTile);
+  let chance = Number((zone.encounterRate || 0) * 100);
 
   if (rawPacingChance !== null && rawPacingChance !== undefined) {
     // Scale by any recovery/revisit modifiers from adventure-engine (where FOREST base is 22)
@@ -1683,7 +2103,60 @@ function checkGoblinForestEncounter(db, character, targetTile, options = {}) {
     return getEncounterById(db, Number(ins.lastInsertRowid), character.class);
   }
 
-  const chancePercent = options.forcedChance !== undefined ? Number(options.forcedChance) : 12;
+  const decision = computePhase9ThreatDecision(db, character, options.currentTile || null, targetTile, options);
+  if (decision.outcome === 'NORMAL') {
+    return null;
+  }
+
+  const pickedResult = selectGoblinForestMonster(db, rng);
+  const pickedMonster = pickedResult && pickedResult.monster ? pickedResult.monster : pickedResult;
+  if (!pickedMonster) return null;
+
+  const isAmbushOut = decision.outcome === 'AMBUSH' ? 1 : 0;
+  const spottedByHeroOut = isAmbushOut === 1 ? 0 : 1;
+  const stateMetaJson = JSON.stringify({
+    travelOutcome: decision.outcome,
+    dangerZoneKey: decision.zone.zoneKey,
+    dangerZoneName: decision.zone.zoneName,
+    dangerLevel: decision.zone.dangerLevel,
+    ambushFoiledByRanger: Boolean(decision.ambushFoiledByRanger),
+    level1AmbushProtected: Boolean(decision.level1AmbushProtected),
+    allowLevel1Ambush: Boolean(options.allowLevel1Ambush),
+    labForcedAmbush: Boolean(options.labForcedAmbush)
+  });
+
+  const initialMonsterHp = Number(pickedMonster.base_hp || 6);
+  const insOut = db.prepare(`
+    INSERT INTO encounters (
+      character_id, tile_id, monster_id, status,
+      current_monster_hp, monster_max_hp, combat_round,
+      spotted_by_hero, is_ambush, opening_shot_resolved, combat_state_json
+    ) VALUES (?, ?, ?, 'DISCOVERED', ?, ?, 0, ?, ?, 0, ?)
+  `).run(
+    character.id,
+    targetTile.id,
+    pickedMonster.id,
+    initialMonsterHp,
+    initialMonsterHp,
+    spottedByHeroOut,
+    isAmbushOut,
+    stateMetaJson
+  );
+
+  const encId = Number(insOut.lastInsertRowid);
+  if (isAmbushOut === 1) {
+    startCombat(db, character.id, encId, { rng });
+  }
+
+  const resolvedEnc = getEncounterById(db, encId, character.class);
+  if (resolvedEnc) {
+    resolvedEnc.travelOutcome = decision.outcome;
+    resolvedEnc.dangerZone = decision.zone;
+    resolvedEnc.ambushFoiledByRanger = Boolean(decision.ambushFoiledByRanger);
+    resolvedEnc.level1AmbushProtected = Boolean(decision.level1AmbushProtected);
+  }
+  return resolvedEnc;
+  const chancePercent = 0;
   if (chancePercent <= 0) return null;
   const roll = rng() * 100;
   if (roll >= chancePercent) {
@@ -1730,6 +2203,314 @@ function checkGoblinForestEncounter(db, character, targetTile, options = {}) {
 /**
  * Builds the complete 30×30 (900-tile) top-down map & Region Map payload for the frontend renderer.
  */
+function getMajorLandmarkSceneForTile(db, tile) {
+  if (!tile) return null;
+  const x = Number(tile.x);
+  const y = Number(tile.y);
+  const meta = TILE_META_BY_COORD.get(`${x},${y}`);
+  const landmarkKey = tile.landmark_key || (meta && meta.landmarkKey) || null;
+
+  let sceneKey = null;
+  if (
+    (x === TOWN_COORD.x && y === TOWN_COORD.y) ||
+    (tile.terrain === 'CITY' && Number(tile.is_safe) === 1) ||
+    landmarkKey === 'OAKHAVEN'
+  ) {
+    sceneKey = 'OAKHAVEN';
+  } else if (isGoblinStrongholdTile(tile) || landmarkKey === 'GOBLIN_STRONGHOLD') {
+    sceneKey = 'GOBLIN_STRONGHOLD';
+  } else if (landmarkKey && LANDMARK_SCENE_DEFINITIONS[landmarkKey]) {
+    sceneKey = landmarkKey;
+  }
+
+  if (!sceneKey) {
+    return null;
+  }
+
+  const baseScene = LANDMARK_SCENE_DEFINITIONS[sceneKey];
+  if (!baseScene || !baseScene.isMajorLandmark || !baseScene.autoOpenOnArrival) {
+    return null;
+  }
+
+  if (db) {
+    try {
+      const dbRow = db.prepare('SELECT * FROM landmark_scene_definitions WHERE scene_key = ?').get(sceneKey);
+      if (dbRow) {
+        if (Number(dbRow.is_major_landmark) !== 1 || Number(dbRow.auto_open_on_arrival) !== 1) {
+          return null;
+        }
+        let actions = baseScene.actions;
+        try {
+          const parsed = JSON.parse(dbRow.actions_json || '[]');
+          if (Array.isArray(parsed) && parsed.length > 0) actions = parsed;
+        } catch {
+          // Use baseScene actions
+        }
+        return {
+          ...baseScene,
+          title: dbRow.title || baseScene.title,
+          subtitle: dbRow.subtitle || baseScene.subtitle,
+          description: dbRow.description || baseScene.description,
+          artworkUrl: dbRow.artwork_url || baseScene.artworkUrl,
+          actions
+        };
+      }
+    } catch {
+      // Fallback to in-memory definition
+    }
+  }
+
+  return { ...baseScene, actions: baseScene.actions.map((a) => ({ ...a })) };
+}
+
+function updateCharacterLandmarkArrival(db, characterId, fromTileId, toTile) {
+  if (!db || !characterId || !toTile) return null;
+  const movedToDifferentTile = Number(fromTileId || 0) !== Number(toTile.id || 0);
+  if (!movedToDifferentTile) return null;
+
+  const sceneDef = getMajorLandmarkSceneForTile(db, toTile);
+  try {
+    if (sceneDef && sceneDef.autoOpenOnArrival) {
+      db.prepare(`
+        UPDATE characters
+        SET active_landmark_scene_key = ?,
+            dismissed_landmark_tile_id = NULL
+        WHERE id = ?
+      `).run(sceneDef.sceneKey, characterId);
+      return sceneDef.sceneKey;
+    } else {
+      db.prepare(`
+        UPDATE characters
+        SET active_landmark_scene_key = NULL,
+            dismissed_landmark_tile_id = NULL
+        WHERE id = ?
+      `).run(characterId);
+      return null;
+    }
+  } catch {
+    return sceneDef ? sceneDef.sceneKey : null;
+  }
+}
+
+function dismissLandmarkScene(db, characterId) {
+  if (!db || !characterId) return { dismissed: false };
+  try {
+    const charRow = db.prepare('SELECT id, tile_id FROM characters WHERE id = ?').get(characterId);
+    if (!charRow) return { dismissed: false };
+    db.prepare(`
+      UPDATE characters
+      SET active_landmark_scene_key = NULL,
+          dismissed_landmark_tile_id = ?
+      WHERE id = ?
+    `).run(charRow.tile_id || null, characterId);
+    return { dismissed: true, tileId: charRow.tile_id };
+  } catch {
+    return { dismissed: false };
+  }
+}
+
+function openLandmarkScene(db, characterId) {
+  if (!db || !characterId) return { opened: false };
+  try {
+    const charRow = db.prepare('SELECT id, tile_id FROM characters WHERE id = ?').get(characterId);
+    if (!charRow || !charRow.tile_id) return { opened: false };
+    const tile = getTileById(db, charRow.tile_id);
+    const sceneDef = getMajorLandmarkSceneForTile(db, tile);
+    if (!sceneDef) return { opened: false };
+    db.prepare(`
+      UPDATE characters
+      SET active_landmark_scene_key = ?,
+          dismissed_landmark_tile_id = NULL
+      WHERE id = ?
+    `).run(sceneDef.sceneKey, characterId);
+    return { opened: true, sceneKey: sceneDef.sceneKey };
+  } catch {
+    return { opened: false };
+  }
+}
+
+function resolveLandmarkSceneState(db, character, currentTile, activeEncounter = null, victory = null) {
+  if (!character || Number(character.is_alive) !== 1 || !currentTile) {
+    return null;
+  }
+  if (activeEncounter || victory) {
+    return null;
+  }
+
+  const sceneDef = getMajorLandmarkSceneForTile(db, currentTile);
+  if (!sceneDef) {
+    return null;
+  }
+
+  const dismissedTileId = character.dismissed_landmark_tile_id !== undefined && character.dismissed_landmark_tile_id !== null
+    ? Number(character.dismissed_landmark_tile_id)
+    : null;
+  const activeKey = character.active_landmark_scene_key || null;
+
+  let isActive = false;
+  if (dismissedTileId !== null && dismissedTileId === Number(currentTile.id)) {
+    isActive = false;
+  } else if (activeKey === sceneDef.sceneKey) {
+    isActive = true;
+  } else if (activeKey === null && dismissedTileId === null) {
+    isActive = true;
+    try {
+      db.prepare('UPDATE characters SET active_landmark_scene_key = ? WHERE id = ?').run(sceneDef.sceneKey, character.id);
+    } catch {
+      // Ignore read-only DB
+    }
+  }
+
+  const questState = syncCharacterQuestState(db, character.id);
+  const bossSlain = Boolean(questState && questState.bossSlain);
+
+  let description = sceneDef.description;
+  const actions = (sceneDef.actions || []).map((act) => {
+    if (act.action === 'ENGAGE_STRONGHOLD_BOSS') {
+      return {
+        ...act,
+        disabled: bossSlain,
+        label: bossSlain ? 'Goblin Chieftain Vanquished' : act.label
+      };
+    }
+    return { ...act };
+  });
+
+  if (sceneDef.sceneKey === 'GOBLIN_STRONGHOLD' && bossSlain) {
+    description = 'The war-drums of the Goblin Stronghold have fallen silent. Warchief Grak lies vanquished, and the surviving goblins have scattered into the deep woods.';
+  }
+
+  return {
+    sceneKey: sceneDef.sceneKey,
+    landmarkType: sceneDef.landmarkType,
+    category: sceneDef.category,
+    title: sceneDef.title,
+    subtitle: sceneDef.subtitle,
+    description,
+    artworkUrl: sceneDef.artworkUrl,
+    isMajorLandmark: true,
+    isActive,
+    bossSlain: sceneDef.sceneKey === 'GOBLIN_STRONGHOLD' ? bossSlain : undefined,
+    canChallengeBoss: sceneDef.sceneKey === 'GOBLIN_STRONGHOLD' ? !bossSlain : undefined,
+    tileId: currentTile.id,
+    tileCoord: { x: Number(currentTile.x), y: Number(currentTile.y) },
+    actions
+  };
+}
+
+function runPhase9MonteCarloSimulation(db, options = {}) {
+  const trials = Math.max(50, Math.min(5000, Number(options.trials || 1000)));
+  const routeCoords = Array.isArray(options.route) && options.route.length > 1
+    ? options.route
+    : ROUTE_A_MAIN_TRAIL;
+  const heroClass = String(options.heroClass || 'FIGHTER').toUpperCase();
+  const heroLevel = Number(options.heroLevel || 2);
+  const heroWisdom = Number(options.heroWisdom || (heroClass === 'RANGER' || heroClass === 'CLERIC' ? 14 : 10));
+  const allowLevel1Ambush = Boolean(options.allowLevel1Ambush);
+
+  let seed = Number(options.seed || 9001);
+  const nextRand = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+
+  const routeTiles = routeCoords.map(([x, y]) => {
+    const meta = TILE_META_BY_COORD.get(`${x},${y}`) || {};
+    return {
+      id: y * 30 + x + 1,
+      x,
+      y,
+      name: meta.name || `Tile [${x},${y}]`,
+      terrain: meta.terrain || 'FOREST',
+      feature: meta.feature || null,
+      is_safe: meta.is_safe || 0,
+      landmark_key: meta.landmarkKey || null
+    };
+  });
+
+  const character = {
+    id: 0,
+    class: heroClass,
+    level: heroLevel,
+    wisdom: heroWisdom
+  };
+
+  let totalThreats = 0;
+  let totalNormals = 0;
+  let totalEncounters = 0;
+  let totalAmbushes = 0;
+  let totalRangerFoiled = 0;
+  let totalLevel1Protected = 0;
+  const threatsPerTrip = [];
+
+  for (let t = 0; t < trials; t++) {
+    let stepsSinceLastCombat = 99;
+    let recentThreatStreak = 0;
+    let tripThreats = 0;
+
+    for (let i = 1; i < routeTiles.length; i++) {
+      const prevTile = routeTiles[i - 1];
+      const nextTile = routeTiles[i];
+      const decision = computePhase9ThreatDecision(db, character, prevTile, nextTile, {
+        rng: nextRand,
+        stepsSinceLastCombat,
+        recentThreatStreak,
+        allowLevel1Ambush,
+        monster: { initiative_bonus: 2 }
+      });
+
+      if (decision.outcome === 'NORMAL') {
+        totalNormals++;
+        stepsSinceLastCombat++;
+        if (stepsSinceLastCombat >= 3) {
+          recentThreatStreak = Math.max(0, recentThreatStreak - 1);
+        }
+      } else {
+        tripThreats++;
+        totalThreats++;
+        stepsSinceLastCombat = 0;
+        recentThreatStreak++;
+        if (decision.outcome === 'AMBUSH') {
+          totalAmbushes++;
+        } else {
+          totalEncounters++;
+        }
+        if (decision.ambushFoiledByRanger) totalRangerFoiled++;
+        if (decision.level1AmbushProtected) totalLevel1Protected++;
+      }
+    }
+    threatsPerTrip.push(tripThreats);
+  }
+
+  threatsPerTrip.sort((a, b) => a - b);
+  const avgThreats = Number((totalThreats / trials).toFixed(2));
+  const avgEncounters = Number((totalEncounters / trials).toFixed(2));
+  const avgAmbushes = Number((totalAmbushes / trials).toFixed(2));
+  const avgNormals = Number((totalNormals / trials).toFixed(2));
+  const medianThreats = threatsPerTrip[Math.floor(trials / 2)];
+  const p10Threats = threatsPerTrip[Math.floor(trials * 0.10)];
+  const p90Threats = threatsPerTrip[Math.floor(trials * 0.90)];
+
+  return {
+    trials,
+    stepsPerTrip: routeTiles.length - 1,
+    heroClass,
+    heroLevel,
+    allowLevel1Ambush,
+    avgThreats,
+    avgEncounters,
+    avgAmbushes,
+    avgNormals,
+    encounterShareOfThreats: totalThreats > 0 ? Number(((totalEncounters / totalThreats) * 100).toFixed(1)) : 0,
+    ambushShareOfThreats: totalThreats > 0 ? Number(((totalAmbushes / totalThreats) * 100).toFixed(1)) : 0,
+    rangerAmbushConversions: totalRangerFoiled,
+    level1AmbushProtections: totalLevel1Protected,
+    medianThreats,
+    p10Threats,
+    p90Threats
+  };
+}
+
 function buildTopdownMapPayload(db, character, currentTile) {
   const heroX = currentTile ? Number(currentTile.x) : TOWN_COORD.x;
   const heroY = currentTile ? Number(currentTile.y) : TOWN_COORD.y;
@@ -1984,5 +2765,16 @@ module.exports = {
   selectGoblinForestMonster,
   computePhase8StepEncounterChance,
   checkGoblinForestEncounter,
-  buildTopdownMapPayload
+  buildTopdownMapPayload,
+  DANGER_ZONE_PROFILES,
+  LANDMARK_SCENE_DEFINITIONS,
+  ensurePhase9DefinitionsSeeded,
+  resolveTileDangerZone,
+  computePhase9ThreatDecision,
+  getMajorLandmarkSceneForTile,
+  updateCharacterLandmarkArrival,
+  dismissLandmarkScene,
+  openLandmarkScene,
+  resolveLandmarkSceneState,
+  runPhase9MonteCarloSimulation
 };

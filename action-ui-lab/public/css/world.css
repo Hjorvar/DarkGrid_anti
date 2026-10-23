@@ -1788,3 +1788,148 @@
   flex-wrap: wrap;
   row-gap: 4px;
 }
+
+/* ==========================================================================
+   PHASE 9A — MAJOR LANDMARK SCENE SYSTEM
+   Temporarily replaces the 2D map visually while keeping canvas layout intact
+   ========================================================================== */
+#fp-viewport.scene-state-landmark .topdown-map-stage {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+#fp-viewport.scene-state-landmark #fp-terrain-img,
+#fp-viewport.scene-state-landmark #fp-atmosphere-layer {
+  opacity: 1 !important;
+}
+
+.major-landmark-scene-overlay {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 16px 20px 18px;
+  box-sizing: border-box;
+  z-index: 25;
+  pointer-events: auto;
+}
+
+.major-landmark-artwork-frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 6px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.major-landmark-artwork-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 38%;
+  filter: contrast(1.06) saturate(1.08);
+  transform: scale(1.01);
+}
+
+.major-landmark-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(8, 11, 16, 0.12) 0%, rgba(6, 8, 12, 0.68) 76%, rgba(4, 6, 10, 0.92) 100%),
+    linear-gradient(180deg, rgba(6, 8, 12, 0.35) 0%, rgba(6, 8, 12, 0.18) 38%, rgba(6, 9, 14, 0.92) 86%, rgba(5, 7, 11, 0.98) 100%);
+}
+
+.major-landmark-card {
+  position: relative;
+  z-index: 5;
+  width: min(94%, 680px);
+  background: linear-gradient(180deg, rgba(14, 19, 28, 0.93) 0%, rgba(8, 11, 17, 0.97) 100%);
+  border: 1px solid var(--accent-gold, #c5a059);
+  border-radius: 8px;
+  padding: 14px 20px 15px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.92), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  text-align: center;
+  backdrop-filter: blur(8px);
+}
+
+.major-landmark-card.is-stronghold-card {
+  border-color: rgba(239, 68, 68, 0.72);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.94), 0 0 24px rgba(158, 42, 43, 0.28);
+}
+
+.major-landmark-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-gold-bright, #e6be6e);
+  margin-bottom: 2px;
+}
+
+.major-landmark-card.is-stronghold-card .major-landmark-kicker {
+  color: #fca5a5;
+}
+
+.major-landmark-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.15rem, 2.2vh, 1.45rem);
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 0;
+  letter-spacing: 0.03em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+
+.major-landmark-subtitle {
+  font-family: var(--font-serif);
+  font-size: 0.78rem;
+  color: var(--accent-gold, #c5a059);
+  margin-top: 1px;
+  margin-bottom: 6px;
+}
+
+.major-landmark-desc {
+  font-size: 0.78rem;
+  line-height: 1.42;
+  color: var(--text-body, #cbd5e1);
+  margin: 0 auto 12px;
+  max-width: 600px;
+}
+
+.major-landmark-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.landmark-scene-btn {
+  padding: 6px 14px !important;
+  font-size: 0.76rem !important;
+  font-weight: 700;
+}
+
+.landmark-scene-btn.is-continue-btn {
+  border-color: rgba(148, 163, 184, 0.55);
+  color: #e2e8f0;
+}
+
+.landmark-boss-slain-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 5px;
+  background: rgba(22, 101, 52, 0.35);
+  border: 1px solid rgba(74, 222, 128, 0.6);
+  color: #86efac;
+  font-family: var(--font-serif);
+  font-size: 0.76rem;
+  font-weight: 700;
+}

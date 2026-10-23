@@ -387,6 +387,18 @@ function checkTileEncounter(db, character, targetTile, options = {}) {
 /**
  * Fetch encounter by ID with resolved descriptions and Monster Knowledge metadata
  */
+function hasExplicitAmbushOverride(encounter) {
+  if (!encounter || !encounter.combat_state_json) return false;
+  try {
+    const parsed = typeof encounter.combat_state_json === 'string'
+      ? JSON.parse(encounter.combat_state_json)
+      : encounter.combat_state_json;
+    return Boolean(parsed && (parsed.labForcedAmbush === true || parsed.allowLevel1Ambush === true));
+  } catch {
+    return false;
+  }
+}
+
 function getEncounterById(db, encounterId, heroClass) {
   let encounter;
   try {
@@ -448,7 +460,7 @@ function getEncounterById(db, encounterId, heroClass) {
 
   if (!encounter) return null;
 
-  if (Number(encounter.character_level || 1) <= 1 && Number(encounter.is_ambush) === 1) {
+  if (Number(encounter.character_level || 1) <= 1 && Number(encounter.is_ambush) === 1 && !hasExplicitAmbushOverride(encounter)) {
     db.prepare(`
       UPDATE encounters
       SET is_ambush = 0, spotted_by_hero = 0
@@ -554,7 +566,8 @@ function getEncounterById(db, encounterId, heroClass) {
     favored_enemy_type: encounter.character_fav_type || null,
     favored_enemy_subtype: encounter.character_fav_sub || null
   };
-  const monsterKnowledge = isRevealed ? evaluateHeroMonsterKnowledge(db, heroObj, monsterContext) : null;
+  const preCombatKnowledge = evaluateHeroMonsterKnowledge(db, heroObj, monsterContext);
+  const monsterKnowledge = isRevealed ? preCombatKnowledge : null;
 
   return {
     ...encounter,
@@ -576,7 +589,8 @@ function getEncounterById(db, encounterId, heroClass) {
     isAmbush: Number(encounter.is_ambush || 0) === 1,
     spottedByHero: Number(encounter.spotted_by_hero !== undefined ? encounter.spotted_by_hero : 1) === 1,
     openingShotResolved: Number(encounter.opening_shot_resolved || 0) === 1,
-    monsterKnowledge
+    monsterKnowledge,
+    preCombatKnowledge
   };
 }
 
@@ -630,7 +644,7 @@ function ignoreEncounter(db, characterId, encounterId) {
       throw new Error(`Encounter cannot be ignored in status: ${enc.status}`);
     }
 
-    const effectiveAmbush = Number(enc.character_level || 1) <= 1 ? 0 : Number(enc.is_ambush || 0);
+    const effectiveAmbush = (Number(enc.character_level || 1) <= 1 && !hasExplicitAmbushOverride(enc)) ? 0 : Number(enc.is_ambush || 0);
     if (effectiveAmbush === 1) {
       throw new Error('Ambush! Your path is cut off—you cannot bypass this threat and must face the ambush!');
     }
@@ -676,8 +690,10 @@ function investigateEncounter(db, characterId, encounterId, heroClass) {
       }
     }
 
-    if (Number(enc.character_level || 1) <= 1 && Number(enc.is_ambush) === 1) {
+    if (Number(enc.character_level || 1) <= 1 && Number(enc.is_ambush) === 1 && !hasExplicitAmbushOverride(enc)) {
       txDb.prepare('UPDATE encounters SET is_ambush = 0, spotted_by_hero = 0 WHERE id = ?').run(encounterId);
+    } else if (enc.status === 'DISCOVERED' && Number(enc.is_ambush || 0) === 0) {
+      txDb.prepare('UPDATE encounters SET is_ambush = 0, spotted_by_hero = 1 WHERE id = ?').run(encounterId);
     }
 
     startCombat(txDb, characterId, encounterId);

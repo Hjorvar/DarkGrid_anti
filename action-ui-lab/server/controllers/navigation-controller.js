@@ -38,7 +38,10 @@ const {
   isCoordInTopdownRegion,
   recordTileDiscovery,
   computePhase8StepEncounterChance,
-  checkGoblinForestEncounter
+  checkGoblinForestEncounter,
+  updateCharacterLandmarkArrival,
+  dismissLandmarkScene,
+  openLandmarkScene
 } = require('../services/topdown-world-service');
 
 function handleNavigationAction({ db, userId, options, action, payload, character, currentFacing, labToolsAllowed = false, res }) {
@@ -86,6 +89,25 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
       // 0b. OPTIONAL DISMISS VICTORY OVERLAY (Not required before moving!)
       if (action === 'DISMISS_VICTORY') {
         db.prepare('UPDATE characters SET pending_victory_encounter_id = NULL WHERE id = ?').run(character.id);
+        return res.json({
+          ok: true,
+          state: buildClientState(db, userId)
+        });
+      }
+
+      // 0c. PHASE 9A: DISMISS / OPEN MAJOR LANDMARK SCENE
+      if (action === 'DISMISS_LANDMARK_SCENE' || action === 'CONTINUE_EXPLORING') {
+        dismissLandmarkScene(db, character.id);
+        return res.json({
+          ok: true,
+          state: buildClientState(db, userId, {
+            infoMessage: 'You step back into the surrounding territory and survey the map.'
+          })
+        });
+      }
+
+      if (action === 'OPEN_LANDMARK_SCENE') {
+        openLandmarkScene(db, character.id);
         return res.json({
           ok: true,
           state: buildClientState(db, userId)
@@ -220,10 +242,16 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
             character.id
           );
           recordTileDiscovery(tx, character, targetTile.x, targetTile.y);
+          updateCharacterLandmarkArrival(tx, character.id, currentTile ? currentTile.id : null, targetTile);
 
           // Roll for encounter on the new tile unless safe city or Stronghold entrance
           if (!(targetTile.terrain === 'CITY' && targetTile.is_safe === 1)) {
-            const encounterOpts = {};
+            const encounterOpts = { currentTile };
+            if (labToolsAllowed) {
+              if (payload.testForceOutcome) encounterOpts.forceOutcome = String(payload.testForceOutcome).toUpperCase();
+              if (payload.testForceAmbush !== undefined) encounterOpts.forceAmbush = Boolean(payload.testForceAmbush);
+              if (payload.allowLevel1Ambush !== undefined) encounterOpts.allowLevel1Ambush = Boolean(payload.allowLevel1Ambush);
+            }
             if (options.rng) encounterOpts.rng = options.rng;
             if (payload.testForceEncounter !== undefined) {
               encounterOpts.forcedChance = payload.testForceEncounter ? 100 : 0;
@@ -258,7 +286,10 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
           }
         });
 
-        const infoMessage = bypassedEncounter
+        const isAmbushTriggered = Boolean(spawnedEncounter && (spawnedEncounter.status === 'IN_COMBAT' || spawnedEncounter.isAmbush));
+        const infoMessage = isAmbushTriggered
+          ? `AMBUSH! ${spawnedEncounter.monster_name || 'A lurking foe'} strikes from the shadows before you can react! Retreat is cut off for 2 rounds!`
+          : bypassedEncounter
           ? `You slipped past the threat in the shadows and moved ${FACING_VECTORS[direction].label.toLowerCase()} to ${targetTile.name}.`
           : null;
 
@@ -309,7 +340,7 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
           state: buildClientState(db, userId, {
             infoMessage,
             fxCue: {
-              type: spawnedEncounter ? 'ENCOUNTER_DISCOVERED' : 'STEP',
+              type: isAmbushTriggered ? 'AMBUSH_STARTED' : (spawnedEncounter ? 'ENCOUNTER_DISCOVERED' : 'STEP'),
               direction,
               moveKind,
               relativeMove: moveKind,
@@ -375,6 +406,10 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
           character.id
         );
         recordTileDiscovery(db, character, targetTile.x, targetTile.y);
+        updateCharacterLandmarkArrival(db, character.id, character.tile_id, targetTile);
+        if (payload.openLandmarkScene !== false) {
+          openLandmarkScene(db, character.id);
+        }
         return res.json({
           ok: true,
           state: buildClientState(db, userId, {

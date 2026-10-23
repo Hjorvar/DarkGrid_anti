@@ -39,6 +39,14 @@ function parseCombatStateJson(rawJson, encounterRow = null) {
 
   return {
     auraResolved: Boolean(parsed.auraResolved),
+    labForcedAmbush: Boolean(parsed.labForcedAmbush),
+    allowLevel1Ambush: Boolean(parsed.allowLevel1Ambush),
+    travelOutcome: parsed.travelOutcome || null,
+    dangerZoneKey: parsed.dangerZoneKey || null,
+    dangerZoneName: parsed.dangerZoneName || null,
+    dangerLevel: parsed.dangerLevel || null,
+    ambushFoiledByRanger: Boolean(parsed.ambushFoiledByRanger),
+    level1AmbushProtected: Boolean(parsed.level1AmbushProtected),
     secondWindUsed: Boolean(parsed.secondWindUsed || secondWindFromEncounter),
     turnUndeadResolved: Boolean(parsed.turnUndeadResolved),
     turnUndeadPenaltyRounds: Number(parsed.turnUndeadPenaltyRounds || 0),

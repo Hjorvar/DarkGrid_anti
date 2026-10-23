@@ -499,7 +499,8 @@ export function renderViewportCenterStage(state) {
       'scene-state-exploration',
       'scene-state-discovered',
       'scene-state-combat',
-      'scene-state-victory'
+      'scene-state-victory',
+      'scene-state-landmark'
     );
     if (victory) {
       vp.classList.add('scene-state-victory');
@@ -509,6 +510,13 @@ export function renderViewportCenterStage(state) {
       vp.classList.add('scene-state-discovered');
     } else {
       vp.classList.add('scene-state-exploration');
+      if (state.landmarkScene && state.landmarkScene.isActive) {
+        vp.classList.add('scene-state-landmark');
+        const bgImg = document.getElementById('fp-terrain-img');
+        if (bgImg && state.landmarkScene.artworkUrl && bgImg.getAttribute('src') !== state.landmarkScene.artworkUrl) {
+          bgImg.setAttribute('src', state.landmarkScene.artworkUrl);
+        }
+      }
     }
   }
 
@@ -631,20 +639,26 @@ export function renderViewportCenterStage(state) {
 
         <div class="fp-threat-whisper-plate" onclick="event.stopPropagation();">
           <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--font-serif); font-size: 0.84rem; font-weight: 700; color: var(--accent-gold-bright);">
-            <span>👁️ Unidentified Presence Ahead</span>
+            <span>${enc.isAmbush ? '⚠️ AMBUSH — Threat Lunging Ahead!' : '👁️ ENCOUNTER — Threat Spotted Ahead'}</span>
+            ${enc.ambushFoiledByRanger ? `<span class="lab-badge" style="color:#86efac; border-color:#4ade80;">🏹 Ambush Foiled</span>` : ''}
             ${enc.isRangerSpecial ? `<span class="lab-badge" style="color:#86efac; border-color:#4ade80;">🏹 Keen Senses</span>` : ''}
             ${enc.isAmbush ? `<span class="lab-badge" style="color:#fca5a5; border-color:#ef4444;">⚠️ Ambush</span>` : ''}
           </div>
+          ${enc.situationalSummary ? `<div style="font-size: 0.74rem; color: #fde68a; margin-top: 2px;">${escapeHtml(enc.situationalSummary)}</div>` : ''}
           <p class="fp-mystery-clue">
             “${escapeHtml(enc.resolvedDescription)}”
           </p>
           <div style="display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
-            <button type="button" class="btn-action-gold" style="padding: 5px 14px; font-size: 0.76rem;" onclick="dispatchAction('INVESTIGATE')">
-              ⚔️ ${enc.isAmbush ? 'Face Ambush' : 'Engage Threat'} [Space]
+            <button type="button" class="btn-action-gold" id="btn-encounter-fight" style="padding: 5px 14px; font-size: 0.76rem;" onclick="dispatchAction('FIGHT')">
+              ⚔️ ${enc.isAmbush ? 'Face Ambush' : 'Fight'} [Space]
+            </button>
+              <!-- Fight -->
             </button>
             ${!enc.isAmbush ? `
-              <button type="button" class="btn-action-stone" style="padding: 5px 12px; font-size: 0.74rem;" onclick="dispatchAction('IGNORE')">
-                👣 Slip Past [4 / F]
+              <button type="button" class="btn-action-stone" id="btn-encounter-avoid" style="padding: 5px 12px; font-size: 0.74rem;" onclick="dispatchAction('AVOID')">
+                👣 Avoid [4 / F]
+              </button>
+              <!-- Avoid -->
               </button>
             ` : ''}
           </div>
@@ -687,6 +701,86 @@ export function renderViewportCenterStage(state) {
   const cleanHorizonHint = sanitizePlayerContinuityText((adv && adv.horizonHint) || '');
   const FacingLabel = (FACING_META[state.facing] && FACING_META[state.facing].label) || state.facing || 'North';
 
+  // CASE D.0: PHASE 9A MAJOR LANDMARK SCENE (Auto-opened full-viewport environment scene on arrival)
+  if (state.landmarkScene && state.landmarkScene.isActive) {
+    const lm = state.landmarkScene;
+    const q = state.quest || {};
+    const bgImg = document.getElementById('fp-terrain-img');
+    if (bgImg && lm.artworkUrl && bgImg.getAttribute('src') !== lm.artworkUrl) {
+      bgImg.setAttribute('src', lm.artworkUrl);
+    }
+
+    if (lm.sceneKey === 'OAKHAVEN') {
+      let questActionExtra = '';
+      if (q.canAccept) {
+        questActionExtra = `<button type="button" class="btn-action-gold landmark-scene-btn" id="btn-town-accept-quest" onclick="dispatchAction('ACCEPT_QUEST')">📜 Accept Quest: The Goblin Chieftain</button>`;
+      } else if (q.canClaimReward) {
+        questActionExtra = `<button type="button" class="btn-action-gold landmark-scene-btn" id="btn-town-claim-reward" onclick="dispatchAction('CLAIM_QUEST_REWARD')">🏆 Claim Quest Reward (+${q.rewardGold || 100}g, +${q.rewardXp || 120} XP)</button>`;
+      }
+      stage.innerHTML = `
+        <div class="major-landmark-scene-overlay" id="major-landmark-scene-panel" data-scene-key="OAKHAVEN">
+          <div class="major-landmark-artwork-frame">
+            <img src="${escapeHtml(lm.artworkUrl)}" alt="${escapeHtml(lm.title)}" class="major-landmark-artwork-img">
+            <div class="major-landmark-vignette"></div>
+          </div>
+          <div class="major-landmark-card">
+            <div class="major-landmark-kicker">MAJOR LANDMARK • SANCTUARY SETTLEMENT</div>
+            <h2 class="major-landmark-title">${escapeHtml(lm.title)}</h2>
+            <div class="major-landmark-subtitle">${escapeHtml(lm.subtitle || 'Safe Haven in Blackwood Frontier')}</div>
+            <p class="major-landmark-desc">${escapeHtml(lm.description)}</p>
+            <div class="major-landmark-actions" id="major-landmark-actions">
+              <button type="button" class="btn-action-gold landmark-scene-btn" id="btn-town-rest" data-landmark-action="REST_HEAL" onclick="dispatchAction('REST')">
+                ⛺ Rest / Heal
+              </button>
+              <button type="button" class="btn-action-stone landmark-scene-btn" id="btn-town-shop" data-landmark-action="OPEN_SHOP" onclick="openLabModal('market')">
+                ⚖️ Shop [M]
+              </button>
+              <button type="button" class="btn-action-stone landmark-scene-btn" id="btn-landmark-quests" data-landmark-action="OPEN_QUESTS" onclick="openLabModal('quests')">
+                📜 Quests &amp; Bounties [J]
+              </button>
+              ${questActionExtra}
+              <button type="button" class="btn-action-stone landmark-scene-btn is-continue-btn" id="btn-landmark-continue" data-landmark-action="CONTINUE_EXPLORING" onclick="dispatchAction('DISMISS_LANDMARK_SCENE')">
+                🧭 Continue Exploring
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    if (lm.sceneKey === 'GOBLIN_STRONGHOLD') {
+      const bossSlain = Boolean(lm.bossSlain || (state.topdownMap && state.topdownMap.bossSlain));
+      stage.innerHTML = `
+        <div class="major-landmark-scene-overlay is-stronghold-scene" id="major-landmark-scene-panel" data-scene-key="GOBLIN_STRONGHOLD">
+          <div class="major-landmark-artwork-frame">
+            <img src="${escapeHtml(lm.artworkUrl)}" alt="${escapeHtml(lm.title)}" class="major-landmark-artwork-img">
+            <div class="major-landmark-vignette"></div>
+          </div>
+          <div class="major-landmark-card is-stronghold-card">
+            <div class="major-landmark-kicker">${bossSlain ? 'MAJOR LANDMARK • STRONGHOLD SILENCED' : 'MAJOR LANDMARK • FORTIFIED BOSS STRONGHOLD'}</div>
+            <h2 class="major-landmark-title">${escapeHtml(lm.title)}</h2>
+            <div class="major-landmark-subtitle">${escapeHtml(lm.subtitle || 'Northern Stockade of Warchief Grak')}</div>
+            <p class="major-landmark-desc">${escapeHtml(lm.description)}</p>
+            <div class="major-landmark-actions" id="major-landmark-actions">
+              ${!bossSlain ? `
+                <button type="button" class="btn-action-gold landmark-scene-btn" id="btn-engage-stronghold-boss" data-landmark-action="CHALLENGE_CHIEFTAIN" onclick="dispatchAction('ENGAGE_STRONGHOLD_BOSS')">
+                  ⚔️ Challenge the Goblin Chieftain
+                </button>
+              ` : `
+                <span class="landmark-boss-slain-pill">✓ Warchief Grak Vanquished</span>
+              `}
+              <button type="button" class="btn-action-stone landmark-scene-btn is-continue-btn" id="btn-landmark-continue" data-landmark-action="CONTINUE_EXPLORING" onclick="dispatchAction('DISMISS_LANDMARK_SCENE')">
+                🧭 Continue Exploring
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+  }
+
   // CASE D: SAFE HAVEN CITY (Compact non-intrusive sanctuary bar at bottom of stage)
   if (state.isSafeCity) {
     const q = state.quest || {};
@@ -715,6 +809,7 @@ export function renderViewportCenterStage(state) {
               Shop [M]
             </button>
             ${questBtnHtml}
+            <button type="button" class="btn-action-stone" id="btn-reopen-landmark-scene" style="padding: 4px 11px; font-size: 0.74rem;" onclick="dispatchAction('OPEN_LANDMARK_SCENE')">🖼️ Sanctuary View</button>
           </div>
         </div>
       </div>

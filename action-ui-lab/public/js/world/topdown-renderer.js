@@ -259,6 +259,13 @@ function animateTopdownFrame(now) {
 export function renderTopdownStage(state) {
   if (!canvasEl) initTopdownRenderer();
   if (!canvasEl || !state || !state.topdownMap) return;
+  const stageEl = document.getElementById('topdown-map-stage');
+  const isLandmarkSceneActive = Boolean(state.landmarkScene && state.landmarkScene.isActive && !state.encounter);
+  if (stageEl) {
+    stageEl.hidden = isLandmarkSceneActive;
+    stageEl.style.display = isLandmarkSceneActive ? 'none' : '';
+  }
+  if (isLandmarkSceneActive) return;
 
   const targetX = state.currentTile ? Number(state.currentTile.x) : 15;
   const targetY = state.currentTile ? Number(state.currentTile.y) : 27;

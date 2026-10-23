@@ -187,6 +187,7 @@ async function runPhase8VisualQa() {
     // Wait for initial game state & topdown canvas to render
     const loaded = await evalJs(`(async () => {
       for (let i = 0; i < 40; i++) {
+        if (window.currentState && window.currentState.landmarkScene && window.currentState.landmarkScene.isActive) { await window.dispatchAction('DISMISS_LANDMARK_SCENE'); }
         if (window.currentState && document.getElementById('topdown-map-canvas')) return true;
         await new Promise(r => setTimeout(r, 100));
       }
@@ -466,7 +467,7 @@ async function runPhase8VisualQa() {
     const strongholdArrival = await evalJs(`(() => ({
       areaTitle: document.getElementById('fp-area-title').textContent.trim(),
       coord: [window.currentState.currentTile.x, window.currentState.currentTile.y],
-      hasStrongholdCard: Boolean(document.getElementById('stronghold-entrance-card')),
+      hasStrongholdCard: Boolean(document.getElementById('major-landmark-scene-panel') || document.getElementById('stronghold-entrance-card')),
       hasChallengeBtn: Boolean(document.getElementById('btn-engage-stronghold-boss'))
     }))()`);
     console.log('13 Goblin Stronghold Arrival:', strongholdArrival);

@@ -27,7 +27,9 @@ const {
   STRONGHOLD_BOSS_PROFILE,
   ensureStrongholdBossInstance,
   recordTileDiscovery,
-  syncCharacterQuestState
+  syncCharacterQuestState,
+  updateCharacterLandmarkArrival,
+  openLandmarkScene
 } = require('../services/topdown-world-service');
 
 function handleAdventureScenarioAction({ db, userId, options = {}, action, payload, character, currentFacing, labToolsAllowed = false, res }) {
@@ -268,6 +270,8 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
           }
           db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(targetTile.id, targetFacing, character.id);
           recordTileDiscovery(db, character, targetTile.x, targetTile.y);
+          updateCharacterLandmarkArrival(db, character.id, character.tile_id, targetTile);
+          recordTileDiscovery(db, character, targetTile.x, targetTile.y);
           return res.json({
             ok: true,
             state: buildClientState(db, userId, {
@@ -282,7 +286,7 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
             || db.prepare("SELECT * FROM map_tiles WHERE terrain = 'CITY' AND is_safe = 1 LIMIT 1").get();
           const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
           if (cityTile) {
-            db.prepare('UPDATE characters SET tile_id = ?, current_hp = max_hp, facing = ? WHERE id = ?').run(cityTile.id, targetFacing, character.id);
+            db.prepare('UPDATE characters SET tile_id = ?, current_hp = max_hp, facing = ?, active_landmark_scene_key = ?, dismissed_landmark_tile_id = NULL WHERE id = ?').run(cityTile.id, targetFacing, 'OAKHAVEN', character.id);
             recordTileDiscovery(db, character, cityTile.x, cityTile.y);
           }
           return res.json({
@@ -410,7 +414,7 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
           const shTile = getTileByCoords(db, STRONGHOLD_COORD.x, STRONGHOLD_COORD.y);
           const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
           if (shTile) {
-            db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(shTile.id, targetFacing, character.id);
+            db.prepare('UPDATE characters SET tile_id = ?, facing = ?, active_landmark_scene_key = ?, dismissed_landmark_tile_id = NULL WHERE id = ?').run(shTile.id, targetFacing, 'GOBLIN_STRONGHOLD', character.id);
             recordTileDiscovery(db, character, shTile.x, shTile.y);
           }
           return res.json({
@@ -428,7 +432,7 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
           const cityTile = getTileByCoords(db, TOWN_COORD.x, TOWN_COORD.y)
             || db.prepare("SELECT * FROM map_tiles WHERE terrain = 'CITY' AND is_safe = 1 LIMIT 1").get();
           if (cityTile) {
-            db.prepare("UPDATE characters SET tile_id = ?, current_hp = max_hp, facing = 'NORTH', pending_victory_encounter_id = NULL, quest_goblin_chieftain_status = 'NOT_ACCEPTED', goblin_chieftain_slain = 0 WHERE id = ?").run(cityTile.id, character.id);
+            db.prepare("UPDATE characters SET tile_id = ?, current_hp = max_hp, facing = 'NORTH', pending_victory_encounter_id = NULL, quest_goblin_chieftain_status = 'NOT_ACCEPTED', goblin_chieftain_slain = 0, active_landmark_scene_key = 'OAKHAVEN', dismissed_landmark_tile_id = NULL WHERE id = ?").run(cityTile.id, character.id);
           }
           try {
             db.prepare('DELETE FROM character_quests WHERE character_id = ?').run(character.id);
@@ -438,6 +442,8 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
           }
           ensureStrongholdBossInstance(db, { forceRespawn: true });
           recordTileDiscovery(db, character, TOWN_COORD.x, TOWN_COORD.y);
+          recordTileDiscovery(db, character, TOWN_COORD.x, TOWN_COORD.y);
+          openLandmarkScene(db, character.id);
           syncCharacterQuestState(db, character.id);
           resetAdventureState(character.id);
           return res.json({
@@ -494,7 +500,7 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
           scenario === 'AMBUSH' ? 'STAGE1_AMBUSH' :
           scenario;
 
-        if (effectiveScenario === 'STAGE1_MYSTERY' || effectiveScenario === 'STAGE1_AMBUSH' || effectiveScenario === 'STAGE2_COMBAT') {
+        if (effectiveScenario === 'STAGE1_MYSTERY' || effectiveScenario === 'STAGE1_AMBUSH' || effectiveScenario === 'STAGE2_COMBAT' || effectiveScenario === 'STAGE2_AMBUSH' || effectiveScenario === 'AMBUSH_COMBAT') {
           // Move to a suitable wilderness tile if currently in a safe tile
           let tile = getTileById(db, character.tile_id);
           let relocatedFromSafe = false;
@@ -544,7 +550,7 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
               || db.prepare('SELECT * FROM monsters ORDER BY RANDOM() LIMIT 1').get();
           }
 
-          const isAmbushScenario = effectiveScenario === 'STAGE1_AMBUSH' ? 1 : 0;
+          const isAmbushScenario = (effectiveScenario === 'STAGE1_AMBUSH' || effectiveScenario === 'STAGE2_AMBUSH' || effectiveScenario === 'AMBUSH_COMBAT') ? 1 : 0;
           const spottedByHero = isAmbushScenario ? 0 : 1;
           const stateJson = isAmbushScenario ? JSON.stringify({ labForcedAmbush: true }) : '{}';
 
@@ -558,7 +564,27 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
 
           const encId = Number(ins.lastInsertRowid);
           const advState = getOrCreateAdventureState(character.id, tile);
-          if (effectiveScenario === 'STAGE2_COMBAT') {
+          if (effectiveScenario === 'STAGE2_COMBAT' || effectiveScenario === 'STAGE2_AMBUSH' || effectiveScenario === 'AMBUSH_COMBAT') {
+            investigateEncounter(db, character.id, encId, character.class, options.rng ? { rng: options.rng } : {});
+            if (isAmbushScenario) {
+              db.prepare("UPDATE encounters SET initiative_winner = 'MONSTER', is_ambush = 1, spotted_by_hero = 0 WHERE id = ?").run(encId);
+            } else {
+              db.prepare("UPDATE encounters SET initiative_winner = 'HERO' WHERE id = ?").run(encId);
+            }
+            recordEncounterStart(advState, tile, {
+              status: 'IN_COMBAT',
+              monsterName: monster ? monster.name : 'Hostile Creature'
+            });
+            return res.json({
+              ok: true,
+              state: buildClientState(db, userId, {
+                infoMessage: isAmbushScenario
+                  ? `AMBUSH! ${monster ? monster.name : 'A lurking foe'} lunges from the shadows! Retreat is cut off for the first 2 combat rounds!`
+                  : null,
+                fxCue: { type: isAmbushScenario ? 'AMBUSH_STARTED' : 'REVEAL_MONSTER' }
+              })
+            });
+          } else if (false) {
             investigateEncounter(db, character.id, encId, character.class, options.rng ? { rng: options.rng } : {});
             db.prepare("UPDATE encounters SET initiative_winner = 'HERO' WHERE id = ?").run(encId);
             recordEncounterStart(advState, tile, {

@@ -15,7 +15,7 @@ export function renderActionDeckAndPad(state) {
   const deckHeading = document.getElementById('action-deck-heading');
   if (deckHeading) {
     if (enc && enc.status === 'IN_COMBAT') {
-      deckHeading.textContent = '⚔️ Combat Actions';
+      deckHeading.textContent = enc.isAmbush ? '⚠️ Ambush Combat' : '⚔️ Combat Actions';
     } else if (enc && enc.status === 'DISCOVERED') {
       deckHeading.textContent = '👁️ Encounter Response';
     } else if (state.victory) {
@@ -42,7 +42,7 @@ export function renderActionDeckAndPad(state) {
         Number(state.currentTile.y) === Number(shCoord.y)))
   );
 
-  // SLOT 1: Primary Context Action (Attack / Engage Threat / Stronghold Boss / Sanctuary Rest / Inspect Landmark / Continue)
+  // SLOT 1: Primary Context Action (Attack / Fight Threat / Stronghold Boss / Sanctuary Rest / Inspect Landmark / Continue)
   if (enc && enc.status === 'IN_COMBAT') {
     slot1.disabled = false;
     document.getElementById('slot1-icon').textContent = cStats.isRangedActive ? '🏹' : '⚔️';
@@ -53,9 +53,9 @@ export function renderActionDeckAndPad(state) {
   } else if (enc && enc.status === 'DISCOVERED') {
     slot1.disabled = false;
     document.getElementById('slot1-icon').textContent = '⚔️';
-    document.getElementById('slot1-title').textContent = enc.isAmbush ? 'Face Ambush' : 'Engage Threat';
-    document.getElementById('slot1-sub').textContent = 'Reveal & Fight';
-    slot1.title = 'Step forward and engage the threat [Space / 1]';
+    document.getElementById('slot1-title').textContent = enc.isAmbush ? 'Face Ambush' : 'Fight';
+    document.getElementById('slot1-sub').textContent = 'Engage in Combat';
+    slot1.title = 'Step forward and fight the spotted threat [Space / 1]';
   } else if (isAtStrongholdGate && !state.victory) {
     slot1.disabled = false;
     document.getElementById('slot1-icon').textContent = '⚔️';
@@ -124,21 +124,31 @@ export function renderActionDeckAndPad(state) {
     slot3.title = 'Toggle between Melee and Ranged weapon stance [3 / R]';
   }
 
-  // SLOT 4: Retreat / Slip Past / Cleric Prayer
+  // SLOT 4: Retreat / Avoid / Cleric Prayer
   if (enc && enc.status === 'IN_COMBAT') {
-    slot4.disabled = false;
-    document.getElementById('slot4-icon').textContent = '🏃';
-    document.getElementById('slot4-title').textContent = store.fleeConfirmArmed ? 'Confirm Flee?' : 'Flee Battle';
-    document.getElementById('slot4-sub').textContent = store.fleeConfirmArmed ? 'Press [4/F] Again' : 'Provokes AoO';
-    slot4.title = 'Attempt to flee combat (monster gets a parting attack of opportunity) [4 / F]';
+    const isFleeLocked = Boolean(enc.fleeLocked || (enc.isAmbush && Number(enc.combat_round || 1) <= 2));
+    const lockedRounds = Number(enc.ambushFleeLockedRoundsRemaining || Math.max(0, 3 - Number(enc.combat_round || 1)));
+    if (isFleeLocked) {
+      slot4.disabled = true;
+      document.getElementById('slot4-icon').textContent = '🔒';
+      document.getElementById('slot4-title').textContent = 'Flee Locked';
+      document.getElementById('slot4-sub').textContent = `Ambush (${lockedRounds} Rd${lockedRounds === 1 ? '' : 's'} Left)`;
+      slot4.title = enc.fleeLockReason || `AMBUSH! Retreat is locked for the first 2 combat rounds (${lockedRounds} round(s) remaining).`;
+    } else {
+      slot4.disabled = false;
+      document.getElementById('slot4-icon').textContent = '🏃';
+      document.getElementById('slot4-title').textContent = store.fleeConfirmArmed ? 'Confirm Flee?' : 'Flee Battle';
+      document.getElementById('slot4-sub').textContent = store.fleeConfirmArmed ? 'Press [4/F] Again' : 'Provokes AoO';
+      slot4.title = 'Attempt to flee combat (monster gets a parting attack of opportunity) [4 / F]';
+    }
   } else if (enc && enc.status === 'DISCOVERED') {
     slot4.disabled = Boolean(enc.isAmbush);
     document.getElementById('slot4-icon').textContent = '👣';
-    document.getElementById('slot4-title').textContent = 'Slip Past';
+    document.getElementById('slot4-title').textContent = 'Avoid';
     document.getElementById('slot4-sub').textContent = enc.isAmbush ? 'Ambush Locked!' : 'Bypass Threat';
     slot4.title = enc.isAmbush
-      ? 'Ambush! You cannot slip past — you must engage the threat'
-      : 'Slip past the unidentified threat without fighting (or simply walk with W/S/Q/E) [4 / F]';
+      ? 'Ambush! You cannot avoid — you must face the threat'
+      : 'Avoid the spotted monster and continue without combat (grants no XP or loot) [4 / F]';
   } else if (hero.class === 'CLERIC' && state.clericHealInfo) {
     const canHeal = state.clericHealInfo.remainingUses > 0 && hero.current_hp < hero.max_hp;
     slot4.disabled = !canHeal;
@@ -157,7 +167,6 @@ export function renderActionDeckAndPad(state) {
   }
 
   // First-Person Navigation Pad (Turn Left/Right, Forward/Backward, Strafe Left/Right)
-  const relMoves = (state.viewportScene && state.viewportScene.relativeMoves) || {};
   const isMoveLockedByCombat = Boolean(enc && (enc.status === 'IN_COMBAT' || enc.isAmbush));
   const moveDeck = document.getElementById('dm-movement-deck');
   const navLockBanner = document.getElementById('dm-nav-combat-banner');
@@ -167,9 +176,14 @@ export function renderActionDeckAndPad(state) {
   if (navLockBanner) {
     navLockBanner.hidden = !isMoveLockedByCombat;
     if (isMoveLockedByCombat) {
-      navLockBanner.textContent = enc.isAmbush
-        ? '⚠️ Ambush! Press [Space / 1] to face the threat'
-        : '🔒 Engaged in Melee — Use Flee [4 / F] to retreat';
+      if (enc.status === 'IN_COMBAT' && enc.isAmbush && enc.fleeLocked) {
+        const rem = Number(enc.ambushFleeLockedRoundsRemaining || Math.max(1, 3 - Number(enc.combat_round || 1)));
+        navLockBanner.textContent = `⚠️ AMBUSH! Flee Locked (${rem} Rd${rem === 1 ? '' : 's'} Left)`;
+      } else if (enc.isAmbush && enc.status === 'DISCOVERED') {
+        navLockBanner.textContent = '⚠️ Ambush! Press [Space / 1] to face the threat';
+      } else {
+        navLockBanner.textContent = '🔒 Engaged in Melee — Use Flee [4 / F] to retreat';
+      }
     }
   }
 
@@ -219,7 +233,7 @@ export function renderActionDeckAndPad(state) {
         : 'Locked in melee combat — use Flee [4/F] to retreat';
     } else {
       btn.title = cInfo.open
-        ? `${label} (${dir}): ${cInfo.name}${enc && enc.status === 'DISCOVERED' ? ' (Slips past threat)' : ''}`
+        ? `${label} (${dir}): ${cInfo.name}${enc && enc.status === 'DISCOVERED' ? ' (Avoids threat)' : ''}`
         : `Blocked (${dir}): ${cInfo.name}`;
     }
   });
