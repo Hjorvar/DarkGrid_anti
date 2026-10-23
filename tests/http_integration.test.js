@@ -113,7 +113,7 @@ test('HTTP Flow: Register -> Create Character -> Game Screen -> Movement', async
     strength: '12',
     constitution: '10',
     dexterity: '16', // base 14 + 2
-    intelligence: '10',
+    intelligence: '11',
     wisdom: '13',   // base 12 + 1
     charisma: '10',  // sum 12+10+16+10+13+10 = 71
     _csrf: csrfToken

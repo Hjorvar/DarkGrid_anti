@@ -214,7 +214,7 @@ test('Session 2 Secrecy & Revelation: Stage 1 hides identity, Stage 2 reveals wi
     userId: user.id,
     name: 'SecrecyTester',
     classType: 'FIGHTER',
-    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 9 }
+    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 9 }
   });
 
   // Pick a random monster from the new 30

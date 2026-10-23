@@ -40,7 +40,7 @@ describe('Night Work: Gameplay Fixes, Loot Progression, and 30 New Monsters', ()
       userId: user.id,
       name: 'Sir Ambush',
       classType: 'FIGHTER',
-      stats: { strength: 16, dexterity: 10, constitution: 14, intelligence: 11, wisdom: 10, charisma: 10 }
+      stats: { strength: 16, dexterity: 10, constitution: 14, intelligence: 11, wisdom: 11, charisma: 10 }
     });
 
     const forestTile = db.prepare("SELECT * FROM map_tiles WHERE terrain = 'FOREST' AND is_safe = 0 AND is_passable = 1 LIMIT 1").get();
@@ -108,7 +108,7 @@ describe('Night Work: Gameplay Fixes, Loot Progression, and 30 New Monsters', ()
       userId: user.id,
       name: 'Young Squire',
       classType: 'FIGHTER',
-      stats: { strength: 16, dexterity: 12, constitution: 14, intelligence: 10, wisdom: 10, charisma: 9 }
+      stats: { strength: 16, dexterity: 12, constitution: 14, intelligence: 11, wisdom: 10, charisma: 9 }
     });
 
     // Verify Level 1 outlier monsters were rebalanced in Seed 010
@@ -167,7 +167,7 @@ describe('Night Work: Gameplay Fixes, Loot Progression, and 30 New Monsters', ()
       userId: user.id,
       name: 'FirstHero',
       classType: 'FIGHTER',
-      stats: { strength: 16, dexterity: 12, constitution: 14, intelligence: 10, wisdom: 10, charisma: 9 }
+      stats: { strength: 16, dexterity: 12, constitution: 14, intelligence: 11, wisdom: 10, charisma: 9 }
     });
 
     // Move to Oakhaven city (terrain = 'CITY', is_safe = 1) to test selling starter gear
@@ -217,7 +217,7 @@ describe('Night Work: Gameplay Fixes, Loot Progression, and 30 New Monsters', ()
       userId: user.id,
       name: 'MuleAlt',
       classType: 'FIGHTER',
-      stats: { strength: 16, dexterity: 12, constitution: 14, intelligence: 10, wisdom: 10, charisma: 9 }
+      stats: { strength: 16, dexterity: 12, constitution: 14, intelligence: 11, wisdom: 10, charisma: 9 }
     });
 
     const enc2Res = db.prepare(`

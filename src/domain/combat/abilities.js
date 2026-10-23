@@ -1,20 +1,29 @@
 /**
- * Darkgrid Monster Special Abilities & Permadeath-Safe Combat Mechanics
- * Implements the 12 reusable Pathfinder 1e ability archetypes across all 68 monsters,
- * Hero Saving Throws (Fortitude, Reflex, Will, Physical), and all 9 Permadeath Safety Rules.
+ * Darkgrid Monster Special Abilities, Class Combat Passives & Permadeath-Safe Combat Mechanics
+ * Implements the 12 reusable Pathfinder 1e ability archetypes across all 98 monsters,
+ * Fighter Second Wind (OC-2 Option B), Cleric Turn Undead opening disruption,
+ * Hero Saving Throws (Fortitude, Reflex, Will, Physical), and all Permadeath Safety Rules.
  *
  * Strictly adheres to Darkgrid's Hidden Math Policy:
  * - Public combat event text (`public_text`) uses atmospheric dark-fantasy prose without raw numbers, dice formulas, or DCs.
  * - Structured details are recorded in event `details` JSON and `encounters.combat_state_json`.
  */
 
-const { getHeroSavingThrows } = require('../character/rules');
+const {
+  getModifier,
+  getEffectiveStats,
+  getHeroSavingThrows
+} = require('../character/rules');
+const {
+  doesMonsterMatchSacredKnowledge,
+  getClericTurnUndeadProfile
+} = require('./knowledge');
 const { rollD20, rollDice } = require('./dice');
 
 /**
  * Parses encounter.combat_state_json into a normalized state object.
  */
-function parseCombatStateJson(rawJson) {
+function parseCombatStateJson(rawJson, encounterRow = null) {
   let parsed = {};
   if (typeof rawJson === 'string' && rawJson.trim()) {
     try {
@@ -26,8 +35,15 @@ function parseCombatStateJson(rawJson) {
     parsed = { ...rawJson };
   }
 
+  const secondWindFromEncounter = Boolean(encounterRow && Number(encounterRow.second_wind_used) === 1);
+
   return {
     auraResolved: Boolean(parsed.auraResolved),
+    secondWindUsed: Boolean(parsed.secondWindUsed || secondWindFromEncounter),
+    turnUndeadResolved: Boolean(parsed.turnUndeadResolved),
+    turnUndeadPenaltyRounds: Number(parsed.turnUndeadPenaltyRounds || 0),
+    turnUndeadAttackPenalty: Number(parsed.turnUndeadAttackPenalty || 0),
+    calcifyInstantDeath: Boolean(parsed.calcifyInstantDeath),
     ferocityTriggered: Boolean(parsed.ferocityTriggered),
     bloodFrenzyActive: Boolean(parsed.bloodFrenzyActive),
     stirgeAttached: Boolean(parsed.stirgeAttached),
@@ -46,6 +62,7 @@ function parseCombatStateJson(rawJson) {
       sickened: Number(parsed.heroStatuses?.sickened || 0),
       paralyzed: Number(parsed.heroStatuses?.paralyzed || 0),
       calcifyStacks: Number(parsed.heroStatuses?.calcifyStacks || 0),
+      petrifiedInstantDeath: Boolean(parsed.heroStatuses?.petrifiedInstantDeath),
       corroded: Boolean(parsed.heroStatuses?.corroded),
       drainStacks: Number(parsed.heroStatuses?.drainStacks || 0)
     }
@@ -57,6 +74,278 @@ function parseCombatStateJson(rawJson) {
  */
 function serializeCombatStateJson(state) {
   return JSON.stringify(state || {});
+}
+
+/**
+ * Fighter Second Wind — Option B (PHASE-7A4-FINAL-OWNER-DECISIONS.md OC-2):
+ * Automatic once per combat when Fighter falls to <= 25% Max HP (including lethal HP damage).
+ * - Level 1-2: Unavailable
+ * - Level 3-5: 1d10 + Level + CON modifier
+ * - Level 6-9: 2d10 + Level + CON modifier
+ * - Level 10+: 3d10 + Level + CON modifier, plus one physical status cleanse (BLEED prioritized over POISON)
+ */
+function getFighterSecondWindProfile(character, equipment = null) {
+  if (!character || (character.class || '').toUpperCase() !== 'FIGHTER') {
+    return {
+      available: false,
+      dice: null,
+      diceCount: 0,
+      flatBonus: 0,
+      cleanse: false,
+      thresholdRatio: 0.25
+    };
+  }
+
+  const eff = getEffectiveStats(character, equipment);
+  const lvl = Math.max(1, Math.floor(Number(eff.level) || 1));
+  if (lvl < 3) {
+    return {
+      available: false,
+      dice: null,
+      diceCount: 0,
+      flatBonus: 0,
+      cleanse: false,
+      thresholdRatio: 0.25
+    };
+  }
+
+  const conMod = getModifier(eff.constitution !== undefined ? eff.constitution : 10);
+  const flatBonus = lvl + conMod;
+
+  if (lvl >= 10) {
+    return {
+      available: true,
+      dice: '3d10',
+      diceCount: 3,
+      flatBonus,
+      cleanse: true,
+      thresholdRatio: 0.25
+    };
+  }
+
+  if (lvl >= 6) {
+    return {
+      available: true,
+      dice: '2d10',
+      diceCount: 2,
+      flatBonus,
+      cleanse: false,
+      thresholdRatio: 0.25
+    };
+  }
+
+  return {
+    available: true,
+    dice: '1d10',
+    diceCount: 1,
+    flatBonus,
+    cleanse: false,
+    thresholdRatio: 0.25
+  };
+}
+
+/**
+ * Evaluates and triggers Fighter Second Wind (Option B) if eligible.
+ * Must be called AFTER the complete monster multi-hit and immediate damage-rider sequence,
+ * and after end-of-round Poison/Bleed DoT ticks.
+ * - Supports lethal HP rescue from <= 0 HP (resets base HP to 0 before adding healRoll).
+ * - Never rescues non-HP instant death from CALCIFY.
+ * - At Level 10+, cleanses one active physical status (BLEED prioritized over POISON).
+ */
+function tryTriggerFighterSecondWind({
+  character,
+  equipment = null,
+  encounter = null,
+  combatState = {},
+  currentHeroHp,
+  currentHp,
+  maxHeroHp = null,
+  maxHp = null,
+  rng = Math.random,
+  logEvent = null,
+  nonHpInstantDeath = false,
+  isCalcifiedKilled = false
+}) {
+  const curHp = currentHeroHp !== undefined ? Number(currentHeroHp) : Number(currentHp);
+  const mxHp = maxHeroHp !== null && maxHeroHp !== undefined
+    ? Number(maxHeroHp)
+    : (maxHp !== null && maxHp !== undefined ? Number(maxHp) : null);
+
+  const profile = getFighterSecondWindProfile(character, equipment);
+  if (!profile.available || !combatState) {
+    return {
+      triggered: false,
+      newHeroHp: curHp,
+      currentHp: curHp,
+      healed: 0,
+      healAmount: 0,
+      rescuedFromZero: false,
+      cleansedStatus: null,
+      cleansedCondition: null,
+      combatState
+    };
+  }
+
+  if (combatState.secondWindUsed || (encounter && Number(encounter.second_wind_used) === 1)) {
+    return {
+      triggered: false,
+      newHeroHp: curHp,
+      currentHp: curHp,
+      healed: 0,
+      healAmount: 0,
+      rescuedFromZero: false,
+      cleansedStatus: null,
+      cleansedCondition: null,
+      combatState
+    };
+  }
+
+  // Never rescue non-HP instant death from CALCIFY
+  if (
+    nonHpInstantDeath ||
+    isCalcifiedKilled ||
+    combatState.calcifyInstantDeath ||
+    (combatState.heroStatuses && combatState.heroStatuses.petrifiedInstantDeath)
+  ) {
+    return {
+      triggered: false,
+      newHeroHp: curHp,
+      currentHp: curHp,
+      healed: 0,
+      healAmount: 0,
+      rescuedFromZero: false,
+      cleansedStatus: null,
+      cleansedCondition: null,
+      blockedByCalcify: true,
+      combatState
+    };
+  }
+
+  const effMaxHp = Math.max(1, Math.floor(Number(mxHp !== null ? mxHp : character.max_hp) || 1));
+  const thresholdHp = Math.floor(effMaxHp * profile.thresholdRatio);
+
+  if (curHp > thresholdHp) {
+    return {
+      triggered: false,
+      newHeroHp: curHp,
+      currentHp: curHp,
+      healed: 0,
+      healAmount: 0,
+      rescuedFromZero: false,
+      cleansedStatus: null,
+      cleansedCondition: null,
+      combatState
+    };
+  }
+
+  combatState.secondWindUsed = true;
+  if (encounter && typeof encounter === 'object') {
+    encounter.second_wind_used = 1;
+  }
+
+  const diceResult = rollDice(profile.dice, rng, 1);
+  const rawHeal = Math.max(1, diceResult.total + profile.flatBonus);
+  const lethalRescue = curHp <= 0;
+  const baseHpBeforeHeal = Math.max(0, curHp);
+  const newHeroHp = Math.min(effMaxHp, baseHpBeforeHeal + rawHeal);
+  const actualHealed = newHeroHp - baseHpBeforeHeal;
+
+  let cleansedStatus = null;
+  if (profile.cleanse) {
+    if (combatState.heroStatuses) {
+      if (combatState.heroStatuses.bleed) {
+        combatState.heroStatuses.bleed = null;
+        cleansedStatus = 'BLEED';
+      } else if (combatState.heroStatuses.poison) {
+        combatState.heroStatuses.poison = null;
+        cleansedStatus = 'POISON';
+      }
+    }
+    if (!cleansedStatus) {
+      if (combatState.bleedRounds > 0) {
+        combatState.bleedRounds = 0;
+        combatState.bleedDamage = null;
+        cleansedStatus = 'BLEED';
+      } else if (combatState.poisonRounds > 0) {
+        combatState.poisonRounds = 0;
+        combatState.poisonDamage = null;
+        cleansedStatus = 'POISON';
+      }
+    }
+  }
+
+  if (typeof logEvent === 'function') {
+    let narrative;
+    if (lethalRescue && cleansedStatus) {
+      narrative = 'At the brink of death, unyielding martial grit surges through your veins — you refuse to fall, rallying your strength and purging the affliction from your flesh!';
+    } else if (lethalRescue) {
+      narrative = 'At the brink of death, unyielding martial grit surges through your veins — you refuse to fall and rally back into the fight!';
+    } else if (cleansedStatus) {
+      narrative = 'Gritting your teeth through the agony, a surge of battle-hardened second wind courses through your veins, steadying your stance and purging the affliction from your flesh!';
+    } else {
+      narrative = 'Gritting your teeth through the agony, a surge of battle-hardened second wind courses through your veins and steadies your stance!';
+    }
+
+    logEvent('SECOND_WIND', narrative, {
+      ability: 'SECOND_WIND',
+      dice: profile.dice,
+      flatBonus: profile.flatBonus,
+      rawHeal,
+      healed: actualHealed,
+      previousHp: curHp,
+      newHeroHp,
+      thresholdHp,
+      lethalRescue,
+      cleansedStatus
+    });
+  }
+
+  return {
+    triggered: true,
+    newHeroHp,
+    currentHp: newHeroHp,
+    healed: actualHealed,
+    healAmount: actualHealed,
+    rawHeal,
+    lethalRescue,
+    rescuedFromZero: lethalRescue,
+    cleansedStatus,
+    cleansedCondition: cleansedStatus,
+    combatState
+  };
+}
+
+/**
+ * Resolves Cleric Turn Undead opening disruption when engaging an Undead creature at Level 2+.
+ */
+function resolveClericTurnUndead(character, equipment, encounter, combatState, logEvent) {
+  if (!combatState || combatState.turnUndeadResolved) return { triggered: false };
+  const eff = getEffectiveStats(character, equipment);
+  const profile = getClericTurnUndeadProfile(eff, encounter);
+  if (!profile.available) return { triggered: false };
+
+  combatState.turnUndeadResolved = true;
+  combatState.turnUndeadAttackPenalty = profile.monsterAttackPenalty;
+  combatState.turnUndeadPenaltyRounds = profile.penaltyRounds;
+
+  const monsterName = (encounter && (encounter.monster_name || encounter.name)) || 'the undead abomination';
+  if (typeof logEvent === 'function') {
+    logEvent(
+      'TURN_UNDEAD',
+      `You raise your holy symbol as searing sacred light washes over the ${monsterName}, disrupting its unholy malice!`,
+      {
+        ability: 'TURN_UNDEAD',
+        monsterAttackPenalty: profile.monsterAttackPenalty,
+        penaltyRounds: profile.penaltyRounds
+      }
+    );
+  }
+
+  return {
+    triggered: true,
+    monsterAttackPenalty: profile.monsterAttackPenalty,
+    penaltyRounds: profile.penaltyRounds
+  };
 }
 
 /**
@@ -103,17 +392,11 @@ function getWeaponCombatTraits(character, activeWeapon = null, monster = null) {
       types.add('P');
     }
   } else {
-    // Unarmed strike is bludgeoning
     types.add('B');
   }
 
   // Cleric Holy Radiance imbues attacks with sacred energy against Undead
-  const isUndead = Boolean(
-    monster && (
-      (monster.creature_type || '').toUpperCase() === 'UNDEAD' ||
-      (monster.creature_subtype || '').toLowerCase().includes('undead')
-    )
-  );
+  const isUndead = doesMonsterMatchSacredKnowledge(monster);
   if (character && (character.class || '').toUpperCase() === 'CLERIC' && isUndead) {
     isMagical = true;
   }
@@ -126,7 +409,7 @@ function getWeaponCombatTraits(character, activeWeapon = null, monster = null) {
 }
 
 /**
- * Returns the Pathfinder 1e Darkgrid-adapted ability profile for any of the 68 monsters.
+ * Returns the Pathfinder 1e Darkgrid-adapted ability profile for any of the 98 monsters.
  */
 function getMonsterAbilityProfile(monster) {
   const name = (monster && (monster.base_monster_name || monster.monster_name || monster.name) ? (monster.base_monster_name || monster.monster_name || monster.name) : '').trim();
@@ -316,7 +599,7 @@ function getMonsterAbilityProfile(monster) {
       p.evasion = { type: 'BLINK', margin: 0 };
       break;
     case 'Duergar':
-      p.bloodFrenzy = true; // Enlarge Person giant growth when bloodied
+      p.bloodFrenzy = true;
       break;
     case 'Drow':
       p.poison = { dc: 12, dmgFormula: '1d2', rounds: 2, atkPenalty: 1, acPenalty: 0, label: 'Drow Lethargy Bolt' };
@@ -400,7 +683,6 @@ function getMonsterAbilityProfile(monster) {
     case 'Sahuagin':
       p.bloodFrenzy = true;
       break;
-    // --- 30 New Night-Work Monsters (Levels 1-5) ---
     case 'Mite':
       p.openingStrike = { atkBonus: 1, bonusDmgFormula: null, label: 'Underbrush Dart' };
       break;
@@ -582,10 +864,18 @@ function getActiveStatusModifiers(combatState) {
 /**
  * Returns an array of human-readable status badges for the UI (no raw numbers).
  */
-function getPublicHeroStatusBadges(combatState) {
+function getPublicHeroStatusBadges(combatState, character = null) {
   if (!combatState || !combatState.heroStatuses) return [];
   const s = combatState.heroStatuses;
   const badges = [];
+
+  if (character && (character.class || '').toUpperCase() === 'FIGHTER' && Number(character.level || 1) >= 3) {
+    if (combatState.secondWindUsed) {
+      badges.push({ key: 'SECOND_WIND_SPENT', label: 'Second Wind: Spent', severity: 'info' });
+    } else {
+      badges.push({ key: 'SECOND_WIND_READY', label: 'Second Wind: Ready', severity: 'success' });
+    }
+  }
 
   if (s.paralyzed > 0) {
     badges.push({ key: 'PARALYZED', label: 'Paralyzed (Drink Potion or Flee still available!)', severity: 'danger' });
@@ -647,7 +937,7 @@ function resolveCombatStartAura(character, equipment, encounter, combatState, rn
 
   if (saved) {
     if (aura.type === 'STENCH') {
-      logEvent('MONSTER_ABILITY', `A waves of putrid stench rolls off the ${monsterName}, but you steel your stomach and resist the nausea.`, {
+      logEvent('MONSTER_ABILITY', `A wave of putrid stench rolls off the ${monsterName}, but you steel your stomach and resist the nausea.`, {
         ability: aura.label, saveType: aura.save, saved: true
       });
     } else if (aura.type === 'ENTANGLE') {
@@ -703,7 +993,6 @@ function modifyHeroAttackDamageAndState({
     return { finalDamage: 0, newMonsterHp: currentMonsterHp, evaded: false };
   }
 
-  // 1. Evasion / Concealment / Incorporeal phase check on glancing hits (deterministic, consumes 0 extra RNG calls)
   if (profile.evasion && !heroAttackRoll.isCrit) {
     const margin = heroAttackRoll.total - monsterAC;
     const maxGlance = profile.evasion.margin || 0;
@@ -718,12 +1007,10 @@ function modifyHeroAttackDamageAndState({
 
   let damage = rawHeroDamage;
 
-  // 2. Amorphous critical resistance (Gibbering Mouther)
   if (profile.amorphous && heroAttackRoll.isCrit) {
     damage = Math.max(1, Math.ceil(damage * 0.75));
   }
 
-  // 3. Incorporeal non-magical damage reduction (Permadeath Safety Rule #7: 50% damage, min 1)
   if (profile.evasion && profile.evasion.type === 'INCORPOREAL' && !traits.isMagical) {
     damage = Math.max(1, Math.floor(damage * 0.5));
     logEvent('MONSTER_ABILITY', `Your non-magical weapon passes partially through the spectral form of the ${monsterName}, inflicting diminished harm.`, {
@@ -731,15 +1018,13 @@ function modifyHeroAttackDamageAndState({
     });
   }
 
-  // 4. Ochre Jelly Split Mitigation (blades part protoplasm without full force; bludgeoning deals full damage)
   if (profile.splitMitigation && !traits.types.has('B')) {
     damage = Math.max(1, damage - 2);
-    logEvent('MONSTER_ABILITY', `Your blade slices through the ${monsterName}'s gelatinous mass, which Flows and reforms around the cut!`, {
+    logEvent('MONSTER_ABILITY', `Your blade slices through the ${monsterName}'s gelatinous mass, which flows and reforms around the cut!`, {
       ability: 'SPLIT_MITIGATION', mitigated: true
     });
   }
 
-  // 5. Damage Reduction (DR X/bludgeoning, slashing, magic, or —; Permadeath Safety Rule #7: min 1 damage)
   if (profile.dr && profile.dr.amount > 0) {
     let bypassed = false;
     if (profile.dr.bypass === 'B' && traits.types.has('B')) bypassed = true;
@@ -757,7 +1042,6 @@ function modifyHeroAttackDamageAndState({
 
   let newMonsterHp = currentMonsterHp - damage;
 
-  // 6. Ferocity (Orc, Boar) — Permadeath Safety Rule #9: survives at 1 HP once unless overkill or low-HP test
   if (
     profile.ferocity &&
     !combatState.ferocityTriggered &&
@@ -777,7 +1061,6 @@ function modifyHeroAttackDamageAndState({
     newMonsterHp = Math.max(0, newMonsterHp);
   }
 
-  // 7. Blood Frenzy / Giant Growth trigger when monster is wounded
   if (profile.bloodFrenzy && !combatState.bloodFrenzyActive && newMonsterHp > 0 && newMonsterHp < monsterMaxHp) {
     combatState.bloodFrenzyActive = true;
     logEvent('MONSTER_ABILITY', `The scent of blood drives the ${monsterName} into a reckless frenzy!`, {
@@ -809,7 +1092,6 @@ function resolveMonsterTurnSpecials({
   let newHeroHp = currentHeroHp;
   let newMonsterHp = currentMonsterHp;
 
-  // 1. Troll Regeneration (heals while alive on round >= 2)
   if (profile.regeneration > 0 && roundNumber >= 2 && newMonsterHp > 0 && newMonsterHp < monsterMaxHp) {
     newMonsterHp = Math.min(monsterMaxHp, newMonsterHp + profile.regeneration);
     logEvent('MONSTER_ABILITY', `Torn sinew and flesh knit back together as the ${monsterName} regenerates before your eyes!`, {
@@ -817,7 +1099,6 @@ function resolveMonsterTurnSpecials({
     });
   }
 
-  // 2. Stirge Attached Automatic Blood Drain
   if (profile.attachDrain && combatState.stirgeAttached && newMonsterHp > 0 && newHeroHp > 0) {
     const drainRoll = rollDice(profile.attachDrain.drainFormula || '1d3', rng, 1);
     newHeroHp = Math.max(0, newHeroHp - drainRoll.total);
@@ -830,7 +1111,6 @@ function resolveMonsterTurnSpecials({
     }
   }
 
-  // 3. Constrict damage while hero is Grabbed
   if (combatState.heroStatuses.grabbed && combatState.heroStatuses.grabbed.constrictFormula && newMonsterHp > 0 && newHeroHp > 0) {
     const constrictRoll = rollDice(combatState.heroStatuses.grabbed.constrictFormula, rng, 1);
     newHeroHp = Math.max(0, newHeroHp - constrictRoll.total);
@@ -839,7 +1119,6 @@ function resolveMonsterTurnSpecials({
     });
   }
 
-  // 4. Cooldown Breath Weapon / Tail Spike Volley (only on round >= 2 when cooldown is 0)
   let usedBreathOrVolley = false;
   if (profile.cooldownSpecial && roundNumber >= 2 && combatState.breathCooldown <= 0 && newMonsterHp > 0 && newHeroHp > 0) {
     usedBreathOrVolley = true;
@@ -864,7 +1143,6 @@ function resolveMonsterTurnSpecials({
     combatState.breathCooldown -= 1;
   }
 
-  // 5. Compute Monster Attack Bonus & Bonus Damage for standard attack
   let monsterAbBonus = 0;
   let bonusDamageFormula = null;
 
@@ -876,7 +1154,11 @@ function resolveMonsterTurnSpecials({
     monsterAbBonus += 2;
   }
   if (combatState.ferocityTriggered) {
-    monsterAbBonus -= 2; // Wounded ferocity penalty
+    monsterAbBonus -= 2;
+  }
+  if (combatState.turnUndeadPenaltyRounds > 0) {
+    monsterAbBonus += Number(combatState.turnUndeadAttackPenalty || 0);
+    combatState.turnUndeadPenaltyRounds -= 1;
   }
 
   return {
@@ -890,8 +1172,7 @@ function resolveMonsterTurnSpecials({
 }
 
 /**
- * Resolves Monster On-Hit effects (Elemental Rider, Rend, Poison, Disease, Bleed, Trip, Grab, Paralysis, Drain, Calcify, Rust)
- * AFTER the monster's primary attack hits and deals its base damage.
+ * Resolves Monster On-Hit effects AFTER the monster's primary attack hits and deals its base damage.
  */
 function resolveMonsterOnHitEffects({
   character,
@@ -916,7 +1197,6 @@ function resolveMonsterOnHitEffects({
   let newHeroHp = currentHeroHp;
   let newMonsterHp = currentMonsterHp;
 
-  // 1. Elemental Rider (Acid / Cold)
   if (profile.elementalRider && newHeroHp > 0) {
     const elemDmg = rollDice(profile.elementalRider.dmgFormula, rng, 1).total;
     newHeroHp = Math.max(0, newHeroHp - elemDmg);
@@ -925,7 +1205,6 @@ function resolveMonsterOnHitEffects({
     });
   }
 
-  // 2. High-Roll Rend / Multiattack Follow-up (triggers when attack roll >= heroAC + 4 or Crit)
   if (profile.rend && newHeroHp > 0 && (monsterAttackRoll.isCrit || monsterAttackRoll.total >= heroAC + (profile.rend.margin || 4))) {
     const rendDmg = rollDice(profile.rend.bonusDmgFormula, rng, 1).total;
     newHeroHp = Math.max(0, newHeroHp - rendDmg);
@@ -938,7 +1217,6 @@ function resolveMonsterOnHitEffects({
     return { newHeroHp, newMonsterHp };
   }
 
-  // 3. Stirge Attach on hit
   if (profile.attachDrain && !combatState.stirgeAttached) {
     combatState.stirgeAttached = true;
     combatState.stirgeDrainCount = 0;
@@ -947,7 +1225,6 @@ function resolveMonsterOnHitEffects({
     });
   }
 
-  // 4. On-Hit Bleed (stopped by drinking any healing potion)
   if (profile.bleed && !combatState.heroStatuses.bleed) {
     combatState.heroStatuses.bleed = {
       rounds: profile.bleed.rounds || 2,
@@ -959,7 +1236,6 @@ function resolveMonsterOnHitEffects({
     });
   }
 
-  // 5. On-Hit Poison (Permadeath Safety Rule #3: max 3 rounds, cure on 1 save, non-stacking)
   if (
     profile.poison &&
     !combatState.heroStatuses.poison &&
@@ -983,7 +1259,6 @@ function resolveMonsterOnHitEffects({
     }
   }
 
-  // 6. On-Hit Disease / Curse
   if (profile.disease && !combatState.heroStatuses.disease) {
     const d20 = rollD20(rng);
     const saved = d20 === 20 || (d20 !== 1 && d20 + saves.fort >= profile.disease.dc);
@@ -999,7 +1274,6 @@ function resolveMonsterOnHitEffects({
     }
   }
 
-  // 7. On-Hit Trip (Physical Save = max(Fort, Ref))
   if (profile.trip && combatState.heroStatuses.tripped <= 0) {
     const d20 = rollD20(rng);
     const saved = d20 === 20 || (d20 !== 1 && d20 + saves.physical >= profile.trip.dc);
@@ -1011,7 +1285,6 @@ function resolveMonsterOnHitEffects({
     }
   }
 
-  // 8. On-Hit Grab (Physical Save = max(Fort, Ref))
   if (profile.grab && !combatState.heroStatuses.grabbed) {
     const d20 = rollD20(rng);
     const saved = d20 === 20 || (d20 !== 1 && d20 + saves.physical >= profile.grab.dc);
@@ -1029,7 +1302,6 @@ function resolveMonsterOnHitEffects({
     }
   }
 
-  // 9. On-Hit Paralysis (Permadeath Safety Rule #1: 1-round stun, Potion/Flee allowed, 3-round immunity cooldown)
   if (profile.paralysis && combatState.heroStatuses.paralyzed <= 0 && combatState.paralysisCooldown <= 0) {
     const d20 = rollD20(rng);
     const saved = d20 === 20 || (d20 !== 1 && d20 + saves.fort >= profile.paralysis.dc);
@@ -1042,7 +1314,6 @@ function resolveMonsterOnHitEffects({
     }
   }
 
-  // 10. On-Hit Life / Ability Drain (Permadeath Safety Rule #4: encounter-scoped drain + monster leech)
   if (profile.drain && combatState.heroStatuses.drainStacks < 3) {
     const d20 = rollD20(rng);
     const saved = d20 === 20 || (d20 !== 1 && d20 + saves.fort >= profile.drain.dc);
@@ -1055,7 +1326,6 @@ function resolveMonsterOnHitEffects({
     }
   }
 
-  // 11. On-Hit Progressive Calcification (Permadeath Safety Rule #2: 2-stage progressive, never 1-roll instant death)
   if (profile.calcify) {
     const d20 = rollD20(rng);
     const saved = d20 === 20 || (d20 !== 1 && d20 + saves.fort >= profile.calcify.dc);
@@ -1076,7 +1346,6 @@ function resolveMonsterOnHitEffects({
     }
   }
 
-  // 12. On-Hit Rust Corrosion (Permadeath Safety Rule #6: temporary encounter debuff, never deletes items)
   if (profile.rust && !combatState.heroStatuses.corroded) {
     const d20 = rollD20(rng);
     const saved = d20 === 20 || (d20 !== 1 && d20 + saves.ref >= profile.rust.dc);
@@ -1110,7 +1379,6 @@ function resolveEndOfRoundStatusTicks({
     combatState.paralysisCooldown -= 1;
   }
 
-  // 1. Poison tick & Cure-1-Save check (Permadeath Safety Rule #3)
   if (s.poison && newHeroHp > 0) {
     const d20 = rollD20(rng);
     const cured = d20 === 20 || (d20 !== 1 && d20 + saves.fort >= (s.poison.dc || 12));
@@ -1132,7 +1400,6 @@ function resolveEndOfRoundStatusTicks({
     }
   }
 
-  // 2. Bleed tick
   if (s.bleed && newHeroHp > 0) {
     const bleedDmg = rollDice(s.bleed.dmgFormula || '1d4', rng, 1).total;
     newHeroHp = Math.max(0, newHeroHp - bleedDmg);
@@ -1145,7 +1412,6 @@ function resolveEndOfRoundStatusTicks({
     }
   }
 
-  // 3. Grab break-free check at end of round
   if (s.grabbed && newHeroHp > 0) {
     const d20 = rollD20(rng);
     if (d20 === 20 || d20 + saves.physical >= (s.grabbed.dc || 13)) {
@@ -1156,7 +1422,6 @@ function resolveEndOfRoundStatusTicks({
     }
   }
 
-  // 4. Decrement round-based debuffs
   if (s.tripped > 0) s.tripped -= 1;
   if (s.entangled > 0) s.entangled -= 1;
   if (s.shaken > 0) s.shaken -= 1;
@@ -1168,6 +1433,10 @@ function resolveEndOfRoundStatusTicks({
 module.exports = {
   parseCombatStateJson,
   serializeCombatStateJson,
+  getFighterSecondWindProfile,
+  tryTriggerFighterSecondWind,
+  resolveFighterSecondWind: tryTriggerFighterSecondWind,
+  resolveClericTurnUndead,
   getWeaponCombatTraits,
   getMonsterAbilityProfile,
   getActiveStatusModifiers,

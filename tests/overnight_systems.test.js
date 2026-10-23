@@ -51,7 +51,7 @@ test('1. Character creation grants authentic starting equipment and prepared slo
     userId: userF.id,
     name: 'Sir Galahad',
     classType: 'FIGHTER',
-    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 9 },
+    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 9 },
     startingGold: 10
   });
   const eqF = getCharacterEquipment(db, fighter.id);
@@ -67,7 +67,7 @@ test('1. Character creation grants authentic starting equipment and prepared slo
     userId: userR.id,
     name: 'Robin',
     classType: 'RANGER',
-    stats: { strength: 12, constitution: 12, dexterity: 16, intelligence: 10, wisdom: 12, charisma: 9 },
+    stats: { strength: 12, constitution: 12, dexterity: 16, intelligence: 11, wisdom: 12, charisma: 9 },
     startingGold: 10,
     favoredEnemyType: 'HUMANOID',
     favoredEnemySubtype: 'goblinoid'
@@ -86,7 +86,7 @@ test('1. Character creation grants authentic starting equipment and prepared slo
     userId: userC.id,
     name: 'Brother Tuck',
     classType: 'CLERIC',
-    stats: { strength: 12, constitution: 12, dexterity: 10, intelligence: 10, wisdom: 16, charisma: 11 },
+    stats: { strength: 12, constitution: 12, dexterity: 10, intelligence: 11, wisdom: 16, charisma: 11 },
     startingGold: 10
   });
   const eqC = getCharacterEquipment(db, cleric.id);
@@ -107,7 +107,7 @@ test('2. Ranger Favored Enemy validation rejects Undead and bare Humanoid', asyn
       userId: user.id,
       name: 'UndeadHunter',
       classType: 'RANGER',
-      stats: { strength: 12, constitution: 12, dexterity: 16, intelligence: 10, wisdom: 12, charisma: 9 },
+      stats: { strength: 12, constitution: 12, dexterity: 16, intelligence: 11, wisdom: 12, charisma: 9 },
       favoredEnemyType: 'UNDEAD'
     });
   }, /Undead is not permitted as a Favored Enemy/i);
@@ -118,7 +118,7 @@ test('2. Ranger Favored Enemy validation rejects Undead and bare Humanoid', asyn
       userId: user.id,
       name: 'HumanoidHunter',
       classType: 'RANGER',
-      stats: { strength: 12, constitution: 12, dexterity: 16, intelligence: 10, wisdom: 12, charisma: 9 },
+      stats: { strength: 12, constitution: 12, dexterity: 16, intelligence: 11, wisdom: 12, charisma: 9 },
       favoredEnemyType: 'HUMANOID',
       favoredEnemySubtype: ''
     });
@@ -132,7 +132,7 @@ test('3. Town Shop: Buy and sell standard equipment with 50% resale liquidation'
     userId: user.id,
     name: 'MerchantKnight',
     classType: 'FIGHTER',
-    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 9 },
+    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 9 },
     startingGold: 50
   });
 
@@ -175,7 +175,7 @@ test('4. Safe Haven Rest: Fully restores HP and recharges Cleric self-healing', 
     userId: user.id,
     name: 'Father Paul',
     classType: 'CLERIC',
-    stats: { strength: 12, constitution: 12, dexterity: 10, intelligence: 10, wisdom: 16, charisma: 11 }
+    stats: { strength: 12, constitution: 12, dexterity: 10, intelligence: 11, wisdom: 16, charisma: 11 }
   });
 
   // Damage hero and use a cleric charge
@@ -202,7 +202,7 @@ test('5. Combat dynamic weapon selection: Flying monster respects weapon prefere
     userId: user.id,
     name: 'ShieldBearer',
     classType: 'FIGHTER',
-    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 9 }
+    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 9 }
   });
 
   const eq = getCharacterEquipment(db, hero.id);
@@ -250,8 +250,8 @@ test('6. Class abilities: Fighter Weapon/Armor Training, Ranger Favored Enemy, C
   const rangerHero = { class: 'RANGER', level: 5, favored_enemy_type: 'HUMANOID', favored_enemy_subtype: 'goblinoid' };
   const goblin = { creature_type: 'Humanoid', creature_subtype: 'goblinoid' };
   const wolf = { creature_type: 'Animal', creature_subtype: null };
-  assert.deepEqual(getRangerFavoredEnemyBonus(rangerHero, goblin), { attack: 2, damage: 2 });
-  assert.deepEqual(getRangerFavoredEnemyBonus(rangerHero, wolf), { attack: 0, damage: 0 });
+  assert.deepEqual(getRangerFavoredEnemyBonus(rangerHero, goblin), { attack: 3, damage: 3, ac: 0 });
+  assert.deepEqual(getRangerFavoredEnemyBonus(rangerHero, wolf), { attack: 0, damage: 0, ac: 0 });
 
   // Cleric Holy Radiance (upgraded from Divine Power)
   assert.deepEqual(getClericDivinePowerBonus('CLERIC', 1, { creature_type: 'Undead' }), { attack: 2, damage: 3, ac: 2 });
@@ -268,7 +268,7 @@ test('7. Cleric out-of-combat self-healing: rolls dice, respects caps, enforces 
     userId: user.id,
     name: 'HolyHealer',
     classType: 'CLERIC',
-    stats: { strength: 12, constitution: 12, dexterity: 10, intelligence: 10, wisdom: 16, charisma: 11 }
+    stats: { strength: 12, constitution: 12, dexterity: 10, intelligence: 11, wisdom: 16, charisma: 11 }
   });
 
   // At Level 1, max charges = 2, dice = 1d6
@@ -319,7 +319,7 @@ test('9. Magic item resale and global market circulation between players', async
     userId: user1.id,
     name: 'HeroOne',
     classType: 'FIGHTER',
-    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 9 },
+    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 9 },
     startingGold: 10
   });
 
@@ -327,7 +327,7 @@ test('9. Magic item resale and global market circulation between players', async
     userId: user2.id,
     name: 'HeroTwo',
     classType: 'RANGER',
-    stats: { strength: 12, constitution: 12, dexterity: 16, intelligence: 10, wisdom: 12, charisma: 9 },
+    stats: { strength: 12, constitution: 12, dexterity: 16, intelligence: 11, wisdom: 12, charisma: 9 },
     startingGold: 5000 // wealthy buyer
   });
 
@@ -384,7 +384,7 @@ test('10. Permadeath with 50% gold and item transfer to Persistent Monster, and 
     userId: userVictim.id,
     name: 'UnfortunateHero',
     classType: 'FIGHTER',
-    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 9 },
+    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 9 },
     startingGold: 100
   });
 
@@ -392,7 +392,7 @@ test('10. Permadeath with 50% gold and item transfer to Persistent Monster, and 
     userId: userVictor.id,
     name: 'AvengingHero',
     classType: 'FIGHTER',
-    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 9 },
+    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 9 },
     startingGold: 10
   });
 

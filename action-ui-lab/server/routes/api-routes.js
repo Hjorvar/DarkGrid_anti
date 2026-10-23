@@ -61,6 +61,7 @@ function registerApiRoutes(app, { db, userId, options = {} }) {
   router.post('/api/auth/login', authCharCtrl.postLogin);
   router.post('/api/auth/logout', authCharCtrl.postLogout);
   router.post('/api/character/create', idempotencyGuard, authCharCtrl.postCreateCharacter);
+  router.post('/api/character/attributes/spend', idempotencyGuard, authCharCtrl.postSpendAttributePoint);
 
   // Unified Game Action Endpoint
   router.post('/api/action', idempotencyGuard, postAction);

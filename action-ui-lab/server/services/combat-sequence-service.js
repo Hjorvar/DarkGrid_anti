@@ -34,7 +34,7 @@ function buildCombatSequence(db, encounterId, lastEventIdBefore, beforeSnap, aft
     if (currentBeat) {
       let computedOutcome = 'HIT';
       if (currentBeat.actor === 'HERO') {
-        if (currentBeat.kind === 'POTION_USED') computedOutcome = 'HEAL';
+        if (currentBeat.kind === 'POTION_USED' || currentBeat.kind === 'SECOND_WIND') computedOutcome = 'HEAL';
         else if (currentBeat.isCrit) computedOutcome = 'CRIT';
         else if (currentBeat.isHit) computedOutcome = 'HIT';
         else computedOutcome = 'MISS';
@@ -74,14 +74,19 @@ function buildCombatSequence(db, encounterId, lastEventIdBefore, beforeSnap, aft
 
     const type = ev.event_type;
 
-    if (type === 'OPENING_SHOT' || type === 'HERO_ATTACK') {
+    if (type === 'OPENING_SHOT' || type === 'HERO_ATTACK' || type === 'TURN_UNDEAD') {
       flushBeat();
-      const isHit = Boolean(details.isHit);
+      const isHit = type === 'TURN_UNDEAD'
+        ? Boolean(details.effect && details.effect !== 'RESISTED')
+        : Boolean(details.isHit);
       const isCrit = Boolean(details.isCrit);
       const paralyzedStun = Boolean(details.paralyzedStun);
       let popupText = 'Miss';
       let popupStyle = 'pop-miss';
-      if (paralyzedStun) {
+      if (type === 'TURN_UNDEAD') {
+        popupText = isHit ? '✨ Turn Undead!' : 'Unholy Resistance';
+        popupStyle = isHit ? 'pop-strike' : 'pop-miss';
+      } else if (paralyzedStun) {
         popupText = '⚡ Broke Free!';
         popupStyle = 'pop-strike';
       } else if (isCrit) {
@@ -126,6 +131,22 @@ function buildCombatSequence(db, encounterId, lastEventIdBefore, beforeSnap, aft
         isHit: true,
         healed,
         popupText: healed > 0 ? `+${healed} HP` : '✨ Potion Used',
+        popupStyle: 'pop-heal',
+        heroHpAfterBeat: runningHeroHp,
+        conditionBracketAfterBeat: runningBracketKey,
+        conditionTextAfterBeat: runningConditionText,
+        events: [{ id: ev.id, round_number: ev.round_number, event_type: type, public_text: ev.public_text }]
+      };
+    } else if (type === 'SECOND_WIND') {
+      flushBeat();
+      const healed = Number(details.healed ?? details.actualHealed ?? 0);
+      runningHeroHp = Math.min(beforeSnap.heroMaxHp, Math.max(0, runningHeroHp) + healed);
+      currentBeat = {
+        actor: 'HERO',
+        kind: 'SECOND_WIND',
+        isHit: true,
+        healed,
+        popupText: healed > 0 ? `🛡️ Second Wind +${healed} HP` : '🛡️ Second Wind!',
         popupStyle: 'pop-heal',
         heroHpAfterBeat: runningHeroHp,
         conditionBracketAfterBeat: runningBracketKey,

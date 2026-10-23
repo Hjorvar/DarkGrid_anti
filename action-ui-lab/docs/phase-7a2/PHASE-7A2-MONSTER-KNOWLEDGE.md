@@ -1,5 +1,8 @@
 # DARKGRID — PHASE 7A.2: MONSTER KNOWLEDGE SYSTEM & 98-MONSTER CLASSIFICATION MATRIX
 
+> [!IMPORTANT]
+> **Historical Design Baseline (Superseded in Part by Phase 7A.3):** This Phase 7A.2 document is preserved as historical design context. While **Approved Option A (Automatic Class-Specific Monster Knowledge)** remains in force, the **7 blended Ranger Favored Enemy categories** in Section 2 and the habitat/monster counts in Section 3 have been superseded by the natural `monster_family` classification, corrected SQLite habitat audit (`86` surface / `12` non-surface), and **Battle Experience** system in [`../phase-7a3/PHASE-7A3-RANGER-FAMILIES.md`](../phase-7a3/PHASE-7A3-RANGER-FAMILIES.md), [`../phase-7a3/PHASE-7A3-BATTLE-EXPERIENCE.md`](../phase-7a3/PHASE-7A3-BATTLE-EXPERIENCE.md), and [`../phase-7a3/PHASE-7A3-WORLD-HABITATS.md`](../phase-7a3/PHASE-7A3-WORLD-HABITATS.md).
+
 **Date:** 2026-10-22  
 **Phase:** 7A.2 — Class Identity & Thematic Progression (Design & Documentation Only)  
 **Baseline Verified Against:** `main` commit `042d122` (98 Seeded Monsters across `001_seed_world.sql` .. `010_seed_30_new_monsters.sql`)

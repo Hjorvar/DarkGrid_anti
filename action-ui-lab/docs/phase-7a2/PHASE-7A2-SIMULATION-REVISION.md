@@ -1,5 +1,8 @@
 # DARKGRID — PHASE 7A.2: REVISED SIMULATION PHILOSOPHY & ACCEPTANCE CRITERIA
 
+> [!IMPORTANT]
+> **Historical Design Baseline (Superseded by Phase 7A.3):** This Phase 7A.2 document is preserved as historical design context. For the authoritative Phase 7B simulation matrix—adding Battle Experience (`0 / 1 / 3` wins across low/average/high `INT` & `WIS`), Fighter *Second Wind Lethal Rescue*, Ranger lethal *Opening Shot*, `INT 8 / WIS 8` Level 1 safety checks, and removal of the 98-monster surface spawn mandate—see [`../phase-7a3/PHASE-7A3-SIMULATION-PLAN.md`](../phase-7a3/PHASE-7A3-SIMULATION-PLAN.md).
+
 **Date:** 2026-10-22  
 **Phase:** 7A.2 — Class Identity & Thematic Progression (Design & Documentation Only)  
 **Baseline Verified Against:** `main` commit `042d122`  

@@ -3,32 +3,30 @@ const path = require('path');
 const config = require('../../config');
 const { withTransaction } = require('../../db/connection');
 const { getDistanceToNearestSafeCity } = require('../world/map');
+const { resolveMonsterFamily } = require('../monsters/taxonomy');
+const {
+  hasClassGeneralKnowledge,
+  getCharacterMonsterKnowledge,
+  evaluateHeroMonsterKnowledge
+} = require('../combat/knowledge');
 
 /**
  * Calculates the maximum Challenge Rating (CR) allowed for random encounters
  * based on distance (in grid steps) from the nearest safe city haven.
- * 
- * Rules:
- * - 0 steps (city itself): No random combat (CR = 0)
- * - 1 step: CR <= 1/3 (approx 0.334)
- * - 2 steps: CR <= 1/2 (0.5)
- * - 3 steps: CR <= 1.0
- * - 4+ steps: null (unrestricted Gaussian distribution)
  */
 function getMaxCrForDistance(distance) {
   if (distance === null || distance === undefined || !isFinite(distance)) {
     return null;
   }
   if (distance <= 0) return 0;
-  if (distance === 1) return (1 / 3) + 0.001; // ~0.334 to safely include 0.33
+  if (distance === 1) return (1 / 3) + 0.001;
   if (distance === 2) return 0.5;
   if (distance === 3) return 1.0;
-  return null; // 4+ steps: normal Gaussian
+  return null;
 }
 
 /**
  * Calculates Gaussian weight for an available monster level L relative to hero level H.
- * weight(L) = exp(-((L - H)^2) / (2 * sigma^2))
  */
 function calculateNormalWeight(monsterLevel, heroLevel, sigma = config.encounterSigma) {
   const diff = monsterLevel - heroLevel;
@@ -37,8 +35,6 @@ function calculateNormalWeight(monsterLevel, heroLevel, sigma = config.encounter
 
 /**
  * Weighted random picker
- * @param {Array<{ item: any, weight: number }>} itemsWithWeights
- * @param {() => number} rng Optional RNG function (0 to 1), defaults to Math.random
  */
 function weightedPick(itemsWithWeights, rng = Math.random) {
   if (!itemsWithWeights || itemsWithWeights.length === 0) return null;
@@ -57,9 +53,6 @@ function weightedPick(itemsWithWeights, rng = Math.random) {
 
 /**
  * Selects monster candidate using the two-step normal-weighted algorithm
- * 1. Filter candidates by terrain habitat and optional maxCr safety cap
- * 2. Group by solo_level and choose level using Gaussian normal weights
- * 3. Choose candidate within selected level by spawn_weight
  */
 function selectMonsterForTerrainAndHero(db, terrainName, heroLevel, options = {}) {
   const rng = options.rng || Math.random;
@@ -69,7 +62,6 @@ function selectMonsterForTerrainAndHero(db, terrainName, heroLevel, options = {}
 
   let matchingMonsters = [];
 
-  // 1. Primary lookup: query monster_terrains join table
   try {
     const stmt = db.prepare(`
       SELECT m.* FROM monsters m
@@ -81,7 +73,6 @@ function selectMonsterForTerrainAndHero(db, terrainName, heroLevel, options = {}
     matchingMonsters = [];
   }
 
-  // 2. Fallback to legacy JSON habitat array if monster_terrains table is absent or empty
   if (matchingMonsters.length === 0) {
     const habitatCode = config.terrainHabitatMap[normalizedTerrain];
     if (habitatCode) {
@@ -105,7 +96,6 @@ function selectMonsterForTerrainAndHero(db, terrainName, heroLevel, options = {}
     }
   }
 
-  // Apply City Safety CR filter if present
   if (maxCr !== null && maxCr !== undefined) {
     matchingMonsters = matchingMonsters.filter(m => m.challenge_rating <= maxCr);
   }
@@ -114,7 +104,6 @@ function selectMonsterForTerrainAndHero(db, terrainName, heroLevel, options = {}
     return null;
   }
 
-  // Group candidate monsters by solo_level
   const byLevel = new Map();
   for (const m of matchingMonsters) {
     if (!byLevel.has(m.solo_level)) {
@@ -123,18 +112,15 @@ function selectMonsterForTerrainAndHero(db, terrainName, heroLevel, options = {}
     byLevel.get(m.solo_level).push(m);
   }
 
-  // Calculate normal weights for each available level
   const levelWeightEntries = [];
   for (const level of byLevel.keys()) {
     const weight = calculateNormalWeight(level, heroLevel, sigma);
     levelWeightEntries.push({ item: level, weight });
   }
 
-  // Pick level using normal distribution
   const chosenLevel = weightedPick(levelWeightEntries, rng);
   const candidatesAtLevel = byLevel.get(chosenLevel);
 
-  // Pick specific monster at that level using spawn_weight
   const monsterWeightEntries = candidatesAtLevel.map(m => ({
     item: m,
     weight: Math.max(1, m.spawn_weight || 10)
@@ -144,9 +130,13 @@ function selectMonsterForTerrainAndHero(db, terrainName, heroLevel, options = {}
 }
 
 /**
- * Resolves the appropriate description text based on hero class and encounter state
+ * Resolves the appropriate description text based on hero class / Monster Knowledge / Battle Experience and encounter state.
+ * Unlocks 2_ranger_distant and 4_ranger_close when:
+ * - Hero is a RANGER (Keen Senses / Natural Knowledge), OR
+ * - Hero has thematic class knowledge for monsterContext (Fighter Know Your Enemy / Cleric Sacred Knowledge), OR
+ * - Hero has Recognized/Experienced Battle Experience (victories >= 1) against monsterContext.
  */
-function resolveMonsterDescription(descriptionsJson, heroClass, state = 'DISCOVERED') {
+function resolveMonsterDescription(descriptionsJson, heroClassOrCharacter, state = 'DISCOVERED', monsterContext = null) {
   let descriptions = {};
   if (typeof descriptionsJson === 'string') {
     try {
@@ -158,10 +148,25 @@ function resolveMonsterDescription(descriptionsJson, heroClass, state = 'DISCOVE
     descriptions = descriptionsJson;
   }
 
+  const heroClass = typeof heroClassOrCharacter === 'string'
+    ? heroClassOrCharacter
+    : (heroClassOrCharacter && heroClassOrCharacter.class ? heroClassOrCharacter.class : '');
   const isRanger = (heroClass || '').toUpperCase() === 'RANGER';
 
+  let hasEnhancedKnowledge = isRanger;
+  if (!hasEnhancedKnowledge && monsterContext) {
+    if (hasClassGeneralKnowledge(heroClassOrCharacter, monsterContext)) {
+      hasEnhancedKnowledge = true;
+    } else if (
+      Number(monsterContext.victories || monsterContext.victories_against || 0) >= 1 ||
+      (heroClassOrCharacter && typeof heroClassOrCharacter === 'object' && Number(heroClassOrCharacter.monster_victories || 0) >= 1)
+    ) {
+      hasEnhancedKnowledge = true;
+    }
+  }
+
   if (state === 'DISCOVERED') {
-    if (isRanger && descriptions['2_ranger_distant']) {
+    if (hasEnhancedKnowledge && descriptions['2_ranger_distant']) {
       return {
         text: descriptions['2_ranger_distant'],
         isRangerSpecial: true,
@@ -176,7 +181,7 @@ function resolveMonsterDescription(descriptionsJson, heroClass, state = 'DISCOVE
   }
 
   if (state === 'IN_COMBAT' || state === 'INVESTIGATED') {
-    if (isRanger && descriptions['4_ranger_close']) {
+    if (hasEnhancedKnowledge && descriptions['4_ranger_close']) {
       return {
         text: descriptions['4_ranger_close'],
         isRangerSpecial: true,
@@ -199,8 +204,7 @@ function resolveMonsterDescription(descriptionsJson, heroClass, state = 'DISCOVE
 
 /**
  * Resolves hero detection (spottedByHero) and ambush status (isAmbush).
- * Enforces the rule: Level 1 characters can NEVER be ambushed (isAmbush is always 0 at Level 1),
- * while preserving spottedByHero = 0 when perception fails so Ranger Opening Shot does not fire on unspotted threats.
+ * Enforces the rule: Level 1 characters can NEVER be ambushed (isAmbush is always 0 at Level 1).
  */
 function resolveDetectionAndAmbush(character, monster, options = {}, defaults = {}) {
   const heroLevel = Number((character && character.level) || 1);
@@ -217,7 +221,6 @@ function resolveDetectionAndAmbush(character, monster, options = {}, defaults = 
     spottedByHero = 1;
     isAmbush = 0;
   } else {
-    // Standard perception check: Hero Perception (1d20 + WIS mod + 3 if Ranger) vs Monster Stealth (10 + init bonus)
     const ambushRng = options.ambushRng || Math.random;
     const wisMod = Math.floor(((character.wisdom || 10) - 10) / 2);
     const perceptionBonus = ((character.class || '').toUpperCase() === 'RANGER') ? wisMod + 3 : wisMod;
@@ -231,7 +234,6 @@ function resolveDetectionAndAmbush(character, monster, options = {}, defaults = 
     }
   }
 
-  // Approved Rule: No Ambush at Level 1
   if (heroLevel <= 1) {
     isAmbush = 0;
   }
@@ -257,18 +259,14 @@ function resolveTileRegionName(tile) {
 
 /**
  * Checks and rolls for an encounter upon moving onto targetTile
- * Strictly called ONLY during valid move step, not on page refresh
  */
 function checkTileEncounter(db, character, targetTile, options = {}) {
   const rng = options.rng || Math.random;
 
-  // 1. Safe tiles (cities, etc.) never trigger random encounters
   if (targetTile.is_safe === 1) {
     return null;
   }
 
-  // 2. Check for active persistent monster on tile (NOT subject to CR restriction!)
-  // Global persistent monster always takes 100% priority over normal and bounty encounters.
   const persistentMonster = db.prepare(`
     SELECT mi.*, m.name, m.symbol, m.color, m.descriptions, m.base_hp, m.initiative_bonus
     FROM monster_instances mi
@@ -283,7 +281,6 @@ function checkTileEncounter(db, character, targetTile, options = {}) {
       options,
       { isPersistent: true }
     );
-    // Persistent monster discovered
     const insertEncounter = db.prepare(`
       INSERT INTO encounters (
         character_id, tile_id, monster_id, monster_instance_id,
@@ -304,14 +301,12 @@ function checkTileEncounter(db, character, targetTile, options = {}) {
     return getEncounterById(db, Number(result.lastInsertRowid), character.class);
   }
 
-  // 3. City Safety: Calculate distance to nearest safe city
   const distance = getDistanceToNearestSafeCity(db, targetTile);
   if (distance <= 0) {
-    return null; // The city itself: no random combat
+    return null;
   }
   const maxCr = getMaxCrForDistance(distance);
 
-  // 4. Check if character has an ACTIVE hunting contract in this tile's region
   let activeBountyContract = null;
   const tileRegion = resolveTileRegionName(targetTile);
   if (tileRegion && character && character.id) {
@@ -327,17 +322,13 @@ function checkTileEncounter(db, character, targetTile, options = {}) {
     }
   }
 
-  // 5. Roll encounter chance:
-  // In an active bounty region, encounter chance is 40% (replacing the standard 25%, not an extra roll).
   const defaultChance = activeBountyContract ? 40 : config.encounterChancePercent;
   const chancePercent = options.forcedChance !== undefined ? options.forcedChance : defaultChance;
   const roll = rng() * 100;
   if (roll >= chancePercent) {
-    return null; // No encounter
+    return null;
   }
 
-  // 6. Select monster:
-  // If in active bounty region, 75% chance to encounter the Named Bounty target (respecting CR & level safety caps).
   let monster = null;
   let selectedBountyContract = null;
 
@@ -364,10 +355,8 @@ function checkTileEncounter(db, character, targetTile, options = {}) {
     return null;
   }
 
-  // 7. Ambush vs Hero Detection Check (with Level 1 ambush immunity)
   const { isAmbush, spottedByHero } = resolveDetectionAndAmbush(character, monster, options);
 
-  // 8. Create pending encounter record (persisting bounty_contract_id and boosted HP if Named Bounty)
   const initialMonsterHp = selectedBountyContract
     ? (selectedBountyContract.boosted_max_hp || monster.base_hp)
     : monster.base_hp;
@@ -396,44 +385,69 @@ function checkTileEncounter(db, character, targetTile, options = {}) {
 }
 
 /**
- * Fetch encounter by ID with resolved descriptions
+ * Fetch encounter by ID with resolved descriptions and Monster Knowledge metadata
  */
 function getEncounterById(db, encounterId, heroClass) {
-  const stmt = db.prepare(`
-    SELECT e.*, m.name as base_monster_name, m.symbol as monster_symbol,
-           m.color as monster_color, m.solo_level as monster_level,
-           m.descriptions as monster_descriptions, m.image_path as monster_image_path,
-           m.defeated_image_path as monster_defeated_image_path,
-           m.movement_type, m.creature_type, m.creature_subtype,
-           m.challenge_rating, m.treasure_type, m.xp_reward, m.base_hp,
-           m.armor_class as monster_ac, m.attack_bonus as monster_ab,
-           m.damage_dice as monster_damage_dice, m.initiative_bonus,
-           c.level as character_level,
-           t.name as tile_name, t.terrain as tile_terrain,
-           hc.custom_name as bounty_custom_name,
-           hc.title as bounty_title,
-           hc.region_name as bounty_region_name,
-           hc.boost_type as bounty_boost_type,
-           hc.boost_label as bounty_boost_label,
-           hc.boosted_max_hp as bounty_boosted_max_hp,
-           hc.attack_bonus_mod as bounty_attack_bonus_mod,
-           hc.damage_bonus_mod as bounty_damage_bonus_mod,
-           hc.reward_gold as bounty_reward_gold,
-           hc.status as bounty_status,
-           mi.custom_title as instance_custom_title
-    FROM encounters e
-    JOIN monsters m ON e.monster_id = m.id
-    JOIN map_tiles t ON e.tile_id = t.id
-    LEFT JOIN characters c ON e.character_id = c.id
-    LEFT JOIN hunting_contracts hc ON e.bounty_contract_id = hc.id
-    LEFT JOIN monster_instances mi ON e.monster_instance_id = mi.id
-    WHERE e.id = ?
-  `);
+  let encounter;
+  try {
+    encounter = db.prepare(`
+      SELECT e.*, m.name as base_monster_name, m.symbol as monster_symbol,
+             m.color as monster_color, m.solo_level as monster_level,
+             m.descriptions as monster_descriptions, m.image_path as monster_image_path,
+             m.defeated_image_path as monster_defeated_image_path,
+             m.movement_type, m.creature_type, m.creature_subtype, m.monster_family,
+             m.challenge_rating, m.treasure_type, m.xp_reward, m.base_hp,
+             m.armor_class as monster_ac, m.attack_bonus as monster_ab,
+             m.damage_dice as monster_damage_dice, m.initiative_bonus,
+             c.level as character_level, c.class as character_class,
+             c.intelligence as character_int, c.wisdom as character_wis,
+             c.favored_enemy_family as character_fav_family,
+             c.favored_enemy_type as character_fav_type,
+             c.favored_enemy_subtype as character_fav_sub,
+             t.name as tile_name, t.terrain as tile_terrain,
+             hc.custom_name as bounty_custom_name,
+             hc.title as bounty_title,
+             hc.region_name as bounty_region_name,
+             hc.boost_type as bounty_boost_type,
+             hc.boost_label as bounty_boost_label,
+             hc.boosted_max_hp as bounty_boosted_max_hp,
+             hc.attack_bonus_mod as bounty_attack_bonus_mod,
+             hc.damage_bonus_mod as bounty_damage_bonus_mod,
+             hc.reward_gold as bounty_reward_gold,
+             hc.status as bounty_status,
+             mi.custom_title as instance_custom_title
+      FROM encounters e
+      JOIN monsters m ON e.monster_id = m.id
+      JOIN map_tiles t ON e.tile_id = t.id
+      LEFT JOIN characters c ON e.character_id = c.id
+      LEFT JOIN hunting_contracts hc ON e.bounty_contract_id = hc.id
+      LEFT JOIN monster_instances mi ON e.monster_instance_id = mi.id
+      WHERE e.id = ?
+    `).get(encounterId);
+  } catch {
+    encounter = db.prepare(`
+      SELECT e.*, m.name as base_monster_name, m.symbol as monster_symbol,
+             m.color as monster_color, m.solo_level as monster_level,
+             m.descriptions as monster_descriptions, m.image_path as monster_image_path,
+             m.defeated_image_path as monster_defeated_image_path,
+             m.movement_type, m.creature_type, m.creature_subtype,
+             m.challenge_rating, m.treasure_type, m.xp_reward, m.base_hp,
+             m.armor_class as monster_ac, m.attack_bonus as monster_ab,
+             m.damage_dice as monster_damage_dice, m.initiative_bonus,
+             c.level as character_level, c.class as character_class,
+             t.name as tile_name, t.terrain as tile_terrain,
+             mi.custom_title as instance_custom_title
+      FROM encounters e
+      JOIN monsters m ON e.monster_id = m.id
+      JOIN map_tiles t ON e.tile_id = t.id
+      LEFT JOIN characters c ON e.character_id = c.id
+      LEFT JOIN monster_instances mi ON e.monster_instance_id = mi.id
+      WHERE e.id = ?
+    `).get(encounterId);
+  }
 
-  const encounter = stmt.get(encounterId);
   if (!encounter) return null;
 
-  // Enforce No Ambush at Level 1 even if a legacy encounter row had is_ambush = 1
   if (Number(encounter.character_level || 1) <= 1 && Number(encounter.is_ambush) === 1) {
     db.prepare(`
       UPDATE encounters
@@ -444,10 +458,29 @@ function getEncounterById(db, encounterId, heroClass) {
     encounter.spotted_by_hero = 0;
   }
 
+  const monsterFamily = encounter.monster_family || resolveMonsterFamily({
+    id: encounter.monster_id,
+    name: encounter.base_monster_name,
+    creature_type: encounter.creature_type,
+    creature_subtype: encounter.creature_subtype
+  }, { strict: false });
+
+  const knowledgeRecord = getCharacterMonsterKnowledge(db, encounter.character_id, encounter.monster_id);
+  const effectiveClass = heroClass || encounter.character_class || 'FIGHTER';
+  const monsterContext = {
+    id: encounter.monster_id,
+    name: encounter.base_monster_name,
+    creature_type: encounter.creature_type,
+    creature_subtype: encounter.creature_subtype,
+    monster_family: monsterFamily,
+    victories: knowledgeRecord.victories
+  };
+
   const resolved = resolveMonsterDescription(
     encounter.monster_descriptions,
-    heroClass,
-    encounter.status
+    effectiveClass,
+    encounter.status,
+    monsterContext
   );
 
   const cleanName = (encounter.base_monster_name || '').replace(/\[.*?\]/g, '').trim();
@@ -472,7 +505,6 @@ function getEncounterById(db, encounterId, heroClass) {
     imageUrl = `/images/monsters/${imageFilename}`;
   }
 
-  // Defeated artwork resolution
   const defeatedFilename = `${slug}_defeated.png`;
   const defaultDefeatedDiskPath = path.join(__dirname, '../../../images/monsters', defeatedFilename);
   const publicDefeatedDiskPath = path.join(__dirname, '../../../public/images/monsters', defeatedFilename);
@@ -496,13 +528,11 @@ function getEncounterById(db, encounterId, heroClass) {
   const customDisplayName = (isBountyTarget ? encounter.bounty_custom_name : null) || encounter.instance_custom_title || null;
   const monsterDisplayName = customDisplayName || encounter.base_monster_name;
 
-  // Stage 1 atmospheric hint for bounty target (strictly preserves encounter secrecy without naming the monster)
   let finalDescription = resolved.text;
   if (encounter.status === 'DISCOVERED' && hasBountyContract) {
     finalDescription = `${resolved.text} Fresh tracks matching the Watcher's warrant suggest a hunted quarry prowls nearby.`;
   }
 
-  // Qualitative trait description for combat UI (no raw numbers per Hidden Math Policy)
   let bountyTraitNotice = null;
   if (isBountyTarget) {
     if (encounter.bounty_boost_type === 'TOUGH') {
@@ -514,10 +544,23 @@ function getEncounterById(db, encounterId, heroClass) {
     }
   }
 
+  const heroObj = {
+    id: encounter.character_id,
+    class: effectiveClass,
+    level: encounter.character_level || 1,
+    intelligence: encounter.character_int || 10,
+    wisdom: encounter.character_wis || 10,
+    favored_enemy_family: encounter.character_fav_family || null,
+    favored_enemy_type: encounter.character_fav_type || null,
+    favored_enemy_subtype: encounter.character_fav_sub || null
+  };
+  const monsterKnowledge = isRevealed ? evaluateHeroMonsterKnowledge(db, heroObj, monsterContext) : null;
+
   return {
     ...encounter,
     monster_name: monsterDisplayName,
     base_monster_name: encounter.base_monster_name,
+    monster_family: monsterFamily,
     custom_title: encounter.instance_custom_title || null,
     isBountyTarget,
     bountyTraitNotice,
@@ -532,7 +575,8 @@ function getEncounterById(db, encounterId, heroClass) {
     isRevealed,
     isAmbush: Number(encounter.is_ambush || 0) === 1,
     spottedByHero: Number(encounter.spotted_by_hero !== undefined ? encounter.spotted_by_hero : 1) === 1,
-    openingShotResolved: Number(encounter.opening_shot_resolved || 0) === 1
+    openingShotResolved: Number(encounter.opening_shot_resolved || 0) === 1,
+    monsterKnowledge
   };
 }
 
@@ -550,8 +594,6 @@ function getActiveEncounterForCharacter(db, characterId, heroClass) {
   const row = stmt.get(characterId);
   if (!row) return null;
 
-  // If a persistent monster was defeated by another player while this encounter was still DISCOVERED,
-  // automatically close the stale DISCOVERED encounter so Player B cannot resurrect or re-fight it.
   if (row.monster_instance_id && row.status === 'DISCOVERED' && row.instance_status && row.instance_status !== 'ACTIVE') {
     db.prepare(`
       UPDATE encounters

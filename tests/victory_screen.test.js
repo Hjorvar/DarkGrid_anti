@@ -94,7 +94,7 @@ test('2. Normal monster victory: extracts confirmed XP, gold, and defeat narrati
     userId: user.id,
     name: 'Siegfried',
     classType: 'FIGHTER',
-    stats: { strength: 16, dexterity: 12, constitution: 13, intelligence: 10, wisdom: 10, charisma: 10 }
+    stats: { strength: 16, dexterity: 12, constitution: 13, intelligence: 11, wisdom: 10, charisma: 10 }
   });
 
   const wolf = db.prepare("SELECT * FROM monsters WHERE name = 'Wolf'").get();
@@ -129,7 +129,7 @@ test('3. Victory with items: accurately lists all awarded item names', async () 
     userId: user.id,
     name: 'Beowulf',
     classType: 'FIGHTER',
-    stats: { strength: 16, dexterity: 12, constitution: 13, intelligence: 10, wisdom: 10, charisma: 10 }
+    stats: { strength: 16, dexterity: 12, constitution: 13, intelligence: 11, wisdom: 10, charisma: 10 }
   });
 
   const troll = db.prepare("SELECT * FROM monsters WHERE name = 'Troll'").get();
@@ -160,7 +160,7 @@ test('4. Victory causing level up: flags leveledUp and calculates hpGain', async
     userId: user.id,
     name: 'Valeria',
     classType: 'CLERIC',
-    stats: { strength: 12, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 15, charisma: 14 }
+    stats: { strength: 12, dexterity: 10, constitution: 10, intelligence: 11, wisdom: 15, charisma: 14 }
   });
 
   // Give hero 1100 XP (Level 2 threshold is 1300 XP)
@@ -192,7 +192,7 @@ test('5. Persistent Monster Victory: recognizes avenged fallen hero from databas
     userId: user1.id,
     name: 'FallenKaelen',
     classType: 'RANGER',
-    stats: { strength: 12, dexterity: 16, constitution: 10, intelligence: 10, wisdom: 13, charisma: 10 }
+    stats: { strength: 12, dexterity: 16, constitution: 10, intelligence: 11, wisdom: 13, charisma: 10 }
   });
   // Give victim hero 100 gold and Longsword +1
   db.prepare('UPDATE characters SET gold = 100 WHERE id = ?').run(victimHero.id);
@@ -230,7 +230,7 @@ test('5. Persistent Monster Victory: recognizes avenged fallen hero from databas
     userId: user2.id,
     name: 'AvengerMorrigan',
     classType: 'FIGHTER',
-    stats: { strength: 16, dexterity: 12, constitution: 13, intelligence: 10, wisdom: 10, charisma: 10 }
+    stats: { strength: 16, dexterity: 12, constitution: 13, intelligence: 11, wisdom: 10, charisma: 10 }
   });
 
   // Avenger hero engages the persistent monster
@@ -262,7 +262,7 @@ test('6. Non-victory encounters: getVictoryData safely returns null', async () =
     userId: user.id,
     name: 'Cautious',
     classType: 'RANGER',
-    stats: { strength: 12, dexterity: 16, constitution: 10, intelligence: 10, wisdom: 13, charisma: 10 }
+    stats: { strength: 12, dexterity: 16, constitution: 10, intelligence: 11, wisdom: 13, charisma: 10 }
   });
   const wolf = db.prepare("SELECT * FROM monsters WHERE name = 'Wolf'").get();
 
@@ -333,7 +333,7 @@ test('7. HTTP Flow: Combat victory redirects to /game/victory?encounterId=... an
       name: 'Vanquisher',
       classType: 'FIGHTER',
       strength: '16', constitution: '13', dexterity: '12',
-      intelligence: '10', wisdom: '10', charisma: '10',
+      intelligence: '11', wisdom: '10', charisma: '10',
       _csrf: csrfToken
     }),
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookie },
@@ -476,7 +476,7 @@ test('8. Death Screen priority: Dead character cannot access victory screen and 
       name: 'SoonDead',
       classType: 'CLERIC',
       strength: '12', constitution: '10', dexterity: '10',
-      intelligence: '10', wisdom: '15', charisma: '14',
+      intelligence: '11', wisdom: '15', charisma: '14',
       _csrf: csrfToken
     }),
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookie },
@@ -534,7 +534,7 @@ test('9. Ranger Opening Shot leaves monster at minimum 1 HP (redirects to /game 
       name: 'SniperHero',
       classType: 'RANGER',
       strength: '12', constitution: '10', dexterity: '16',
-      intelligence: '10', wisdom: '13', charisma: '10',
+      intelligence: '11', wisdom: '13', charisma: '10',
       _csrf: csrfToken
     }),
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookie },
@@ -646,7 +646,7 @@ test('10. Escape / Flee never redirects to Victory Screen', async () => {
       name: 'FleeHero',
       classType: 'FIGHTER',
       strength: '16', constitution: '13', dexterity: '12',
-      intelligence: '10', wisdom: '10', charisma: '10',
+      intelligence: '11', wisdom: '10', charisma: '10',
       _csrf: csrfToken
     }),
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookie },

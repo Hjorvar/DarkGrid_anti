@@ -1,7 +1,9 @@
 /**
  * Darkgrid Combat System — Core Rules & Formulas
  * Handles attack rolls, critical hits, armor class, initiative, and damage resolution.
- * Integrates character progression, class abilities, and weapon/armor enhancement bonuses.
+ * Integrates character progression, class abilities (Know Your Enemy, Natural Knowledge,
+ * Favored Enemy Option A, Sacred Knowledge / Holy Radiance), INT/WIS Battle Experience,
+ * and 9-slot weapon/armor/accessory enhancement bonuses.
  */
 
 const {
@@ -13,8 +15,15 @@ const {
   getClericHolyRadianceBonus,
   getClericDivinePowerBonus,
   getEffectiveStats,
-  getLastEquipmentForCharacter
+  getLastEquipmentForCharacter,
+  getHeroSavingThrows
 } = require('../character/rules');
+const {
+  getFighterKnowYourEnemyBonus,
+  getRangerNaturalKnowledgeBonus,
+  hasClassGeneralKnowledge,
+  computeBattleExperienceModifiers
+} = require('./knowledge');
 const { rollD20, rollDice } = require('./dice');
 
 /**
@@ -50,28 +59,56 @@ function isWeaponRanged(equippedWeapon, character = null, equipment = null) {
 }
 
 /**
+ * Helper to resolve Battle Experience modifiers for a character against a target monster.
+ */
+function resolveCombatBattleExperience(effectiveCharacter, monster = null, options = {}) {
+  if (!effectiveCharacter || !monster) {
+    return { damageBonus: 0, acBonus: 0, tier: 'UNFAMILIAR', victories: 0 };
+  }
+  if (options && options.battleExperience && typeof options.battleExperience === 'object') {
+    return options.battleExperience;
+  }
+  if (effectiveCharacter._battleExperience && typeof effectiveCharacter._battleExperience === 'object') {
+    return effectiveCharacter._battleExperience;
+  }
+  if (effectiveCharacter._learnedDamageBonus !== undefined || effectiveCharacter._learnedAcBonus !== undefined) {
+    return {
+      damageBonus: Number(effectiveCharacter._learnedDamageBonus || 0),
+      acBonus: Number(effectiveCharacter._learnedAcBonus || 0),
+      tier: effectiveCharacter._knowledgeTier || 'UNFAMILIAR',
+      victories: Number(effectiveCharacter.monsterVictories || 0)
+    };
+  }
+  const victories = options && options.victories !== undefined
+    ? Number(options.victories)
+    : (monster.victories_against !== undefined
+      ? Number(monster.victories_against)
+      : (effectiveCharacter.monster_victories !== undefined
+        ? Number(effectiveCharacter.monster_victories)
+        : (effectiveCharacter.monsterVictories !== undefined ? Number(effectiveCharacter.monsterVictories) : 0)));
+  return computeBattleExperienceModifiers({
+    effectiveInt: effectiveCharacter.intelligence !== undefined ? effectiveCharacter.intelligence : 10,
+    effectiveWis: effectiveCharacter.wisdom !== undefined ? effectiveCharacter.wisdom : 10,
+    victories,
+    hasClassExemption: hasClassGeneralKnowledge(effectiveCharacter, monster)
+  });
+}
+
+/**
  * Calculates hero Attack Bonus:
  * - Melee attacks use STR modifier (+ level_progression + weapon_enhancement + class_bonuses, -1 vs airborne FLY targets).
  * - Ranged attacks use DEX modifier (+ level_progression + weapon_enhancement + class_bonuses, 0 penalty vs FLY targets).
- * Supports Belt of Giant Strength +2 via effective stats without double counting.
- * @param {object} character
- * @param {object|null} equippedWeapon
- * @param {object|null} monster
- * @param {object|null} equipment
- * @returns {number}
+ * - Integrates Fighter Weapon Training + Know Your Enemy, Ranger Favored Enemy (Option A) + Natural Knowledge,
+ *   and Cleric Sacred Knowledge / Holy Radiance (with Cleric BAB ceil(level * 3 / 4)).
+ * - Note: INT/WIS Battle Experience grants Damage and AC only, never Attack bonus (OC-5).
  */
-function calculateHeroAttackBonus(character, equippedWeapon = null, monster = null, equipment = null) {
-  let strVal = character.strength;
-  if (equipment && equipment.belt && character.is_str_boosted === undefined) {
-    const eff = getEffectiveStats(character, equipment);
-    strVal = eff.strength;
-  }
-  const strMod = getModifier(strVal);
-  const dexMod = getModifier(character.dexterity);
-  const isRanged = isWeaponRanged(equippedWeapon, character, equipment);
+function calculateHeroAttackBonus(character, equippedWeapon = null, monster = null, equipment = null, options = {}) {
+  const eff = getEffectiveStats(character, equipment);
+  const strMod = getModifier(eff.strength);
+  const dexMod = getModifier(eff.dexterity);
+  const isRanged = isWeaponRanged(equippedWeapon, eff, equipment);
   const baseBonus = isRanged ? dexMod : strMod;
 
-  // Evasive Flyer penalty: Melee attacks against airborne creatures take a -1 attack penalty; Ranged attacks take 0 penalty
   const mType = (monster && monster.movement_type ? monster.movement_type : '').toUpperCase();
   const isAirborne = Boolean(monster && (
     mType === 'FLY' ||
@@ -80,10 +117,8 @@ function calculateHeroAttackBonus(character, equippedWeapon = null, monster = nu
   ));
   const evasiveFlyerPenalty = (!isRanged && isAirborne) ? -1 : 0;
 
-  // Level Attack Progression
-  const levelBonus = getLevelAttackBonus(character.class, character.level || 1);
+  const levelBonus = getLevelAttackBonus(eff.class, eff.level || 1);
 
-  // Weapon enhancement bonus or attribute bonus
   let weaponBonus = 0;
   if (equippedWeapon) {
     if (equippedWeapon.enhancement_bonus) {
@@ -97,22 +132,26 @@ function calculateHeroAttackBonus(character, equippedWeapon = null, monster = nu
     }
   }
 
-  // Fighter Weapon Training
+  const cls = (eff.class || '').toUpperCase();
+  const allowNameOnly = Boolean(options && options.allowNameOnly);
+
   let fighterBonus = 0;
-  if (character.class === 'FIGHTER') {
-    fighterBonus = getFighterWeaponTraining(character.level || 1).attack;
+  if (cls === 'FIGHTER') {
+    fighterBonus += getFighterWeaponTraining(eff.level || 1).attack;
+    if (monster) {
+      fighterBonus += getFighterKnowYourEnemyBonus(eff, monster, { allowNameOnly }).attack;
+    }
   }
 
-  // Ranger Favored Enemy (guaranteed 0 vs Undead)
   let rangerBonus = 0;
-  if (character.class === 'RANGER' && monster) {
-    rangerBonus = getRangerFavoredEnemyBonus(character, monster).attack;
+  if (cls === 'RANGER' && monster) {
+    rangerBonus += getRangerFavoredEnemyBonus(eff, monster).attack;
+    rangerBonus += getRangerNaturalKnowledgeBonus(eff, monster, { allowNameOnly }).attack;
   }
 
-  // Cleric Holy Radiance vs Undead (replaces Divine Power)
   let clericBonus = 0;
-  if (character.class === 'CLERIC' && monster) {
-    clericBonus = getClericHolyRadianceBonus(character, monster).attack;
+  if (cls === 'CLERIC' && monster) {
+    clericBonus += getClericHolyRadianceBonus(eff, monster).attack;
   }
 
   return baseBonus + levelBonus + weaponBonus + fighterBonus + rangerBonus + clericBonus + evasiveFlyerPenalty;
@@ -120,22 +159,20 @@ function calculateHeroAttackBonus(character, equippedWeapon = null, monster = nu
 
 /**
  * Calculates hero Armor Class:
- * 10 + effective_DEX + armor_bonus + shield_bonus + sacred_bonuses (Holy Radiance) + accessoryAC
- * Effective DEX respects armor Max DEX limit, boosted by Fighter Armor Training.
- * Shield bonus drops to 0 when ranged weapon or two-handed melee weapon is active.
- * Holy Radiance AC bonus is a sacred defense that applies vs Undead even when using a ranged weapon.
+ * 10 + effective_DEX + armor_bonus + shield_bonus + class_knowledge_AC + favored_enemy_AC + battle_experience_AC + accessoryAC
  * Supports both:
- *   calculateHeroAC(hero, equipment, isRangedActive, monster, activeWeapon)
+ *   calculateHeroAC(hero, equipment, isRangedActive, monster, activeWeapon, options)
  * and:
- *   calculateHeroAC(hero, armor, shield, isRangedActive, monster, activeWeapon)
+ *   calculateHeroAC(hero, armor, shield, isRangedActive, monster, activeWeapon, options)
  */
-function calculateHeroAC(character, equippedArmor = null, equippedShield = null, isRangedActive = false, monster = null, activeWeapon = null) {
+function calculateHeroAC(character, equippedArmor = null, equippedShield = null, isRangedActive = false, monster = null, activeWeapon = null, options = {}) {
   let armor = equippedArmor;
   let shield = equippedShield;
   let rangedActive = Boolean(isRangedActive);
   let targetMonster = monster;
   let activeWep = activeWeapon;
   let equipmentBag = null;
+  let opts = options || {};
 
   const isEquipmentBag = Boolean(
     equippedArmor &&
@@ -143,7 +180,6 @@ function calculateHeroAC(character, equippedArmor = null, equippedShield = null,
     ('armor' in equippedArmor || 'shield' in equippedArmor || 'ring' in equippedArmor || 'neck' in equippedArmor || 'meleeWeapon' in equippedArmor)
   );
 
-  // Support calculateHeroAC(hero, equipmentBag, isRangedActive, monster, activeWeapon)
   if (isEquipmentBag) {
     equipmentBag = equippedArmor;
     armor = equippedArmor.armor || null;
@@ -155,7 +191,10 @@ function calculateHeroAC(character, equippedArmor = null, equippedShield = null,
         activeWep = monster;
         if (targetMonster === monster) targetMonster = null;
       }
-    } else if (equippedShield && typeof equippedShield === 'object' && ('creature_type' in equippedShield || 'armor_class' in equippedShield || 'descriptions' in equippedShield)) {
+      if (activeWeapon && typeof activeWeapon === 'object' && !('category' in activeWeapon) && ('victories' in activeWeapon || 'battleExperience' in activeWeapon || 'allowNameOnly' in activeWeapon)) {
+        opts = activeWeapon;
+      }
+    } else if (equippedShield && typeof equippedShield === 'object' && ('creature_type' in equippedShield || 'armor_class' in equippedShield || 'descriptions' in equippedShield || 'monster_family' in equippedShield)) {
       targetMonster = equippedShield;
       rangedActive = Boolean(isRangedActive);
     }
@@ -176,13 +215,12 @@ function calculateHeroAC(character, equippedArmor = null, equippedShield = null,
       }
     }
 
-    // If monster parameter was passed as a weapon object rather than a monster
     if (targetMonster && typeof targetMonster === 'object' && !activeWep) {
       const isWeaponLike = (
         targetMonster.category === 'WEAPON' ||
         targetMonster.damage_dice !== undefined ||
         targetMonster.weapon_range_type !== undefined ||
-        (targetMonster.is_two_handed !== undefined && !targetMonster.creature_type && !targetMonster.challenge_rating)
+        (targetMonster.is_two_handed !== undefined && !targetMonster.creature_type && !targetMonster.challenge_rating && !targetMonster.monster_family)
       );
       if (isWeaponLike) {
         activeWep = targetMonster;
@@ -191,12 +229,14 @@ function calculateHeroAC(character, equippedArmor = null, equippedShield = null,
     }
   }
 
-  const dexMod = getModifier(character.dexterity);
+  const eff = getEffectiveStats(character, equipmentBag);
+  const cls = (eff.class || '').toUpperCase();
+  const dexMod = getModifier(eff.dexterity);
 
   let effectiveDex = dexMod;
   if (armor && armor.max_dex_bonus !== null && armor.max_dex_bonus !== undefined) {
     const armorMaxDex = Number(armor.max_dex_bonus);
-    const fighterBonus = (character.class === 'FIGHTER') ? getFighterArmorTrainingMaxDexBonus(character.level || 1) : 0;
+    const fighterBonus = (cls === 'FIGHTER') ? getFighterArmorTrainingMaxDexBonus(eff.level || 1) : 0;
     const effectiveMax = armorMaxDex + fighterBonus;
     effectiveDex = dexMod >= 0 ? Math.min(dexMod, effectiveMax) : dexMod;
   }
@@ -208,18 +248,13 @@ function calculateHeroAC(character, equippedArmor = null, equippedShield = null,
     } else if (armor.armor_bonus_includes_enhancement === false) {
       armorBonus = Number(armor.armor_bonus || 0) + Number(armor.enhancement_bonus || 0);
     } else {
-      // In Darkgrid DB, item_definitions.armor_bonus already includes enhancement_bonus
       armorBonus = Number(armor.armor_bonus || 0);
     }
   }
 
-  // Two-handed melee weapon check:
-  // When hero wields a two-handed weapon (is_two_handed = 1), shield AC bonus is 0.
-  // Applies to all weapons with is_two_handed = 1, both normal and magical shields.
   const isTwoHanded = Boolean(activeWep && (Number(activeWep.is_two_handed) === 1 || activeWep.is_two_handed === true));
   const isTwoHandedMelee = !rangedActive && isTwoHanded;
 
-  // Shield bonus does NOT apply when fighting with a ranged weapon OR when wielding a two-handed melee weapon
   let shieldBonus = 0;
   if (!rangedActive && !isTwoHandedMelee && shield) {
     if (shield.base_shield_bonus !== undefined) {
@@ -227,18 +262,29 @@ function calculateHeroAC(character, equippedArmor = null, equippedShield = null,
     } else if (shield.shield_bonus_includes_enhancement === false) {
       shieldBonus = Number(shield.shield_bonus || 0) + Number(shield.enhancement_bonus || 0);
     } else {
-      // In Darkgrid DB, item_definitions.shield_bonus already includes enhancement_bonus
       shieldBonus = Number(shield.shield_bonus || 0);
     }
   }
 
-  // Cleric Holy Radiance vs Undead (+2 AC L1-4, +3 AC L5-8, +4 AC L9+). Sacred defense, NOT shield bonus.
-  let holyRadianceAC = 0;
-  if (character && (character.class || '').toUpperCase() === 'CLERIC' && targetMonster) {
-    holyRadianceAC = getClericHolyRadianceBonus(character, targetMonster).ac;
+  const allowNameOnly = Boolean(opts && opts.allowNameOnly);
+  let classTargetAC = 0;
+  if (targetMonster) {
+    if (cls === 'FIGHTER') {
+      classTargetAC += getFighterKnowYourEnemyBonus(eff, targetMonster, { allowNameOnly }).ac;
+    } else if (cls === 'RANGER') {
+      classTargetAC += getRangerFavoredEnemyBonus(eff, targetMonster).ac;
+      classTargetAC += getRangerNaturalKnowledgeBonus(eff, targetMonster, { allowNameOnly }).ac;
+    } else if (cls === 'CLERIC') {
+      classTargetAC += getClericHolyRadianceBonus(eff, targetMonster).ac;
+    }
   }
 
-  // Wondrous Accessories AC bonus (e.g. Ring of Protection deflection, Amulet of Natural Armor)
+  let battleExperienceAC = 0;
+  if (targetMonster) {
+    const bexp = resolveCombatBattleExperience(eff, targetMonster, opts);
+    battleExperienceAC = Number(bexp.acBonus || 0);
+  }
+
   let accessoryAC = 0;
   const ringItem = (equipmentBag && equipmentBag.ring) || null;
   const neckItem = (equipmentBag && equipmentBag.neck) || null;
@@ -249,50 +295,48 @@ function calculateHeroAC(character, equippedArmor = null, equippedShield = null,
     accessoryAC += Number(neckItem.armor_bonus || 0);
   }
 
-  return 10 + effectiveDex + armorBonus + shieldBonus + holyRadianceAC + accessoryAC;
+  return 10 + effectiveDex + armorBonus + shieldBonus + classTargetAC + battleExperienceAC + accessoryAC;
 }
 
 /**
- * Determines damage formula for hero based on equipped weapon, STR modifier,
- * enhancement bonuses, and class ability bonuses.
- * Supports Belt of Giant Strength +2 via effective stats without double counting.
- * @param {object} character
- * @param {object|null} equippedWeapon
- * @param {object|null} monster
- * @param {object|null} equipment
- * @returns {string} e.g. '1d8+2' or '1d6+1'
+ * Determines damage formula for hero based on equipped weapon, STR/DEX modifier,
+ * enhancement bonuses, class abilities (Weapon Training, Know Your Enemy, Favored Enemy Option A,
+ * Natural Knowledge, Holy Radiance), and INT Battle Experience.
  */
-function getHeroDamageFormula(character, equippedWeapon = null, monster = null, equipment = null) {
-  let strVal = character.strength;
-  if (equipment && equipment.belt && character.is_str_boosted === undefined) {
-    const eff = getEffectiveStats(character, equipment);
-    strVal = eff.strength;
-  }
-  const strMod = getModifier(strVal);
-  const dexMod = getModifier(character.dexterity);
-  const isRanged = isWeaponRanged(equippedWeapon, character, equipment);
+function getHeroDamageFormula(character, equippedWeapon = null, monster = null, equipment = null, options = {}) {
+  const eff = getEffectiveStats(character, equipment);
+  const strMod = getModifier(eff.strength);
+  const dexMod = getModifier(eff.dexterity);
+  const isRanged = isWeaponRanged(equippedWeapon, eff, equipment);
   let baseDice = '1d4';
 
   if (equippedWeapon && equippedWeapon.damage_dice) {
     baseDice = equippedWeapon.damage_dice;
   }
 
-  // Melee uses full STR modifier; Ranged uses DEX modifier (half DEX mod, or STR mod on composite/heavy draws)
   let flatBonus = isRanged ? Math.max(strMod, Math.floor(dexMod / 2)) : strMod;
   if (equippedWeapon && equippedWeapon.enhancement_bonus) {
     flatBonus += Number(equippedWeapon.enhancement_bonus);
   }
 
-  if (character.class === 'FIGHTER') {
-    flatBonus += getFighterWeaponTraining(character.level || 1).damage;
+  const cls = (eff.class || '').toUpperCase();
+  const allowNameOnly = Boolean(options && options.allowNameOnly);
+
+  if (cls === 'FIGHTER') {
+    flatBonus += getFighterWeaponTraining(eff.level || 1).damage;
+    if (monster) {
+      flatBonus += getFighterKnowYourEnemyBonus(eff, monster, { allowNameOnly }).damage;
+    }
+  } else if (cls === 'RANGER' && monster) {
+    flatBonus += getRangerFavoredEnemyBonus(eff, monster).damage;
+    flatBonus += getRangerNaturalKnowledgeBonus(eff, monster, { allowNameOnly }).damage;
+  } else if (cls === 'CLERIC' && monster) {
+    flatBonus += getClericHolyRadianceBonus(eff, monster).damage;
   }
 
-  if (character.class === 'RANGER' && monster) {
-    flatBonus += getRangerFavoredEnemyBonus(character, monster).damage;
-  }
-
-  if (character.class === 'CLERIC' && monster) {
-    flatBonus += getClericHolyRadianceBonus(character, monster).damage;
+  if (monster) {
+    const bexp = resolveCombatBattleExperience(eff, monster, options);
+    flatBonus += Number(bexp.damageBonus || 0);
   }
 
   if (flatBonus > 0) {
@@ -304,11 +348,28 @@ function getHeroDamageFormula(character, equippedWeapon = null, monster = null, 
 }
 
 /**
+ * Rolls hero damage for a hit (convenience wrapper over getHeroDamageFormula + resolveDamage).
+ */
+function rollHeroDamage(character, equippedWeapon = null, monster = null, isCrit = false, rng = Math.random, equipment = null, options = {}) {
+  const formula = getHeroDamageFormula(character, equippedWeapon, monster, equipment, options);
+  return resolveDamage(formula, isCrit, rng);
+}
+
+/**
+ * Returns the hero's saving throw bonus for a specific save type ('FORT', 'REF', 'WILL', 'PHYSICAL').
+ */
+function getHeroSavingThrowBonus(character, saveType = 'FORT', equipment = null) {
+  const saves = getHeroSavingThrows(character, equipment);
+  const norm = String(saveType || 'FORT').toUpperCase().trim();
+  if (norm === 'FORT' || norm === 'FORTITUDE') return saves.fort;
+  if (norm === 'REF' || norm === 'REFLEX') return saves.ref;
+  if (norm === 'WILL') return saves.will;
+  if (norm === 'PHYSICAL') return saves.physical;
+  return saves.fort;
+}
+
+/**
  * Resolves an attack roll (works for both Hero and Monster).
- * @param {number} attackBonus
- * @param {number} targetAC
- * @param {() => number} rng
- * @returns {{ roll: number, total: number, isHit: boolean, isCrit: boolean, isFumble: boolean, isNat1: boolean, isNat20: boolean, d20: number }}
  */
 function resolveAttackRoll(attackBonus, targetAC, rng = Math.random) {
   const roll = rollD20(rng);
@@ -327,10 +388,6 @@ function resolveAttackRoll(attackBonus, targetAC, rng = Math.random) {
 
 /**
  * Calculates damage for a hit, doubling on critical hits.
- * @param {string} damageFormula
- * @param {boolean} isCrit
- * @param {() => number} rng
- * @returns {number}
  */
 function resolveDamage(damageFormula, isCrit = false, rng = Math.random) {
   const result = rollDice(damageFormula, rng, 1);
@@ -339,9 +396,6 @@ function resolveDamage(damageFormula, isCrit = false, rng = Math.random) {
 
 /**
  * Calculates initiative roll: 1d20 + bonus.
- * @param {number} bonus
- * @param {() => number} rng
- * @returns {number}
  */
 function rollInitiative(bonus, rng = Math.random) {
   return rollD20(rng) + bonus;
@@ -349,10 +403,6 @@ function rollInitiative(bonus, rng = Math.random) {
 
 /**
  * Calculates healing amount for potion.
- * Defaults to '1d8+1' if not specified in potion attributes.
- * @param {object|null} potionItem
- * @param {() => number} rng
- * @returns {number}
  */
 function resolvePotionHealing(potionItem = null, rng = Math.random) {
   let healDice = '1d8+1';
@@ -369,9 +419,13 @@ function resolvePotionHealing(potionItem = null, rng = Math.random) {
 
 module.exports = {
   isWeaponRanged,
+  resolveCombatBattleExperience,
   calculateHeroAttackBonus,
   calculateHeroAC,
   getHeroDamageFormula,
+  rollHeroDamage,
+  getHeroSavingThrowBonus,
+  getClericDivinePowerBonus,
   resolveAttackRoll,
   resolveDamage,
   rollInitiative,

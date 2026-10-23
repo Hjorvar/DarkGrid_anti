@@ -21,21 +21,21 @@ const DEFAULT_CLASS_BASES = {
     name: 'Fighter',
     title: 'Iron-Clad Vanguard',
     icon: '⚔️',
-    strength: 14, constitution: 12, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 10,
+    strength: 14, constitution: 14, dexterity: 12, intelligence: 10, wisdom: 12, charisma: 10,
     hpPerLevel: 10
   },
   RANGER: {
     name: 'Ranger',
     title: 'Shadow-Stalker of the Wilds',
     icon: '🏹',
-    strength: 12, constitution: 10, dexterity: 14, intelligence: 10, wisdom: 12, charisma: 10,
+    strength: 10, constitution: 12, dexterity: 16, intelligence: 10, wisdom: 14, charisma: 10,
     hpPerLevel: 8
   },
   CLERIC: {
     name: 'Cleric',
     title: 'Vessel of the Dying Light',
     icon: '✨',
-    strength: 12, constitution: 10, dexterity: 10, intelligence: 10, wisdom: 14, charisma: 12,
+    strength: 12, constitution: 12, dexterity: 10, intelligence: 10, wisdom: 16, charisma: 12,
     hpPerLevel: 8
   }
 };
@@ -43,6 +43,18 @@ const DEFAULT_CLASS_BASES = {
 function formatStatMod(score) {
   const m = Math.floor((Number(score || 10) - 10) / 2);
   return m >= 0 ? `+${m}` : `${m}`;
+}
+
+export function getAttributeTierLabel(score) {
+  const s = Number(score || 10);
+  if (s <= 7) return 'Weak';
+  if (s <= 9) return 'Below Average';
+  if (s <= 11) return 'Average';
+  if (s <= 13) return 'Good';
+  if (s <= 15) return 'Strong';
+  if (s <= 17) return 'Exceptional';
+  if (s <= 19) return 'Heroic';
+  return 'Legendary';
 }
 
 export function updateHeroVitalsDisplay(currentHp, maxHp) {
@@ -99,14 +111,29 @@ export function renderTopBarAndDeckSnapshot(state, { sequenceLock = false } = {}
   document.getElementById('hud-hero-name').textContent = hero.name;
   document.getElementById('hud-hero-class-lvl').textContent = `${hero.class} • LVL ${hero.level}`;
 
-  // Status badges
+  // Status badges + Second Wind indicator + Unspent Attribute Points indicator
   const statusContainer = document.getElementById('hud-status-pills');
-  if (enc && Array.isArray(enc.heroStatusBadges) && enc.heroStatusBadges.length > 0) {
-    statusContainer.innerHTML = enc.heroStatusBadges.map(b =>
-      `<span style="background: rgba(220,38,38,0.28); border: 1px solid #ef4444; color: #fca5a5; padding: 1px 6px; border-radius: 3px; font-size: 0.66rem;">⚠️ ${escapeHtml(b.label)}</span>`
-    ).join(' ');
-  } else {
-    statusContainer.innerHTML = '';
+  if (statusContainer) {
+    const pills = [];
+    if (Number(hero.attribute_points || 0) > 0) {
+      pills.push(
+        `<span onclick="openLabModal('character')" style="cursor:pointer; background: rgba(234,179,8,0.25); border: 1px solid #facc15; color: #fde047; padding: 1px 6px; border-radius: 3px; font-size: 0.66rem;" title="Click to allocate milestone attribute points [C]">⬆️ +${Number(hero.attribute_points)} Attr</span>`
+      );
+    }
+    if (hero.class === 'FIGHTER' && Number(hero.level || 1) >= 3) {
+      const swUsed = Boolean((enc && enc.secondWindUsed) || hero.secondWindStatus === 'Spent');
+      pills.push(
+        `<span style="background: ${swUsed ? 'rgba(71,85,105,0.35)' : 'rgba(22,163,74,0.24)'}; border: 1px solid ${swUsed ? '#64748b' : '#4ade80'}; color: ${swUsed ? '#cbd5e1' : '#86efac'}; padding: 1px 6px; border-radius: 3px; font-size: 0.66rem;" title="Fighter Second Wind status">🛡️ Second Wind: ${swUsed ? 'Spent' : 'Ready'}</span>`
+      );
+    }
+    if (enc && Array.isArray(enc.heroStatusBadges) && enc.heroStatusBadges.length > 0) {
+      for (const b of enc.heroStatusBadges) {
+        pills.push(
+          `<span style="background: rgba(220,38,38,0.28); border: 1px solid #ef4444; color: #fca5a5; padding: 1px 6px; border-radius: 3px; font-size: 0.66rem;">⚠️ ${escapeHtml(b.label)}</span>`
+        );
+      }
+    }
+    statusContainer.innerHTML = pills.join(' ');
   }
 
   // Hands & Stance Slots (Connected only to implemented actions)
@@ -306,6 +333,11 @@ function formatSlotItemBonus(item) {
   return bits.join(' • ');
 }
 
+export async function spendMilestoneAttribute(statKey) {
+  if (!statKey) return;
+  await dispatchAction('SPEND_ATTRIBUTE_POINT', { attribute: statKey });
+}
+
 export function renderCharacterModal(titleEl, bodyEl, hero, mods) {
   const st = store.currentState || {};
   const saves = st.savingThrows || (st.combatStats && st.combatStats.savingThrows) || { fort: 0, ref: 0, will: 0, physical: 0 };
@@ -313,8 +345,10 @@ export function renderCharacterModal(titleEl, bodyEl, hero, mods) {
   const eq = st.equipment || {};
   const cStats = st.combatStats || {};
   const nextXp = hero.xpForNextLevel;
-  const xpReadout = nextXp ? `${hero.xp} / ${nextXp} XP` : `${hero.xp} XP (MAX LEVEL 10)`;
+  const xpReadout = nextXp ? `${hero.xp} / ${nextXp} XP` : `${hero.xp} XP`;
   const fmtSave = v => (Number(v) >= 0 ? `+${v}` : `${v}`);
+  const unspentPoints = Number(hero.attribute_points || 0);
+  const tierLabels = hero.attributeTierLabels || {};
 
   const slotList = [
     { label: 'Melee', item: eq.meleeWeapon },
@@ -327,6 +361,19 @@ export function renderCharacterModal(titleEl, bodyEl, hero, mods) {
     { label: 'Belt', item: eq.belt },
     { label: 'Feet', item: eq.feet }
   ];
+
+  const statDefs = [
+    { key: 'strength', short: 'STR', title: 'Melee Attack & Damage' },
+    { key: 'constitution', short: 'CON', title: 'Max HP & Fortitude Save' },
+    { key: 'dexterity', short: 'DEX', title: 'Ranged Attack, AC, Initiative & Reflex Save' },
+    { key: 'intelligence', short: 'INT', title: 'Tactical Battle Experience (Offensive Mastery)' },
+    { key: 'wisdom', short: 'WIS', title: 'Perception, Will Save, Prayers & Defensive Battle Experience' },
+    { key: 'charisma', short: 'CHA', title: 'Merchant Trade Terms & Sacred Presence' }
+  ];
+
+  const compendium = Array.isArray(st.compendiumKnowledge)
+    ? st.compendiumKnowledge.filter(entry => entry.discovered)
+    : [];
 
   titleEl.textContent = `👤 Champion Record — ${hero.name} (${hero.class} • Level ${hero.level})`;
   bodyEl.innerHTML = `
@@ -348,16 +395,40 @@ export function renderCharacterModal(titleEl, bodyEl, hero, mods) {
       </div>
     </div>
 
+    ${unspentPoints > 0 ? `
+      <div style="padding:8px 12px; background:rgba(234,179,8,0.18); border:1px solid #facc15; border-radius:6px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div>
+          <strong style="color:#fde047; font-size:0.82rem;">🌟 Milestone Attribute Points Available: ${unspentPoints}</strong>
+          <div style="font-size:0.72rem; color:var(--text-body);">Select <strong>+1</strong> beside any attribute below to permanently increase it.</div>
+        </div>
+      </div>
+    ` : ''}
+
     <div style="font-family:var(--font-serif); font-size:0.8rem; color:var(--accent-gold); font-weight:700; margin-bottom:5px;">
-      ⚔️ Ability Scores & Modifiers ${hero.is_str_boosted ? '<span class="lab-badge" style="color:#fde68a; border-color:#c5a059;">+2 Belt of Giant Strength Active</span>' : ''}
+      ⚔️ Ability Scores, Descriptive Tiers & Modifiers ${hero.is_str_boosted ? '<span class="lab-badge" style="color:#fde68a; border-color:#c5a059;">Equipment Boost Active</span>' : ''}
     </div>
     <div class="champ-ability-grid" style="margin-bottom:10px;">
-      <div class="lab-item-row"><span>STR: <strong>${hero.strength}</strong>${hero.is_str_boosted ? ' ★' : ''}</span><span style="color:var(--accent-gold); font-family:var(--font-mono); font-weight:700;">${mods.strength}</span></div>
-      <div class="lab-item-row"><span>CON: <strong>${hero.constitution}</strong></span><span style="color:var(--accent-gold); font-family:var(--font-mono); font-weight:700;">${mods.constitution}</span></div>
-      <div class="lab-item-row"><span>DEX: <strong>${hero.dexterity}</strong></span><span style="color:var(--accent-gold); font-family:var(--font-mono); font-weight:700;">${mods.dexterity}</span></div>
-      <div class="lab-item-row" title="+10% Combat XP per +1 INT mod"><span>INT: <strong>${hero.intelligence}</strong></span><span style="color:var(--accent-gold); font-family:var(--font-mono); font-weight:700;">${mods.intelligence}</span></div>
-      <div class="lab-item-row"><span>WIS: <strong>${hero.wisdom}</strong></span><span style="color:var(--accent-gold); font-family:var(--font-mono); font-weight:700;">${mods.wisdom}</span></div>
-      <div class="lab-item-row" title="-5% Shop Price per +1 CHA mod"><span>CHA: <strong>${hero.charisma}</strong></span><span style="color:var(--accent-gold); font-family:var(--font-mono); font-weight:700;">${mods.charisma}</span></div>
+      ${statDefs.map(sd => {
+        const val = Number(hero[sd.key] || 10);
+        const baseVal = Number(hero[`base_${sd.key}`] ?? val);
+        const modStr = (mods && mods[sd.key]) || formatStatMod(val);
+        const tierLbl = tierLabels[sd.key] || getAttributeTierLabel(val);
+        const isBoosted = val > baseVal;
+        return `
+          <div class="lab-item-row" title="${escapeHtml(sd.title)}" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+            <div>
+              <span>${sd.short}: <strong>${val}</strong>${isBoosted ? ` <span style="font-size:0.68rem; color:#86efac;">(Base ${baseVal})</span>` : ''}</span>
+              <div style="font-size:0.68rem; color:var(--text-muted);">${escapeHtml(tierLbl)}</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="color:var(--accent-gold); font-family:var(--font-mono); font-weight:700;">${escapeHtml(modStr)}</span>
+              ${unspentPoints > 0 ? `
+                <button type="button" class="btn-action-gold" style="padding:2px 7px; font-size:0.72rem;" onclick="spendMilestoneAttribute('${sd.key}')" title="Spend 1 attribute point to permanently raise ${sd.short}">+1</button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('')}
     </div>
 
     <div style="font-family:var(--font-serif); font-size:0.8rem; color:var(--accent-gold); font-weight:700; margin-bottom:5px;">
@@ -382,6 +453,25 @@ export function renderCharacterModal(titleEl, bodyEl, hero, mods) {
               <span class="lab-badge" style="color:${a.active ? '#86efac' : '#fde68a'};">${escapeHtml(a.currentTier)}</span>
             </div>
             <div style="font-size:0.74rem; color:var(--text-muted);">${escapeHtml(a.detail)}</div>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+
+    ${compendium.length > 0 ? `
+      <div style="font-family:var(--font-serif); font-size:0.8rem; color:var(--accent-gold); font-weight:700; margin-bottom:5px;">
+        📖 Studied Foes & Battle Experience (${compendium.length} Discovered)
+      </div>
+      <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap:6px; margin-bottom:10px; max-height:130px; overflow-y:auto;">
+        ${compendium.slice(0, 12).map(m => `
+          <div class="lab-item-row" style="padding:5px 8px; font-size:0.72rem; flex-direction:column; align-items:flex-start; gap:2px;">
+            <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+              <strong style="color:var(--text-heading);">${escapeHtml(m.name)}</strong>
+              <span class="lab-badge" style="font-size:0.65rem;">${escapeHtml(m.masteryLabel)}</span>
+            </div>
+            <div style="color:var(--text-muted); font-size:0.67rem;">
+              ${escapeHtml(m.familyLabel || '')} • ${m.victoryCount} slain / ${m.encounteredCount} met
+            </div>
           </div>
         `).join('')}
       </div>
@@ -415,7 +505,7 @@ export function renderCharacterModal(titleEl, bodyEl, hero, mods) {
 }
 
 /* =========================================================================
-   ACCOUNT, SESSION & 71-POINT CHARACTER CREATION FORGE (Phase 6)
+   ACCOUNT, SESSION & 72-POINT CHARACTER CREATION FORGE (Phase 7B)
    ========================================================================= */
 export function selectCreatorClass(classType) {
   const upper = String(classType || 'FIGHTER').toUpperCase();
@@ -433,13 +523,16 @@ export function selectCreatorClass(classType) {
     store.charCreatorDraft.name = defaultNames[upper] || 'Vaelen Ironhand';
   }
   store.charCreatorDraft.primaryWeapon = upper === 'RANGER' ? 'RANGED' : 'MELEE';
+  if (upper === 'RANGER' && !store.charCreatorDraft.favoredEnemyType) {
+    store.charCreatorDraft.favoredEnemyType = 'ANIMALS';
+  }
   store.charCreatorDraft.stats = {
-    strength: base.strength + (upper === 'FIGHTER' ? 2 : 0),
-    constitution: base.constitution + 1,
-    dexterity: base.dexterity + (upper === 'RANGER' ? 2 : 0),
-    intelligence: base.intelligence,
-    wisdom: base.wisdom + (upper === 'CLERIC' ? 2 : 0),
-    charisma: base.charisma
+    strength: Number(base.strength),
+    constitution: Number(base.constitution),
+    dexterity: Number(base.dexterity),
+    intelligence: Number(base.intelligence),
+    wisdom: Number(base.wisdom),
+    charisma: Number(base.charisma)
   };
 
   if (store.currentOpenModal === 'account' || store.currentOpenModal === 'create-character') {
@@ -447,19 +540,23 @@ export function selectCreatorClass(classType) {
   }
 }
 
+export function resetCreatorPreset() {
+  selectCreatorClass(store.charCreatorDraft.classType || 'FIGHTER');
+}
+
 export function adjustCreatorStat(statKey, delta) {
   const draft = store.charCreatorDraft;
-  const classBases = (store.currentState && store.currentState.classBases) || DEFAULT_CLASS_BASES;
-  const base = classBases[draft.classType] || DEFAULT_CLASS_BASES.FIGHTER;
-  const minVal = (base[statKey] || 10) - 2;
-  const maxVal = 18;
+  const statRules = (store.currentState && store.currentState.statRules) || {};
+  const requiredTotal = Number(statRules.requiredTotalSum || statRules.totalSum || 72);
+  const minVal = Number(statRules.minScore || 8);
+  const maxVal = Number(statRules.maxScore || 18);
 
   const currentTotal = Object.values(draft.stats).reduce((a, b) => a + Number(b || 0), 0);
-  const currentVal = Number(draft.stats[statKey] || base[statKey] || 10);
+  const currentVal = Number(draft.stats[statKey] || 10);
   const nextVal = currentVal + Number(delta);
 
   if (nextVal < minVal || nextVal > maxVal) return;
-  if (delta > 0 && currentTotal >= 71) return;
+  if (delta > 0 && currentTotal >= requiredTotal) return;
 
   draft.stats[statKey] = nextVal;
   if (store.currentOpenModal === 'account' || store.currentOpenModal === 'create-character') {
@@ -487,11 +584,13 @@ export async function submitCreatorHero() {
     draft.primaryWeapon = stanceEl.value;
   }
 
+  const chosenFamily = draft.classType === 'RANGER' ? (draft.favoredEnemyType || 'ANIMALS') : null;
   await dispatchAction('CREATE_CHARACTER', {
     name: draft.name,
     classType: draft.classType,
     stats: { ...draft.stats },
-    favoredEnemyType: draft.classType === 'RANGER' ? draft.favoredEnemyType : null,
+    favoredEnemyFamily: chosenFamily,
+    favoredEnemyType: chosenFamily,
     primaryWeapon: draft.primaryWeapon
   });
   if (store.currentState && store.currentState.character) {
@@ -516,31 +615,46 @@ export function renderAccountAndCreatorModal(titleEl, bodyEl) {
   const user = st.currentUser;
   const hasLivingHero = Boolean(st.character);
   const classBases = st.classBases || DEFAULT_CLASS_BASES;
+  const statRules = st.statRules || {};
+  const requiredTotal = Number(statRules.requiredTotalSum || statRules.totalSum || 72);
+  const minScore = Number(statRules.minScore || 8);
+  const maxScore = Number(statRules.maxScore || 18);
+
   const feOptions = st.favoredEnemyOptions || [
-    { value: 'ANIMAL', label: 'Beast / Animal' },
-    { value: 'MAGICAL BEAST', label: 'Magical Beast' },
-    { value: 'MONSTROUS HUMANOID', label: 'Monstrous Humanoid' },
-    { value: 'ABERRATION', label: 'Aberration' },
+    { value: 'ANIMALS', label: 'Animals' },
     { value: 'VERMIN', label: 'Vermin' },
-    { value: 'PLANT', label: 'Plant' },
-    { value: 'HUMANOID:goblinoid', label: 'Humanoid — Goblinoid' },
-    { value: 'HUMANOID:reptilian', label: 'Humanoid — Reptilian' }
+    { value: 'PLANTS', label: 'Plants & Fungi' },
+    { value: 'HUMANOID_RAIDER', label: 'Humanoid Raiders' },
+    { value: 'GOBLINOIDS', label: 'Goblinoids' },
+    { value: 'GNOLLS', label: 'Gnolls' },
+    { value: 'ORCS', label: 'Orcs' },
+    { value: 'REPTILIAN_HUMANOIDS', label: 'Reptilian Humanoids' },
+    { value: 'GIANTS', label: 'Giants & Ogres' },
+    { value: 'DRAGONS', label: 'Dragons & Drakes' },
+    { value: 'OUTSIDERS', label: 'Elementals & Outsiders' },
+    { value: 'AVIAN_MAGICAL_BEASTS', label: 'Avian Magical Beasts' },
+    { value: 'ARACHNID_MAGICAL_BEASTS', label: 'Arachnid Magical Beasts' },
+    { value: 'TERRESTRIAL_MAGICAL_BEASTS', label: 'Other Magical Beasts' }
   ];
 
   const draft = store.charCreatorDraft;
   const activeBase = classBases[draft.classType] || DEFAULT_CLASS_BASES.FIGHTER;
   const totalPoints = Object.values(draft.stats).reduce((a, b) => a + Number(b || 0), 0);
-  const pointsRemaining = 71 - totalPoints;
+  const pointsRemaining = requiredTotal - totalPoints;
   const conMod = Math.floor((Number(draft.stats.constitution || 10) - 10) / 2);
-  const startHp = Math.max(1, (activeBase.hpPerLevel || 8) + conMod);
+  const startHp = draft.classType === 'FIGHTER'
+    ? Math.max(1, 10 + conMod + 2)
+    : (draft.classType === 'RANGER'
+      ? Math.max(1, 10 + conMod)
+      : Math.max(1, 8 + conMod));
 
   const statLabels = [
     { key: 'strength', short: 'STR', label: 'Strength (Melee Atk & Dmg)' },
     { key: 'constitution', short: 'CON', label: 'Constitution (Max HP & Fortitude)' },
     { key: 'dexterity', short: 'DEX', label: 'Dexterity (Ranged Atk, AC & Reflex)' },
-    { key: 'intelligence', short: 'INT', label: 'Intelligence (+10% Combat XP / Mod)' },
-    { key: 'wisdom', short: 'WIS', label: 'Wisdom (Will Save, Perception & Prayers)' },
-    { key: 'charisma', short: 'CHA', label: 'Charisma (-5% Merchant Price / Mod)' }
+    { key: 'intelligence', short: 'INT', label: 'Intelligence (Tactical Battle Experience)' },
+    { key: 'wisdom', short: 'WIS', label: 'Wisdom (Will Save, Perception, Prayers & Battle Exp)' },
+    { key: 'charisma', short: 'CHA', label: 'Charisma (Merchant Trade Terms & Sacred Presence)' }
   ];
 
   bodyEl.innerHTML = `
@@ -577,13 +691,16 @@ export function renderAccountAndCreatorModal(titleEl, bodyEl) {
       </div>
     </div>
 
-    <!-- 2. FULL 71-POINT CHARACTER CREATION FORGE -->
+    <!-- 2. FULL 72-POINT CHARACTER CREATION FORGE -->
     <div class="qa-card">
       <div class="qa-card-title">
-        <span>⚒️ Forge New Champion (Canonical 71-Point Attribute Allocation)</span>
-        <span class="lab-badge" style="color:${pointsRemaining === 0 ? '#86efac' : '#fde68a'};">
-          Points Remaining: ${pointsRemaining} (Total: ${totalPoints} / 71)
-        </span>
+        <span>⚒️ Forge New Champion (Canonical 72-Point Attribute Allocation)</span>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button type="button" class="btn-action-stone" style="padding:2px 8px; font-size:0.7rem;" onclick="resetCreatorPreset()">Reset to Class Preset</button>
+          <span class="lab-badge" style="color:${pointsRemaining === 0 ? '#86efac' : '#fde68a'};">
+            Points Remaining: ${pointsRemaining} (Total: ${totalPoints} / ${requiredTotal})
+          </span>
+        </div>
       </div>
 
       ${hasLivingHero ? `
@@ -636,17 +753,18 @@ export function renderAccountAndCreatorModal(titleEl, bodyEl) {
         ${statLabels.map(s => {
           const val = Number(draft.stats[s.key] || 10);
           const baseVal = Number(activeBase[s.key] || 10);
-          const minVal = baseVal - 2;
-          const canDec = val > minVal;
-          const canInc = val < 18 && pointsRemaining > 0;
+          const canDec = val > minScore;
+          const canInc = val < maxScore && pointsRemaining > 0;
+          const tierLbl = getAttributeTierLabel(val);
           return `
             <div class="lab-item-row" style="padding:6px 10px;">
               <div>
                 <div style="font-weight:700; font-size:0.8rem; color:var(--text-heading);">
                   ${s.short}: <span style="color:var(--accent-gold-bright);">${val}</span>
                   <span style="font-family:var(--font-mono); font-size:0.74rem; color:var(--accent-gold);">(${formatStatMod(val)})</span>
+                  <span class="lab-badge" style="font-size:0.65rem; margin-left:4px;">${escapeHtml(tierLbl)}</span>
                 </div>
-                <div style="font-size:0.69rem; color:var(--text-muted);">${escapeHtml(s.label)} • Base ${baseVal} (Min ${minVal})</div>
+                <div style="font-size:0.69rem; color:var(--text-muted);">${escapeHtml(s.label)} • Preset ${baseVal} (Range ${minScore}–${maxScore})</div>
               </div>
               <div style="display:flex; gap:4px; align-items:center;">
                 <button type="button" class="btn-action-stone" style="padding:3px 9px; font-size:0.78rem;" ${!canDec ? 'disabled' : ''} onclick="adjustCreatorStat('${s.key}', -1)">−</button>
@@ -660,19 +778,19 @@ export function renderAccountAndCreatorModal(titleEl, bodyEl) {
       <div class="forge-top-grid" style="margin-top:8px;">
         ${draft.classType === 'RANGER' ? `
           <div>
-            <label for="creator-favored-enemy" style="font-size:0.73rem; color:var(--text-muted); display:block; margin-bottom:3px;">Sworn Blood-Quarry (Favored Enemy — Undead Forbidden)</label>
+            <label for="creator-favored-enemy" style="font-size:0.73rem; color:var(--text-muted); display:block; margin-bottom:3px;">Sworn Blood-Quarry (14 Initial Monster Families — Undead Forbidden)</label>
             <select id="creator-favored-enemy" class="lab-select" onchange="setCreatorField('favoredEnemyType', this.value)"
                     style="width:100%; border-color:var(--border-gold-dim);">
               ${feOptions.map(opt => `
-                <option value="${escapeHtml(opt.value)}" ${draft.favoredEnemyType === opt.value ? 'selected' : ''}>${escapeHtml(opt.label)}</option>
+                <option value="${escapeHtml(opt.value || opt.key)}" ${draft.favoredEnemyType === (opt.value || opt.key) ? 'selected' : ''}>${escapeHtml(opt.label)}</option>
               `).join('')}
             </select>
           </div>
         ` : `
           <div style="font-size:0.73rem; color:var(--text-muted); display:flex; align-items:center;">
             ${draft.classType === 'FIGHTER'
-              ? '⚔️ Fighter Mastery: Full martial weapons, heavy armor, Weapon Training (+1 Lv5, +2 Lv9) & Armor Training.'
-              : '✨ Cleric Mastery: Holy Radiance vs Undead (+2/+3/+2 Lv1) & Sacred Self-Healing Prayers outside combat.'}
+              ? '⚔️ Fighter Mastery: Battle-Hardened vitality & saves, Know Your Enemy, Second Wind (Lv3+), Weapon & Armor Training.'
+              : '✨ Cleric Mastery: Sacred Knowledge, Turn Undead, Holy Radiance vs Undead & Sacred Self-Healing Prayers.'}
           </div>
         `}
         <div>

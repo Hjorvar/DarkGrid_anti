@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { getDb, withTransaction } = require('./connection');
+const { applyMonsterTaxonomyToDatabase } = require('../domain/monsters/taxonomy');
 
 /**
  * Ensures migration tracking table exists
@@ -50,6 +51,7 @@ function runMigrations(db = getDb()) {
     }
   }
 
+  applyMonsterTaxonomyToDatabase(db);
   return appliedMigrations;
 }
 
@@ -132,6 +134,7 @@ function runSeeds(db = getDb()) {
     }
   }
 
+  applyMonsterTaxonomyToDatabase(db);
   return executedSeeds;
 }
 

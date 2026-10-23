@@ -82,7 +82,7 @@ test('1. Starting Gold: New characters receive exactly 10 gp by default', async 
     userId: user.id,
     name: `Valiant_${suffix}`,
     classType: 'FIGHTER',
-    stats: { strength: 16, dexterity: 12, constitution: 14, intelligence: 10, wisdom: 10, charisma: 9 }
+    stats: { strength: 16, dexterity: 12, constitution: 14, intelligence: 11, wisdom: 10, charisma: 9 }
   });
 
   assert.equal(hero.gold, 10, 'Hero starting gold must be exactly 10 gp');
@@ -105,7 +105,7 @@ test('2. City Healing: Allowed when peaceful, strictly blocked when IN_COMBAT', 
     userId: user.id,
     name: `Healer_${suffix}`,
     classType: 'CLERIC',
-    stats: { strength: 10, dexterity: 10, constitution: 14, intelligence: 10, wisdom: 16, charisma: 11 }
+    stats: { strength: 10, dexterity: 10, constitution: 14, intelligence: 11, wisdom: 16, charisma: 11 }
   });
 
   // Damage hero and use cleric healing
@@ -222,7 +222,7 @@ test('4. Two-Handed Weapons & Shields: Suppresses shield AC bonus for two-handed
     userId: user.id,
     name: `Blade_${suffix}`,
     classType: 'FIGHTER',
-    stats: { strength: 16, dexterity: 14, constitution: 12, intelligence: 10, wisdom: 10, charisma: 9 }
+    stats: { strength: 16, dexterity: 14, constitution: 12, intelligence: 11, wisdom: 10, charisma: 9 }
   });
 
   // Base AC: 10 + 2 (DEX) + 4 (Chain Shirt) = 16
@@ -376,14 +376,14 @@ test('5. Healing Potion Selection: Cheapest-first default, explicit choice, owne
     userId: user1.id,
     name: `Healee_${suffix}`,
     classType: 'FIGHTER',
-    stats: { strength: 16, dexterity: 12, constitution: 14, intelligence: 10, wisdom: 10, charisma: 9 }
+    stats: { strength: 16, dexterity: 12, constitution: 14, intelligence: 11, wisdom: 10, charisma: 9 }
   });
 
   const hero2 = createCharacter(db, {
     userId: user2.id,
     name: `Stranger_${suffix}`,
     classType: 'CLERIC',
-    stats: { strength: 10, dexterity: 10, constitution: 14, intelligence: 10, wisdom: 16, charisma: 11 }
+    stats: { strength: 10, dexterity: 10, constitution: 14, intelligence: 11, wisdom: 16, charisma: 11 }
   });
 
   // Clear starter potions to start clean
@@ -552,7 +552,7 @@ test('6. UI & HTTP Integration: Renders potion dropdown in combat and processes 
       strength: '16',
       dexterity: '14',
       constitution: '12',
-      intelligence: '10',
+      intelligence: '11',
       wisdom: '10',
       charisma: '9',
       _csrf: createCsrf

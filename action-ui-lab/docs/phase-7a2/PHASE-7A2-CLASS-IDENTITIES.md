@@ -1,5 +1,8 @@
 # DARKGRID — PHASE 7A.2: CLASS IDENTITIES & PLAYSTYLE DISTINCTIONS
 
+> [!IMPORTANT]
+> **Historical Design Baseline (Updated by Phase 7A.3):** This Phase 7A.2 document is preserved as historical design context. Phase 7A.3 updates Fighter *Second Wind* with **Lethal Rescue**, replaces the 7 blended Ranger Favored Enemy categories with natural `monster_family` lineages, and adds **Battle Experience** (`INT` damage / `WIS` AC). See [`../phase-7a3/PHASE-7A3-DESIGN-DECISIONS.md`](../phase-7a3/PHASE-7A3-DESIGN-DECISIONS.md), [`../phase-7a3/PHASE-7A3-RANGER-FAMILIES.md`](../phase-7a3/PHASE-7A3-RANGER-FAMILIES.md), and [`../phase-7a3/PHASE-7A3-SECOND-WIND.md`](../phase-7a3/PHASE-7A3-SECOND-WIND.md).
+
 **Date:** 2026-10-22  
 **Phase:** 7A.2 — Class Identity & Thematic Progression (Design & Documentation Only)  
 **Baseline Verified Against:** `main` commit `042d122`

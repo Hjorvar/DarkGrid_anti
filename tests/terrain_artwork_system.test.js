@@ -234,7 +234,7 @@ test('11. Moving hero between tiles dynamically updates resolved terrain artwork
     userId: user.id,
     name: 'Wanderer',
     classType: 'RANGER',
-    stats: { strength: 12, constitution: 10, dexterity: 17, intelligence: 10, wisdom: 12, charisma: 10 }
+    stats: { strength: 12, constitution: 10, dexterity: 17, intelligence: 11, wisdom: 12, charisma: 10 }
   });
 
   // Start at Oakhaven City (7, 7)
@@ -307,7 +307,7 @@ test('14. Combat retains terrain artwork without corrupting active combat state'
     userId: user.id,
     name: 'Gladiator',
     classType: 'FIGHTER',
-    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 9 }
+    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 9 }
   });
 
   const forestTile = db.prepare("SELECT * FROM map_tiles WHERE terrain = 'FOREST' AND is_passable = 1 LIMIT 1").get();

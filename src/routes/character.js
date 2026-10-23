@@ -6,8 +6,10 @@ const {
   getLivingCharacterByUserId,
   createCharacter,
   getModifier,
-  formatModifier
+  formatModifier,
+  getAttributeTierLabel
 } = require('../domain/character/rules');
+const { getRangerSelectableFamilies } = require('../domain/monsters/taxonomy');
 
 router.use(requireAuth);
 
@@ -22,11 +24,14 @@ router.get('/create', (req, res) => {
     errors: [],
     classBases: config.classBases,
     statRules: config.statRules,
+    favoredEnemyOptions: getRangerSelectableFamilies(),
     getModifier,
     formatModifier,
+    getAttributeTierLabel,
     formData: {
       name: '',
-      classType: 'FIGHTER'
+      classType: 'FIGHTER',
+      favoredEnemyFamily: 'ANIMALS'
     }
   });
 });
@@ -46,6 +51,7 @@ router.post('/create', (req, res) => {
     intelligence,
     wisdom,
     charisma,
+    favoredEnemyFamily,
     favoredEnemyType,
     favoredEnemySubtype
   } = req.body;
@@ -65,7 +71,8 @@ router.post('/create', (req, res) => {
       name,
       classType,
       stats,
-      favoredEnemyType: favoredEnemyType || null,
+      favoredEnemyFamily: favoredEnemyFamily || favoredEnemyType || null,
+      favoredEnemyType: favoredEnemyType || favoredEnemyFamily || null,
       favoredEnemySubtype: favoredEnemySubtype || null
     });
 
@@ -76,11 +83,14 @@ router.post('/create', (req, res) => {
       errors: err.validationErrors || [err.message],
       classBases: config.classBases,
       statRules: config.statRules,
+      favoredEnemyOptions: getRangerSelectableFamilies(),
       getModifier,
       formatModifier,
+      getAttributeTierLabel,
       formData: {
         name,
         classType,
+        favoredEnemyFamily: favoredEnemyFamily || favoredEnemyType || 'ANIMALS',
         favoredEnemyType,
         favoredEnemySubtype,
         ...stats

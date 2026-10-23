@@ -1,5 +1,8 @@
 # DARKGRID — PHASE 7A.2: THEMATIC CLASS PROGRESSION (LEVELS 1–10)
 
+> [!IMPORTANT]
+> **Historical Design Baseline (Updated by Phase 7A.3):** This Phase 7A.2 document is preserved as historical design context. Phase 7A.3 upgrades Fighter *Second Wind* with once-per-combat **Lethal Rescue**, standardizes the Cleric Base Attack progression formula (`Math.ceil(level * 3 / 4)`), and pairs Level 2/4/6/8/10 attribute allocation with visible attribute numbers and **Battle Experience**. See [`../phase-7a3/PHASE-7A3-SECOND-WIND.md`](../phase-7a3/PHASE-7A3-SECOND-WIND.md), [`../phase-7a3/PHASE-7A3-ATTRIBUTES.md`](../phase-7a3/PHASE-7A3-ATTRIBUTES.md), and [`../phase-7a3/PHASE-7A3-CONSISTENCY-AUDIT.md`](../phase-7a3/PHASE-7A3-CONSISTENCY-AUDIT.md).
+
 **Date:** 2026-10-22  
 **Phase:** 7A.2 — Class Identity & Thematic Progression (Design & Documentation Only)  
 **Baseline Verified Against:** `main` commit `042d122`

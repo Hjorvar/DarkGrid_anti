@@ -1,5 +1,8 @@
 # DARKGRID — PHASE 7A.2: DESIGN PHILOSOPHY & HIDDEN MATHEMATICS
 
+> [!IMPORTANT]
+> **Historical Design Baseline (Updated by Phase 7A.3):** This Phase 7A.2 document is preserved as historical design context. Phase 7A.3 retains the core asymmetric class philosophy and Hidden Mathematics while permitting visible attribute integers (`8–18+`) and remaining point counts during Character Creation and Level-Up allocation. See [`../phase-7a3/PHASE-7A3-DESIGN-DECISIONS.md`](../phase-7a3/PHASE-7A3-DESIGN-DECISIONS.md) and [`../phase-7a3/PHASE-7A3-ATTRIBUTES.md`](../phase-7a3/PHASE-7A3-ATTRIBUTES.md).
+
 **Date:** 2026-10-22  
 **Phase:** 7A.2 — Class Identity & Thematic Progression (Design & Documentation Only)  
 **Baseline Verified Against:** `main` commit `042d122` (Post-Phase-6.2 Source of Truth)  

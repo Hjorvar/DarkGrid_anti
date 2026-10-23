@@ -130,7 +130,7 @@ test('Section 2: CR & Loot — Full combat flow preserves CR (0.25, 1, 3, 5), tr
       userId,
       name: 'CrSlayer',
       classType: 'FIGHTER',
-      stats: { strength: 18, constitution: 14, dexterity: 12, intelligence: 10, wisdom: 9, charisma: 8 }
+      stats: { strength: 18, constitution: 14, dexterity: 12, intelligence: 11, wisdom: 9, charisma: 8 }
     });
     // Boost hero so 1 hit kills target in executeCombatRound
     db.prepare('UPDATE characters SET level = 9, strength = 18, current_hp = 120, max_hp = 120 WHERE id = ?').run(hero.id);
@@ -265,7 +265,7 @@ test('Section 3 & Section 8: JavaScript & Modal System — Valid rendered JS, no
       strength: '16',
       constitution: '15',
       dexterity: '12',
-      intelligence: '10',
+      intelligence: '11',
       wisdom: '10',
       charisma: '8',
       primaryWeapon: 'MELEE'
@@ -435,7 +435,7 @@ test('Section 3 & Section 8: JavaScript & Modal System — Valid rendered JS, no
 test('Section 4: Ranger Favored Enemy & Opening Shot — All humanoid subtypes work in real combat and Opening Shot obeys strict 4-part condition', () => {
   const db = setupTestDb();
   try {
-    const subtypesToTest = ['goblinoid', 'orc', 'gnoll', 'drow', 'duergar', 'reptilian'];
+    const subtypesToTest = ['goblinoid', 'orc', 'gnoll', 'reptilian'];
     const wildTile = db.prepare("SELECT * FROM map_tiles WHERE is_safe = 0 AND is_passable = 1 LIMIT 1").get();
 
     for (const subtype of subtypesToTest) {
@@ -444,7 +444,7 @@ test('Section 4: Ranger Favored Enemy & Opening Shot — All humanoid subtypes w
         userId,
         name: `Ranger_${subtype}`,
         classType: 'RANGER',
-        stats: { strength: 14, constitution: 12, dexterity: 16, intelligence: 10, wisdom: 11, charisma: 8 },
+        stats: { strength: 14, constitution: 12, dexterity: 16, intelligence: 11, wisdom: 11, charisma: 8 },
         favoredEnemyType: 'HUMANOID',
         favoredEnemySubtype: subtype
       });
@@ -471,7 +471,7 @@ test('Section 4: Ranger Favored Enemy & Opening Shot — All humanoid subtypes w
       const abWithFavored = calculateHeroAttackBonus(effHero, equip.rangedWeapon, started.encounter);
       const nonMatchingMonster = { ...started.encounter, creature_subtype: 'other_humanoid' };
       const abWithoutFavored = calculateHeroAttackBonus(effHero, equip.rangedWeapon, nonMatchingMonster);
-      assert.equal(abWithFavored - abWithoutFavored, 1, `Ranger must gain +1 attack against HUMANOID:${subtype} in real combat`);
+      assert.equal(abWithFavored - abWithoutFavored, 2, `Ranger must gain +2 attack (Option A) against HUMANOID:${subtype} in real combat`);
 
       const dmgFormulaFavored = getHeroDamageFormula(effHero, equip.rangedWeapon, started.encounter);
       const dmgFormulaNonFavored = getHeroDamageFormula(effHero, equip.rangedWeapon, nonMatchingMonster);
@@ -484,11 +484,11 @@ test('Section 4: Ranger Favored Enemy & Opening Shot — All humanoid subtypes w
       userId: beastUserId,
       name: 'BeastTracker',
       classType: 'RANGER',
-      stats: { strength: 14, constitution: 12, dexterity: 16, intelligence: 10, wisdom: 11, charisma: 8 },
+      stats: { strength: 14, constitution: 12, dexterity: 16, intelligence: 11, wisdom: 11, charisma: 8 },
       favoredEnemyType: 'BEAST'
     });
     const wolf = db.prepare("SELECT * FROM monsters WHERE UPPER(creature_type) = 'ANIMAL' LIMIT 1").get();
-    assert.equal(getRangerFavoredEnemyBonus(beastRanger, wolf).attack, 1, 'BEAST/ANIMAL Favored Enemy must match ANIMAL monsters');
+    assert.equal(getRangerFavoredEnemyBonus(beastRanger, wolf).attack, 2, 'BEAST/ANIMAL Favored Enemy must match ANIMAL monsters with +2 Option A bonus');
 
     // Undead strictly forbidden
     assert.throws(() => {
@@ -496,7 +496,7 @@ test('Section 4: Ranger Favored Enemy & Opening Shot — All humanoid subtypes w
         userId: createTestUser(db, 'ranger_undead_fail'),
         name: 'UndeadHunter',
         classType: 'RANGER',
-        stats: { strength: 14, constitution: 12, dexterity: 16, intelligence: 10, wisdom: 11, charisma: 8 },
+        stats: { strength: 14, constitution: 12, dexterity: 16, intelligence: 11, wisdom: 11, charisma: 8 },
         favoredEnemyType: 'UNDEAD'
       });
     }, /Undead is not permitted/i);
@@ -543,7 +543,7 @@ test('Section 5: Magical Equipment, AC & Character Sheet — Ring of Protection 
       userId,
       name: 'SirGalahad',
       classType: 'FIGHTER',
-      stats: { strength: 16, constitution: 15, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 8 }
+      stats: { strength: 16, constitution: 15, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 8 }
     });
 
     // Base Fighter: DEX 12 (+1), Chain Shirt (+4), Light Steel Shield (+1) => AC 16
@@ -590,7 +590,7 @@ test('Section 5: Magical Equipment, AC & Character Sheet — Ring of Protection 
     `).run(hero.id, wildTile.id, goblin.id).lastInsertRowid);
 
     const combatState = startCombat(db, hero.id, encId, { rng: () => 0.5 });
-    assert.equal(combatState.heroAC, 18, 'getCombatState must include Ring of Protection +1 and Amulet of Natural Armor +1 in heroAC');
+    assert.equal(combatState.heroAC, 19, 'getCombatState must include Ring +1, Amulet +1, and Fighter Know Your Enemy +1 AC vs Goblin in heroAC');
     assert.equal(combatState.character.strength, 18, 'getCombatState must expose effective STR 18');
 
     // End combat to test unequipping
@@ -631,7 +631,7 @@ test('Section 6: Encounter Secrecy & DISCOVERED Lock — No Hero Panel stat leak
       strength: '14',
       constitution: '13',
       dexterity: '8',
-      intelligence: '10',
+      intelligence: '11',
       wisdom: '15',
       charisma: '11',
       primaryWeapon: 'MELEE'
@@ -645,7 +645,7 @@ test('Section 6: Encounter Secrecy & DISCOVERED Lock — No Hero Panel stat leak
     // 1. Baseline peaceful Hero Panel stats (Cleric L1: STR 14 (+2 melee), DEX 8 (-1 ranged))
     const peacefulPage = await client.request('GET', '/game');
     assert.ok(peacefulPage.text.includes('Active: 🗡️ Melee'), 'Peaceful Cleric must show Active: Melee');
-    assert.ok(peacefulPage.text.includes('⚔️ +2 • 🏹 -1'), 'Peaceful Cleric must show baseline +2 melee / -1 ranged attack');
+    assert.ok(peacefulPage.text.includes('⚔️ +3 • 🏹 +0'), 'Peaceful Cleric (BAB +1 at L1) must show baseline +3 melee / +0 ranged attack');
 
     // 2. Create a DISCOVERED encounter with a FLYING UNDEAD monster
     const wildTile = db.prepare("SELECT * FROM map_tiles WHERE is_safe = 0 AND is_passable = 1 LIMIT 1").get();
@@ -661,7 +661,7 @@ test('Section 6: Encounter Secrecy & DISCOVERED Lock — No Hero Panel stat leak
     // - Must NOT leak flying or Undead status in Hero Panel while DISCOVERED
     const discoveredPage = await client.request('GET', '/game');
     assert.ok(discoveredPage.text.includes('Active: 🗡️ Melee'), 'DISCOVERED state must NOT leak flying status');
-    assert.ok(discoveredPage.text.includes('⚔️ +2 • 🏹 -1'), 'DISCOVERED state must NOT leak Undead status via Holy Radiance attack bonus');
+    assert.ok(discoveredPage.text.includes('⚔️ +3 • 🏹 +0'), 'DISCOVERED state must NOT leak Undead status via Holy Radiance attack bonus');
 
     // 3. Server-side & HTTP locks while DISCOVERED:
     const equip = getCharacterEquipment(db, cleric.id);
@@ -682,7 +682,7 @@ test('Section 6: Encounter Secrecy & DISCOVERED Lock — No Hero Panel stat leak
     await client.request('POST', '/game/encounter/investigate', { encounterId: String(encId) });
     const combatPage = await client.request('GET', '/game');
     assert.ok(combatPage.text.includes('Active: 🗡️ Melee'), 'IN_COMBAT must preserve Melee stance and shield against flying monster');
-    assert.ok(combatPage.text.includes('⚔️ +3 • 🏹 +1'), 'IN_COMBAT must apply Cleric Holy Radiance (+2 Atk vs Undead) and -1 melee Evasive Flyer penalty');
+    assert.ok(combatPage.text.includes('⚔️ +4 • 🏹 +2'), 'IN_COMBAT must apply Cleric Holy Radiance (+2 Atk vs Undead) and -1 melee Evasive Flyer penalty');
   } finally {
     await new Promise(resolve => server.close(resolve));
     closeDb();
@@ -697,7 +697,7 @@ test('Section 7: Approved Rule — No Ambush at Level 1 across all encounter pat
       userId,
       name: 'RookieFighter',
       classType: 'FIGHTER',
-      stats: { strength: 16, constitution: 15, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 8 }
+      stats: { strength: 16, constitution: 15, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 8 }
     });
 
     const wildTile = db.prepare("SELECT * FROM map_tiles WHERE is_safe = 0 AND is_passable = 1 LIMIT 1").get();
@@ -744,7 +744,7 @@ test('Section 7: Approved Rule — No Ambush at Level 1 across all encounter pat
       userId: user2Id,
       name: 'VeteranFighter',
       classType: 'FIGHTER',
-      stats: { strength: 16, constitution: 15, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 8 }
+      stats: { strength: 16, constitution: 15, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 8 }
     });
     db.prepare('UPDATE characters SET level = 2, xp = 300 WHERE id = ?').run(heroLvl2.id);
     const updatedLvl2 = db.prepare('SELECT * FROM characters WHERE id = ?').get(heroLvl2.id);
@@ -770,7 +770,7 @@ test('Section 9 & Section 10: Treasure sell prices match DB/UI and DB seed track
       userId,
       name: 'TreasureMerchant',
       classType: 'FIGHTER',
-      stats: { strength: 16, constitution: 15, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 8 }
+      stats: { strength: 16, constitution: 15, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 8 }
     });
 
     const treasures = db.prepare("SELECT * FROM item_definitions WHERE subtype = 'TREASURE' ORDER BY id ASC").all();

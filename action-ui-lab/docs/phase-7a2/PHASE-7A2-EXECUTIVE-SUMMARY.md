@@ -1,5 +1,8 @@
 # DARKGRID — PHASE 7A.2: EXECUTIVE SUMMARY & OWNER DECISION CHECKLIST
 
+> [!IMPORTANT]
+> **Historical Design Baseline (Superseded by Phase 7A.3):** This Phase 7A.2 document is preserved as historical design context. For the authoritative Phase 7B specification—including natural Ranger `monster_family` classifications, free 72-point attribute allocation (`8–18`), Battle Experience (`INT` damage / `WIS` AC), Fighter *Second Wind Lethal Rescue*, and natural habitat preservation—see [`../phase-7a3/PHASE-7A3-EXECUTIVE-SUMMARY.md`](../phase-7a3/PHASE-7A3-EXECUTIVE-SUMMARY.md).
+
 **Date:** 2026-10-22  
 **Phase:** 7A.2 — Class Identity & Thematic Progression (Design & Documentation Only)  
 **Verified Baseline:** `main` commit `042d122` (Post-Phase-6.2 Source of Truth)  

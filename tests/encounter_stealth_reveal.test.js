@@ -51,7 +51,7 @@ test('Encounter Secrecy Stage 1: Threat is unknown, name & image are hidden in H
     userId: user.id,
     name: 'SecretHero',
     classType: 'FIGHTER',
-    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 9 }
+    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 9 }
   });
 
   const forestTile = getTileByCoords(db, 7, 5); // Forest
@@ -104,7 +104,7 @@ test('Encounter Revelation Stage 2: Proceeding reveals exact same monster, name,
     userId: user.id,
     name: 'RevealHero',
     classType: 'RANGER',
-    stats: { strength: 12, constitution: 10, dexterity: 16, intelligence: 10, wisdom: 13, charisma: 10 }
+    stats: { strength: 12, constitution: 10, dexterity: 16, intelligence: 11, wisdom: 13, charisma: 10 }
   });
 
   const forestTile = getTileByCoords(db, 7, 5);
@@ -171,7 +171,7 @@ test('Encounter lifecycle across multiple monster types verifies consistency and
     userId: user.id,
     name: 'CatalogTester',
     classType: 'CLERIC',
-    stats: { strength: 12, constitution: 10, dexterity: 10, intelligence: 10, wisdom: 16, charisma: 13 }
+    stats: { strength: 12, constitution: 10, dexterity: 10, intelligence: 11, wisdom: 16, charisma: 13 }
   });
 
   const testMonsters = ['Ghoul', 'Giant Spider', 'Choker', 'Rust Monster', 'Manticore', 'Assassin Vine'];

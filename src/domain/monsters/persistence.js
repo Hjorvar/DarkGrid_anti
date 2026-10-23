@@ -1,23 +1,22 @@
 /**
  * Darkgrid Persistent Monsters & Permadeath Domain Logic
  * Handles player death, loot splitting (50% loss / 50% transfer), 20-item cap overflow,
- * +10% HP boost, map persistence, and victory resolution.
+ * +10% HP boost, map persistence, Monster Battle Experience victory recording,
+ * canonical level-up HP + milestone attribute points, and victory resolution.
  */
 
 const { withTransaction } = require('../../db/connection');
-const { getAllCharacterItems, getLevelForXp, getHpPerLevel, calculateXpWithIntelligence } = require('../character/rules');
+const {
+  getAllCharacterItems,
+  calculateXpWithIntelligence,
+  applyCharacterLevelUp
+} = require('../character/rules');
 const { generateMonsterLoot } = require('../combat/loot');
+const { recordMonsterVictory } = require('../combat/knowledge');
 
 /**
  * Handles the complete permadeath lifecycle of a fallen hero.
  * Executed atomically in a single transaction.
- * @param {object} db Database connection
- * @param {object} character Fallen character
- * @param {object} encounter Active encounter
- * @param {object} monster Base monster record
- * @param {object|null} monsterInstance Existing persistent monster if applicable
- * @param {object} options Optional { rng }
- * @returns {{ instanceId: number, goldTransferred: number, itemsTransferred: number, itemsDestroyed: number }}
  */
 function handlePlayerDeath(db, character, encounter, monster, monsterInstance = null, options = {}) {
   const rng = options.rng || Math.random;
@@ -66,14 +65,12 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
     let instanceId = encounter.monster_instance_id || (monsterInstance ? monsterInstance.id : null);
 
     if (instanceId) {
-      // Monster was already persistent — increment kill count, reset HP to full (H2) only if still ACTIVE
       tx.prepare(`
         UPDATE monster_instances
         SET kill_count = kill_count + 1, current_hp = max_hp
         WHERE id = ? AND status = 'ACTIVE'
       `).run(instanceId);
     } else {
-      // Monster was a random or bounty spawn — check if an active persistent monster already occupies the tile
       const existingOnTile = tx.prepare(`
         SELECT * FROM monster_instances
         WHERE tile_id = ? AND status = 'ACTIVE'
@@ -82,14 +79,12 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
       const actualMonsterId = encounter.monster_id || (monster ? (monster.monster_id || monster.id) : null);
       const baseMonsterHp = (monster && monster.base_hp) || encounter.base_hp || 10;
 
-      // Avoid double-stacking +15% TOUGH bounty HP boost and +10% persistent HP boost
       const standardPersistentHp = Math.ceil(baseMonsterHp * 1.10);
       const boostedMaxHp = bountyBoostedHp
         ? Math.max(standardPersistentHp, Number(bountyBoostedHp))
         : standardPersistentHp;
 
       if (existingOnTile && existingOnTile.monster_id === actualMonsterId) {
-        // Tile collision edge case: absorb kill into existing persistent monster of the SAME species
         instanceId = existingOnTile.id;
         const mergedMaxHp = Math.max(existingOnTile.max_hp || standardPersistentHp, boostedMaxHp);
         tx.prepare(`
@@ -101,7 +96,6 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
           WHERE id = ?
         `).run(mergedMaxHp, mergedMaxHp, bountyCustomTitle, instanceId);
       } else if (!existingOnTile) {
-        // Create new persistent monster instance (preserving custom_title if killed by a Named Bounty)
         const insertStmt = tx.prepare(`
           INSERT INTO monster_instances (
             monster_id, tile_id, current_hp, max_hp, held_gold, kill_count, custom_title, status
@@ -117,7 +111,6 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
         );
         instanceId = Number(res.lastInsertRowid);
       } else {
-        // Tile collision with DIFFERENT species: find nearest open wilderness tile (L10)
         const openTile = tx.prepare(`
           SELECT mt.id FROM map_tiles mt
           LEFT JOIN monster_instances mi ON mt.id = mi.tile_id AND mi.status = 'ACTIVE'
@@ -173,7 +166,6 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
     `).run(character.id);
 
     // 4. Equipment and Inventory retention: 50% roll per item across ALL owned items
-    // (Starter items on a 0-XP mule alt are destroyed rather than stacked onto the monster)
     const allItems = getAllCharacterItems(tx, character.id);
     const survivingItems = [];
     const destroyedItemIds = [];
@@ -198,7 +190,6 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
       }
     }
 
-    // Enforce 20-item cap on the monster instance
     const currentMonsterItemCountRow = tx.prepare(`
       SELECT COUNT(*) as count
       FROM item_instances
@@ -208,10 +199,6 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
     const currentCount = currentMonsterItemCountRow ? currentMonsterItemCountRow.count : 0;
     const availableSlots = Math.max(0, 20 - currentCount);
 
-    // Sort surviving items by priority:
-    // 1. Magical items first
-    // 2. Highest buy_price next
-    // 3. Lowest ID (deterministic tie-breaker)
     survivingItems.sort((a, b) => {
       const magA = a.is_magical ? 1 : 0;
       const magB = b.is_magical ? 1 : 0;
@@ -225,12 +212,10 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
     const itemsToTransfer = survivingItems.slice(0, availableSlots);
     const overflowItems = survivingItems.slice(availableSlots);
 
-    // Overflow items are destroyed
     for (const over of overflowItems) {
       destroyedItemIds.push(over.id);
     }
 
-    // Transfer surviving items to monster
     const transferStmt = tx.prepare(`
       UPDATE item_instances
       SET owner_type = 'MONSTER',
@@ -244,20 +229,17 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
       transferStmt.run(instanceId, item.id);
     }
 
-    // Destroy lost items
-    const deleteStmt = tx.prepare(`DELETE FROM item_instances WHERE id = ?`);
+    const deleteStmt = tx.prepare('DELETE FROM item_instances WHERE id = ?');
     for (const delId of destroyedItemIds) {
       deleteStmt.run(delId);
     }
 
-    // 5. Link fallen character to the killer monster instance
     tx.prepare(`
       UPDATE characters
       SET killed_by_monster_instance_id = ?
       WHERE id = ?
     `).run(instanceId, character.id);
 
-    // 6. Conclude encounter with DEFEAT
     tx.prepare(`
       UPDATE encounters
       SET status = 'DEFEAT',
@@ -266,8 +248,7 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
       WHERE id = ?
     `).run(instanceId, encounter.id);
 
-    // 7. Log death event in combat log
-    const deathText = `Your vision fades to black as life leaves your shattered body. Your journey in Darkgrid has come to an end.`;
+    const deathText = 'Your vision fades to black as life leaves your shattered body. Your journey in Darkgrid has come to an end.';
     tx.prepare(`
       INSERT INTO combat_events (
         encounter_id, round_number, event_type, public_text, details
@@ -296,16 +277,9 @@ function handlePlayerDeath(db, character, encounter, monster, monsterInstance = 
 /**
  * Handles victory over a monster (random or persistent).
  * Executed atomically in a single transaction.
- * @param {object} db Database connection
- * @param {object} character Winning hero
- * @param {object} encounter Active encounter
- * @param {object} monster Base monster record
- * @param {object|null} monsterInstance Persistent monster instance if applicable
- * @returns {{ xpAwarded: number, goldLooted: number, itemsLooted: number }}
  */
 function handleMonsterDefeat(db, character, encounter, monster, monsterInstance = null, options = {}) {
   return withTransaction(db, (tx) => {
-    // Guard against duplicate victory resolution on the same encounter
     const encCheck = tx.prepare('SELECT status FROM encounters WHERE id = ?').get(encounter.id);
     if (encCheck && (encCheck.status === 'VICTORY' || encCheck.status === 'DEFEAT')) {
       return { xpAwarded: 0, goldLooted: 0, itemsLooted: 0, alreadyResolved: true };
@@ -315,11 +289,9 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
     let itemsLooted = 0;
 
     const instanceId = encounter.monster_instance_id || (monsterInstance ? monsterInstance.id : null);
-
     let lootedItemNames = [];
 
     if (instanceId) {
-      // Persistent monster defeated: atomically mark DEFEATED and zero held_gold where status = 'ACTIVE' (H1)
       const instRow = tx.prepare('SELECT * FROM monster_instances WHERE id = ?').get(instanceId);
       if (instRow && instRow.status === 'ACTIVE') {
         goldLooted = instRow.held_gold || 0;
@@ -332,8 +304,6 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
       `).run(instanceId);
 
       if (updateRes.changes === 0) {
-        // Monster was already defeated by another champion!
-        // Player receives 0 gold, 0 loot, 0 XP, and no duplication occurs.
         tx.prepare(`
           UPDATE encounters
           SET status = 'VICTORY', updated_at = CURRENT_TIMESTAMP
@@ -360,7 +330,6 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
         return { xpAwarded: 0, goldLooted: 0, itemsLooted: 0, resolvedByOther: true };
       }
 
-      // Transfer held gold
       if (goldLooted > 0) {
         tx.prepare(`
           UPDATE characters
@@ -369,11 +338,10 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
         `).run(goldLooted, character.id);
       }
 
-      // Transfer all preserved items from monster to winner's inventory
       const lootItems = tx.prepare(`
         SELECT ii.id, id.name FROM item_instances ii
         JOIN item_definitions id ON ii.item_definition_id = id.id
-        WHERE ii.owner_type = 'MONSTER' AND ii.owner_monster_id = ?
+        WHERE ii.owner_type = 'MONSTER' AND owner_monster_id = ?
       `).all(instanceId);
 
       itemsLooted = lootItems.length;
@@ -388,7 +356,6 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
         WHERE owner_type = 'MONSTER' AND owner_monster_id = ?
       `).run(character.id, instanceId);
     } else {
-      // Ensure monster record carries challenge_rating, treasure_type, creature_type, creature_subtype, and xp_reward
       let resolvedMonster = monster || encounter || {};
       const targetMonsterId =
         (encounter && encounter.monster_id) ||
@@ -424,7 +391,6 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
           };
         }
       }
-      // Random encounter defeated: generate Pathfinder-inspired loot drop
       const lootResult = generateMonsterLoot(tx, resolvedMonster, character.id, options);
       goldLooted = lootResult.goldAwarded;
       itemsLooted = lootResult.itemsAwarded.length;
@@ -432,32 +398,27 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
       monster = resolvedMonster;
     }
 
-    // Award XP reward scaled by Hero Intelligence modifier (+10% per +1 INT mod) and check for level-up
+    // Record Monster Battle Experience victory for this character & species
+    const knowledgeMonsterId =
+      (encounter && encounter.monster_id) ||
+      (monster && (monster.monster_id || monster.id)) ||
+      (monsterInstance && monsterInstance.monster_id) ||
+      null;
+    if (knowledgeMonsterId) {
+      recordMonsterVictory(tx, character.id, knowledgeMonsterId);
+    }
+
+    // Award XP reward (flat base XP per Phase 7A.4 OC-5) and apply canonical level-up + milestone attribute points
     const rawXp = (monster && monster.xp_reward) || (encounter && encounter.xp_reward) || 0;
     const charRow = tx.prepare('SELECT * FROM characters WHERE id = ?').get(character.id) || character;
     const xpAwarded = calculateXpWithIntelligence(rawXp, charRow.intelligence);
     const newXp = (charRow.xp || 0) + xpAwarded;
-    const oldLevel = charRow.level || 1;
-    const newLevel = Math.max(oldLevel, getLevelForXp(newXp));
 
-    let currentHp = charRow.current_hp;
-    let maxHp = charRow.max_hp;
-    let totalHpGain = 0;
-
-    if (newLevel > oldLevel) {
-      for (let lvl = oldLevel + 1; lvl <= newLevel; lvl++) {
-        const hpGain = getHpPerLevel(charRow.class, charRow.constitution);
-        currentHp += hpGain;
-        maxHp += hpGain;
-        totalHpGain += hpGain;
-      }
-    }
-
-    tx.prepare(`
-      UPDATE characters
-      SET xp = ?, level = ?, current_hp = ?, max_hp = ?
-      WHERE id = ?
-    `).run(newXp, newLevel, currentHp, maxHp, character.id);
+    const levelProgress = applyCharacterLevelUp(tx, character.id, newXp);
+    const oldLevel = levelProgress ? levelProgress.oldLevel : (charRow.level || 1);
+    const newLevel = levelProgress ? levelProgress.newLevel : oldLevel;
+    const totalHpGain = levelProgress ? levelProgress.totalHpGain : 0;
+    const attributePointsEarned = levelProgress ? levelProgress.attributePointsEarned : 0;
 
     // Conclude encounter with VICTORY
     tx.prepare(`
@@ -502,14 +463,13 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
       }
     }
 
-    // Log victory event in combat log
     const slainLabel = bountyCompleted
       ? `${bountyCompleted.customName} collapses to the earth with a final shudder`
-      : `The abominable beast collapses to the earth with a final shudder`;
+      : 'The abominable beast collapses to the earth with a final shudder';
     let victoryText = `${slainLabel}. The battle is won! (+${xpAwarded} XP`;
     if (goldLooted > 0) victoryText += `, +${goldLooted} gp`;
     if (lootedItemNames.length > 0) victoryText += `, Looted: ${lootedItemNames.join(', ')}`;
-    victoryText += `)`;
+    victoryText += ')';
     if (bountyCompleted) {
       victoryText += ` Bounty Target Slain! Return to Oakhaven to collect your ${bountyCompleted.rewardGold} gold reward.`;
     }
@@ -530,13 +490,17 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
         leveled_up: newLevel > oldLevel,
         new_level: newLevel,
         hp_gain: totalHpGain,
+        attribute_points_earned: attributePointsEarned,
         bounty_completed: Boolean(bountyCompleted),
         bounty_info: bountyCompleted
       })
     );
 
     if (newLevel > oldLevel) {
-      const levelUpText = `Triumph! You have attained Level ${newLevel}! Maximum vitality increased by +${totalHpGain} HP.`;
+      let levelUpText = `Triumph! You have attained Level ${newLevel}! Maximum vitality increased by +${totalHpGain} HP.`;
+      if (attributePointsEarned > 0) {
+        levelUpText += ` You have earned +${attributePointsEarned} Attribute Point${attributePointsEarned > 1 ? 's' : ''} to allocate!`;
+      }
       tx.prepare(`
         INSERT INTO combat_events (
           encounter_id, round_number, event_type, public_text, details
@@ -545,7 +509,11 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
         encounter.id,
         encounter.combat_round || 1,
         levelUpText,
-        JSON.stringify({ new_level: newLevel, hp_gain: totalHpGain })
+        JSON.stringify({
+          new_level: newLevel,
+          hp_gain: totalHpGain,
+          attribute_points_earned: attributePointsEarned
+        })
       );
     }
 
@@ -556,6 +524,7 @@ function handleMonsterDefeat(db, character, encounter, monster, monsterInstance 
       leveledUp: newLevel > oldLevel,
       newLevel,
       totalHpGain,
+      attributePointsEarned,
       bountyCompleted
     };
   });

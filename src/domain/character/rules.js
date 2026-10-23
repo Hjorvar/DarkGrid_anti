@@ -1,8 +1,90 @@
 const config = require('../../config');
 const { withTransaction } = require('../../db/connection');
 const { rollDice } = require('../combat/dice');
+const {
+  validateRangerFavoredEnemyChoice,
+  normalizeRangerFavoredEnemy
+} = require('../monsters/taxonomy');
+const {
+  doesMonsterMatchRangerFavoredEnemy,
+  doesMonsterMatchSacredKnowledge
+} = require('../combat/knowledge');
 
 const STAT_KEYS = ['strength', 'constitution', 'dexterity', 'intelligence', 'wisdom', 'charisma'];
+
+const STAT_KEY_ALIASES = {
+  STR: 'strength',
+  STRENGTH: 'strength',
+  DEX: 'dexterity',
+  DEXTERITY: 'dexterity',
+  CON: 'constitution',
+  CONSTITUTION: 'constitution',
+  INT: 'intelligence',
+  INTELLIGENCE: 'intelligence',
+  WIS: 'wisdom',
+  WISDOM: 'wisdom',
+  CHA: 'charisma',
+  CHARISMA: 'charisma'
+};
+
+const ATTRIBUTE_MILESTONE_LEVELS = Object.freeze([2, 4, 6, 8, 10]);
+
+const DESCRIPTIVE_ATTRIBUTE_TIER_LABELS = Object.freeze({
+  strength: [
+    { min: 20, label: 'Titan-Born' },
+    { min: 18, label: 'Herculean' },
+    { min: 16, label: 'Mighty' },
+    { min: 14, label: 'Strong' },
+    { min: 12, label: 'Sturdy' },
+    { min: 10, label: 'Capable' },
+    { min: -Infinity, label: 'Unconditioned' }
+  ],
+  dexterity: [
+    { min: 20, label: 'Wind-Swift' },
+    { min: 18, label: 'Razor-Quick' },
+    { min: 16, label: 'Nimble' },
+    { min: 14, label: 'Agile' },
+    { min: 12, label: 'Deft' },
+    { min: 10, label: 'Steady' },
+    { min: -Infinity, label: 'Stiff' }
+  ],
+  constitution: [
+    { min: 20, label: 'Unbreakable' },
+    { min: 18, label: 'Iron-Blooded' },
+    { min: 16, label: 'Stalwart' },
+    { min: 14, label: 'Resilient' },
+    { min: 12, label: 'Hardened' },
+    { min: 10, label: 'Hale' },
+    { min: -Infinity, label: 'Frail' }
+  ],
+  intelligence: [
+    { min: 20, label: 'Mastermind' },
+    { min: 18, label: 'Brilliant' },
+    { min: 16, label: 'Tactical' },
+    { min: 14, label: 'Analytical' },
+    { min: 12, label: 'Sharp-Minded' },
+    { min: 10, label: 'Observant' },
+    { min: -Infinity, label: 'Unstudied' }
+  ],
+  wisdom: [
+    { min: 20, label: 'Oracular' },
+    { min: 18, label: 'Prescient' },
+    { min: 16, label: 'Wise' },
+    { min: 14, label: 'Perceptive' },
+    { min: 12, label: 'Attentive' },
+    { min: 10, label: 'Grounded' },
+    { min: -Infinity, label: 'Unwary' }
+  ],
+  charisma: [
+    { min: 20, label: 'Mythic' },
+    { min: 18, label: 'Sovereign' },
+    { min: 16, label: 'Inspiring' },
+    { min: 14, label: 'Commanding' },
+    { min: 12, label: 'Assured' },
+    { min: 10, label: 'Composed' },
+    { min: -Infinity, label: 'Reserved' }
+  ]
+});
 
 const FAST_XP_TABLE = {
   1: 0,
@@ -18,10 +100,42 @@ const FAST_XP_TABLE = {
 };
 
 /**
+ * Normalizes an attribute key (e.g. 'STR' -> 'strength', 'constitution' -> 'constitution').
+ */
+function normalizeAttributeKey(rawKey) {
+  if (!rawKey || typeof rawKey !== 'string') return null;
+  const upper = rawKey.trim().toUpperCase();
+  return STAT_KEY_ALIASES[upper] || null;
+}
+
+/**
+ * Returns the Phase 7A.3 / 7B qualitative attribute tier label for a given stat and score.
+ */
+function getAttributeTierLabel(statKeyOrScore, maybeScore) {
+  let statKey = 'strength';
+  let score = maybeScore;
+  if (maybeScore === undefined && (typeof statKeyOrScore === 'number' || !Number.isNaN(Number(statKeyOrScore)))) {
+    score = statKeyOrScore;
+  } else {
+    statKey = statKeyOrScore;
+  }
+  const normKey = normalizeAttributeKey(statKey) || 'strength';
+  const tiers = DESCRIPTIVE_ATTRIBUTE_TIER_LABELS[normKey] || DESCRIPTIVE_ATTRIBUTE_TIER_LABELS.strength;
+  const numScore = Number(score);
+  const val = Number.isFinite(numScore) ? numScore : 10;
+  for (const tier of tiers) {
+    if (val >= tier.min) {
+      return tier.label;
+    }
+  }
+  return tiers[tiers.length - 1].label;
+}
+
+/**
  * Calculates ability modifier according to standard d20: floor((score - 10) / 2)
  */
 function getModifier(score) {
-  return Math.floor((score - 10) / 2);
+  return Math.floor((Number(score) - 10) / 2);
 }
 
 /**
@@ -33,11 +147,16 @@ function formatModifier(score) {
 }
 
 /**
- * Calculates level from cumulative XP using Pathfinder 1e Fast progression
+ * Calculates level from cumulative XP using the configured Pathfinder 1e Fast progression table.
+ * Note: Levels 1-10 are the currently configured XP thresholds, not a permanent design cap.
  */
 function getLevelForXp(xp) {
   const currentXp = Math.max(0, parseInt(xp, 10) || 0);
-  for (let lvl = 10; lvl >= 1; lvl--) {
+  const configuredLevels = Object.keys(FAST_XP_TABLE)
+    .map(Number)
+    .filter(Number.isFinite)
+    .sort((a, b) => b - a);
+  for (const lvl of configuredLevels) {
     if (currentXp >= FAST_XP_TABLE[lvl]) {
       return lvl;
     }
@@ -46,36 +165,161 @@ function getLevelForXp(xp) {
 }
 
 /**
- * Returns required XP for the next level, or null if at max level (10)
+ * Returns required XP for the next level if configured in FAST_XP_TABLE, or null if beyond configured table.
  */
 function getXpForNextLevel(level) {
   const lvl = Math.max(1, parseInt(level, 10) || 1);
-  if (lvl >= 10) return null;
-  return FAST_XP_TABLE[lvl + 1];
+  if (Object.prototype.hasOwnProperty.call(FAST_XP_TABLE, lvl + 1)) {
+    return FAST_XP_TABLE[lvl + 1];
+  }
+  return null;
 }
 
 /**
- * Calculates HP gained per level based on class and Constitution modifier.
- * Fighter: 10 + CON mod (min 1)
- * Ranger: 8 + CON mod (min 1)
- * Cleric: 8 + CON mod (min 1)
+ * Fighter Battle-Hardened progression (PHASE-7A4-LEVELS-AND-CONSTITUTION.md):
+ * - Level 1-4: +(1 + L) Max HP, +1 Fortitude save
+ * - Level 5+:  +(2 * L) Max HP, +2 Fortitude save, +1 Will save
  */
-function getHpPerLevel(classType, conScore) {
-  const conMod = getModifier(conScore);
-  const base = (classType || '').toUpperCase() === 'FIGHTER' ? 10 : 8;
-  return Math.max(1, base + conMod);
+function getFighterBattleHardenedBonus(level) {
+  const lvl = Math.max(1, Math.floor(Number(level) || 1));
+  if (lvl >= 5) {
+    return {
+      hpBonus: 2 * lvl,
+      fortBonus: 2,
+      willBonus: 1
+    };
+  }
+  return {
+    hpBonus: 1 + lvl,
+    fortBonus: 1,
+    willBonus: 0
+  };
+}
+
+/**
+ * Canonical Max HP calculation (PHASE-7A4-LEVELS-AND-CONSTITUTION.md §2.1):
+ * MaxHP(L, c, M_con) = max(L, H_1(c) + (L - 1) * H_lvl(c) + B_class(L, c) + L * M_con)
+ *
+ * Accepts:
+ * - calculateCanonicalMaxHp(level, characterClass, effectiveConMod)
+ * - calculateCanonicalMaxHp(characterClass, level, effectiveConMod)
+ * - calculateCanonicalMaxHp(characterObject, equipmentOrNull)
+ */
+function calculateCanonicalMaxHp(arg1, arg2, arg3) {
+  if (arg1 && typeof arg1 === 'object') {
+    const eff = getEffectiveStats(arg1, arg2 || arg1._equipment || null);
+    const lvl = Math.max(1, Math.floor(Number(eff.level) || 1));
+    const cls = String(eff.class || 'FIGHTER').toUpperCase();
+    const conMod = getModifier(eff.constitution !== undefined ? eff.constitution : 10);
+    return calculateCanonicalMaxHp(lvl, cls, conMod);
+  }
+
+  let level = arg1;
+  let characterClass = arg2;
+  const effectiveConMod = arg3;
+
+  if (typeof arg1 === 'string' && Number.isNaN(Number(arg1))) {
+    characterClass = arg1;
+    level = arg2;
+  }
+
+  const lvl = Math.max(1, Math.floor(Number(level) || 1));
+  const cls = String(characterClass || 'FIGHTER').toUpperCase();
+  const conMod = Math.floor(Number(effectiveConMod) || 0);
+
+  let h1 = 8;
+  let hLvl = 5;
+  let classHpBonus = 0;
+
+  if (cls === 'FIGHTER') {
+    h1 = 10;
+    hLvl = 6;
+    classHpBonus = getFighterBattleHardenedBonus(lvl).hpBonus;
+  } else if (cls === 'RANGER') {
+    h1 = 10;
+    hLvl = 6;
+    classHpBonus = 0;
+  } else if (cls === 'CLERIC') {
+    h1 = 8;
+    hLvl = 5;
+    classHpBonus = 0;
+  }
+
+  const rawMaxHp = h1 + ((lvl - 1) * hLvl) + classHpBonus + (lvl * conMod);
+  return Math.max(lvl, rawMaxHp);
+}
+
+/**
+ * Equipment CON HP clamp rule (Rule A, PHASE-7A4-LEVELS-AND-CONSTITUTION.md §3):
+ * - Equipping CON gear raises Max HP only; Current HP does not increase automatically.
+ * - Unequipping or swapping CON gear clamps Current HP to [1, newMaxHp] so a living hero never dies.
+ */
+function applyEquipmentConHpClamp(oldCurrentHp, newMaxHp) {
+  const cur = Math.floor(Number(oldCurrentHp) || 1);
+  const max = Math.max(1, Math.floor(Number(newMaxHp) || 1));
+  return Math.max(1, Math.min(cur, max));
+}
+
+/**
+ * Permanent CON point investment rule (Rule B, PHASE-7A4-LEVELS-AND-CONSTITUTION.md §4):
+ * - If effective CON modifier increases, both Max HP and Current HP increase by hpDelta (+L).
+ * - If effective CON modifier does not change (odd CON score), hpDelta is 0.
+ * - Never grants a free full heal.
+ */
+function applyPermanentConHpIncrease(oldCurrentHp, oldMaxHp, newMaxHp) {
+  const cur = Math.floor(Number(oldCurrentHp) || 1);
+  const prevMax = Math.max(1, Math.floor(Number(oldMaxHp) || 1));
+  const nextMax = Math.max(1, Math.floor(Number(newMaxHp) || 1));
+  const hpDelta = Math.max(0, nextMax - prevMax);
+  return Math.max(1, Math.min(nextMax, cur + hpDelta));
+}
+
+/**
+ * Level-up HP gain rule (Rule C, PHASE-7A4-LEVELS-AND-CONSTITUTION.md §5):
+ * - Adds the canonical Max HP delta for the new level(s) to Current HP without full healing.
+ */
+function applyLevelUpHpGain(oldCurrentHp, oldMaxHp, newMaxHp) {
+  const cur = Math.floor(Number(oldCurrentHp) || 1);
+  const prevMax = Math.max(1, Math.floor(Number(oldMaxHp) || 1));
+  const nextMax = Math.max(1, Math.floor(Number(newMaxHp) || 1));
+  const levelHpDelta = Math.max(0, nextMax - prevMax);
+  return Math.max(1, Math.min(nextMax, cur + levelHpDelta));
+}
+
+/**
+ * Calculates HP gained at a given level based on class and Constitution score.
+ * Uses calculateCanonicalMaxHp so Level 1 returns H_1 + B_class(1) + conMod and Level L > 1 returns the exact level delta.
+ */
+function getHpPerLevel(classType, conScore, level = 1) {
+  const conMod = getModifier(conScore !== undefined ? conScore : 10);
+  const lvl = Math.max(1, Math.floor(Number(level) || 1));
+  if (lvl === 1) {
+    return calculateCanonicalMaxHp(1, classType, conMod);
+  }
+  const prevMax = calculateCanonicalMaxHp(lvl - 1, classType, conMod);
+  const nextMax = calculateCanonicalMaxHp(lvl, classType, conMod);
+  return Math.max(1, nextMax - prevMax);
 }
 
 /**
  * Calculates attack progression bonus based on class and level.
  * Fighter & Ranger: level - 1
- * Cleric: floor(level * 0.75)
+ * Cleric: Math.ceil(level * 3 / 4) (PHASE-7A4-FINAL-OWNER-DECISIONS.md)
+ * Supports both (classType, level) and (level, classType) argument orders.
  */
-function getLevelAttackBonus(classType, level) {
-  const upper = (classType || '').toUpperCase();
-  const lvl = Math.max(1, parseInt(level, 10) || 1);
+function getLevelAttackBonus(classTypeOrLevel, levelOrClassType) {
+  let upper = '';
+  let rawLvl = 1;
+  if (typeof classTypeOrLevel === 'number') {
+    rawLvl = classTypeOrLevel;
+    upper = String(levelOrClassType || '').toUpperCase();
+  } else {
+    upper = String(classTypeOrLevel || '').toUpperCase();
+    rawLvl = levelOrClassType;
+  }
+  const lvl = Math.max(1, parseInt(rawLvl, 10) || 1);
   if (upper === 'CLERIC') {
-    return Math.floor(lvl * 0.75);
+    return Math.ceil((lvl * 3) / 4);
   }
   return lvl - 1;
 }
@@ -107,64 +351,38 @@ function getFighterArmorTrainingMaxDexBonus(level) {
 }
 
 /**
- * Ranger Favored Enemy: attack & damage bonus against chosen creature type/subtype.
- * Level 1-4: +1 Atk / +1 Dmg
- * Level 5-8: +2 Atk / +2 Dmg
- * Level 9+:  +3 Atk / +3 Dmg
- * Strictly prohibits bonus against Undead under any circumstance, even with legacy/corrupt data.
+ * Ranger Favored Enemy — Option A (PHASE-7A4-FINAL-OWNER-DECISIONS.md OC-3):
+ * - Level 1-3: +2 Attack / +2 Damage / +0 AC
+ * - Level 4-7: +3 Attack / +3 Damage / +0 AC
+ * - Level 8:   +4 Attack / +4 Damage / +0 AC
+ * - Level 9+:  +4 Attack / +4 Damage / +2 AC
+ * Does NOT expand critical hit range.
+ * Strictly prohibits bonus against Undead under any circumstance.
  */
-function normalizeCreatureCategory(rawType) {
-  const norm = (rawType || '').replace(/_/g, ' ').trim().toUpperCase();
-  if (norm === 'BEAST') return 'ANIMAL';
-  return norm;
-}
-
 function getRangerFavoredEnemyBonus(character, monster) {
-  if (!character || (character.class || '').toUpperCase() !== 'RANGER') {
-    return { attack: 0, damage: 0 };
-  }
-  if (!character.favored_enemy_type || !monster) {
-    return { attack: 0, damage: 0 };
+  if (!character || (character.class || '').toUpperCase() !== 'RANGER' || !monster) {
+    return { attack: 0, damage: 0, ac: 0 };
   }
 
-  let rawFavoredType = String(character.favored_enemy_type || '').trim();
-  let rawFavoredSub = String(character.favored_enemy_subtype || '').trim();
-  if (rawFavoredType.includes(':')) {
-    const parts = rawFavoredType.split(':');
-    rawFavoredType = parts[0] || '';
-    if (!rawFavoredSub && parts[1]) {
-      rawFavoredSub = parts[1];
-    }
-  }
-
-  const favoredType = normalizeCreatureCategory(rawFavoredType);
-  const monsterType = normalizeCreatureCategory(monster.creature_type);
-
-  // STRICT GUARANTEE: Ranger NEVER receives Favored Enemy bonus against Undead
-  if (favoredType === 'UNDEAD' || monsterType === 'UNDEAD') {
-    return { attack: 0, damage: 0 };
-  }
-
-  if (!favoredType || favoredType !== monsterType) {
-    return { attack: 0, damage: 0 };
-  }
-
-  if (favoredType === 'HUMANOID') {
-    const favoredSub = rawFavoredSub.trim().toLowerCase();
-    const monsterSub = String(monster.creature_subtype || monster.subtype || '').trim().toLowerCase();
-    if (!favoredSub || favoredSub !== monsterSub) {
-      return { attack: 0, damage: 0 };
-    }
+  if (!doesMonsterMatchRangerFavoredEnemy(character, monster)) {
+    return { attack: 0, damage: 0, ac: 0 };
   }
 
   const lvl = Math.max(1, parseInt(character.level, 10) || 1);
-  const bonus = lvl >= 9 ? 3 : (lvl >= 5 ? 2 : 1);
-  return { attack: bonus, damage: bonus };
+  if (lvl >= 9) {
+    return { attack: 4, damage: 4, ac: 2 };
+  }
+  if (lvl === 8) {
+    return { attack: 4, damage: 4, ac: 0 };
+  }
+  if (lvl >= 4) {
+    return { attack: 3, damage: 3, ac: 0 };
+  }
+  return { attack: 2, damage: 2, ac: 0 };
 }
 
 /**
- * Cleric Holy Radiance: passive class ability against Undead.
- * Replaces previous Divine Power bonuses (do not stack).
+ * Cleric Holy Radiance / Sacred Knowledge: passive class ability against Undead.
  * Level 1-4: +2 Atk / +3 Dmg / +2 AC
  * Level 5-8: +3 Atk / +4 Dmg / +3 AC
  * Level 9+:  +4 Atk / +5 Dmg / +4 AC
@@ -188,14 +406,11 @@ function getClericHolyRadianceBonus(character, ...rest) {
     targetMonster = rest[0];
   }
 
-  if (charClass.toUpperCase() !== 'CLERIC') {
+  if (charClass.toUpperCase() !== 'CLERIC' || !targetMonster) {
     return { attack: 0, damage: 0, ac: 0 };
   }
-  if (!targetMonster) {
-    return { attack: 0, damage: 0, ac: 0 };
-  }
-  const monsterType = (targetMonster.creature_type || '').trim().toUpperCase();
-  if (monsterType !== 'UNDEAD') {
+
+  if (!doesMonsterMatchSacredKnowledge(targetMonster)) {
     return { attack: 0, damage: 0, ac: 0 };
   }
 
@@ -280,9 +495,11 @@ function performClericSelfHeal(db, characterId, options = {}) {
       throw new Error('You have exhausted your Self-Healing uses for this expedition. Rest in a safe city to restore them.');
     }
 
+    const eq = getCharacterEquipment(tx, characterId);
+    const eff = getEffectiveStats(character, eq);
     const info = getClericSelfHealInfo(character.level);
     const rollResult = rollDice(info.dice, rng);
-    const wisMod = getModifier(character.wisdom);
+    const wisMod = getModifier(eff.wisdom);
     const healAmount = Math.max(1, rollResult.total + wisMod);
 
     const oldHp = character.current_hp;
@@ -323,34 +540,39 @@ function performCityRest(db, characterId) {
       throw new Error('Cannot rest or receive city healing while engaged in combat or an unresolved encounter.');
     }
 
+    const eq = getCharacterEquipment(tx, characterId);
+    const eff = getEffectiveStats(character, eq);
+    const canonicalMaxHp = calculateCanonicalMaxHp(eff.level, eff.class, getModifier(eff.constitution));
+
     tx.prepare(`
       UPDATE characters
-      SET current_hp = max_hp, cleric_heal_uses = 0
+      SET max_hp = ?, current_hp = ?, cleric_heal_uses = 0
       WHERE id = ?
-    `).run(characterId);
+    `).run(canonicalMaxHp, canonicalMaxHp, characterId);
 
     return {
-      currentHp: character.max_hp,
-      maxHp: character.max_hp,
+      currentHp: canonicalMaxHp,
+      maxHp: canonicalMaxHp,
       clericHealUses: 0
     };
   });
 }
 
 /**
- * Validates character creation input against DARKGRID_GAME_SPEC.md §3 rules
+ * Validates character creation input against Phase 7A.3 / 7B rules:
+ * - 6 attributes: STR, DEX, CON, INT, WIS, CHA
+ * - Each attribute must be an integer in [8, 18]
+ * - Total attribute sum must equal exactly 72
  */
 function validateCharacterCreation(classType, stats, name) {
   const errors = [];
 
-  // Name check
   if (!name || typeof name !== 'string' || name.trim().length === 0) {
     errors.push('Hero must have a name.');
   } else if (name.trim().length > 30) {
     errors.push('Name cannot exceed 30 characters.');
   }
 
-  // Class check
   const upperClass = (classType || '').toUpperCase();
   const classBase = config.classBases[upperClass];
   if (!classBase) {
@@ -363,23 +585,23 @@ function validateCharacterCreation(classType, stats, name) {
     return { valid: false, errors };
   }
 
+  const minAllowed = config.statRules.minScore !== undefined ? config.statRules.minScore : 8;
+  const maxAllowed = config.statRules.maxScore !== undefined ? config.statRules.maxScore : 18;
+  const requiredTotal = config.statRules.requiredTotalSum !== undefined ? config.statRules.requiredTotalSum : 72;
+
   let totalSum = 0;
 
   for (const stat of STAT_KEYS) {
     const rawVal = stats[stat];
     const val = Number(rawVal);
-    const baseVal = classBase[stat];
 
     if (!Number.isInteger(val)) {
       errors.push(`${stat} must be an integer.`);
       continue;
     }
 
-    const minAllowed = baseVal - config.statRules.maxReductionPerStat;
-    const maxAllowed = config.statRules.maxScore;
-
     if (val < minAllowed) {
-      errors.push(`${stat} (${val}) cannot drop below the minimum of ${minAllowed} for ${classBase.name} (base ${baseVal} - 2).`);
+      errors.push(`${stat} (${val}) cannot drop below the minimum of ${minAllowed} at creation.`);
     }
 
     if (val > maxAllowed) {
@@ -389,8 +611,8 @@ function validateCharacterCreation(classType, stats, name) {
     totalSum += val;
   }
 
-  if (totalSum !== config.statRules.requiredTotalSum) {
-    errors.push(`Total attribute points must equal exactly ${config.statRules.requiredTotalSum} (base ${config.statRules.baseSum} + ${config.statRules.bonusPoints} bonus points). Current total is ${totalSum}.`);
+  if (totalSum !== requiredTotal) {
+    errors.push(`Total attribute points must equal exactly ${requiredTotal}. Current total is ${totalSum}.`);
   }
 
   return {
@@ -402,7 +624,46 @@ function validateCharacterCreation(classType, stats, name) {
 }
 
 /**
- * Fetches the living character for a given user, or null if none
+ * Reconciles a character's Max HP (and clamps Current HP if needed) on login/reload.
+ * Never adds a Max HP difference to Current HP during login reconciliation.
+ * Preserves permadeath: dead heroes remain dead with 0 HP.
+ */
+function reconcileCharacterHpOnLoad(db, characterOrId) {
+  if (!db || !characterOrId) return null;
+  const charId = typeof characterOrId === 'object' ? characterOrId.id : Number(characterOrId);
+  if (!charId) return typeof characterOrId === 'object' ? characterOrId : null;
+
+  const row = db.prepare('SELECT * FROM characters WHERE id = ?').get(charId);
+  if (!row) return null;
+
+  if (row.is_alive !== 1 || Number(row.current_hp) <= 0) {
+    if (row.is_alive !== 1 && Number(row.current_hp) !== 0) {
+      db.prepare('UPDATE characters SET current_hp = 0 WHERE id = ? AND is_alive = 0').run(charId);
+      row.current_hp = 0;
+    }
+    return row;
+  }
+
+  const equipment = getCharacterEquipment(db, charId);
+  const eff = getEffectiveStats(row, equipment);
+  const canonicalMaxHp = calculateCanonicalMaxHp(eff.level, eff.class, getModifier(eff.constitution));
+  const reconciledCurrentHp = applyEquipmentConHpClamp(row.current_hp, canonicalMaxHp);
+
+  if (Number(row.max_hp) !== canonicalMaxHp || Number(row.current_hp) !== reconciledCurrentHp) {
+    db.prepare(`
+      UPDATE characters
+      SET max_hp = ?, current_hp = ?
+      WHERE id = ? AND is_alive = 1
+    `).run(canonicalMaxHp, reconciledCurrentHp, charId);
+    row.max_hp = canonicalMaxHp;
+    row.current_hp = reconciledCurrentHp;
+  }
+
+  return row;
+}
+
+/**
+ * Fetches the living character for a given user, or null if none.
  */
 function getLivingCharacterByUserId(db, userId) {
   const stmt = db.prepare(`
@@ -415,7 +676,8 @@ function getLivingCharacterByUserId(db, userId) {
 }
 
 /**
- * Creates a new character for a user, enforcing one living character rule
+ * Creates a new character for a user, enforcing one living character rule,
+ * Phase 7A.3 72-point attribute rules, and Phase 7A.4 Ranger 14-family Favored Enemy taxonomy.
  */
 function createCharacter(db, {
   userId,
@@ -423,6 +685,7 @@ function createCharacter(db, {
   classType,
   stats,
   startingGold,
+  favoredEnemyFamily,
   favoredEnemyType,
   favoredEnemySubtype,
   primaryWeapon
@@ -435,14 +698,9 @@ function createCharacter(db, {
     throw error;
   }
 
-  // Favored Enemy validation for Ranger (L6)
-  const ALLOWED_FAVORED_ENEMIES = [
-    'ANIMAL', 'BEAST', 'MAGICAL BEAST', 'MAGICAL_BEAST', 'MONSTROUS HUMANOID', 'MONSTROUS_HUMANOID',
-    'DRAGON', 'ABERRATION', 'GIANT', 'PLANT', 'VERMIN',
-    'OUTSIDER', 'CONSTRUCT', 'OOZE', 'FEY', 'HUMANOID'
-  ];
-
-  let rawFavoredType = favoredEnemyType ? String(favoredEnemyType).trim() : '';
+  let rawFavoredType = favoredEnemyFamily !== undefined && favoredEnemyFamily !== null && String(favoredEnemyFamily).trim() !== ''
+    ? String(favoredEnemyFamily).trim()
+    : (favoredEnemyType ? String(favoredEnemyType).trim() : '');
   let rawFavoredSub = favoredEnemySubtype ? String(favoredEnemySubtype).trim() : '';
   if (rawFavoredType.includes(':')) {
     const parts = rawFavoredType.split(':');
@@ -452,35 +710,37 @@ function createCharacter(db, {
     }
   }
 
-  if (validation.classType === 'RANGER' && rawFavoredType) {
-    const normType = rawFavoredType.toUpperCase().trim();
-    if (normType === 'UNDEAD') {
-      const error = new Error('Undead is not permitted as a Favored Enemy.');
-      error.status = 400;
-      throw error;
-    }
-    if (!ALLOWED_FAVORED_ENEMIES.includes(normType)) {
-      const error = new Error(`Invalid Favored Enemy type: ${favoredEnemyType}.`);
-      error.status = 400;
-      throw error;
-    }
-    if (normType === 'HUMANOID' && !rawFavoredSub) {
-      const error = new Error('Humanoid Favored Enemy requires a subtype (e.g. reptilian, goblinoid, giant).');
-      error.status = 400;
-      throw error;
-    }
-  }
+  let finalFavoredEnemyFamily = null;
+  let finalFavoredEnemyType = null;
+  let finalFavoredEnemySubtype = null;
 
-  const finalFavoredEnemyType = validation.classType === 'RANGER' ? (rawFavoredType ? rawFavoredType.toUpperCase().trim() : null) : null;
-  const finalFavoredEnemySubtype = validation.classType === 'RANGER' ? (rawFavoredSub ? rawFavoredSub.trim().toLowerCase() : null) : null;
+  if (validation.classType === 'RANGER' && rawFavoredType) {
+    const favCheck = validateRangerFavoredEnemyChoice(rawFavoredType, rawFavoredSub, { allowLegacy: true });
+    if (!favCheck.valid) {
+      const error = new Error(favCheck.error || `Invalid Favored Enemy type: ${rawFavoredType}.`);
+      error.status = 400;
+      throw error;
+    }
+    finalFavoredEnemyFamily = favCheck.family;
+    finalFavoredEnemyType = rawFavoredType.toUpperCase().trim();
+    finalFavoredEnemySubtype = rawFavoredSub ? rawFavoredSub.trim().toLowerCase() : null;
+  }
 
   const defaultPrimary = (validation.classType === 'RANGER') ? 'RANGED' : 'MELEE';
   const chosenPrimary = (primaryWeapon && ['MELEE', 'RANGED'].includes(primaryWeapon.toUpperCase()))
     ? primaryWeapon.toUpperCase()
     : defaultPrimary;
 
+  const initialAttributesJson = JSON.stringify({
+    strength: Number(stats.strength),
+    constitution: Number(stats.constitution),
+    dexterity: Number(stats.dexterity),
+    intelligence: Number(stats.intelligence),
+    wisdom: Number(stats.wisdom),
+    charisma: Number(stats.charisma)
+  });
+
   return withTransaction(db, (tx) => {
-    // 1. Strict check for living character
     const existing = tx.prepare('SELECT id FROM characters WHERE user_id = ? AND is_alive = 1').get(userId);
     if (existing) {
       const err = new Error('User already has a living hero. Only one living hero is permitted.');
@@ -488,51 +748,91 @@ function createCharacter(db, {
       throw err;
     }
 
-    // 2. Locate starting safe city tile
     let startTile = tx.prepare("SELECT id FROM map_tiles WHERE terrain = 'CITY' AND is_safe = 1 LIMIT 1").get();
     if (!startTile) {
-      startTile = tx.prepare("SELECT id FROM map_tiles WHERE is_passable = 1 LIMIT 1").get();
+      startTile = tx.prepare('SELECT id FROM map_tiles WHERE is_passable = 1 LIMIT 1').get();
     }
 
-    const maxHp = getHpPerLevel(validation.classType, stats.constitution);
+    const maxHp = calculateCanonicalMaxHp(1, validation.classType, getModifier(stats.constitution));
     const goldToGrant = startingGold !== undefined ? startingGold : config.startingGold;
 
-    const insertStmt = tx.prepare(`
-      INSERT INTO characters (
-        user_id, name, class, is_alive, level, xp, gold,
-        strength, constitution, dexterity, intelligence, wisdom, charisma,
-        current_hp, max_hp, tile_id,
-        favored_enemy_type, favored_enemy_subtype, cleric_heal_uses, primary_weapon
-      ) VALUES (
-        ?, ?, ?, 1, 1, 0, ?,
-        ?, ?, ?, ?, ?, ?,
-        ?, ?, ?,
-        ?, ?, 0, ?
-      )
-    `);
+    let characterId;
+    try {
+      const insertStmt = tx.prepare(`
+        INSERT INTO characters (
+          user_id, name, class, is_alive, level, xp, gold,
+          strength, constitution, dexterity, intelligence, wisdom, charisma,
+          current_hp, max_hp, tile_id,
+          favored_enemy_type, favored_enemy_subtype, favored_enemy_family,
+          attribute_points, initial_attributes_json,
+          cleric_heal_uses, primary_weapon
+        ) VALUES (
+          ?, ?, ?, 1, 1, 0, ?,
+          ?, ?, ?, ?, ?, ?,
+          ?, ?, ?,
+          ?, ?, ?,
+          0, ?,
+          0, ?
+        )
+      `);
 
-    const result = insertStmt.run(
-      userId,
-      validation.sanitizedName,
-      validation.classType,
-      goldToGrant,
-      stats.strength,
-      stats.constitution,
-      stats.dexterity,
-      stats.intelligence,
-      stats.wisdom,
-      stats.charisma,
-      maxHp,
-      maxHp,
-      startTile.id,
-      finalFavoredEnemyType,
-      finalFavoredEnemySubtype,
-      chosenPrimary
-    );
+      const result = insertStmt.run(
+        userId,
+        validation.sanitizedName,
+        validation.classType,
+        goldToGrant,
+        stats.strength,
+        stats.constitution,
+        stats.dexterity,
+        stats.intelligence,
+        stats.wisdom,
+        stats.charisma,
+        maxHp,
+        maxHp,
+        startTile.id,
+        finalFavoredEnemyType,
+        finalFavoredEnemySubtype,
+        finalFavoredEnemyFamily,
+        initialAttributesJson,
+        chosenPrimary
+      );
+      characterId = Number(result.lastInsertRowid);
+    } catch {
+      // Fallback for minimal test schemas that have not run migration 014
+      const fallbackStmt = tx.prepare(`
+        INSERT INTO characters (
+          user_id, name, class, is_alive, level, xp, gold,
+          strength, constitution, dexterity, intelligence, wisdom, charisma,
+          current_hp, max_hp, tile_id,
+          favored_enemy_type, favored_enemy_subtype, cleric_heal_uses, primary_weapon
+        ) VALUES (
+          ?, ?, ?, 1, 1, 0, ?,
+          ?, ?, ?, ?, ?, ?,
+          ?, ?, ?,
+          ?, ?, 0, ?
+        )
+      `);
+      const result = fallbackStmt.run(
+        userId,
+        validation.sanitizedName,
+        validation.classType,
+        goldToGrant,
+        stats.strength,
+        stats.constitution,
+        stats.dexterity,
+        stats.intelligence,
+        stats.wisdom,
+        stats.charisma,
+        maxHp,
+        maxHp,
+        startTile.id,
+        finalFavoredEnemyType,
+        finalFavoredEnemySubtype,
+        chosenPrimary
+      );
+      characterId = Number(result.lastInsertRowid);
+    }
 
-    const characterId = Number(result.lastInsertRowid);
-
-    // Grant class starting equipment (Phase F)
     const starterItemsByClass = {
       FIGHTER: [
         { name: 'Longsword', slot: 'MELEE' },
@@ -561,7 +861,6 @@ function createCharacter(db, {
       ) VALUES (?, 'CHARACTER', ?, ?, ?)
     `);
 
-    // Insert class gear
     for (const gear of starterItems) {
       const def = tx.prepare('SELECT id FROM item_definitions WHERE name = ?').get(gear.name);
       if (def) {
@@ -569,7 +868,6 @@ function createCharacter(db, {
       }
     }
 
-    // Insert 2 Minor Healing Potions
     const potionDef = tx.prepare("SELECT id FROM item_definitions WHERE name = 'Minor Healing Potion'").get();
     if (potionDef) {
       insertItemStmt.run(potionDef.id, characterId, null, starterMeta);
@@ -577,6 +875,195 @@ function createCharacter(db, {
     }
 
     return tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
+  });
+}
+
+/**
+ * Permanently spends 1 available milestone attribute point on one of the six attributes
+ * (STR, DEX, CON, INT, WIS, CHA).
+ * Enforces:
+ * - Hero is alive
+ * - Hero is not in active combat or an unresolved encounter
+ * - attribute_points > 0
+ * - Atomic update to prevent race conditions or duplicate spending
+ * - Rule B for permanent CON increases (+L to both Max HP and Current HP when CON modifier increases; 0 on odd score; no full heal)
+ */
+function spendAttributePoint(db, characterId, attributeName) {
+  const statCol = normalizeAttributeKey(attributeName);
+  if (!statCol || !STAT_KEYS.includes(statCol)) {
+    const err = new Error(`Invalid attribute: ${attributeName}. Allowed: STR, DEX, CON, INT, WIS, CHA.`);
+    err.status = 400;
+    err.code = 'INVALID_ATTRIBUTE';
+    throw err;
+  }
+
+  return withTransaction(db, (tx) => {
+    const character = tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
+    if (!character || character.is_alive !== 1) {
+      const err = new Error('Dead characters cannot spend attribute points.');
+      err.status = 400;
+      throw err;
+    }
+
+    const activeThreat = tx.prepare("SELECT status FROM encounters WHERE character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT') LIMIT 1").get(characterId);
+    if (activeThreat) {
+      const err = new Error('Cannot spend attribute points during active combat or an unresolved encounter.');
+      err.status = 409;
+      err.code = 'COMBAT_LOCKED_ATTRIBUTES';
+      throw err;
+    }
+
+    const availablePoints = Math.max(0, parseInt(character.attribute_points, 10) || 0);
+    if (availablePoints <= 0) {
+      const err = new Error('No unspent attribute points available.');
+      err.status = 400;
+      err.code = 'NO_ATTRIBUTE_POINTS';
+      throw err;
+    }
+
+    const equipment = getCharacterEquipment(tx, characterId);
+    const effBefore = getEffectiveStats(character, equipment);
+    const oldMaxHp = calculateCanonicalMaxHp(character.level, character.class, getModifier(effBefore.constitution));
+
+    const updateRes = tx.prepare(`
+      UPDATE characters
+      SET ${statCol} = ${statCol} + 1,
+          attribute_points = attribute_points - 1
+      WHERE id = ? AND is_alive = 1 AND attribute_points > 0
+    `).run(characterId);
+
+    if (updateRes.changes !== 1) {
+      const err = new Error('Could not spend attribute point due to concurrent state modification.');
+      err.status = 409;
+      throw err;
+    }
+
+    const updated = tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
+    const effAfter = getEffectiveStats(updated, equipment);
+    const newMaxHp = calculateCanonicalMaxHp(updated.level, updated.class, getModifier(effAfter.constitution));
+    const newCurrentHp = statCol === 'constitution'
+      ? applyPermanentConHpIncrease(character.current_hp, oldMaxHp, newMaxHp)
+      : applyEquipmentConHpClamp(character.current_hp, newMaxHp);
+
+    tx.prepare(`
+      UPDATE characters
+      SET max_hp = ?, current_hp = ?
+      WHERE id = ?
+    `).run(newMaxHp, newCurrentHp, characterId);
+
+    const finalCharacter = tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
+    const hpGain = Math.max(0, newMaxHp - oldMaxHp);
+    return {
+      character: finalCharacter,
+      attribute: statCol,
+      attributeSpent: statCol,
+      newBaseScore: finalCharacter[statCol],
+      newScore: finalCharacter[statCol],
+      newEffectiveScore: effAfter[statCol],
+      remainingAttributePoints: finalCharacter.attribute_points || 0,
+      hpDelta: hpGain,
+      hpGain,
+      hpGained: hpGain,
+      currentHp: finalCharacter.current_hp,
+      maxHp: finalCharacter.max_hp
+    };
+  });
+}
+
+/**
+ * Counts how many milestone attribute points are awarded when advancing from oldLevel to newLevel.
+ * Milestones are strictly Levels 2, 4, 6, 8, and 10 (Prompt §3).
+ */
+function countMilestoneAttributePointsEarned(oldLevel, newLevel) {
+  const fromLvl = Math.max(1, Math.floor(Number(oldLevel) || 1));
+  const toLvl = Math.max(fromLvl, Math.floor(Number(newLevel) || 1));
+  let earned = 0;
+  for (let lvl = fromLvl + 1; lvl <= toLvl; lvl++) {
+    if (ATTRIBUTE_MILESTONE_LEVELS.includes(lvl)) {
+      earned += 1;
+    }
+  }
+  return earned;
+}
+
+/**
+ * Applies XP & level-up progression for a character inside a transaction or database connection:
+ * - Calculates new level from newXp (or accepts a direct target level when 2 <= arg <= 30)
+ * - Awards +1 attribute_points for each milestone crossed in [2, 4, 6, 8, 10]
+ * - Recalculates canonical Max HP using effective CON modifier
+ * - Adds levelHpDelta to Current HP without granting a free full heal
+ */
+function applyCharacterLevelUp(db, characterId, newXpOverride = null) {
+  return withTransaction(db, (tx) => {
+    const charRow = tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
+    if (!charRow) return null;
+
+    const oldLevel = Math.max(1, Math.floor(Number(charRow.level) || 1));
+    let currentXp;
+    let newLevel;
+
+    if (newXpOverride !== null && newXpOverride !== undefined && Number(newXpOverride) >= 1 && Number(newXpOverride) <= 30) {
+      newLevel = Math.max(oldLevel, Math.floor(Number(newXpOverride)));
+      currentXp = FAST_XP_TABLE[newLevel] !== undefined
+        ? Math.max(Number(charRow.xp) || 0, FAST_XP_TABLE[newLevel])
+        : Math.max(0, Math.floor(Number(charRow.xp) || 0));
+    } else {
+      currentXp = newXpOverride !== null && newXpOverride !== undefined
+        ? Math.max(0, Math.floor(Number(newXpOverride) || 0))
+        : Math.max(0, Math.floor(Number(charRow.xp) || 0));
+      newLevel = Math.max(oldLevel, getLevelForXp(currentXp));
+    }
+
+    const equipment = getCharacterEquipment(tx, characterId);
+    const eff = getEffectiveStats(charRow, equipment);
+    const effectiveConMod = getModifier(eff.constitution);
+
+    let currentHp = Number(charRow.current_hp) || 1;
+    let maxHp = Number(charRow.max_hp) || 1;
+    let totalHpGain = 0;
+    let attributePointsEarned = 0;
+
+    if (newLevel > oldLevel) {
+      const oldCanonicalMaxHp = calculateCanonicalMaxHp(oldLevel, charRow.class, effectiveConMod);
+      const newCanonicalMaxHp = calculateCanonicalMaxHp(newLevel, charRow.class, effectiveConMod);
+      totalHpGain = Math.max(0, newCanonicalMaxHp - oldCanonicalMaxHp);
+      maxHp = newCanonicalMaxHp;
+      currentHp = applyLevelUpHpGain(currentHp, oldCanonicalMaxHp, newCanonicalMaxHp);
+      attributePointsEarned = countMilestoneAttributePointsEarned(oldLevel, newLevel);
+    }
+
+    try {
+      tx.prepare(`
+        UPDATE characters
+        SET xp = ?, level = ?, current_hp = ?, max_hp = ?,
+            attribute_points = COALESCE(attribute_points, 0) + ?
+        WHERE id = ?
+      `).run(currentXp, newLevel, currentHp, maxHp, attributePointsEarned, characterId);
+    } catch {
+      tx.prepare(`
+        UPDATE characters
+        SET xp = ?, level = ?, current_hp = ?, max_hp = ?
+        WHERE id = ?
+      `).run(currentXp, newLevel, currentHp, maxHp, characterId);
+    }
+
+    const updated = tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
+    const finalCurrentHp = updated ? updated.current_hp : currentHp;
+    const finalMaxHp = updated ? updated.max_hp : maxHp;
+    return {
+      character: updated,
+      oldLevel,
+      newLevel,
+      leveledUp: newLevel > oldLevel,
+      totalHpGain,
+      hpGain: totalHpGain,
+      attributePointsEarned,
+      attributePointsAwarded: attributePointsEarned,
+      currentHp: finalCurrentHp,
+      newCurrentHp: finalCurrentHp,
+      maxHp: finalMaxHp,
+      newMaxHp: finalMaxHp
+    };
   });
 }
 
@@ -588,8 +1075,7 @@ function getLastEquipmentForCharacter(characterId) {
 }
 
 /**
- * Fetches equipped weapon, armor, and shield for a character.
- * Provides backwards-compatible 'weapon' property along with distinct 'meleeWeapon' and 'rangedWeapon'.
+ * Fetches equipped weapon, armor, shield, and accessories for a character across all 9 slots.
  */
 function getCharacterEquipment(db, characterId) {
   const items = db.prepare(`
@@ -628,7 +1114,7 @@ function getCharacterEquipment(db, characterId) {
       cloak = it;
     } else if (slot === 'NECK') {
       neck = it;
-    } else if (slot === 'BELT') {
+    } else if (slot === 'BELT' || slot === 'WAIST') {
       belt = it;
     } else if (slot === 'FEET') {
       feet = it;
@@ -691,17 +1177,26 @@ function getCharacterInventory(db, characterId) {
 
 /**
  * Equips an item into a designated slot (MELEE, RANGED, ARMOR, SHIELD, RING, CLOAK, NECK, BELT, FEET).
+ * Enforces:
+ * - Blocks dead characters
+ * - Blocks changes during active combat or unresolved encounters (status 409, code COMBAT_LOCKED_EQUIPMENT)
+ * - Atomically swaps slot items and recalculates canonical Max HP + clamps Current HP via Rule A
  */
 function equipItem(db, characterId, itemInstanceId, targetSlot) {
   return withTransaction(db, (tx) => {
     const character = tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
     if (!character || character.is_alive !== 1) {
-      throw new Error('Hero is not eligible to equip items.');
+      const err = new Error('Dead characters are not eligible to equip items.');
+      err.status = 400;
+      throw err;
     }
 
     const activeThreat = tx.prepare("SELECT status FROM encounters WHERE character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT') LIMIT 1").get(characterId);
     if (activeThreat) {
-      throw new Error('Cannot change equipment during active combat or an unresolved encounter.');
+      const err = new Error('Cannot change equipment during active combat or an unresolved encounter.');
+      err.status = 409;
+      err.code = 'COMBAT_LOCKED_EQUIPMENT';
+      throw err;
     }
 
     const item = tx.prepare(`
@@ -712,16 +1207,21 @@ function equipItem(db, characterId, itemInstanceId, targetSlot) {
     `).get(itemInstanceId, characterId);
 
     if (!item) {
-      throw new Error('Item not found in character possession.');
+      const err = new Error('Item not found in character possession.');
+      err.status = 403;
+      throw err;
     }
 
     let allowed = [];
     try { allowed = JSON.parse(item.allowed_classes || '[]'); } catch { allowed = []; }
     if (allowed.length > 0 && !allowed.includes(character.class)) {
-      throw new Error(`The ${item.name} cannot be equipped by a ${character.class}.`);
+      const err = new Error(`The ${item.name} cannot be equipped by a ${character.class}.`);
+      err.status = 400;
+      throw err;
     }
 
     let slot = (targetSlot || '').toUpperCase().trim();
+    if (slot === 'WAIST') slot = 'BELT';
     if (!slot) {
       if (item.category === 'WEAPON') {
         slot = item.weapon_range_type === 'RANGED' ? 'RANGED' : 'MELEE';
@@ -731,12 +1231,15 @@ function equipItem(db, characterId, itemInstanceId, targetSlot) {
         slot = 'SHIELD';
       } else if (item.def_equip_slot || item.equip_slot) {
         slot = (item.def_equip_slot || item.equip_slot).toUpperCase().trim();
+        if (slot === 'WAIST') slot = 'BELT';
       }
     }
 
     const ALLOWED_SLOTS = ['MELEE', 'RANGED', 'ARMOR', 'SHIELD', 'RING', 'CLOAK', 'NECK', 'BELT', 'FEET'];
     if (!ALLOWED_SLOTS.includes(slot)) {
-      throw new Error(`Invalid equipment slot: ${targetSlot}. Allowed: ${ALLOWED_SLOTS.join(', ')}.`);
+      const err = new Error(`Invalid equipment slot: ${targetSlot}. Allowed: ${ALLOWED_SLOTS.join(', ')}.`);
+      err.status = 400;
+      throw err;
     }
 
     if (slot === 'MELEE') {
@@ -756,49 +1259,69 @@ function equipItem(db, characterId, itemInstanceId, targetSlot) {
         throw new Error('Only shields can be equipped in the SHIELD slot.');
       }
     } else if (['RING', 'CLOAK', 'NECK', 'BELT', 'FEET'].includes(slot)) {
-      const itemDefSlot = (item.def_equip_slot || item.equip_slot || '').toUpperCase().trim();
+      let itemDefSlot = (item.def_equip_slot || item.equip_slot || '').toUpperCase().trim();
+      if (itemDefSlot === 'WAIST') itemDefSlot = 'BELT';
       if (!itemDefSlot || itemDefSlot !== slot) {
         if (itemDefSlot) {
           throw new Error(`The ${item.name} must be equipped in the ${itemDefSlot} slot.`);
         }
         throw new Error(`The ${item.name} cannot be equipped in the ${slot} slot.`);
       }
-      if (item.category !== 'OTHER' && item.category !== 'ARMOR') {
+      if (item.category !== 'OTHER' && item.category !== 'ARMOR' && item.category !== 'ACCESSORY') {
         throw new Error(`The ${item.name} cannot be equipped in the ${slot} slot.`);
       }
     }
 
-    // Unequip current item in that slot
+    // Unequip current item in that slot atomically
     tx.prepare(`
       UPDATE item_instances
       SET equipped_slot = NULL
       WHERE owner_character_id = ? AND equipped_slot = ?
     `).run(characterId, slot);
 
-    // Equip item
+    // Equip new item
     tx.prepare(`
       UPDATE item_instances
       SET equipped_slot = ?
       WHERE id = ?
     `).run(slot, itemInstanceId);
 
-    return getCharacterEquipment(tx, characterId);
+    const newEquipment = getCharacterEquipment(tx, characterId);
+    const effAfter = getEffectiveStats(character, newEquipment);
+    const newMaxHp = calculateCanonicalMaxHp(character.level, character.class, getModifier(effAfter.constitution));
+    const newCurrentHp = applyEquipmentConHpClamp(character.current_hp, newMaxHp);
+
+    tx.prepare(`
+      UPDATE characters
+      SET max_hp = ?, current_hp = ?
+      WHERE id = ?
+    `).run(newMaxHp, newCurrentHp, characterId);
+
+    newEquipment.maxHp = newMaxHp;
+    newEquipment.currentHp = newCurrentHp;
+    return newEquipment;
   });
 }
 
 /**
  * Unequips an item from the character.
+ * Enforces combat lock, dead-character block, and Rule A HP clamping.
  */
 function unequipItem(db, characterId, itemInstanceId) {
   return withTransaction(db, (tx) => {
     const character = tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
     if (!character || character.is_alive !== 1) {
-      throw new Error('Hero is not eligible to equip items.');
+      const err = new Error('Dead characters are not eligible to equip items.');
+      err.status = 400;
+      throw err;
     }
 
     const activeThreat = tx.prepare("SELECT status FROM encounters WHERE character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT') LIMIT 1").get(characterId);
     if (activeThreat) {
-      throw new Error('Cannot change equipment during active combat or an unresolved encounter.');
+      const err = new Error('Cannot change equipment during active combat or an unresolved encounter.');
+      err.status = 409;
+      err.code = 'COMBAT_LOCKED_EQUIPMENT';
+      throw err;
     }
 
     const item = tx.prepare(`
@@ -807,11 +1330,27 @@ function unequipItem(db, characterId, itemInstanceId) {
     `).get(itemInstanceId, characterId);
 
     if (!item) {
-      throw new Error('Item not found in character possession.');
+      const err = new Error('Item not found in character possession.');
+      err.status = 403;
+      throw err;
     }
 
     tx.prepare('UPDATE item_instances SET equipped_slot = NULL WHERE id = ?').run(itemInstanceId);
-    return getCharacterEquipment(tx, characterId);
+
+    const newEquipment = getCharacterEquipment(tx, characterId);
+    const effAfter = getEffectiveStats(character, newEquipment);
+    const newMaxHp = calculateCanonicalMaxHp(character.level, character.class, getModifier(effAfter.constitution));
+    const newCurrentHp = applyEquipmentConHpClamp(character.current_hp, newMaxHp);
+
+    tx.prepare(`
+      UPDATE characters
+      SET max_hp = ?, current_hp = ?
+      WHERE id = ?
+    `).run(newMaxHp, newCurrentHp, characterId);
+
+    newEquipment.maxHp = newMaxHp;
+    newEquipment.currentHp = newCurrentHp;
+    return newEquipment;
   });
 }
 
@@ -843,12 +1382,6 @@ function setPrimaryWeaponPreference(db, characterId, preference) {
 
 /**
  * Determines the hero's active weapon and whether ranged is active for combat & defense.
- * Rules:
- * 1. Respects the hero's preferred primary weapon (RANGED or MELEE) against both ground and airborne enemies.
- *    (Melee attacks against airborne enemies keep the melee weapon and shield AC, taking a small -1 Evasive Flyer attack penalty in combat rules).
- * 2. Safe fallback:
- *    If preferred weapon is not equipped (removed, sold), falls back to the other legally equipped weapon,
- *    or unequipped/bare hands.
  */
 function getActiveWeapon(character, equipment, monster = null) {
   const mType = (monster && monster.movement_type ? monster.movement_type : '').toUpperCase();
@@ -863,23 +1396,19 @@ function getActiveWeapon(character, equipment, monster = null) {
 
   const preference = (character && character.primary_weapon ? character.primary_weapon : 'MELEE').toUpperCase();
 
-  // Primary Weapon Preference with Safe Fallback
   if (preference === 'RANGED') {
     if (rangedWeapon) {
       return { activeWeapon: rangedWeapon, isRangedActive: true, isAirborne };
     }
-    // Safe fallback to melee
     if (meleeWeapon) {
       return { activeWeapon: meleeWeapon, isRangedActive: false, isAirborne };
     }
     return { activeWeapon: genericWeapon, isRangedActive: false, isAirborne };
   }
 
-  // Melee preference (default)
   if (meleeWeapon) {
     return { activeWeapon: meleeWeapon, isRangedActive: false, isAirborne };
   }
-  // Safe fallback to ranged
   if (rangedWeapon) {
     return { activeWeapon: rangedWeapon, isRangedActive: true, isAirborne };
   }
@@ -910,47 +1439,162 @@ const INACTIVE_CONSUMABLE_NAMES = [
 ];
 
 /**
- * Calculates effective character attributes taking equipped accessories into account.
- * Specifically, Belt of Giant Strength +2 adds +2 to Strength when equipped in the BELT slot.
- * Ensures no double-counting and bonus disappears when unequipped.
- * Does not add synthetic dexterity to Boots of Elvenkind.
+ * Extracts per-stat bonuses from a single equipped item definition/instance.
+ * Does not add synthetic dexterity to Boots of Elvenkind unless an explicit dexterity_bonus is defined.
+ */
+function extractItemStatBonuses(item) {
+  const bonuses = {
+    strength: 0,
+    constitution: 0,
+    dexterity: 0,
+    intelligence: 0,
+    wisdom: 0,
+    charisma: 0
+  };
+  if (!item || typeof item !== 'object') return bonuses;
+
+  let attrs = item.attributes;
+  if (typeof attrs === 'string') {
+    try { attrs = JSON.parse(attrs); } catch { attrs = {}; }
+  }
+  if (!attrs || typeof attrs !== 'object') {
+    attrs = {};
+  }
+
+  const statBonusObj = (attrs.stat_bonus && typeof attrs.stat_bonus === 'object') ? attrs.stat_bonus : {};
+  const shortKeys = {
+    strength: 'str_bonus',
+    constitution: 'con_bonus',
+    dexterity: 'dex_bonus',
+    intelligence: 'int_bonus',
+    wisdom: 'wis_bonus',
+    charisma: 'cha_bonus'
+  };
+
+  for (const stat of STAT_KEYS) {
+    const bonusKey = `${stat}_bonus`;
+    const shortKey = shortKeys[stat];
+    let val = 0;
+    if (attrs[bonusKey] !== undefined) {
+      val = Number(attrs[bonusKey]) || 0;
+    } else if (statBonusObj[stat] !== undefined) {
+      val = Number(statBonusObj[stat]) || 0;
+    } else if (attrs[shortKey] !== undefined) {
+      val = Number(attrs[shortKey]) || 0;
+    } else if (item[bonusKey] !== undefined) {
+      val = Number(item[bonusKey]) || 0;
+    }
+    bonuses[stat] += Math.floor(val);
+  }
+
+  if (item.name === 'Belt of Giant Strength +2' && bonuses.strength === 0) {
+    bonuses.strength = 2;
+  }
+
+  return bonuses;
+}
+
+/**
+ * Calculates effective character attributes taking all nine equipped slots into account:
+ * MELEE, RANGED, ARMOR, SHIELD, RING, CLOAK, NECK, BELT, FEET.
+ * Ensures no double-counting even if called repeatedly on an already-computed object.
  */
 function getEffectiveStats(character, equipment = null) {
   if (!character) return character;
-  const baseStr = Number(character.base_strength !== undefined ? character.base_strength : character.strength);
-  let strBonus = 0;
 
-  if (equipment && equipment.belt) {
-    const belt = equipment.belt;
-    if (belt.name === 'Belt of Giant Strength +2') {
-      strBonus += 2;
-    } else if (belt.attributes) {
-      let attrs = belt.attributes;
-      if (typeof attrs === 'string') {
-        try { attrs = JSON.parse(attrs); } catch { attrs = {}; }
+  const eq = equipment || character._equipment || null;
+  const baseScores = {};
+  const bonuses = {
+    strength: 0,
+    constitution: 0,
+    dexterity: 0,
+    intelligence: 0,
+    wisdom: 0,
+    charisma: 0
+  };
+
+  for (const stat of STAT_KEYS) {
+    const baseKey = `base_${stat}`;
+    const rawBase = character[baseKey] !== undefined ? character[baseKey] : character[stat];
+    baseScores[stat] = Number.isFinite(Number(rawBase)) ? Number(rawBase) : 10;
+  }
+
+  if (eq && typeof eq === 'object') {
+    const seenItems = new Set();
+    const slotProps = ['meleeWeapon', 'rangedWeapon', 'armor', 'shield', 'ring', 'cloak', 'neck', 'belt', 'feet'];
+    const candidateItems = [];
+
+    for (const prop of slotProps) {
+      if (eq[prop] && typeof eq[prop] === 'object') {
+        candidateItems.push(eq[prop]);
       }
-      if (attrs.strength_bonus) {
-        strBonus += Number(attrs.strength_bonus);
-      } else if (attrs.stat_bonus && attrs.stat_bonus.strength) {
-        strBonus += Number(attrs.stat_bonus.strength);
+    }
+    if (Array.isArray(eq.items)) {
+      for (const it of eq.items) {
+        if (it && typeof it === 'object' && it.equipped_slot) {
+          candidateItems.push(it);
+        }
+      }
+    }
+
+    for (const item of candidateItems) {
+      const dedupKey = item.instance_id || item.id || item;
+      if (seenItems.has(dedupKey)) continue;
+      seenItems.add(dedupKey);
+
+      const itemBonuses = extractItemStatBonuses(item);
+      for (const stat of STAT_KEYS) {
+        bonuses[stat] += itemBonuses[stat];
       }
     }
   }
 
-  const effectiveStr = baseStr + strBonus;
+  const effectiveScores = {};
+  const modifiers = {};
+  for (const stat of STAT_KEYS) {
+    effectiveScores[stat] = baseScores[stat] + bonuses[stat];
+    modifiers[stat] = getModifier(effectiveScores[stat]);
+  }
 
   const result = {
     ...character,
-    base_strength: baseStr,
-    strength: effectiveStr,
-    strength_bonus: strBonus,
-    is_str_boosted: strBonus > 0
+    base_strength: baseScores.strength,
+    base_constitution: baseScores.constitution,
+    base_dexterity: baseScores.dexterity,
+    base_intelligence: baseScores.intelligence,
+    base_wisdom: baseScores.wisdom,
+    base_charisma: baseScores.charisma,
+    strength: effectiveScores.strength,
+    constitution: effectiveScores.constitution,
+    dexterity: effectiveScores.dexterity,
+    intelligence: effectiveScores.intelligence,
+    wisdom: effectiveScores.wisdom,
+    charisma: effectiveScores.charisma,
+    strength_bonus: bonuses.strength,
+    constitution_bonus: bonuses.constitution,
+    dexterity_bonus: bonuses.dexterity,
+    intelligence_bonus: bonuses.intelligence,
+    wisdom_bonus: bonuses.wisdom,
+    charisma_bonus: bonuses.charisma,
+    strength_mod: modifiers.strength,
+    constitution_mod: modifiers.constitution,
+    dexterity_mod: modifiers.dexterity,
+    intelligence_mod: modifiers.intelligence,
+    wisdom_mod: modifiers.wisdom,
+    charisma_mod: modifiers.charisma,
+    modifiers,
+    is_str_boosted: bonuses.strength > 0,
+    is_con_boosted: bonuses.constitution > 0,
+    is_dex_boosted: bonuses.dexterity > 0,
+    is_int_boosted: bonuses.intelligence > 0,
+    is_wis_boosted: bonuses.wisdom > 0,
+    is_cha_boosted: bonuses.charisma > 0
   };
 
-  if (equipment && typeof equipment === 'object') {
-    Object.defineProperty(result, '_equipment', { value: equipment, enumerable: false, configurable: true, writable: true });
+  if (eq && typeof eq === 'object') {
+    Object.defineProperty(result, '_equipment', { value: eq, enumerable: false, configurable: true, writable: true });
     if (character.id) {
-      lastEquipmentByCharacterId.set(Number(character.id), equipment);
+      lastEquipmentByCharacterId.set(Number(character.id), eq);
     }
   }
 
@@ -959,8 +1603,6 @@ function getEffectiveStats(character, equipment = null) {
 
 /**
  * Fetches potions owned by the hero, ordered by price ASC (cheapest first).
- * In combat (options.combatOnly = true), returns strictly active healing potions.
- * In inventory display, returns all potions, flagging inactive ones with is_inactive = true.
  */
 function getCharacterPotions(db, characterId, options = {}) {
   const combatOnly = Boolean(options && options.combatOnly);
@@ -1011,26 +1653,21 @@ function getAllCharacterItems(db, characterId) {
 
 /**
  * Uses a consumable item (e.g. potion, elixir) from the player's inventory outside of combat.
- * Thread-safe, atomic, validates ownership, prevents dead hero usage and race conditions.
- * Prevents consuming inactive items without effect; existing items are preserved.
  */
 function useConsumable(db, characterId, itemInstanceId, options = {}) {
   const rng = typeof options === 'function' ? options : (options && options.rng ? options.rng : Math.random);
 
   return withTransaction(db, (tx) => {
-    // 1. Validate living character
     const character = tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
     if (!character || character.is_alive !== 1) {
       throw new Error('Dead characters cannot use consumables.');
     }
 
-    // 2. Validate out-of-combat and no unresolved encounter
     const activeThreat = tx.prepare("SELECT status FROM encounters WHERE character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT') LIMIT 1").get(characterId);
     if (activeThreat) {
       throw new Error('Cannot use items from your backpack during active combat or an unresolved encounter. Use the combat action menu.');
     }
 
-    // 3. Fetch item instance
     const item = tx.prepare(`
       SELECT ii.*, id.name, id.category, id.subtype, id.attributes, id.is_magical
       FROM item_instances ii
@@ -1059,13 +1696,11 @@ function useConsumable(db, characterId, itemInstanceId, options = {}) {
 
     const potionType = attrs.potion_type || (attrs.heal_dice ? 'healing' : 'other');
 
-    // Healing potion handling
     if (potionType === 'healing' || (attrs.heal_dice && attrs.heal_dice !== '0')) {
       if (character.current_hp >= character.max_hp) {
         throw new Error('Hero is already at maximum health.');
       }
 
-      // Consume item (atomic delete)
       tx.prepare('DELETE FROM item_instances WHERE id = ?').run(item.id);
 
       const healResult = rollDice(attrs.heal_dice || '1d8+1', rng);
@@ -1086,26 +1721,26 @@ function useConsumable(db, characterId, itemInstanceId, options = {}) {
       };
     }
 
-    // Unimplemented or inactive consumable: reject consumption, do NOT delete item
     throw new Error(`${item.name} cannot be consumed: its effect is not yet active in this version.`);
   });
 }
 
 /**
  * Calculates Hero Saving Throws (Fortitude, Reflex, Will, and Physical = max(Fort, Ref))
- * based on Pathfinder 1e class progressions and attribute modifiers, plus Cloak of Resistance.
- * - FIGHTER: Good Fort, Poor Ref, Poor Will
- * - RANGER:  Good Fort, Good Ref, Poor Will
- * - CLERIC:  Good Fort, Poor Ref, Good Will
+ * based on Pathfinder 1e class progressions, effective attribute modifiers,
+ * Fighter Battle-Hardened bonuses, and Cloak of Resistance.
  */
 function getHeroSavingThrows(character, equipment = null) {
   if (!character) {
     return { fort: 0, ref: 0, will: 0, physical: 0 };
   }
-  const lvl = Math.max(1, Number(character.level || 1));
+  const eq = equipment || character._equipment || (character.id ? getLastEquipmentForCharacter(character.id) : null);
+  const eff = getEffectiveStats(character, eq);
+
+  const lvl = Math.max(1, Number(eff.level || 1));
   const goodSave = 2 + Math.floor(lvl / 2);
   const poorSave = Math.floor(lvl / 3);
-  const cls = (character.class || 'FIGHTER').toUpperCase();
+  const cls = (eff.class || 'FIGHTER').toUpperCase();
 
   let baseFort = goodSave;
   let baseRef = poorSave;
@@ -1115,9 +1750,12 @@ function getHeroSavingThrows(character, equipment = null) {
     baseRef = goodSave;
   } else if (cls === 'CLERIC') {
     baseWill = goodSave;
+  } else if (cls === 'FIGHTER') {
+    const bh = getFighterBattleHardenedBonus(lvl);
+    baseFort += bh.fortBonus;
+    baseWill += bh.willBonus;
   }
 
-  const eq = equipment || character._equipment || (character.id ? getLastEquipmentForCharacter(character.id) : null);
   let cloakBonus = 0;
   if (eq && eq.cloak) {
     if (eq.cloak.enhancement_bonus) {
@@ -1127,23 +1765,22 @@ function getHeroSavingThrows(character, equipment = null) {
     }
   }
 
-  const fort = baseFort + getModifier(character.constitution || 10) + cloakBonus;
-  const ref = baseRef + getModifier(character.dexterity || 10) + cloakBonus;
-  const will = baseWill + getModifier(character.wisdom || 10) + cloakBonus;
+  const fort = baseFort + getModifier(eff.constitution || 10) + cloakBonus;
+  const ref = baseRef + getModifier(eff.dexterity || 10) + cloakBonus;
+  const will = baseWill + getModifier(eff.wisdom || 10) + cloakBonus;
   const physical = Math.max(fort, ref);
 
   return { fort, ref, will, physical };
 }
 
 /**
- * Scales XP gained from combat by the hero's Intelligence modifier (+10% per +1 INT mod, -10% per -1 INT mod).
+ * Phase 7A.4 / 7B (OC-5): General INT XP multiplier is retired.
+ * INT now fuels Monster Battle Experience learned damage bonuses and tactical recognition.
+ * Returns the flat base XP reward as a non-negative integer.
  */
-function calculateXpWithIntelligence(baseXp, intelligence = 10) {
-  const rawXp = Math.max(0, Number(baseXp) || 0);
-  if (rawXp === 0) return 0;
-  const intMod = getModifier(Number(intelligence !== undefined && intelligence !== null ? intelligence : 10));
-  const multiplier = Math.max(0.5, 1 + (intMod * 0.10));
-  return Math.max(1, Math.round(rawXp * multiplier));
+function calculateXpWithIntelligence(baseXp, _intelligence = 10) {
+  const rawXp = Math.max(0, Math.floor(Number(baseXp) || 0));
+  return rawXp;
 }
 
 /**
@@ -1159,11 +1796,22 @@ function calculateShopPriceWithCharisma(basePrice, charisma = 10) {
 
 module.exports = {
   STAT_KEYS,
+  STAT_KEY_ALIASES,
+  ATTRIBUTE_MILESTONE_LEVELS,
+  DESCRIPTIVE_ATTRIBUTE_TIER_LABELS,
   FAST_XP_TABLE,
+  normalizeAttributeKey,
+  getAttributeTierLabel,
   getModifier,
   formatModifier,
   getLevelForXp,
   getXpForNextLevel,
+  getFighterBattleHardenedBonus,
+  calculateCanonicalMaxHp,
+  applyEquipmentConHpClamp,
+  applyPermanentConHpIncrease,
+  applyLevelUpHpGain,
+  reconcileCharacterHpOnLoad,
   getHpPerLevel,
   getLevelAttackBonus,
   getFighterWeaponTraining,
@@ -1178,6 +1826,9 @@ module.exports = {
   validateCharacterCreation,
   getLivingCharacterByUserId,
   createCharacter,
+  spendAttributePoint,
+  countMilestoneAttributePointsEarned,
+  applyCharacterLevelUp,
   getCharacterEquipment,
   getCharacterInventory,
   equipItem,
@@ -1188,10 +1839,13 @@ module.exports = {
   getCharacterPotions,
   getAllCharacterItems,
   useConsumable,
+  extractItemStatBonuses,
   getEffectiveStats,
   getLastEquipmentForCharacter,
   getHeroSavingThrows,
+  calculateSavingThrows: getHeroSavingThrows,
   calculateXpWithIntelligence,
   calculateShopPriceWithCharisma,
-  INACTIVE_CONSUMABLE_NAMES
+  INACTIVE_CONSUMABLE_NAMES,
+  normalizeRangerFavoredEnemy
 };

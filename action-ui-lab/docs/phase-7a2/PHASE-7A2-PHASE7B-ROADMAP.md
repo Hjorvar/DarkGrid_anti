@@ -1,5 +1,8 @@
 # DARKGRID — PHASE 7A.2: REVISED PHASE 7B IMPLEMENTATION ROADMAP & PHASE 6.2 ALIGNMENT
 
+> [!IMPORTANT]
+> **Historical Design Baseline (Superseded by Phase 7A.3):** This Phase 7A.2 document is preserved as historical design context. For the authoritative Phase 7B implementation roadmap—incorporating `monster_family`, `character_monster_experience`, 72-point free attribute allocation (`8–18`), Fighter *Second Wind Lethal Rescue*, and the fix for the Ranger *Opening Shot* `Math.max(1, ...)` bug in `src/domain/combat/engine.js:238`—see [`../phase-7a3/PHASE-7A3-PHASE7B-ROADMAP.md`](../phase-7a3/PHASE-7A3-PHASE7B-ROADMAP.md).
+
 **Date:** 2026-10-22  
 **Phase:** 7A.2 — Class Identity & Thematic Progression (Design & Documentation Only)  
 **Verified Against `main` Commit:** `042d122` (`docs(action-ui-lab): add Phase 6.2 final source-of-truth verification report`)

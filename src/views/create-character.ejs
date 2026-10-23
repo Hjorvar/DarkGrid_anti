@@ -9,7 +9,7 @@
 
     <div class="auth-header-emblem">⚔️</div>
     <h1 class="card-title">Create Your Hero</h1>
-    <p class="card-subtitle">Choose a class and allocate your attribute points. Remember: death is permanent in Darkgrid.</p>
+    <p class="card-subtitle">Choose a class and allocate your 72 attribute points (scores 8–18). Remember: death is permanent in Darkgrid.</p>
 
     <% if (error) { %>
       <div class="alert alert-error">
@@ -86,37 +86,29 @@
       <div class="form-group" id="ranger-favored-enemy-group" style="<%= (formData.classType || 'FIGHTER') === 'RANGER' ? '' : 'display: none;' %>">
         <label class="form-label" for="favored-enemy-select">🐺 Sworn Blood-Quarry (Permanent Ranger Oath)</label>
         <p class="form-help" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; font-style: italic;">
-          Name the breed of living creature you have hunted through the dark. You know their anatomy and strike their vital spots with escalating lethality as your legend grows—though the soulless Undead lie beyond a mortal hunter's craft.
+          Name the monster family you have hunted through the dark. You know their anatomy and strike their vital spots with escalating lethality as your legend grows—though the soulless Undead lie beyond a mortal hunter's craft.
         </p>
-        <select id="favored-enemy-select" class="form-input form-select" style="border-color: var(--border-gold);">
-          <option value="ANIMAL:">Animal (Wolves, Boars, Vipers, Dire Rats)</option>
-          <option value="MAGICAL BEAST:">Magical Beast (Owlbears, Manticores, Blink Dogs)</option>
-          <option value="MONSTROUS HUMANOID:">Monstrous Humanoid (Minotaurs, Harpies, Morlocks)</option>
-          <option value="ABERRATION:">Aberration (Choker, Otyugh, Gibbering Mouther, Cloaker)</option>
-          <option value="VERMIN:">Vermin (Giant Spiders, Centipedes, Scorpions)</option>
-          <option value="PLANT:">Plant (Assassin Vines, Violet Fungus, Vegepygmy)</option>
-          <option value="HUMANOID:goblinoid">Humanoid (Goblinoid: Goblins, Hobgoblins, Bugbears)</option>
-          <option value="HUMANOID:gnoll">Humanoid (Gnoll)</option>
-          <option value="HUMANOID:reptilian">Humanoid (Reptilian: Troglodytes, Lizardfolk)</option>
-          <option value="HUMANOID:boggard">Humanoid (Boggard)</option>
-          <option value="HUMANOID:giant">Humanoid (Giant: Ogres, Trolls, Hill Giants)</option>
-          <option value="HUMANOID:orc">Humanoid (Orc)</option>
-          <option value="HUMANOID:drow">Humanoid (Drow / Elf)</option>
-          <option value="HUMANOID:duergar">Humanoid (Duergar / Dwarf)</option>
+        <select id="favored-enemy-select" name="favoredEnemyFamily" class="form-input form-select" style="border-color: var(--border-gold);">
+          <% (favoredEnemyOptions || []).forEach(function(fam) { %>
+            <option value="<%= fam.key %>" <%= (formData.favoredEnemyFamily || formData.favoredEnemyType || 'ANIMALS') === fam.key ? 'selected' : '' %>><%= fam.label %> — <%= fam.description %></option>
+          <% }); %>
         </select>
-        <input type="hidden" name="favoredEnemyType" id="favored-enemy-type-input" value="<%= formData.favoredEnemyType || 'ANIMAL' %>">
-        <input type="hidden" name="favoredEnemySubtype" id="favored-enemy-subtype-input" value="<%= formData.favoredEnemySubtype || '' %>">
+        <input type="hidden" name="favoredEnemyType" id="favored-enemy-type-input" value="<%= formData.favoredEnemyFamily || formData.favoredEnemyType || 'ANIMALS' %>">
+        <input type="hidden" name="favoredEnemySubtype" id="favored-enemy-subtype-input" value="">
       </div>
 
       <!-- Stats Builder -->
       <div class="stats-builder">
         <div class="points-budget-banner">
           <div>
-            <span class="budget-title">Attribute Points Available</span>
-            <span class="budget-subtitle">You may decrease any attribute by up to 2 points to reallocate elsewhere (maximum 18).</span>
+            <span class="budget-title">Attribute Points Available (72 Total Pool)</span>
+            <span class="budget-subtitle">Adjust any attribute between 8 and 18 so your six attributes sum to 72.</span>
           </div>
-          <div class="points-counter">
-            <span id="remaining-points-count">3</span> <span class="points-label">remaining</span>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <button type="button" id="reset-preset-btn" class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.78rem;">Reset to Class Preset</button>
+            <div class="points-counter">
+              <span id="remaining-points-count">0</span> <span class="points-label">remaining</span>
+            </div>
           </div>
         </div>
 
@@ -132,18 +124,18 @@
             };
             const statDescriptions = {
               strength: 'Melee attack & melee damage',
-              constitution: 'Max HP & Fortitude saves',
+              constitution: 'Max HP & Fortitude resilience',
               dexterity: 'Ranged attack, AC, Initiative & Reflex',
-              intelligence: 'Experience gained (±10% XP per mod)',
-              wisdom: 'Perception, Cleric healing & Will',
-              charisma: 'Merchant prices (±5% shop price per mod)'
+              intelligence: 'Tactical Battle Experience (offensive mastery against studied foes)',
+              wisdom: 'Perception, Will resolve, Cleric rites & defensive Battle Experience',
+              charisma: 'Merchant trade terms & sacred presence'
             };
             ['strength', 'constitution', 'dexterity', 'intelligence', 'wisdom', 'charisma'].forEach(stat => { 
           %>
             <div class="stat-control-row">
               <div class="stat-label-group">
                 <span class="stat-name"><%= statDisplayNames[stat] %></span>
-                <span id="base-<%= stat %>" class="stat-base-label">(base)</span>
+                <span id="base-<%= stat %>" class="stat-base-label">(preset)</span>
                 <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 2px;"><%= statDescriptions[stat] %></div>
               </div>
 
@@ -154,8 +146,8 @@
                 <input type="hidden" name="<%= stat %>" id="input-<%= stat %>" value="10">
               </div>
 
-              <div class="stat-mod-tag">
-                Modifier:
+              <div class="stat-mod-tag" id="tier-<%= stat %>">
+                Average
               </div>
 
               <div class="stat-modifier" id="mod-<%= stat %>">+0</div>

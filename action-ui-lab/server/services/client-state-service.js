@@ -7,6 +7,7 @@ const {
   getLivingCharacterByUserId,
   getModifier,
   formatModifier,
+  getAttributeTierLabel,
   getXpForNextLevel,
   getCharacterEquipment,
   getCharacterInventory,
@@ -15,7 +16,8 @@ const {
   getClericSelfHealInfo,
   getClericRemainingHealUses,
   getEffectiveStats,
-  getHeroSavingThrows
+  getHeroSavingThrows,
+  reconcileCharacterHpOnLoad
 } = require('../../../src/domain/character/rules');
 const {
   calculateHeroAC,
@@ -41,6 +43,14 @@ const {
   autoClaimCompletedBounties,
   getWildernessThreats
 } = require('../../../src/domain/bounties/board');
+const {
+  getFamilyMetadata,
+  normalizeRangerFavoredEnemy
+} = require('../../../src/domain/monsters/taxonomy');
+const {
+  evaluateHeroMonsterKnowledge,
+  getCharacterCompendiumKnowledge
+} = require('../../../src/domain/combat/knowledge');
 const { normalizeSceneMode, getCandidateArtPreviewMode } = require('../../scene-catalog');
 const { buildAdventureClientPayload } = require('../../adventure-engine');
 const {
@@ -147,6 +157,9 @@ function buildClientState(db, userId, extra = {}) {
     };
   }
 
+  // Rule D: Reconcile Max HP on load without healing Current HP
+  character = reconcileCharacterHpOnLoad(db, character.id) || character;
+
   const charRowRaw = db.prepare('SELECT facing, pending_victory_encounter_id, scene_mode FROM characters WHERE id = ?').get(character.id) || {};
   const facing = normalizeFacing(charRowRaw.facing || 'NORTH');
   const sceneMode = normalizeSceneMode(charRowRaw.scene_mode || 'C');
@@ -219,11 +232,11 @@ function buildClientState(db, userId, extra = {}) {
     ? combatState
     : getActiveWeapon(effectiveHero, equipment, revealedMonster);
 
-  const meleeAttackBonus = calculateHeroAttackBonus(effectiveHero, equipment.meleeWeapon, revealedMonster, equipment);
-  const rangedAttackBonus = calculateHeroAttackBonus(effectiveHero, equipment.rangedWeapon, revealedMonster, equipment);
+  const meleeAttackBonus = calculateHeroAttackBonus(effectiveHero, equipment.meleeWeapon, revealedMonster, equipment, db);
+  const rangedAttackBonus = calculateHeroAttackBonus(effectiveHero, equipment.rangedWeapon, revealedMonster, equipment, db);
   const heroAC = combatState
     ? combatState.heroAC
-    : calculateHeroAC(effectiveHero, equipment, isRangedActive, revealedMonster, activeWeapon);
+    : calculateHeroAC(effectiveHero, equipment, isRangedActive, revealedMonster, activeWeapon, db);
 
   let clericHealInfo = null;
   if ((effectiveHero.class || '').toUpperCase() === 'CLERIC') {
@@ -233,7 +246,27 @@ function buildClientState(db, userId, extra = {}) {
     };
   }
 
-  const classAbilities = buildClassAbilitySummary(effectiveHero, clericHealInfo);
+  const secondWindUsed = Boolean(combatState && combatState.secondWindUsed);
+  const heroClassUpper = String(effectiveHero.class || '').toUpperCase();
+  const secondWindStatus = heroClassUpper === 'FIGHTER'
+    ? (Number(effectiveHero.level || 1) >= 3 ? (secondWindUsed ? 'Spent' : 'Ready') : 'Unlocks at Level 3')
+    : null;
+
+  const normalizedFavoredFamily = heroClassUpper === 'RANGER'
+    ? normalizeRangerFavoredEnemy(effectiveHero.favored_enemy_family || effectiveHero.favored_enemy_type, effectiveHero.favored_enemy_subtype)
+    : null;
+  const favoredFamilyMeta = normalizedFavoredFamily ? getFamilyMetadata(normalizedFavoredFamily) : null;
+
+  const attributeTierLabels = {
+    strength: getAttributeTierLabel('strength', effectiveHero.strength),
+    constitution: getAttributeTierLabel('constitution', effectiveHero.constitution),
+    dexterity: getAttributeTierLabel('dexterity', effectiveHero.dexterity),
+    intelligence: getAttributeTierLabel('intelligence', effectiveHero.intelligence),
+    wisdom: getAttributeTierLabel('wisdom', effectiveHero.wisdom),
+    charisma: getAttributeTierLabel('charisma', effectiveHero.charisma)
+  };
+
+  const classAbilities = buildClassAbilitySummary(effectiveHero, clericHealInfo, { secondWindUsed });
   const shopStock = isSafeCity ? getCityStoreStock(db, effectiveHero) : null;
   const bountyContracts = isSafeCity
     ? getOrGenerateContracts(db, effectiveHero).map(c => {
@@ -291,6 +324,7 @@ function buildClientState(db, userId, extra = {}) {
         combat_round: 0,
         isAmbush: effectiveAmbush,
         isRangerSpecial: Boolean(activeEncounter.isRangerSpecial),
+        classKnowledgeNote: activeEncounter.classKnowledgeNote || null,
         resolvedDescription: activeEncounter.resolvedDescription
       };
     } else if (activeEncounter.status === 'IN_COMBAT') {
@@ -332,6 +366,7 @@ function buildClientState(db, userId, extra = {}) {
         ? Math.max(...actionEvents.map(ev => Number(ev.round_number || 1)))
         : (activeEncounter.combat_round || 1);
       const currentRoundEvents = actionEvents.filter(ev => Number(ev.round_number || 1) === latestRoundNum);
+      const knowledgeEval = evaluateHeroMonsterKnowledge(db, effectiveHero, activeEncounter);
 
       safeEncounter = {
         id: activeEncounter.id,
@@ -341,6 +376,8 @@ function buildClientState(db, userId, extra = {}) {
         monsterName: cleanMonsterName,
         baseMonsterName: cleanBaseMonsterName,
         monsterSlug: integratedProfile.slug || cleanSlug,
+        monsterFamily: knowledgeEval.monsterFamily,
+        monsterFamilyLabel: knowledgeEval.familyLabel,
         monsterSymbol: activeEncounter.monster_symbol,
         monsterColor: activeEncounter.monster_color || '#c5a059',
         imageUrl,
@@ -366,6 +403,19 @@ function buildClientState(db, userId, extra = {}) {
         conditionText: combatState ? combatState.currentConditionText : '',
         conditionBracket: combatState ? bracketNumToKey(combatState.currentBracket) : '5_uninjured',
         heroStatusBadges: (combatState && Array.isArray(combatState.heroStatusBadges)) ? combatState.heroStatusBadges : [],
+        secondWindUsed: Boolean(combatState && combatState.secondWindUsed),
+        secondWindAvailable: Boolean(combatState && combatState.secondWindAvailable),
+        monsterKnowledge: {
+          monsterFamily: knowledgeEval.monsterFamily,
+          familyLabel: knowledgeEval.familyLabel,
+          isFavoredEnemy: knowledgeEval.isFavoredEnemy,
+          encounteredCount: knowledgeEval.battleExperience.encounteredCount,
+          victoryCount: knowledgeEval.battleExperience.victoryCount,
+          masteryTier: knowledgeEval.battleExperience.masteryTier,
+          masteryLabel: knowledgeEval.battleExperience.masteryLabel,
+          badges: knowledgeEval.qualitativeBadges,
+          loreNotes: knowledgeEval.loreNotes
+        },
         currentRoundEvents,
         allEvents: actionEvents
       };
@@ -420,6 +470,8 @@ function buildClientState(db, userId, extra = {}) {
       .join(' ');
   }
 
+  const compendiumKnowledge = getCharacterCompendiumKnowledge(db, effectiveHero);
+
   return {
     mode: safeEncounter ? safeEncounter.status : (isSafeCity ? 'CITY' : 'EXPLORATION'),
     artPreviewMode: effectiveUseCandidateArt ? 'CANDIDATES_STAGED' : 'APPROVED_DEFAULT',
@@ -444,19 +496,31 @@ function buildClientState(db, userId, extra = {}) {
       gold: effectiveHero.gold,
       current_hp: effectiveHero.current_hp,
       max_hp: effectiveHero.max_hp,
+      attribute_points: Number(effectiveHero.attribute_points || 0),
       strength: effectiveHero.strength,
       constitution: effectiveHero.constitution,
       dexterity: effectiveHero.dexterity,
       intelligence: effectiveHero.intelligence,
       wisdom: effectiveHero.wisdom,
       charisma: effectiveHero.charisma,
+      base_strength: effectiveHero.base_strength,
+      base_constitution: effectiveHero.base_constitution,
+      base_dexterity: effectiveHero.base_dexterity,
+      base_intelligence: effectiveHero.base_intelligence,
+      base_wisdom: effectiveHero.base_wisdom,
+      base_charisma: effectiveHero.base_charisma,
+      attributeTierLabels,
       is_str_boosted: Boolean(effectiveHero.is_str_boosted),
       primary_weapon: effectiveHero.primary_weapon || 'MELEE',
+      favored_enemy_family: normalizedFavoredFamily || effectiveHero.favored_enemy_family || null,
+      favored_enemy_label: favoredFamilyMeta ? favoredFamilyMeta.label : null,
       favored_enemy_type: effectiveHero.favored_enemy_type,
       favored_enemy_subtype: effectiveHero.favored_enemy_subtype || null,
+      secondWindStatus,
       facing,
       sceneMode
     },
+    compendiumKnowledge,
     modifiers,
     savingThrows,
     classAbilities,
@@ -519,5 +583,6 @@ function buildClientState(db, userId, extra = {}) {
 }
 
 module.exports = {
+  normalizeContractGrammar,
   buildClientState
 };

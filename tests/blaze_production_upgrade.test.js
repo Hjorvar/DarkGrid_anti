@@ -112,9 +112,9 @@ async function registerAndCreateHero(username, heroName, classType = 'FIGHTER') 
   csrf = createHtml.match(/name="_csrf"\s+value="([^"]+)"/)[1];
 
   const statsByClass = {
-    FIGHTER: { strength: '16', constitution: '13', dexterity: '12', intelligence: '10', wisdom: '10', charisma: '10' },
-    RANGER: { strength: '12', constitution: '10', dexterity: '16', intelligence: '10', wisdom: '13', charisma: '10' },
-    CLERIC: { strength: '12', constitution: '12', dexterity: '10', intelligence: '10', wisdom: '16', charisma: '11' }
+    FIGHTER: { strength: '16', constitution: '13', dexterity: '12', intelligence: '11', wisdom: '10', charisma: '10' },
+    RANGER: { strength: '12', constitution: '10', dexterity: '16', intelligence: '11', wisdom: '13', charisma: '10' },
+    CLERIC: { strength: '12', constitution: '12', dexterity: '10', intelligence: '11', wisdom: '16', charisma: '11' }
   };
 
   const createRes = await fetch(`${baseUrl}/character/create`, {
@@ -624,7 +624,7 @@ test('Migration & Firebase Auth Login Bridge: Migrated Spark accounts retain UID
           strength: 12,
           constitution: 12,
           dexterity: 10,
-          intelligence: 10,
+          intelligence: 11,
           wisdom: 16,
           charisma: 11,
           inventory_json: JSON.stringify([{ id: 9001, item_definition_id: 1, equipped_slot: null }])

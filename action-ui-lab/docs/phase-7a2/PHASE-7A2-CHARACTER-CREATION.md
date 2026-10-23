@@ -1,5 +1,8 @@
 # DARKGRID — PHASE 7A.2: DESCRIPTIVE CHARACTER CREATION, ATTRIBUTES & RETROACTIVE CONSTITUTION RULES
 
+> [!IMPORTANT]
+> **Historical Design Baseline (Superseded by Phase 7A.3):** This Phase 7A.2 document is preserved as historical design context. Phase 7A.3 replaces the restricted 2-dropdown aptitude concept and the general `INT` combat-XP multiplier with **free player allocation of 72 starting points (`8–18` bounds)**, optional validated class presets, visible attribute integers during creation/level-up, post-18 level-up rules, and **Battle Experience**. See [`../phase-7a3/PHASE-7A3-ATTRIBUTES.md`](../phase-7a3/PHASE-7A3-ATTRIBUTES.md) and [`../phase-7a3/PHASE-7A3-BATTLE-EXPERIENCE.md`](../phase-7a3/PHASE-7A3-BATTLE-EXPERIENCE.md).
+
 **Date:** 2026-10-22  
 **Phase:** 7A.2 — Class Identity & Thematic Progression (Design & Documentation Only)  
 **Baseline Verified Against:** `main` commit `042d122`

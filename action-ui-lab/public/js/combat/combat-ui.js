@@ -291,10 +291,23 @@ export function buildCombatMonsterActorHtml(monster, state, { isSequenceFrame = 
     </div>
   `;
 
+  const hero = state && state.character;
+  const swChipHtml = (hero && hero.class === 'FIGHTER' && Number(hero.level || 1) >= 3)
+    ? `<span class="fp-tactical-chip" style="color:${monster.secondWindUsed ? '#94a3b8' : '#86efac'};">🛡️ Second Wind: ${monster.secondWindUsed ? 'Spent' : 'Ready'}</span>`
+    : '';
+
+  const knowledgeBadges = (monster && monster.monsterKnowledge && Array.isArray(monster.monsterKnowledge.badges))
+    ? monster.monsterKnowledge.badges
+    : [];
+  const knowledgeBadgesHtml = knowledgeBadges.length > 0
+    ? knowledgeBadges.map(b => `<span class="lab-badge" style="border-color:rgba(197,160,89,0.5); color:#fde68a;" title="Passive Tactical & Battle Experience Insight">📖 ${escapeHtml(b)}</span>`).join('')
+    : '';
+
   const tacticalReadoutHtml = `
     <div class="fp-combat-tactical-strip">
       <span class="fp-tactical-chip">⚔️ Round ${roundNum}</span>
       <span class="fp-tactical-chip" id="seq-condition-badge" style="color:${gemColor}; border-color:${gemColor}55;">● ${escapeHtml(bracketLabel)}</span>
+      ${swChipHtml}
       <span class="fp-tactical-chip fp-tactical-hint">${isRanged ? '🏹' : '🗡️'} ${escapeHtml(weaponName)} (${escapeHtml(String(atkBonus))}) • [Space] Strike</span>
     </div>
   `;
@@ -333,6 +346,7 @@ export function buildCombatMonsterActorHtml(monster, state, { isSequenceFrame = 
           ${pfSizeBadgeHtml}
           ${monster.isBountyTarget ? '<span class="lab-badge" style="border-color:#ef4444; color:#fca5a5;">🎯 Quarry</span>' : ''}
           ${monster.isAirborne ? '<span class="lab-badge">🦅 Airborne</span>' : ''}
+          ${knowledgeBadgesHtml}
           ${modeBadgeHtml}
           ${techScaleBadgeHtml}
         </div>
@@ -436,7 +450,7 @@ export function renderFallenScreen(state) {
           WELCOME, ${escapeHtml(uName.toUpperCase())}
         </div>
         <p style="font-size: 0.84rem; color: var(--text-body); margin: 8px 0;">
-          No living champion currently walks the realm under your banner. Forge a custom hero with the 71-point attribute creator or rise with a canonical class preset.
+          No living champion currently walks the realm under your banner. Forge a custom hero with the 72-point attribute creator or rise with a canonical class preset.
         </p>
         <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
           <button type="button" class="btn-action-gold" onclick="openLabModal('account')">

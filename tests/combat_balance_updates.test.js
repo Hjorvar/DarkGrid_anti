@@ -48,9 +48,9 @@ function createRngSequence(sequence) {
 }
 
 const defaultStatsByClass = {
-  FIGHTER: { strength: 16, constitution: 13, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 10 },
-  RANGER: { strength: 12, constitution: 10, dexterity: 16, intelligence: 10, wisdom: 13, charisma: 10 },
-  CLERIC: { strength: 12, constitution: 11, dexterity: 10, intelligence: 10, wisdom: 16, charisma: 12 }
+  FIGHTER: { strength: 16, constitution: 13, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 10 },
+  RANGER: { strength: 12, constitution: 10, dexterity: 16, intelligence: 11, wisdom: 13, charisma: 10 },
+  CLERIC: { strength: 12, constitution: 11, dexterity: 10, intelligence: 11, wisdom: 16, charisma: 12 }
 };
 
 // =============================================================================
@@ -359,17 +359,17 @@ test('2.7 Ranger Opening Shot: Favored Enemy applies to legal type and strictly 
     favoredEnemyType: 'BEAST'
   });
 
-  // Legal type: Level 1 provides +1/+1
+  // Legal type: Level 1 provides +2/+2 (Phase 7A.4 / 7B Option A)
   const beastMonster = { creature_type: 'BEAST' };
   const bonusBeast = getRangerFavoredEnemyBonus(hero, beastMonster);
-  assert.equal(bonusBeast.attack, 1);
-  assert.equal(bonusBeast.damage, 1);
+  assert.equal(bonusBeast.attack, 2);
+  assert.equal(bonusBeast.damage, 2);
 
-  // Level 5 provides +2/+2
+  // Level 5 provides +3/+3 (Phase 7A.4 / 7B Option A)
   const level5Hero = { ...hero, level: 5 };
   const bonusBeastLvl5 = getRangerFavoredEnemyBonus(level5Hero, beastMonster);
-  assert.equal(bonusBeastLvl5.attack, 2);
-  assert.equal(bonusBeastLvl5.damage, 2);
+  assert.equal(bonusBeastLvl5.attack, 3);
+  assert.equal(bonusBeastLvl5.damage, 3);
 
   // Illegal Undead type
   const undeadMonster = { creature_type: 'UNDEAD' };

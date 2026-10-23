@@ -77,9 +77,9 @@ describe('Rebalance & Monster Special Abilities Suite', () => {
   it('2. INT modifier scales XP (+10% per +1 INT mod) and CHA modifier scales shop prices (-5% per +1 CHA mod)', () => {
     // INT XP scaling
     assert.equal(calculateXpWithIntelligence(100, 10), 100, 'INT 10 (+0 mod) -> 100% XP');
-    assert.equal(calculateXpWithIntelligence(100, 14), 120, 'INT 14 (+2 mod) -> 120% XP');
-    assert.equal(calculateXpWithIntelligence(100, 16), 130, 'INT 16 (+3 mod) -> 130% XP');
-    assert.equal(calculateXpWithIntelligence(100, 8), 90, 'INT 8 (-1 mod) -> 90% XP');
+    assert.equal(calculateXpWithIntelligence(100, 14), 100, 'Phase 7B retired general INT XP bonus -> flat 100% XP');
+    assert.equal(calculateXpWithIntelligence(100, 16), 100, 'Phase 7B retired general INT XP bonus -> flat 100% XP');
+    assert.equal(calculateXpWithIntelligence(100, 8), 100, 'Phase 7B retired general INT XP bonus -> flat 100% XP');
 
     // CHA shop price scaling
     assert.equal(calculateShopPriceWithCharisma(100, 10), 100, 'CHA 10 (+0 mod) -> 100% buy price');
@@ -210,7 +210,7 @@ describe('Rebalance & Monster Special Abilities Suite', () => {
       userId: user.id,
       name: 'Sir Valen',
       classType: 'FIGHTER',
-      stats: { strength: 16, dexterity: 12, constitution: 14, intelligence: 10, wisdom: 10, charisma: 9 }
+      stats: { strength: 16, dexterity: 12, constitution: 14, intelligence: 11, wisdom: 10, charisma: 9 }
     });
 
     // Boost character to Level 3 with 35 HP for safe multi-round ability testing

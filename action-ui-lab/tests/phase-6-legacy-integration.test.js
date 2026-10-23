@@ -163,7 +163,7 @@ describe('Phase 6 — Full Legacy Integration & Complete Player Journey Verifica
     assert.ok(json.counts.monsters >= 98);
     assert.ok(json.counts.itemDefinitions >= 25);
     assert.deepEqual(json.classesSupported, ['FIGHTER', 'RANGER', 'CLERIC']);
-    assert.equal(json.statRules.requiredTotalSum, 71);
+    assert.equal(json.statRules.requiredTotalSum, 72);
   });
 
   it('2. Supports User Registration, Session Persistence, Logout, Login & Firebase Auth Password Upgrade Bridge', async () => {
@@ -179,7 +179,7 @@ describe('Phase 6 — Full Legacy Integration & Complete Player Journey Verifica
     // Newly registered user has no character yet -> mode NO_CHARACTER
     assert.equal(regRes.json.state.mode, 'NO_CHARACTER');
     assert.ok(regRes.json.state.classBases.RANGER);
-    assert.equal(regRes.json.state.statRules.requiredTotalSum, 71);
+    assert.equal(regRes.json.state.statRules.requiredTotalSum, 72);
 
     // Check /api/auth/session
     const sessRes = await clientA.get('/api/auth/session');
@@ -226,13 +226,13 @@ describe('Phase 6 — Full Legacy Integration & Complete Player Journey Verifica
     });
     assert.equal(badSum.status, 400);
     assert.equal(badSum.json.ok, false);
-    assert.match(badSum.json.error, /71/);
+    assert.match(badSum.json.error, /72/);
 
     // 3b. Reject Ranger Favored Enemy UNDEAD
     const badUndead = await clientA.post('/api/character/create', {
       name: 'Kaelen Mistwalker',
       classType: 'RANGER',
-      stats: { strength: 12, constitution: 12, dexterity: 15, intelligence: 10, wisdom: 12, charisma: 10 },
+      stats: { strength: 12, constitution: 12, dexterity: 15, intelligence: 11, wisdom: 12, charisma: 10 },
       favoredEnemyType: 'UNDEAD'
     });
     assert.equal(badUndead.status, 400);
@@ -242,7 +242,7 @@ describe('Phase 6 — Full Legacy Integration & Complete Player Journey Verifica
     const badHum = await clientA.post('/api/character/create', {
       name: 'Kaelen Mistwalker',
       classType: 'RANGER',
-      stats: { strength: 12, constitution: 12, dexterity: 15, intelligence: 10, wisdom: 12, charisma: 10 },
+      stats: { strength: 12, constitution: 12, dexterity: 15, intelligence: 11, wisdom: 12, charisma: 10 },
       favoredEnemyType: 'HUMANOID'
     });
     assert.equal(badHum.status, 400);
@@ -252,7 +252,7 @@ describe('Phase 6 — Full Legacy Integration & Complete Player Journey Verifica
     const createRes = await clientA.post('/api/character/create', {
       name: 'Kaelen Mistwalker',
       classType: 'RANGER',
-      stats: { strength: 12, constitution: 11, dexterity: 16, intelligence: 10, wisdom: 12, charisma: 10 },
+      stats: { strength: 12, constitution: 11, dexterity: 16, intelligence: 11, wisdom: 12, charisma: 10 },
       favoredEnemyType: 'HUMANOID:goblinoid',
       primaryWeapon: 'RANGED'
     });
@@ -278,7 +278,7 @@ describe('Phase 6 — Full Legacy Integration & Complete Player Journey Verifica
     const dupRes = await clientA.post('/api/character/create', {
       name: 'Second Ranger',
       classType: 'RANGER',
-      stats: { strength: 12, constitution: 11, dexterity: 16, intelligence: 10, wisdom: 12, charisma: 10 },
+      stats: { strength: 12, constitution: 11, dexterity: 16, intelligence: 11, wisdom: 12, charisma: 10 },
       favoredEnemyType: 'ANIMAL'
     });
     assert.equal(dupRes.status, 409);
@@ -295,7 +295,7 @@ describe('Phase 6 — Full Legacy Integration & Complete Player Journey Verifica
       createCharacter: {
         name: 'Brother Aldric',
         classType: 'CLERIC',
-        stats: { strength: 12, constitution: 10, dexterity: 9, intelligence: 12, wisdom: 14, charisma: 14 },
+        stats: { strength: 12, constitution: 10, dexterity: 9, intelligence: 13, wisdom: 14, charisma: 14 },
         primaryWeapon: 'MELEE'
       }
     });
@@ -395,8 +395,8 @@ describe('Phase 6 — Full Legacy Integration & Complete Player Journey Verifica
     assert.ok(curB.victory, 'Cleric must defeat Human Skeleton');
     // Verify INT 12 (+1 mod -> +10% XP) scaled the XP reward
     const skel = db.prepare("SELECT xp_reward FROM monsters WHERE LOWER(name) = 'human skeleton'").get();
-    const expectedXp = Math.round(skel.xp_reward * 1.10);
-    assert.equal(curB.victory.xpAwarded, expectedXp, 'Intelligence modifier (+1) must increase XP by +10%');
+    const expectedXp = skel.xp_reward;
+    assert.equal(curB.victory.xpAwarded, expectedXp, 'Phase 7B awards flat base XP (INT scales Battle Experience instead)');
 
     // Simulate wound on Cleric outside combat and cast CLERIC_HEAL
     await clientB.action('LAB_SCENARIO', { scenario: 'WOUNDED' });
@@ -548,7 +548,7 @@ describe('Phase 6 — Full Legacy Integration & Complete Player Journey Verifica
     const newHeroRes = await clientB.action('CREATE_CHARACTER', {
       name: 'Sir Galahad',
       classType: 'FIGHTER',
-      stats: { strength: 16, constitution: 13, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 10 },
+      stats: { strength: 16, constitution: 13, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 10 },
       primaryWeapon: 'MELEE'
     });
     assert.equal(newHeroRes.json.ok, true);

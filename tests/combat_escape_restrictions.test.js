@@ -90,7 +90,7 @@ test('C2 HTTP Integration: Illegal escape attempts during IN_COMBAT are rejected
       strength: '16',
       dexterity: '14',
       constitution: '12',
-      intelligence: '10',
+      intelligence: '11',
       wisdom: '10',
       charisma: '9',
       _csrf: createCsrf

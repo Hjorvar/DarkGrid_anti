@@ -117,7 +117,7 @@ test('UI Dashboard: Desktop 3-column layout and core elements in City state', as
       strength: '16',
       dexterity: '14',
       constitution: '12',
-      intelligence: '10',
+      intelligence: '11',
       wisdom: '10',
       charisma: '9',
       _csrf: createCsrf
@@ -220,7 +220,7 @@ test('UI Dashboard: Modal forms, returnModal parameter, and redirect preservatio
       strength: '16',
       dexterity: '14',
       constitution: '12',
-      intelligence: '10',
+      intelligence: '11',
       wisdom: '10',
       charisma: '9',
       _csrf: createCsrf
@@ -338,7 +338,7 @@ test('UI Dashboard: Combat interface renders 3 actions and battle record without
       strength: '16',
       dexterity: '14',
       constitution: '12',
-      intelligence: '10',
+      intelligence: '11',
       wisdom: '10',
       charisma: '9',
       _csrf: createCsrf
@@ -419,7 +419,7 @@ test('UI Dashboard: Combat log displays only current round events in active comb
       strength: '16',
       dexterity: '14',
       constitution: '12',
-      intelligence: '10',
+      intelligence: '11',
       wisdom: '10',
       charisma: '9',
       _csrf: createCsrf

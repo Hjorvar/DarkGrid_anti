@@ -25,8 +25,8 @@ export const store = {
   charCreatorDraft: {
     name: 'Vaelen Ironhand',
     classType: 'FIGHTER',
-    stats: { strength: 16, constitution: 13, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 10 },
-    favoredEnemyType: 'ANIMAL',
+    stats: { strength: 14, constitution: 14, dexterity: 12, intelligence: 10, wisdom: 12, charisma: 10 },
+    favoredEnemyType: 'ANIMALS',
     primaryWeapon: 'MELEE'
   },
   currentMonsterScaleMode: 'adaptive',

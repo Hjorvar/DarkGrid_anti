@@ -81,7 +81,7 @@ async function setupCombatScenario(db, username = 'HeroCombat', classType = 'FIG
     userId: user.id,
     name: username,
     classType,
-    stats: { strength: 16, constitution: 13, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 10 }
+    stats: { strength: 16, constitution: 13, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 10 }
   });
 
   const forestTile = getTileByCoords(db, 7, 5); // Wild tile
@@ -457,7 +457,7 @@ test('12. Second player enters tile with persistent monster: encounters it direc
     userId: user2.id,
     name: 'HeroTwo',
     classType: 'CLERIC',
-    stats: { strength: 12, constitution: 10, dexterity: 10, intelligence: 10, wisdom: 16, charisma: 13 }
+    stats: { strength: 12, constitution: 10, dexterity: 10, intelligence: 11, wisdom: 16, charisma: 13 }
   });
   db.prepare('UPDATE characters SET tile_id = ? WHERE id = ?').run(tile.id, hero2.id);
 
@@ -499,7 +499,7 @@ test('13. Persistent monster slays second player: kill_count=2, loot accumulates
     userId: user2.id,
     name: 'SecondVictim',
     classType: 'FIGHTER',
-    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 9 }
+    stats: { strength: 16, constitution: 14, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 9 }
   });
   db.prepare('UPDATE characters SET tile_id = ?, current_hp = 1, gold = 60 WHERE id = ?').run(tile.id, hero2.id);
 
@@ -533,7 +533,7 @@ test('14. Persistent monster defeated: victor claims loot and XP, monster marked
     userId: user3.id,
     name: 'AvengerHero',
     classType: 'FIGHTER',
-    stats: { strength: 16, constitution: 13, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 10 }
+    stats: { strength: 16, constitution: 13, dexterity: 12, intelligence: 11, wisdom: 10, charisma: 10 }
   });
   db.prepare('UPDATE characters SET tile_id = ? WHERE id = ?').run(tile.id, hero3.id);
 

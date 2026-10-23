@@ -271,7 +271,7 @@ describe('Phase 6.1 — Pre-Cutover Hardening, Security Audit, Migration Rehears
         strength: 16,
         constitution: 14,
         dexterity: 12,
-        intelligence: 10,
+        intelligence: 11,
         wisdom: 9,
         charisma: 10
       },
@@ -298,7 +298,7 @@ describe('Phase 6.1 — Pre-Cutover Hardening, Security Audit, Migration Rehears
     const validRetireAttempt = await fighterClient.action('CREATE_CHARACTER', {
       name: 'Replacement Hero',
       classType: 'CLERIC',
-      stats: { strength: 12, constitution: 12, dexterity: 10, intelligence: 10, wisdom: 16, charisma: 11 },
+      stats: { strength: 12, constitution: 12, dexterity: 10, intelligence: 11, wisdom: 16, charisma: 11 },
       retireCurrentHero: true
     });
     assert.equal(validRetireAttempt.status, 409);
@@ -335,7 +335,7 @@ describe('Phase 6.1 — Pre-Cutover Hardening, Security Audit, Migration Rehears
         strength: 12,
         constitution: 12,
         dexterity: 16,
-        intelligence: 10,
+        intelligence: 11,
         wisdom: 11,
         charisma: 10
       },
@@ -359,7 +359,7 @@ describe('Phase 6.1 — Pre-Cutover Hardening, Security Audit, Migration Rehears
         strength: 12,
         constitution: 11,
         dexterity: 10,
-        intelligence: 10,
+        intelligence: 11,
         wisdom: 16,
         charisma: 12
       },

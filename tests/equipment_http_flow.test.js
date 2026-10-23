@@ -123,7 +123,7 @@ test('C1 HTTP Integration: Full Equip -> Unequip -> Buy -> Sell cycle via real p
       strength: '16',
       dexterity: '14',
       constitution: '12',
-      intelligence: '10',
+      intelligence: '11',
       wisdom: '10',
       charisma: '9',
       _csrf: createCsrf
@@ -332,7 +332,7 @@ test('C1 HTTP Integration: Primary Weapon Preference and Two-Handed Shield Suppr
       strength: '16',
       dexterity: '14',
       constitution: '12',
-      intelligence: '10',
+      intelligence: '11',
       wisdom: '10',
       charisma: '9',
       _csrf: createCsrf
@@ -412,7 +412,7 @@ test('C1 HTTP Integration: Out-of-combat potion drinking via Backpack modal form
       strength: '16',
       dexterity: '14',
       constitution: '12',
-      intelligence: '10',
+      intelligence: '11',
       wisdom: '10',
       charisma: '9',
       _csrf: createCsrf

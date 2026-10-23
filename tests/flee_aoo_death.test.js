@@ -91,7 +91,7 @@ test('Session 2 HTTP Integration: Flee with lethal Attack of Opportunity trigger
       strength: '16',
       constitution: '13',
       dexterity: '12',
-      intelligence: '10',
+      intelligence: '11',
       wisdom: '10',
       charisma: '10',
       _csrf: createCsrf

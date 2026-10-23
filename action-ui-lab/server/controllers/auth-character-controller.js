@@ -1,17 +1,19 @@
 /**
  * DARKGRID ADVENTURE LAB — Authentication, User Session & Character Creation Controller
  *
- * Connects the authoritative legacy authentication (`src/domain/auth/service.js`)
+ * Connects the authoritative authentication (`src/domain/auth/service.js`)
  * and character creation/point-buy rules (`src/domain/character/rules.js`) to the
- * Adventure Lab, supporting both REST endpoints (`/api/auth/*`, `/api/character/create`)
- * and unified `/api/action` dispatches (`REGISTER`, `LOGIN`, `LOGOUT`, `CREATE_CHARACTER`).
+ * Adventure Lab, supporting both REST endpoints (`/api/auth/*`, `/api/character/create`,
+ * `/api/character/attributes/spend`) and unified `/api/action` dispatches
+ * (`REGISTER`, `LOGIN`, `LOGOUT`, `CREATE_CHARACTER`, `SPEND_ATTRIBUTE_POINT`).
  */
 
 const config = require('../../../src/config');
 const { registerUser, loginUser } = require('../../../src/domain/auth/service');
 const {
   createCharacter,
-  getLivingCharacterByUserId
+  getLivingCharacterByUserId,
+  spendAttributePoint
 } = require('../../../src/domain/character/rules');
 const { normalizeSceneMode } = require('../../scene-catalog');
 const { buildClientState } = require('../services/client-state-service');
@@ -28,7 +30,7 @@ const {
 function buildDefaultPointBuyStats(classType) {
   const upper = String(classType || 'FIGHTER').toUpperCase();
   const base = config.classBases[upper] || config.classBases.FIGHTER;
-  const stats = {
+  return {
     strength: base.strength,
     constitution: base.constitution,
     dexterity: base.dexterity,
@@ -36,18 +38,6 @@ function buildDefaultPointBuyStats(classType) {
     wisdom: base.wisdom,
     charisma: base.charisma
   };
-  // Allocate the +3 bonus points (68 -> 71) sensibly by class
-  if (upper === 'FIGHTER') {
-    stats.strength += 2;
-    stats.constitution += 1;
-  } else if (upper === 'RANGER') {
-    stats.dexterity += 2;
-    stats.constitution += 1;
-  } else if (upper === 'CLERIC') {
-    stats.wisdom += 2;
-    stats.constitution += 1;
-  }
-  return stats;
 }
 
 function executeCreateCharacterForUser(db, userId, payload = {}) {
@@ -84,12 +74,23 @@ function executeCreateCharacterForUser(db, userId, payload = {}) {
     stats = buildDefaultPointBuyStats(classType);
   }
 
-  const favoredEnemyType = payload.favoredEnemyType !== undefined
+  const explicitFamily = payload.favoredEnemyFamily !== undefined
+    ? payload.favoredEnemyFamily
+    : payload.favored_enemy_family;
+  const explicitType = payload.favoredEnemyType !== undefined
     ? payload.favoredEnemyType
-    : (payload.favored_enemy_type !== undefined ? payload.favored_enemy_type : (classType === 'RANGER' ? 'ANIMAL' : null));
-  const favoredEnemySubtype = payload.favoredEnemySubtype !== undefined
+    : payload.favored_enemy_type;
+  const explicitSubtype = payload.favoredEnemySubtype !== undefined
     ? payload.favoredEnemySubtype
     : (payload.favored_enemy_subtype || null);
+
+  const hasExplicitFavoredEnemy = explicitFamily !== undefined || explicitType !== undefined;
+  const favoredEnemyFamily = explicitFamily !== undefined
+    ? explicitFamily
+    : (!hasExplicitFavoredEnemy && classType === 'RANGER' ? 'ANIMALS' : null);
+  const favoredEnemyType = explicitType !== undefined
+    ? explicitType
+    : (favoredEnemyFamily || (classType === 'RANGER' && !hasExplicitFavoredEnemy ? 'ANIMALS' : null));
 
   const hero = createCharacter(db, {
     userId,
@@ -97,8 +98,9 @@ function executeCreateCharacterForUser(db, userId, payload = {}) {
     classType,
     stats,
     startingGold: config.startingGold,
+    favoredEnemyFamily,
     favoredEnemyType,
-    favoredEnemySubtype,
+    favoredEnemySubtype: explicitSubtype,
     primaryWeapon: payload.primaryWeapon || payload.primary_weapon || (classType === 'RANGER' ? 'RANGED' : 'MELEE')
   });
 
@@ -276,6 +278,45 @@ function createAuthAndCharacterRoutes({ db, defaultUserId, options = {} }) {
     }
   }
 
+  function postSpendAttributePoint(req, res) {
+    const effectiveUid = resolveRequestUserId(req, db, defaultUserId, options);
+    const labToolsAllowed = isLabToolsAllowedForUser(db, effectiveUid, options, req);
+    try {
+      if (!effectiveUid) {
+        const err = new Error('Authentication required.');
+        err.status = 401;
+        throw err;
+      }
+      const hero = getLivingCharacterByUserId(db, effectiveUid);
+      if (!hero) {
+        const err = new Error('Living character not found.');
+        err.status = 404;
+        throw err;
+      }
+      const body = req.body || {};
+      const payload = { ...body, ...(body.payload || {}) };
+      const attr = payload.attribute || payload.stat || payload.attributeName;
+      const result = spendAttributePoint(db, hero.id, attr);
+      const label = result.attribute.charAt(0).toUpperCase() + result.attribute.slice(1);
+      return res.status(200).json({
+        ok: true,
+        result,
+        spendResult: result,
+        state: buildClientState(db, effectiveUid, {
+          labToolsAllowed,
+          infoMessage: `Permanently increased ${label} to ${result.newBaseScore}.${result.hpGained > 0 ? ` Vitality increased by +${result.hpGained} HP.` : ''}`
+        })
+      });
+    } catch (err) {
+      const status = err.status || 400;
+      return res.status(status).json({
+        ok: false,
+        error: err.message,
+        state: buildClientState(db, effectiveUid, { labToolsAllowed, errorMessage: err.message })
+      });
+    }
+  }
+
   function getLegacyAudit(req, res) {
     try {
       const effectiveUid = resolveRequestUserId(req, db, defaultUserId, options);
@@ -320,6 +361,7 @@ function createAuthAndCharacterRoutes({ db, defaultUserId, options = {} }) {
     postLogout,
     getSession,
     postCreateCharacter,
+    postSpendAttributePoint,
     getLegacyAudit
   };
 }

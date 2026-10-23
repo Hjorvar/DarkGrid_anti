@@ -5,6 +5,7 @@ const {
   getLivingCharacterByUserId,
   getModifier,
   formatModifier,
+  getAttributeTierLabel,
   getCharacterEquipment,
   getCharacterInventory,
   getCharacterPotionCount,
@@ -18,12 +19,18 @@ const {
   getClericSelfHealInfo,
   getClericRemainingHealUses,
   useConsumable,
-  getEffectiveStats
+  getEffectiveStats,
+  reconcileCharacterHpOnLoad,
+  spendAttributePoint
 } = require('../domain/character/rules');
 const {
   calculateHeroAC,
   calculateHeroAttackBonus
 } = require('../domain/combat/rules');
+const {
+  evaluateHeroMonsterKnowledge,
+  getCharacterCompendiumKnowledge
+} = require('../domain/combat/knowledge');
 const {
   getCityStoreStock,
   buyItem,
@@ -97,6 +104,9 @@ router.get('/game', (req, res) => {
     return res.redirect('/character/create');
   }
 
+  // Rule D: Reconcile Max HP on load without healing Current HP
+  character = reconcileCharacterHpOnLoad(req.db, character.id) || character;
+
   const currentTile = getTileById(req.db, character.tile_id);
   if (!currentTile) {
     return res.status(500).send('Error: Current tile not found in the world.');
@@ -135,9 +145,11 @@ router.get('/game', (req, res) => {
   // Computed Combat stats (M1) — strictly do not leak unrevealed monster traits while DISCOVERED
   const revealedMonster = (activeEncounter && activeEncounter.status === 'IN_COMBAT') ? activeEncounter : null;
   const { activeWeapon, isRangedActive } = combatState ? combatState : getActiveWeapon(effectiveHero, equipment, revealedMonster);
-  const meleeAttackBonus = calculateHeroAttackBonus(effectiveHero, equipment.meleeWeapon, revealedMonster, equipment);
-  const rangedAttackBonus = calculateHeroAttackBonus(effectiveHero, equipment.rangedWeapon, revealedMonster, equipment);
-  const heroAC = combatState ? combatState.heroAC : calculateHeroAC(effectiveHero, equipment, isRangedActive, revealedMonster, activeWeapon);
+  const meleeAttackBonus = calculateHeroAttackBonus(effectiveHero, equipment.meleeWeapon, revealedMonster, equipment, req.db);
+  const rangedAttackBonus = calculateHeroAttackBonus(effectiveHero, equipment.rangedWeapon, revealedMonster, equipment, req.db);
+  const heroAC = combatState ? combatState.heroAC : calculateHeroAC(effectiveHero, equipment, isRangedActive, revealedMonster, activeWeapon, req.db);
+  const monsterKnowledge = revealedMonster ? evaluateHeroMonsterKnowledge(req.db, effectiveHero, revealedMonster) : null;
+  const compendiumKnowledge = getCharacterCompendiumKnowledge(req.db, effectiveHero);
 
   // Cleric healing info
   let clericHealInfo = null;
@@ -147,6 +159,11 @@ router.get('/game', (req, res) => {
       remainingUses: getClericRemainingHealUses(character)
     };
   }
+
+  const secondWindUsed = Boolean(combatState && combatState.secondWindUsed);
+  const secondWindStatus = String(effectiveHero.class || '').toUpperCase() === 'FIGHTER'
+    ? (Number(effectiveHero.level || 1) >= 3 ? (secondWindUsed ? 'Spent' : 'Ready') : 'Unlocks at Level 3')
+    : null;
 
   // Shop stock & Watcher's Board data if in safe haven city
   const shopStock = isSafeCity ? getCityStoreStock(req.db, effectiveHero) : null;
@@ -160,7 +177,7 @@ router.get('/game', (req, res) => {
   // Available travel directions
   const directions = getAvailableDirections(req.db, currentTile);
 
-  // Computed stat modifiers
+  // Computed stat modifiers & qualitative tier labels
   const modifiers = {
     strength: formatModifier(effectiveHero.strength),
     constitution: formatModifier(effectiveHero.constitution),
@@ -168,6 +185,14 @@ router.get('/game', (req, res) => {
     intelligence: formatModifier(effectiveHero.intelligence),
     wisdom: formatModifier(effectiveHero.wisdom),
     charisma: formatModifier(effectiveHero.charisma)
+  };
+  const attributeTierLabels = {
+    strength: getAttributeTierLabel(effectiveHero.strength),
+    constitution: getAttributeTierLabel(effectiveHero.constitution),
+    dexterity: getAttributeTierLabel(effectiveHero.dexterity),
+    intelligence: getAttributeTierLabel(effectiveHero.intelligence),
+    wisdom: getAttributeTierLabel(effectiveHero.wisdom),
+    charisma: getAttributeTierLabel(effectiveHero.charisma)
   };
 
   const errorMessage = req.query.error || null;
@@ -206,6 +231,9 @@ router.get('/game', (req, res) => {
     directions,
     encounter: activeEncounter,
     combatState,
+    monsterKnowledge,
+    compendiumKnowledge,
+    secondWindStatus,
     equipment,
     inventory,
     potions,
@@ -223,6 +251,7 @@ router.get('/game', (req, res) => {
     activeContract,
     claimedBounties,
     modifiers,
+    attributeTierLabels,
     errorMessage,
     infoMessage,
     activeModal,
@@ -613,6 +642,27 @@ router.post('/game/character/primary-weapon', (req, res) => {
 });
 
 /**
+ * Spend Milestone Attribute Point (Levels 2, 4, 6, 8, 10)
+ */
+router.post('/game/character/spend-attribute', (req, res) => {
+  const character = getLivingCharacterByUserId(req.db, req.user.id);
+  if (!character) {
+    return res.redirect('/game');
+  }
+
+  const attribute = req.body.attribute || req.body.stat || req.body.attributeName;
+  const returnModal = req.body.returnModal || 'character';
+  try {
+    const result = spendAttributePoint(req.db, character.id, attribute);
+    const label = result.attribute.charAt(0).toUpperCase() + result.attribute.slice(1);
+    const msg = `Permanently increased ${label} to ${result.newBaseScore}.${result.hpGained > 0 ? ` Vitality increased by +${result.hpGained} HP.` : ''}`;
+    res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&info=${encodeURIComponent(msg)}`);
+  } catch (err) {
+    res.redirect(`/game?modal=${encodeURIComponent(returnModal)}&error=${encodeURIComponent(err.message)}`);
+  }
+});
+
+/**
  * Shop Buy Action
  */
 router.post('/game/shop/buy', (req, res) => {
@@ -716,4 +766,3 @@ router.post('/game/bounties/abandon', (req, res) => {
 });
 
 module.exports = router;
-

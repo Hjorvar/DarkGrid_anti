@@ -67,7 +67,7 @@ const config = {
     OTHER: 'Z'
   },
 
-  // Base character definitions according to DARKGRID_GAME_SPEC.md §3.1
+  // Base character definitions and Phase 7A.3 / 7B 72-point class presets
   classBases: {
     FIGHTER: {
       name: 'Fighter',
@@ -93,12 +93,13 @@ const config = {
         }
       ],
       strength: 14,
-      constitution: 12,
+      constitution: 14,
       dexterity: 12,
       intelligence: 10,
-      wisdom: 10,
+      wisdom: 12,
       charisma: 10,
-      hpPerLevel: 10
+      hpAtLevel1: 10,
+      hpPerLevel: 6
     },
     RANGER: {
       name: 'Ranger',
@@ -123,13 +124,14 @@ const config = {
           text: 'By swearing a blood-hunt against a chosen breed of living monster, you exploit their vital spots with escalating lethality—though the soulless Undead defy a hunter’s craft.'
         }
       ],
-      strength: 12,
-      constitution: 10,
-      dexterity: 14,
+      strength: 10,
+      constitution: 12,
+      dexterity: 16,
       intelligence: 10,
-      wisdom: 12,
+      wisdom: 14,
       charisma: 10,
-      hpPerLevel: 8
+      hpAtLevel1: 10,
+      hpPerLevel: 6
     },
     CLERIC: {
       name: 'Cleric',
@@ -155,22 +157,26 @@ const config = {
         }
       ],
       strength: 12,
-      constitution: 10,
+      constitution: 12,
       dexterity: 10,
       intelligence: 10,
-      wisdom: 14,
+      wisdom: 16,
       charisma: 12,
-      hpPerLevel: 8
+      hpAtLevel1: 8,
+      hpPerLevel: 5
     }
   },
 
-  // Stat allocation constraints
+  // Phase 7A.3 / 7B: Free Starting Attribute Allocation (72 points, bounds 8..18) & Level-Up Milestones
   statRules: {
-    bonusPoints: 3,
-    maxReductionPerStat: 2,
+    minScore: 8,
     maxScore: 18,
-    baseSum: 68, // 14+12+12+10+10+10
-    requiredTotalSum: 71 // 68 + 3
+    totalSum: 72,
+    requiredTotalSum: 72,
+    baseSum: 72,
+    bonusPoints: 0,
+    maxReductionPerStat: 10,
+    milestoneLevels: [2, 4, 6, 8, 10]
   }
 };
 

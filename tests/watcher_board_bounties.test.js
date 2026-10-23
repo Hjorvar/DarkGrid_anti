@@ -60,7 +60,7 @@ describe("The Watcher's Board & Bounty Hunting System", () => {
         strength: 16,
         dexterity: 12,
         constitution: 13,
-        intelligence: 10,
+        intelligence: 11,
         wisdom: 10,
         charisma: 10,
       },

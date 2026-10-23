@@ -1,14 +1,14 @@
 /**
  * Darkgrid Combat Engine
  * Manages turn-by-turn combat execution, initiative, player actions (Attack, Drink Potion, Flee),
- * 9 health condition tracking, combat log recording, and permadeath/victory integration.
+ * 9 health condition tracking, Fighter Second Wind (Option B), Cleric Turn Undead,
+ * Monster Knowledge & INT/WIS Battle Experience, combat log recording, and permadeath/victory integration.
  */
 
 const { withTransaction } = require('../../db/connection');
 const {
   getModifier,
   getCharacterEquipment,
-  getCharacterPotionCount,
   getCharacterPotions,
   getActiveWeapon,
   getEffectiveStats,
@@ -30,9 +30,17 @@ const {
   describeFleeAttempt
 } = require('./narrative');
 const { handlePlayerDeath, handleMonsterDefeat } = require('../monsters/persistence');
+const { resolveMonsterFamily } = require('../monsters/taxonomy');
+const {
+  recordMonsterEncountered,
+  evaluateHeroMonsterKnowledge
+} = require('./knowledge');
 const {
   parseCombatStateJson,
   serializeCombatStateJson,
+  getFighterSecondWindProfile,
+  tryTriggerFighterSecondWind,
+  resolveClericTurnUndead,
   getActiveStatusModifiers,
   getPublicHeroStatusBadges,
   resolveCombatStartAura,
@@ -77,49 +85,83 @@ function getConditionTextForBracket(descriptionsJson, bracket) {
 
 /**
  * Shared query helper that fetches the encounter joined with all monster combat, CR, treasure,
- * subtype metadata, persistent monster instance fields, and Named Hunting Contract modifiers.
+ * subtype metadata, 22-family taxonomy, persistent monster instance fields, and Named Hunting Contract modifiers.
  */
 function fetchEncounterWithMonster(db, encounterId, characterId) {
-  const row = db.prepare(`
-    SELECT e.*,
-           m.name as base_monster_name,
-           m.symbol as monster_symbol,
-           m.color as monster_color,
-           m.solo_level as monster_level,
-           m.base_hp,
-           m.initiative_bonus,
-           m.descriptions as monster_descriptions,
-           m.image_path as monster_image_path,
-           m.defeated_image_path as monster_defeated_image_path,
-           m.armor_class as monster_ac,
-           m.attack_bonus as base_monster_ab,
-           m.damage_dice as monster_damage_dice,
-           m.xp_reward,
-           m.creature_type,
-           m.creature_subtype,
-           m.movement_type,
-           m.challenge_rating,
-           m.treasure_type,
-           m.special_abilities,
-           mi.max_hp as instance_max_hp,
-           mi.current_hp as instance_current_hp,
-           mi.custom_title as instance_custom_title,
-           hc.custom_name as bounty_custom_name,
-           hc.title as bounty_title,
-           hc.region_name as bounty_region_name,
-           hc.boost_type as bounty_boost_type,
-           hc.boost_label as bounty_boost_label,
-           hc.boosted_max_hp as bounty_boosted_max_hp,
-           hc.attack_bonus_mod as bounty_attack_bonus_mod,
-           hc.damage_bonus_mod as bounty_damage_bonus_mod,
-           hc.reward_gold as bounty_reward_gold,
-           hc.status as bounty_status
-    FROM encounters e
-    JOIN monsters m ON e.monster_id = m.id
-    LEFT JOIN monster_instances mi ON e.monster_instance_id = mi.id
-    LEFT JOIN hunting_contracts hc ON e.bounty_contract_id = hc.id
-    WHERE e.id = ? AND e.character_id = ?
-  `).get(encounterId, characterId);
+  let row;
+  try {
+    row = db.prepare(`
+      SELECT e.*,
+             m.name as base_monster_name,
+             m.symbol as monster_symbol,
+             m.color as monster_color,
+             m.solo_level as monster_level,
+             m.base_hp,
+             m.initiative_bonus,
+             m.descriptions as monster_descriptions,
+             m.image_path as monster_image_path,
+             m.defeated_image_path as monster_defeated_image_path,
+             m.armor_class as monster_ac,
+             m.attack_bonus as base_monster_ab,
+             m.damage_dice as monster_damage_dice,
+             m.xp_reward,
+             m.creature_type,
+             m.creature_subtype,
+             m.monster_family,
+             m.movement_type,
+             m.challenge_rating,
+             m.treasure_type,
+             m.special_abilities,
+             mi.max_hp as instance_max_hp,
+             mi.current_hp as instance_current_hp,
+             mi.custom_title as instance_custom_title,
+             hc.custom_name as bounty_custom_name,
+             hc.title as bounty_title,
+             hc.region_name as bounty_region_name,
+             hc.boost_type as bounty_boost_type,
+             hc.boost_label as bounty_boost_label,
+             hc.boosted_max_hp as bounty_boosted_max_hp,
+             hc.attack_bonus_mod as bounty_attack_bonus_mod,
+             hc.damage_bonus_mod as bounty_damage_bonus_mod,
+             hc.reward_gold as bounty_reward_gold,
+             hc.status as bounty_status
+      FROM encounters e
+      JOIN monsters m ON e.monster_id = m.id
+      LEFT JOIN monster_instances mi ON e.monster_instance_id = mi.id
+      LEFT JOIN hunting_contracts hc ON e.bounty_contract_id = hc.id
+      WHERE e.id = ? AND e.character_id = ?
+    `).get(encounterId, characterId);
+  } catch {
+    row = db.prepare(`
+      SELECT e.*,
+             m.name as base_monster_name,
+             m.symbol as monster_symbol,
+             m.color as monster_color,
+             m.solo_level as monster_level,
+             m.base_hp,
+             m.initiative_bonus,
+             m.descriptions as monster_descriptions,
+             m.image_path as monster_image_path,
+             m.defeated_image_path as monster_defeated_image_path,
+             m.armor_class as monster_ac,
+             m.attack_bonus as base_monster_ab,
+             m.damage_dice as monster_damage_dice,
+             m.xp_reward,
+             m.creature_type,
+             m.creature_subtype,
+             m.movement_type,
+             m.challenge_rating,
+             m.treasure_type,
+             m.special_abilities,
+             mi.max_hp as instance_max_hp,
+             mi.current_hp as instance_current_hp,
+             mi.custom_title as instance_custom_title
+      FROM encounters e
+      JOIN monsters m ON e.monster_id = m.id
+      LEFT JOIN monster_instances mi ON e.monster_instance_id = mi.id
+      WHERE e.id = ? AND e.character_id = ?
+    `).get(encounterId, characterId);
+  }
 
   if (!row) return null;
 
@@ -127,16 +169,48 @@ function fetchEncounterWithMonster(db, encounterId, characterId) {
   const customDisplayName = row.bounty_custom_name || row.instance_custom_title || null;
   const attackBonusMod = isBountyTarget ? Number(row.bounty_attack_bonus_mod || 0) : 0;
   const damageBonusMod = isBountyTarget ? Number(row.bounty_damage_bonus_mod || 0) : 0;
+  const resolvedFamily = row.monster_family || resolveMonsterFamily({
+    id: row.monster_id,
+    name: row.base_monster_name,
+    creature_type: row.creature_type,
+    creature_subtype: row.creature_subtype
+  }, { strict: false });
 
   return {
     ...row,
     monster_name: customDisplayName || row.base_monster_name,
     base_monster_name: row.base_monster_name,
+    monster_family: resolvedFamily,
     custom_title: row.instance_custom_title || null,
     isBountyTarget,
     monster_ab: Number(row.base_monster_ab || 0) + attackBonusMod,
     bounty_damage_bonus: damageBonusMod
   };
+}
+
+/**
+ * Attaches evaluated Monster Knowledge & INT/WIS Battle Experience to the character & encounter objects.
+ */
+function attachBattleExperienceContext(db, effectiveCharacter, encounter, equipment = null) {
+  const monsterKnowledge = evaluateHeroMonsterKnowledge(db, effectiveCharacter, encounter, equipment);
+  if (effectiveCharacter && typeof effectiveCharacter === 'object') {
+    Object.defineProperty(effectiveCharacter, '_battleExperience', {
+      value: monsterKnowledge.battleExperience,
+      enumerable: false,
+      configurable: true,
+      writable: true
+    });
+    Object.defineProperty(effectiveCharacter, '_monsterKnowledge', {
+      value: monsterKnowledge,
+      enumerable: false,
+      configurable: true,
+      writable: true
+    });
+  }
+  if (encounter && typeof encounter === 'object') {
+    encounter.victories_against = monsterKnowledge.victories;
+  }
+  return monsterKnowledge;
 }
 
 /**
@@ -151,6 +225,26 @@ function enforceNoAmbushAtLevel1(db, character, encounter) {
     `).run(encounter.id);
     encounter.is_ambush = 0;
     encounter.spotted_by_hero = 0;
+  }
+}
+
+/**
+ * Helper to persist combat_state_json and second_wind_used on encounters.
+ */
+function updateEncounterCombatStateSql(tx, encounterId, combatStatusState) {
+  const stateJson = serializeCombatStateJson(combatStatusState);
+  const secondWindInt = combatStatusState && combatStatusState.secondWindUsed ? 1 : 0;
+  try {
+    tx.prepare('UPDATE encounters SET combat_state_json = ?, second_wind_used = ? WHERE id = ?').run(
+      stateJson,
+      secondWindInt,
+      encounterId
+    );
+  } catch {
+    tx.prepare('UPDATE encounters SET combat_state_json = ? WHERE id = ?').run(
+      stateJson,
+      encounterId
+    );
   }
 }
 
@@ -171,7 +265,6 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
     }
 
     const encounter = fetchEncounterWithMonster(tx, encounterId, characterId);
-
     if (!encounter) {
       throw new Error('Encounter not found.');
     }
@@ -190,24 +283,22 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
       }
     }
 
-    // Determine monster max HP (accounting for persistent monster HP or Named Bounty TOUGH boost)
+    if (encounter.status === 'DISCOVERED' && encounter.monster_id) {
+      recordMonsterEncountered(tx, characterId, encounter.monster_id);
+    }
+
     const monsterMaxHp = encounter.instance_max_hp || encounter.bounty_boosted_max_hp || encounter.monster_max_hp || encounter.base_hp;
-    // Persistent monsters start each new combat engagement at full boosted max HP (H2)
     let currentMonsterHp = encounter.monster_instance_id
       ? monsterMaxHp
       : (encounter.current_monster_hp || monsterMaxHp);
 
     const equipment = getCharacterEquipment(tx, characterId);
     const effectiveCharacter = getEffectiveStats(character, equipment);
+    attachBattleExperienceContext(tx, effectiveCharacter, encounter, equipment);
+
     let openingShotResolved = encounter.opening_shot_resolved || 0;
 
-    // Check Ranger Ranged Opening Shot condition:
-    // 1. Character class is Ranger
-    // 2. Ranger has prepared ranged weapon
-    // 3. Ranger spotted monster first (spotted_by_hero === 1)
-    // 4. Monster did not ambush Ranger (is_ambush === 0)
-    // 5. Combat has not already started (status === 'DISCOVERED')
-    // 6. Opening shot has not already been resolved (opening_shot_resolved === 0)
+    // Check Ranger Ranged Opening Shot condition
     const canOpeningShot = (
       (character.class || '').toUpperCase() === 'RANGER' &&
       equipment.rangedWeapon &&
@@ -224,7 +315,7 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
     if (canOpeningShot) {
       openingShotFired = true;
       openingShotResolved = 1;
-      const openingAB = calculateHeroAttackBonus(effectiveCharacter, equipment.rangedWeapon, encounter);
+      const openingAB = calculateHeroAttackBonus(effectiveCharacter, equipment.rangedWeapon, encounter, equipment);
       const monsterAC = encounter.monster_ac || encounter.armor_class;
       const attackRoll = resolveAttackRoll(openingAB, monsterAC, rng);
       openingShotHit = attackRoll.isHit;
@@ -232,7 +323,7 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
       let openingDamage = 0;
 
       if (attackRoll.isHit) {
-        const damageFormula = getHeroDamageFormula(effectiveCharacter, equipment.rangedWeapon, encounter);
+        const damageFormula = getHeroDamageFormula(effectiveCharacter, equipment.rangedWeapon, encounter, equipment);
         openingDamage = resolveDamage(damageFormula, attackRoll.isCrit, rng);
         // Opening Shot can wound a monster down to at least 1 HP, but never kill it outright before combat begins
         currentMonsterHp = Math.max(1, currentMonsterHp - openingDamage);
@@ -261,19 +352,18 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
     let monsterInit = encounter.monster_initiative;
 
     if (!initiativeWinner) {
-      const heroDexMod = getModifier(character.dexterity);
+      const heroDexMod = getModifier(effectiveCharacter.dexterity);
       const isAmbushActive = Number(encounter.is_ambush || 0) === 1;
       const ambushInitBonus = isAmbushActive ? 4 : 0;
       heroInit = rollInitiative(heroDexMod, rng);
       monsterInit = rollInitiative((encounter.initiative_bonus || 0) + ambushInitBonus, rng);
-      // Ties go to the hero normally, but to the ambushing monster during an ambush
       initiativeWinner = isAmbushActive
         ? (monsterInit >= heroInit ? 'MONSTER' : 'HERO')
         : (heroInit >= monsterInit ? 'HERO' : 'MONSTER');
     }
 
     const initialBracket = getHealthBracket(currentMonsterHp, monsterMaxHp);
-    const combatStatusState = parseCombatStateJson(encounter.combat_state_json);
+    const combatStatusState = parseCombatStateJson(encounter.combat_state_json, encounter);
 
     // Initial engagement description
     const initialCondition = getConditionTextForBracket(encounter.monster_descriptions, initialBracket);
@@ -291,42 +381,80 @@ function startCombat(db, characterId, encounterId, optionsOrHeroClass = {}, mayb
       );
     }
 
-    // Resolve Combat-Start Auras (Stench, Fear, Web/Entangle) after initiative and initial condition
-    if (!combatStatusState.auraResolved) {
-      resolveCombatStartAura(effectiveCharacter, equipment, encounter, combatStatusState, rng, (type, text, details = {}) => {
-        tx.prepare(`
-          INSERT INTO combat_events (
-            encounter_id, round_number, event_type, public_text, details
-          ) VALUES (?, 1, ?, ?, ?)
-        `).run(encounterId, type, text, JSON.stringify(details));
-      });
+    const logStartEvent = (type, text, details = {}) => {
+      tx.prepare(`
+        INSERT INTO combat_events (
+          encounter_id, round_number, event_type, public_text, details
+        ) VALUES (?, 1, ?, ?, ?)
+      `).run(encounterId, type, text, JSON.stringify(details));
+    };
+
+    // Resolve Cleric Turn Undead opening disruption (Level 2+ vs Undead)
+    if (!combatStatusState.turnUndeadResolved) {
+      resolveClericTurnUndead(effectiveCharacter, equipment, encounter, combatStatusState, logStartEvent);
     }
 
-    tx.prepare(`
-      UPDATE encounters
-      SET status = 'IN_COMBAT',
-          initiative_winner = ?,
-          hero_initiative = ?,
-          monster_initiative = ?,
-          monster_max_hp = ?,
-          current_monster_hp = ?,
-          combat_round = CASE WHEN combat_round = 0 THEN 1 ELSE combat_round END,
-          last_health_bracket = ?,
-          opening_shot_resolved = ?,
-          combat_state_json = ?,
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `).run(
-      initiativeWinner,
-      heroInit,
-      monsterInit,
-      monsterMaxHp,
-      currentMonsterHp,
-      initialBracket,
-      openingShotResolved,
-      serializeCombatStateJson(combatStatusState),
-      encounterId
-    );
+    // Resolve Combat-Start Auras (Stench, Fear, Web/Entangle) after initiative and initial condition
+    if (!combatStatusState.auraResolved) {
+      resolveCombatStartAura(effectiveCharacter, equipment, encounter, combatStatusState, rng, logStartEvent);
+    }
+
+    const secondWindInt = combatStatusState.secondWindUsed ? 1 : 0;
+    try {
+      tx.prepare(`
+        UPDATE encounters
+        SET status = 'IN_COMBAT',
+            initiative_winner = ?,
+            hero_initiative = ?,
+            monster_initiative = ?,
+            monster_max_hp = ?,
+            current_monster_hp = ?,
+            combat_round = CASE WHEN combat_round = 0 THEN 1 ELSE combat_round END,
+            last_health_bracket = ?,
+            opening_shot_resolved = ?,
+            second_wind_used = ?,
+            combat_state_json = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(
+        initiativeWinner,
+        heroInit,
+        monsterInit,
+        monsterMaxHp,
+        currentMonsterHp,
+        initialBracket,
+        openingShotResolved,
+        secondWindInt,
+        serializeCombatStateJson(combatStatusState),
+        encounterId
+      );
+    } catch {
+      tx.prepare(`
+        UPDATE encounters
+        SET status = 'IN_COMBAT',
+            initiative_winner = ?,
+            hero_initiative = ?,
+            monster_initiative = ?,
+            monster_max_hp = ?,
+            current_monster_hp = ?,
+            combat_round = CASE WHEN combat_round = 0 THEN 1 ELSE combat_round END,
+            last_health_bracket = ?,
+            opening_shot_resolved = ?,
+            combat_state_json = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(
+        initiativeWinner,
+        heroInit,
+        monsterInit,
+        monsterMaxHp,
+        currentMonsterHp,
+        initialBracket,
+        openingShotResolved,
+        serializeCombatStateJson(combatStatusState),
+        encounterId
+      );
+    }
 
     if (encounter.monster_instance_id) {
       tx.prepare("UPDATE monster_instances SET current_hp = ? WHERE id = ? AND status = 'ACTIVE'").run(currentMonsterHp, encounter.monster_instance_id);
@@ -362,12 +490,13 @@ function getCombatState(db, characterId, encounterId) {
 
   const equipment = getCharacterEquipment(db, characterId);
   const effectiveCharacter = getEffectiveStats(character, equipment);
+  const monsterKnowledge = attachBattleExperienceContext(db, effectiveCharacter, encounter, equipment);
   const potions = getCharacterPotions(db, characterId, { combatOnly: true });
   const potionCount = potions.length;
 
-  const combatStatusState = parseCombatStateJson(encounter.combat_state_json);
+  const combatStatusState = parseCombatStateJson(encounter.combat_state_json, encounter);
   const statusMods = getActiveStatusModifiers(combatStatusState);
-  const heroStatusBadges = getPublicHeroStatusBadges(combatStatusState);
+  const heroStatusBadges = getPublicHeroStatusBadges(combatStatusState, effectiveCharacter);
 
   const { activeWeapon, isRangedActive } = getActiveWeapon(effectiveCharacter, equipment, encounter);
   const baseHeroAC = calculateHeroAC(effectiveCharacter, equipment, isRangedActive, encounter, activeWeapon);
@@ -376,6 +505,11 @@ function getCombatState(db, characterId, encounterId) {
   const effectiveMonsterMaxHp = encounter.instance_max_hp || encounter.bounty_boosted_max_hp || encounter.monster_max_hp || encounter.base_hp;
   const currentBracket = getHealthBracket(encounter.current_monster_hp, effectiveMonsterMaxHp);
   const currentConditionText = getConditionTextForBracket(encounter.monster_descriptions, currentBracket);
+
+  const secondWindProfile = getFighterSecondWindProfile(effectiveCharacter, equipment);
+  const secondWindStatus = secondWindProfile.available
+    ? (combatStatusState.secondWindUsed ? 'Spent' : 'Ready')
+    : null;
 
   return {
     character: effectiveCharacter,
@@ -390,7 +524,10 @@ function getCombatState(db, characterId, encounterId) {
     currentBracket,
     currentConditionText,
     heroStatusBadges,
-    combatStatusState
+    combatStatusState,
+    monsterKnowledge,
+    secondWindStatus,
+    secondWindUsed: Boolean(combatStatusState.secondWindUsed)
   };
 }
 
@@ -407,14 +544,12 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
   }
 
   return withTransaction(db, (tx) => {
-    // 1. Validate character and encounter state
     const character = tx.prepare('SELECT * FROM characters WHERE id = ?').get(characterId);
     if (!character || character.is_alive !== 1) {
       throw new Error('Dead characters cannot perform combat actions.');
     }
 
     const encounter = fetchEncounterWithMonster(tx, encounterId, characterId);
-
     if (!encounter) {
       throw new Error('Encounter not found.');
     }
@@ -425,11 +560,9 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       throw new Error(`Cannot perform combat action; encounter status is ${encounter.status}.`);
     }
 
-    // Determine effective round number
     let roundNumber = encounter.combat_round || 1;
     if (roundNumber === 0) roundNumber = 1;
 
-    // Idempotency check: prevent duplicate submissions of the same round
     if (typeof options.expectedRound === 'number' && roundNumber !== options.expectedRound) {
       return getCombatState(tx, characterId, encounterId);
     }
@@ -439,8 +572,6 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       monsterInstance = tx.prepare('SELECT * FROM monster_instances WHERE id = ?').get(encounter.monster_instance_id);
     }
 
-    // Concurrent Persistent Monster check (H1): If another player has slain the monster instance,
-    // conclude this encounter peacefully with 0 duplicate gold, 0 duplicate items, and 0 XP.
     if (monsterInstance && monsterInstance.status !== 'ACTIVE') {
       tx.prepare(`
         UPDATE encounters
@@ -464,15 +595,17 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
 
     const equipment = getCharacterEquipment(tx, characterId);
     const effectiveHero = getEffectiveStats(character, equipment);
+    attachBattleExperienceContext(tx, effectiveHero, encounter, equipment);
+
     const { activeWeapon, isRangedActive } = getActiveWeapon(effectiveHero, equipment, encounter);
     const baseHeroAC = calculateHeroAC(effectiveHero, equipment, isRangedActive, encounter, activeWeapon);
-    const baseHeroAB = calculateHeroAttackBonus(effectiveHero, activeWeapon, encounter);
-    const combatStatusState = parseCombatStateJson(encounter.combat_state_json);
+    const baseHeroAB = calculateHeroAttackBonus(effectiveHero, activeWeapon, encounter, equipment);
+    const combatStatusState = parseCombatStateJson(encounter.combat_state_json, encounter);
     const initialStatusMods = getActiveStatusModifiers(combatStatusState);
     const heroAC = baseHeroAC + initialStatusMods.acMod;
 
     let currentMonsterHp = encounter.current_monster_hp;
-    let monsterMaxHp = encounter.monster_max_hp || encounter.bounty_boosted_max_hp || (monsterInstance ? monsterInstance.max_hp : encounter.base_hp);
+    const monsterMaxHp = encounter.monster_max_hp || encounter.bounty_boosted_max_hp || (monsterInstance ? monsterInstance.max_hp : encounter.base_hp);
     let currentHeroHp = character.current_hp;
     let lastHealthBracket = encounter.last_health_bracket != null ? encounter.last_health_bracket : 100;
     const bountyDamageBonus = Number(encounter.bounty_damage_bonus || 0);
@@ -501,8 +634,6 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
 
     // =========================================================================
     // ACTION 1: FLEE
-    // Flótti yfirtekur umferðarflæði. Skrímslið fær nákvæmlega eina fría árás.
-    // (Permadeath Safety Rule #8: Flee is always available even if Grabbed/Entangled/Paralyzed)
     // =========================================================================
     if (normalizedAction === 'FLEE') {
       const freeAttackRoll = resolveAttackRoll(encounter.monster_ab, heroAC, rng);
@@ -511,6 +642,22 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       if (freeAttackRoll.isHit) {
         freeDamage = resolveDamage(encounter.monster_damage_dice, freeAttackRoll.isCrit, rng) + bountyDamageBonus;
         currentHeroHp = Math.max(0, currentHeroHp - freeDamage);
+      }
+
+      if (freeAttackRoll.isHit) {
+        const swRes = tryTriggerFighterSecondWind({
+          character: effectiveHero,
+          equipment,
+          encounter,
+          combatState: combatStatusState,
+          currentHeroHp,
+          maxHeroHp: character.max_hp,
+          rng,
+          logEvent
+        });
+        if (swRes.triggered) {
+          currentHeroHp = swRes.newHeroHp;
+        }
       }
 
       const survived = currentHeroHp > 0;
@@ -523,12 +670,10 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       });
 
       if (!survived) {
-        // Player slain during retreat
         handlePlayerDeath(tx, character, encounter, encounter, monsterInstance, { rng });
         return getCombatState(tx, characterId, encounterId);
       }
 
-      // Escape succeeded: close encounter, clear temporary combat statuses, unlock movement
       tx.prepare(`
         UPDATE encounters
         SET status = 'ESCAPED', combat_state_json = '{}', updated_at = CURRENT_TIMESTAMP
@@ -537,7 +682,6 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
 
       tx.prepare('UPDATE characters SET current_hp = ? WHERE id = ?').run(currentHeroHp, character.id);
 
-      // Persistent monster fully recovers to max HP upon hero retreat (H2)
       if (monsterInstance) {
         tx.prepare('UPDATE monster_instances SET current_hp = max_hp WHERE id = ?').run(monsterInstance.id);
       }
@@ -547,7 +691,6 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
 
     // =========================================================================
     // ACTION 2: DRINK POTION
-    // Hetja drekkur lækningadrykk. Skrímslið fær venjulega umferðarárás.
     // =========================================================================
     if (normalizedAction === 'DRINK_POTION') {
       let potion = null;
@@ -568,7 +711,6 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
           throw new Error(`${potion.name} cannot be consumed in combat: its effect is not yet active.`);
         }
       } else {
-        // Default to the cheapest available healing potion (ordered by buy_price ASC, ii.id ASC)
         const inactiveSql = INACTIVE_CONSUMABLE_NAMES.map(n => `'${n.replace(/'/g, "''")}'`).join(', ');
         potion = tx.prepare(`
           SELECT ii.id, id.name, id.buy_price, id.attributes, id.subtype
@@ -585,14 +727,12 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
         }
       }
 
-      // Consume potion
       tx.prepare('DELETE FROM item_instances WHERE id = ?').run(potion.id);
       const rollAmount = resolvePotionHealing(potion, rng);
       const newHeroHp = Math.min(character.max_hp, currentHeroHp + rollAmount);
       const actualHealed = newHeroHp - currentHeroHp;
       currentHeroHp = newHeroHp;
 
-      // Drinking a healing potion staunchly stops active Bleeding and clears 1-round Paralysis
       if (combatStatusState.heroStatuses.bleed) {
         combatStatusState.heroStatuses.bleed = null;
       }
@@ -607,7 +747,6 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
         actualHealed
       });
 
-      // Monster turn specials & standard attack
       const currentMods = getActiveStatusModifiers(combatStatusState);
       const effectiveHeroAC = baseHeroAC + currentMods.acMod;
       const turnSpecials = resolveMonsterTurnSpecials({
@@ -663,6 +802,21 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
         }
       }
 
+      // Fighter Second Wind check after monster turn sequence
+      const swAfterMonster = tryTriggerFighterSecondWind({
+        character: effectiveHero,
+        equipment,
+        encounter,
+        combatState: combatStatusState,
+        currentHeroHp,
+        maxHeroHp: character.max_hp,
+        rng,
+        logEvent
+      });
+      if (swAfterMonster.triggered) {
+        currentHeroHp = swAfterMonster.newHeroHp;
+      }
+
       if (currentHeroHp > 0) {
         const eor = resolveEndOfRoundStatusTicks({
           character: effectiveHero,
@@ -673,25 +827,38 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
           logEvent
         });
         currentHeroHp = eor.newHeroHp;
+
+        // Fighter Second Wind check after end-of-round Poison/Bleed DoT ticks
+        const swAfterDoT = tryTriggerFighterSecondWind({
+          character: effectiveHero,
+          equipment,
+          encounter,
+          combatState: combatStatusState,
+          currentHeroHp,
+          maxHeroHp: character.max_hp,
+          rng,
+          logEvent
+        });
+        if (swAfterDoT.triggered) {
+          currentHeroHp = swAfterDoT.newHeroHp;
+        }
       }
 
       tx.prepare('UPDATE characters SET current_hp = ? WHERE id = ?').run(currentHeroHp, character.id);
+      updateEncounterCombatStateSql(tx, encounter.id, combatStatusState);
 
       if (currentHeroHp <= 0) {
-        // Player slain by monster attack or DoT after drinking potion
         handlePlayerDeath(tx, character, encounter, encounter, monsterInstance, { rng });
         return getCombatState(tx, characterId, encounterId);
       }
 
-      // Round advances
       tx.prepare(`
         UPDATE encounters
         SET combat_round = ?,
             current_monster_hp = ?,
-            combat_state_json = ?,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
-      `).run(roundNumber + 1, currentMonsterHp, serializeCombatStateJson(combatStatusState), encounter.id);
+      `).run(roundNumber + 1, currentMonsterHp, encounter.id);
 
       if (monsterInstance) {
         tx.prepare('UPDATE monster_instances SET current_hp = ? WHERE id = ?').run(currentMonsterHp, monsterInstance.id);
@@ -702,12 +869,10 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
 
     // =========================================================================
     // ACTION 3: ATTACK
-    // Umferðaruppgjör ræðst af frumkvæði (initiative_winner).
     // =========================================================================
     const initiativeWinner = encounter.initiative_winner || 'HERO';
 
     function heroAttackPhase() {
-      // Permadeath Safety Rule #1: 1-round Paralysis consumes Attack action to break free
       if (combatStatusState.heroStatuses.paralyzed > 0) {
         combatStatusState.heroStatuses.paralyzed = 0;
         logEvent(
@@ -715,10 +880,7 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
           'You strain with all your might against the numbing paralysis, wrenching your limbs free of the rigor!',
           { isHit: false, isCrit: false, damage: 0, paralyzedStun: true }
         );
-        tx.prepare('UPDATE encounters SET combat_state_json = ? WHERE id = ?').run(
-          serializeCombatStateJson(combatStatusState),
-          encounter.id
-        );
+        updateEncounterCombatStateSql(tx, encounter.id, combatStatusState);
         return false;
       }
 
@@ -730,7 +892,7 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       let heroDamage = 0;
 
       if (heroAttackRoll.isHit) {
-        const damageFormula = getHeroDamageFormula(effectiveHero, activeWeapon, encounter);
+        const damageFormula = getHeroDamageFormula(effectiveHero, activeWeapon, encounter, equipment);
         let rawHeroDamage = resolveDamage(damageFormula, heroAttackRoll.isCrit, rng);
         rawHeroDamage = Math.max(1, rawHeroDamage + currentMods.dmgMod);
 
@@ -759,9 +921,10 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
 
       tx.prepare(`
         UPDATE encounters
-        SET current_monster_hp = ?, last_health_bracket = ?, combat_state_json = ?
+        SET current_monster_hp = ?, last_health_bracket = ?
         WHERE id = ?
-      `).run(currentMonsterHp, lastHealthBracket, serializeCombatStateJson(combatStatusState), encounter.id);
+      `).run(currentMonsterHp, lastHealthBracket, encounter.id);
+      updateEncounterCombatStateSql(tx, encounter.id, combatStatusState);
 
       if (monsterInstance) {
         tx.prepare('UPDATE monster_instances SET current_hp = ? WHERE id = ?').run(currentMonsterHp, monsterInstance.id);
@@ -834,6 +997,21 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
         }
       }
 
+      // Resolve Fighter Second Wind AFTER complete monster multi-hit and immediate damage-rider sequence
+      const swRes = tryTriggerFighterSecondWind({
+        character: effectiveHero,
+        equipment,
+        encounter,
+        combatState: combatStatusState,
+        currentHeroHp,
+        maxHeroHp: character.max_hp,
+        rng,
+        logEvent
+      });
+      if (swRes.triggered) {
+        currentHeroHp = swRes.newHeroHp;
+      }
+
       if (currentHeroHp <= 0 && eligibleForLevel1SpikeGuard) {
         currentHeroHp = 1;
         logEvent('HERO_STATUS', "Death's Door! Sheer survival instinct keeps you standing at 1 HP after a lethal opening blow!", {
@@ -842,11 +1020,9 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
       }
 
       tx.prepare('UPDATE characters SET current_hp = ? WHERE id = ?').run(currentHeroHp, character.id);
-      tx.prepare('UPDATE encounters SET current_monster_hp = ?, combat_state_json = ? WHERE id = ?').run(
-        currentMonsterHp,
-        serializeCombatStateJson(combatStatusState),
-        encounter.id
-      );
+      tx.prepare('UPDATE encounters SET current_monster_hp = ? WHERE id = ?').run(currentMonsterHp, encounter.id);
+      updateEncounterCombatStateSql(tx, encounter.id, combatStatusState);
+
       if (monsterInstance) {
         tx.prepare('UPDATE monster_instances SET current_hp = ? WHERE id = ?').run(currentMonsterHp, monsterInstance.id);
       }
@@ -855,34 +1031,26 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
     }
 
     if (initiativeWinner === 'HERO') {
-      // Hero attacks first
       const monsterDied = heroAttackPhase();
       if (monsterDied) {
-        // Victory! Monster does not get a retaliatory attack
         handleMonsterDefeat(tx, character, encounter, encounter, monsterInstance, { rng });
         return getCombatState(tx, characterId, encounterId);
       }
 
-      // Monster attacks second
       const heroDied = monsterAttackPhase();
       if (heroDied) {
-        // Player defeated
         handlePlayerDeath(tx, character, encounter, encounter, monsterInstance, { rng });
         return getCombatState(tx, characterId, encounterId);
       }
     } else {
-      // Monster attacks first
       const heroDied = monsterAttackPhase();
       if (heroDied) {
-        // Player defeated before they can strike
         handlePlayerDeath(tx, character, encounter, encounter, monsterInstance, { rng });
         return getCombatState(tx, characterId, encounterId);
       }
 
-      // Hero attacks second
       const monsterDied = heroAttackPhase();
       if (monsterDied) {
-        // Victory!
         handleMonsterDefeat(tx, character, encounter, encounter, monsterInstance, { rng });
         return getCombatState(tx, characterId, encounterId);
       }
@@ -899,25 +1067,42 @@ function executeCombatRound(db, characterId, encounterId, action, options = {}) 
     });
     if (eor.newHeroHp !== currentHeroHp) {
       currentHeroHp = eor.newHeroHp;
+
+      // Fighter Second Wind rescue after Poison/Bleed DoT ticks
+      const swDoT = tryTriggerFighterSecondWind({
+        character: effectiveHero,
+        equipment,
+        encounter,
+        combatState: combatStatusState,
+        currentHeroHp,
+        maxHeroHp: character.max_hp,
+        rng,
+        logEvent
+      });
+      if (swDoT.triggered) {
+        currentHeroHp = swDoT.newHeroHp;
+      }
+
       if (currentHeroHp <= 0 && eligibleForLevel1SpikeGuard) {
         currentHeroHp = 1;
       }
       tx.prepare('UPDATE characters SET current_hp = ? WHERE id = ?').run(currentHeroHp, character.id);
+      updateEncounterCombatStateSql(tx, encounter.id, combatStatusState);
+
       if (currentHeroHp <= 0) {
         handlePlayerDeath(tx, character, encounter, encounter, monsterInstance, { rng });
         return getCombatState(tx, characterId, encounterId);
       }
     }
 
-    // Both combatants survived: advance round
     tx.prepare(`
       UPDATE encounters
       SET combat_round = ?,
           current_monster_hp = ?,
-          combat_state_json = ?,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(roundNumber + 1, currentMonsterHp, serializeCombatStateJson(combatStatusState), encounter.id);
+    `).run(roundNumber + 1, currentMonsterHp, encounter.id);
+    updateEncounterCombatStateSql(tx, encounter.id, combatStatusState);
 
     return getCombatState(tx, characterId, encounterId);
   });

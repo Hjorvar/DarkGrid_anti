@@ -20,7 +20,7 @@ test('Valid navigation moves hero to neighbor tile and updates database', async 
     name: 'Legolas',
     classType: 'RANGER',
     stats: {
-      strength: 12, constitution: 10, dexterity: 17, intelligence: 10, wisdom: 12, charisma: 10
+      strength: 12, constitution: 10, dexterity: 17, intelligence: 11, wisdom: 12, charisma: 10
     }
   });
 

@@ -5,21 +5,25 @@ function initCharacterBuilder() {
   const classCards = document.querySelectorAll('.class-card');
   const classInput = document.getElementById('selected-class-input');
   const remainingPointsDisplay = document.getElementById('remaining-points-count');
+  const resetPresetBtn = document.getElementById('reset-preset-btn');
   const submitBtn = document.getElementById('create-hero-btn');
 
   const STATS = ['strength', 'constitution', 'dexterity', 'intelligence', 'wisdom', 'charisma'];
 
-  // Read class bases from data attributes embedded in DOM
   const classBasesData = JSON.parse(document.getElementById('class-bases-json').textContent);
   const statRules = JSON.parse(document.getElementById('stat-rules-json').textContent);
+
+  const requiredTotal = Number(statRules.requiredTotalSum || statRules.totalSum || 72);
+  const minScore = Number(statRules.minScore || 8);
+  const maxScore = Number(statRules.maxScore || 18);
 
   let currentClass = classInput.value || 'FIGHTER';
   let stats = {};
 
   function initStatsForClass(clsKey) {
-    const base = classBasesData[clsKey];
+    const base = classBasesData[clsKey] || classBasesData.FIGHTER;
     STATS.forEach(s => {
-      stats[s] = base[s];
+      stats[s] = Number(base[s]);
     });
   }
 
@@ -32,19 +36,30 @@ function initCharacterBuilder() {
     return mod >= 0 ? `+${mod}` : `${mod}`;
   }
 
-  function calculatePointsSpent() {
-    const base = classBasesData[currentClass];
+  function getAttributeTierLabel(score) {
+    const s = Number(score || 10);
+    if (s <= 7) return 'Weak';
+    if (s <= 9) return 'Below Average';
+    if (s <= 11) return 'Average';
+    if (s <= 13) return 'Good';
+    if (s <= 15) return 'Strong';
+    if (s <= 17) return 'Exceptional';
+    if (s <= 19) return 'Heroic';
+    return 'Legendary';
+  }
+
+  function calculateTotalPoints() {
     let totalScore = 0;
     STATS.forEach(s => {
-      totalScore += stats[s];
+      totalScore += Number(stats[s] || 0);
     });
-    return totalScore - statRules.baseSum;
+    return totalScore;
   }
 
   function updateUI() {
-    const base = classBasesData[currentClass];
-    const pointsSpent = calculatePointsSpent();
-    const remainingPoints = statRules.bonusPoints - pointsSpent;
+    const base = classBasesData[currentClass] || classBasesData.FIGHTER;
+    const totalAllocated = calculateTotalPoints();
+    const remainingPoints = requiredTotal - totalAllocated;
 
     if (remainingPointsDisplay) {
       remainingPointsDisplay.textContent = remainingPoints;
@@ -54,6 +69,7 @@ function initCharacterBuilder() {
     STATS.forEach(s => {
       const displayElem = document.getElementById(`val-${s}`);
       const modElem = document.getElementById(`mod-${s}`);
+      const tierElem = document.getElementById(`tier-${s}`);
       const inputElem = document.getElementById(`input-${s}`);
       const btnMinus = document.getElementById(`btn-minus-${s}`);
       const btnPlus = document.getElementById(`btn-plus-${s}`);
@@ -61,20 +77,18 @@ function initCharacterBuilder() {
 
       const currentVal = stats[s];
       const baseVal = base[s];
-      const minVal = baseVal - statRules.maxReductionPerStat;
-      const maxVal = statRules.maxScore;
 
       if (displayElem) displayElem.textContent = currentVal;
       if (modElem) modElem.textContent = formatModifier(currentVal);
+      if (tierElem) tierElem.textContent = getAttributeTierLabel(currentVal);
       if (inputElem) inputElem.value = currentVal;
-      if (baseLabel) baseLabel.textContent = `(base ${baseVal})`;
+      if (baseLabel) baseLabel.textContent = `(preset ${baseVal})`;
 
-      // Disable conditions
       if (btnMinus) {
-        btnMinus.disabled = currentVal <= minVal;
+        btnMinus.disabled = currentVal <= minScore;
       }
       if (btnPlus) {
-        btnPlus.disabled = (currentVal >= maxVal) || (remainingPoints <= 0);
+        btnPlus.disabled = (currentVal >= maxScore) || (remainingPoints <= 0);
       }
     });
 
@@ -89,22 +103,24 @@ function initCharacterBuilder() {
   const favoredSubtypeInput = document.getElementById('favored-enemy-subtype-input');
 
   function syncFavoredEnemy() {
-    if (!favoredSelect || !favoredTypeInput || !favoredSubtypeInput) return;
-    const parts = (favoredSelect.value || 'ANIMAL:').split(':');
-    favoredTypeInput.value = parts[0] || 'ANIMAL';
-    favoredSubtypeInput.value = parts[1] || '';
+    if (!favoredSelect || !favoredTypeInput) return;
+    favoredTypeInput.value = favoredSelect.value || 'ANIMALS';
+    if (favoredSubtypeInput) {
+      favoredSubtypeInput.value = '';
+    }
   }
 
   if (favoredSelect) {
-    if (favoredTypeInput && favoredTypeInput.value) {
-      const existingCombo = `${favoredTypeInput.value}:${favoredSubtypeInput ? (favoredSubtypeInput.value || '') : ''}`;
-      const matchingOption = Array.from(favoredSelect.options || []).find(opt => opt.value === existingCombo);
-      if (matchingOption) {
-        favoredSelect.value = existingCombo;
-      }
-    }
     favoredSelect.addEventListener('change', syncFavoredEnemy);
     syncFavoredEnemy();
+  }
+
+  if (resetPresetBtn) {
+    resetPresetBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      initStatsForClass(currentClass);
+      updateUI();
+    });
   }
 
   // Class selection handler
@@ -134,9 +150,7 @@ function initCharacterBuilder() {
     if (btnMinus) {
       btnMinus.addEventListener('click', (e) => {
         e.preventDefault();
-        const base = classBasesData[currentClass];
-        const minVal = base[s] - statRules.maxReductionPerStat;
-        if (stats[s] > minVal) {
+        if (stats[s] > minScore) {
           stats[s]--;
           updateUI();
         }
@@ -146,9 +160,8 @@ function initCharacterBuilder() {
     if (btnPlus) {
       btnPlus.addEventListener('click', (e) => {
         e.preventDefault();
-        const pointsSpent = calculatePointsSpent();
-        const remaining = statRules.bonusPoints - pointsSpent;
-        if (stats[s] < statRules.maxScore && remaining > 0) {
+        const remaining = requiredTotal - calculateTotalPoints();
+        if (stats[s] < maxScore && remaining > 0) {
           stats[s]++;
           updateUI();
         }

@@ -84,7 +84,7 @@ test('2. Encounter engine resolves both normal imageUrl and defeatedImageUrl cor
     userId: user.id,
     name: 'ResolutionHero',
     classType: 'FIGHTER',
-    stats: { strength: 16, dexterity: 12, constitution: 13, intelligence: 10, wisdom: 10, charisma: 10 }
+    stats: { strength: 16, dexterity: 12, constitution: 13, intelligence: 11, wisdom: 10, charisma: 10 }
   });
 
   const goblin = db.prepare("SELECT * FROM monsters WHERE name = 'Goblin'").get();
@@ -110,7 +110,7 @@ test('3. Fallback behavior: if defeated artwork is absent, getVictoryData falls 
     userId: user.id,
     name: 'FallbackHero',
     classType: 'FIGHTER',
-    stats: { strength: 16, dexterity: 12, constitution: 13, intelligence: 10, wisdom: 10, charisma: 10 }
+    stats: { strength: 16, dexterity: 12, constitution: 13, intelligence: 11, wisdom: 10, charisma: 10 }
   });
 
   // Create mock monster without defeated artwork on disk
@@ -151,7 +151,7 @@ test('4. Victory screen presentation prioritizes defeatedImageUrl over living im
     userId: user.id,
     name: 'GorbagSlayer',
     classType: 'FIGHTER',
-    stats: { strength: 16, dexterity: 12, constitution: 13, intelligence: 10, wisdom: 10, charisma: 10 }
+    stats: { strength: 16, dexterity: 12, constitution: 13, intelligence: 11, wisdom: 10, charisma: 10 }
   });
 
   const goblin = db.prepare("SELECT * FROM monsters WHERE name = 'Goblin'").get();
@@ -207,7 +207,7 @@ test('5. HTTP /game/victory renders defeated monster artwork and Vanquished badg
       name: 'GoblinCrusher',
       classType: 'FIGHTER',
       strength: '16', constitution: '13', dexterity: '12',
-      intelligence: '10', wisdom: '10', charisma: '10',
+      intelligence: '11', wisdom: '10', charisma: '10',
       _csrf: csrfToken
     }),
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookie },

@@ -20,7 +20,7 @@ test('Account can create a living character and spawns in safe town', async () =
       constitution: 11,
       dexterity: 16,
       intelligence: 10,
-      wisdom: 12,
+      wisdom: 13,
       charisma: 10
     }
   });
@@ -29,8 +29,8 @@ test('Account can create a living character and spawns in safe town', async () =
   assert.equal(hero.class, 'RANGER');
   assert.equal(hero.is_alive, 1);
   assert.equal(hero.level, 1);
-  assert.equal(hero.current_hp, 8); // Ranger 8 HP/level
-  assert.equal(hero.max_hp, 8);
+  assert.equal(hero.current_hp, 10); // Ranger H1=10 at CON mod 0
+  assert.equal(hero.max_hp, 10);
   assert.equal(hero.gold, 10);
 
   // Spawn tile check
@@ -53,7 +53,7 @@ test('Enforces strictly only ONE living character per account', async () => {
     classType: 'FIGHTER',
     stats: {
       strength: 16,
-      constitution: 13,
+      constitution: 14,
       dexterity: 12,
       intelligence: 10,
       wisdom: 10,
@@ -69,7 +69,7 @@ test('Enforces strictly only ONE living character per account', async () => {
       classType: 'FIGHTER',
       stats: {
         strength: 16,
-        constitution: 13,
+        constitution: 14,
         dexterity: 12,
         intelligence: 10,
         wisdom: 10,
@@ -88,7 +88,7 @@ test('Enforces strictly only ONE living character per account', async () => {
         user_id, name, class, is_alive, level, xp, gold,
         strength, constitution, dexterity, intelligence, wisdom, charisma,
         current_hp, max_hp, tile_id
-      ) VALUES (?, 'Sneaky', 'FIGHTER', 1, 1, 0, 0, 14, 12, 12, 10, 10, 10, 10, 10, 1)
+      ) VALUES (?, 'Sneaky', 'FIGHTER', 1, 1, 0, 0, 14, 14, 12, 10, 12, 10, 14, 14, 1)
     `).run(user.id);
   }, (err) => {
     assert.match(err.message, /UNIQUE constraint failed/);
@@ -106,7 +106,7 @@ test('Allows new character creation after previous character dies, preserving hi
     classType: 'FIGHTER',
     stats: {
       strength: 16,
-      constitution: 13,
+      constitution: 14,
       dexterity: 12,
       intelligence: 10,
       wisdom: 10,
@@ -132,7 +132,7 @@ test('Allows new character creation after previous character dies, preserving hi
     classType: 'FIGHTER',
     stats: {
       strength: 17,
-      constitution: 12,
+      constitution: 13,
       dexterity: 12,
       intelligence: 10,
       wisdom: 10,

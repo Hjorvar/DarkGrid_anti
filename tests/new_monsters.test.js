@@ -90,7 +90,7 @@ test('Verification: Monster artwork files exist and link correctly in encounter 
     userId: user.id,
     name: 'ArtTester',
     classType: 'RANGER',
-    stats: { strength: 12, constitution: 10, dexterity: 16, intelligence: 10, wisdom: 13, charisma: 10 }
+    stats: { strength: 12, constitution: 10, dexterity: 16, intelligence: 11, wisdom: 13, charisma: 10 }
   });
 
   const newMonsters = ['Ghoul', 'Giant Spider', 'Choker', 'Rust Monster', 'Manticore'];

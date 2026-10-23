@@ -35,7 +35,7 @@ test('H1 & H2: Two heroes vs same persistent monster & full max HP reset', (t) =
       strength: 16,
       constitution: 14,
       dexterity: 12,
-      intelligence: 10,
+      intelligence: 11,
       wisdom: 10,
       charisma: 9
     }
@@ -49,7 +49,7 @@ test('H1 & H2: Two heroes vs same persistent monster & full max HP reset', (t) =
       strength: 16,
       constitution: 14,
       dexterity: 12,
-      intelligence: 10,
+      intelligence: 11,
       wisdom: 10,
       charisma: 9
     }
@@ -222,7 +222,7 @@ test('H4: Initiative has no hidden production bias', (t) => {
       dexterity: 10, // Dex 10 -> +0 mod
       intelligence: 11,
       wisdom: 11,
-      charisma: 10
+      charisma: 11
     }
   });
 
@@ -296,7 +296,7 @@ test('M6: Shop economy enforces 50 item cap and max 2 free Clubs', (t) => {
       constitution: 14,
       dexterity: 11,
       intelligence: 11,
-      wisdom: 10,
+      wisdom: 11,
       charisma: 10
     }
   });
@@ -347,7 +347,7 @@ test('L3: Cleric self-heal is rejected at full HP', (t) => {
       constitution: 14,
       dexterity: 10,
       intelligence: 9,
-      wisdom: 16,
+      wisdom: 17,
       charisma: 10
     }
   });
@@ -375,7 +375,7 @@ test('L6: Ranger Favored Enemy validation and restriction', (t) => {
       constitution: 14,
       dexterity: 11,
       intelligence: 11,
-      wisdom: 10,
+      wisdom: 11,
       charisma: 10
     },
     favoredEnemyType: 'ANIMAL'
@@ -391,7 +391,7 @@ test('L6: Ranger Favored Enemy validation and restriction', (t) => {
       strength: 12,
       constitution: 14,
       dexterity: 16,
-      intelligence: 10,
+      intelligence: 11,
       wisdom: 10,
       charisma: 9
     },
@@ -409,7 +409,7 @@ test('L6: Ranger Favored Enemy validation and restriction', (t) => {
         strength: 12,
         constitution: 14,
         dexterity: 16,
-        intelligence: 10,
+        intelligence: 11,
         wisdom: 10,
         charisma: 9
       },
@@ -526,7 +526,7 @@ test('M1 HTTP Integration: UI renders identical AC and active weapon as combatSt
         strength: '12',
         dexterity: '10',
         constitution: '12',
-        intelligence: '10',
+        intelligence: '11',
         wisdom: '15',
         charisma: '12',
         _csrf: createCsrf

@@ -4,6 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { DatabaseSync } = require('node:sqlite');
+const config = require('../../../src/config');
 const { runMigrations, runSeeds } = require('../../../src/db/migrate');
 const {
   getLivingCharacterByUserId,
@@ -136,11 +137,15 @@ function ensureLivingHero(db, userId, classOverride = null, sceneModeOverride = 
     }
   }
 
-  const chosenClass = classOverride || 'FIGHTER';
-  const statsByClass = {
-    FIGHTER: { strength: 16, constitution: 13, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 10 },
-    RANGER: { strength: 12, constitution: 11, dexterity: 16, intelligence: 10, wisdom: 12, charisma: 10 },
-    CLERIC: { strength: 13, constitution: 11, dexterity: 10, intelligence: 10, wisdom: 15, charisma: 12 }
+  const chosenClass = String(classOverride || 'FIGHTER').toUpperCase();
+  const baseStats = config.classBases[chosenClass] || config.classBases.FIGHTER;
+  const stats = {
+    strength: baseStats.strength,
+    constitution: baseStats.constitution,
+    dexterity: baseStats.dexterity,
+    intelligence: baseStats.intelligence,
+    wisdom: baseStats.wisdom,
+    charisma: baseStats.charisma
   };
   const namesByClass = {
     FIGHTER: 'Vaelen Ironhand',
@@ -152,9 +157,10 @@ function ensureLivingHero(db, userId, classOverride = null, sceneModeOverride = 
     userId,
     name: namesByClass[chosenClass] || 'Vaelen Ironhand',
     classType: chosenClass,
-    stats: statsByClass[chosenClass] || statsByClass.FIGHTER,
+    stats,
     startingGold: 180,
-    favoredEnemyType: chosenClass === 'RANGER' ? 'BEAST' : null,
+    favoredEnemyFamily: chosenClass === 'RANGER' ? 'ANIMALS' : null,
+    favoredEnemyType: chosenClass === 'RANGER' ? 'ANIMALS' : null,
     primaryWeapon: chosenClass === 'RANGER' ? 'RANGED' : 'MELEE'
   });
 

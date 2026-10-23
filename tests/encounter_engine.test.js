@@ -130,7 +130,7 @@ test('Encounter lifecycle: locks movement, survives refresh, and unlocks on Igno
     name: 'Hawk',
     classType: 'RANGER',
     stats: {
-      strength: 12, constitution: 10, dexterity: 16, intelligence: 10, wisdom: 13, charisma: 10
+      strength: 12, constitution: 10, dexterity: 16, intelligence: 11, wisdom: 13, charisma: 10
     }
   });
 

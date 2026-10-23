@@ -70,11 +70,14 @@ import {
 import { renderMinimap, toggleMinimapSize } from './world/minimap.js';
 import { renderActionDeckAndPad } from './world/navigation.js';
 import {
+  getAttributeTierLabel,
   updateHeroVitalsDisplay,
   renderTopBarAndDeckSnapshot,
   handleMainHandClick,
   handleOffHandClick,
+  spendMilestoneAttribute,
   selectCreatorClass,
+  resetCreatorPreset,
   adjustCreatorStat,
   setCreatorField,
   submitCreatorHero,
@@ -153,7 +156,7 @@ export function renderGameState(state, options = {}) {
   renderMinimap(state);
   renderActionDeckAndPad(state);
 
-  if (store.currentOpenModal === 'journal' || store.currentOpenModal === 'director' || store.currentOpenModal === 'help' || store.currentOpenModal === 'account' || store.currentOpenModal === 'create-character') {
+  if (store.currentOpenModal === 'journal' || store.currentOpenModal === 'director' || store.currentOpenModal === 'help' || store.currentOpenModal === 'account' || store.currentOpenModal === 'create-character' || store.currentOpenModal === 'character') {
     renderModalContent(store.currentOpenModal);
   }
 
@@ -244,11 +247,14 @@ if (typeof window !== 'undefined') {
     renderMinimap,
     toggleMinimapSize,
     renderActionDeckAndPad,
+    getAttributeTierLabel,
     updateHeroVitalsDisplay,
     renderTopBarAndDeckSnapshot,
     handleMainHandClick,
     handleOffHandClick,
+    spendMilestoneAttribute,
     selectCreatorClass,
+    resetCreatorPreset,
     adjustCreatorStat,
     setCreatorField,
     submitCreatorHero,
