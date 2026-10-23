@@ -83,6 +83,12 @@ function ensureNonDestructiveLabAdapter(db) {
   if (!cols.includes('divine_charges')) {
     db.exec('ALTER TABLE characters ADD COLUMN divine_charges INTEGER DEFAULT NULL;');
   }
+  if (!cols.includes('quest_goblin_chieftain_status')) {
+    db.exec("ALTER TABLE characters ADD COLUMN quest_goblin_chieftain_status TEXT NOT NULL DEFAULT 'NOT_ACCEPTED';");
+  }
+  if (!cols.includes('goblin_chieftain_slain')) {
+    db.exec('ALTER TABLE characters ADD COLUMN goblin_chieftain_slain INTEGER NOT NULL DEFAULT 0;');
+  }
   db.exec(`
     UPDATE characters
     SET divine_charges = CASE

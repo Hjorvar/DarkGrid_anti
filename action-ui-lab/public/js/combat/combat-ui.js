@@ -381,12 +381,24 @@ export function handleMonsterActorClick() {
 export function handleSlot1Click() {
   if (!store.currentState) return;
   const enc = store.currentState.encounter;
+  const tile = store.currentState.currentTile;
+  const mapData = store.currentState.topdownMap;
+  const shCoord = (mapData && mapData.strongholdCoord) || { x: 7, y: 1 };
+  const isAtStrongholdGate = Boolean(
+    mapData &&
+    !mapData.bossSlain &&
+    (mapData.atStronghold ||
+      (tile && Number(tile.x) === Number(shCoord.x) && Number(tile.y) === Number(shCoord.y)))
+  );
+
   if (enc && enc.status === 'IN_COMBAT') {
     dispatchAction('ATTACK');
   } else if (enc && enc.status === 'DISCOVERED') {
     dispatchAction('INVESTIGATE');
   } else if (store.currentState.victory) {
     dispatchAction('DISMISS_VICTORY');
+  } else if (isAtStrongholdGate) {
+    dispatchAction('ENGAGE_STRONGHOLD_BOSS');
   } else if (store.currentState.isSafeCity) {
     dispatchAction('REST');
   } else if (store.currentState.viewportScene && store.currentState.viewportScene.pointOfInterest) {

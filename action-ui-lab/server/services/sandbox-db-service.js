@@ -16,6 +16,7 @@ const {
   isAuthRequired,
   ensureNonDestructiveLabAdapter
 } = require('./legacy-compatibility-service');
+const { applyTopdownExperimentWorld, ensureStrongholdBossInstance } = require('./topdown-world-service');
 
 const DATA_DIR = path.join(__dirname, '../../data');
 const DEFAULT_DB_PATH = path.join(DATA_DIR, 'action_lab.sqlite');
@@ -40,43 +41,8 @@ function applyLabSchemaAndTestMap(db, { preserveExistingMap = false } = {}) {
     return;
   }
 
-  // Enrich the local test map around Oakhaven (7,7) so terrain transitions, passable paths,
-  // and impassable obstacles can be tested within 1-2 steps of spawn:
-  // 1. (6, 5) Stonefang Crag: Impassable MOUNTAINS directly West of (7, 5) Mirkwood Forest.
-  db.prepare(`
-    UPDATE map_tiles
-    SET name = 'Stonefang Crag',
-        terrain = 'MOUNTAINS',
-        feature = NULL,
-        description = 'A sheer wall of jagged black granite rising abruptly from the forest floor, blocking passage to the west.',
-        is_passable = 0,
-        is_safe = 0
-    WHERE x = 6 AND y = 5
-  `).run();
-
-  // 2. (8, 6) and (8, 8) Blackwater River: Impassable river channel flowing North and South under The Old Stone Bridge (8, 7).
-  db.prepare(`
-    UPDATE map_tiles
-    SET name = 'Blackwater River',
-        terrain = 'RIVER_LAKE',
-        feature = NULL,
-        description = 'Dark, churning river waters rushing beneath the stone bridge arches, too deep and swift to ford on foot.',
-        is_passable = 0,
-        is_safe = 0
-    WHERE x = 8 AND y IN (6, 8)
-  `).run();
-
-  // 3. (9, 7) Bridge East Watchpost: Passable UNDERGROUND_RUINS at the eastern end of The Old Stone Bridge (8, 7).
-  db.prepare(`
-    UPDATE map_tiles
-    SET name = 'Bridge East Watchpost',
-        terrain = 'UNDERGROUND_RUINS',
-        feature = 'SUNK_RUIN',
-        description = 'Crumbling stone watchtower ruins at the eastern end of the Old Stone Bridge, overlooking the Blackwater River.',
-        is_passable = 1,
-        is_safe = 0
-    WHERE x = 9 AND y = 7
-  `).run();
+  // Apply the Top-Down Exploration Experiment 1 region (Oakhaven + 8x7 Blackwood Goblin Forest + Stronghold Boss)
+  applyTopdownExperimentWorld(db, { preserveOuterPassability: true });
 }
 
 function initSandboxDb(customDbPath = null, options = {}) {
@@ -168,6 +134,7 @@ function ensureLivingHero(db, userId, classOverride = null, sceneModeOverride = 
     initialSceneMode,
     hero.id
   );
+  ensureStrongholdBossInstance(db, { respawnIfDefeated: true });
 
   // Add one extra healing potion so the player has 3 potions to test with
   const potionDef = db.prepare("SELECT id FROM item_definitions WHERE name = 'Minor Healing Potion'").get();

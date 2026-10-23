@@ -1644,5 +1644,118 @@
 .dm-utility-strip {
   grid-template-columns: repeat(2, 1fr);
   gap: 4px;
-  /* end phase 4 world */
+}
+
+/* ==========================================================================
+   TOP-DOWN EXPLORATION EXPERIMENT 1 — 2D MAP CANVAS & SIMPLIFIED EXPLORATION UI
+   ========================================================================== */
+.topdown-map-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #070b09;
+}
+
+.topdown-map-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* In Exploration/Town mode (when not in Stage 2 combat), the 2D Top-Down Canvas is the primary view */
+.fp-viewport-frame:not(.scene-state-combat) #fp-terrain-img,
+.fp-viewport-frame:not(.scene-state-combat) #fp-terrain-img-prev,
+.fp-viewport-frame:not(.scene-state-combat) #fp-ahead-portal,
+.fp-viewport-frame:not(.scene-state-combat) #fp-scene-svg-wrap,
+.fp-viewport-frame:not(.scene-state-combat) .fp-flank-layer {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* In Stage 2 Combat, dim the top-down canvas into the background so the Darkgrid monster artwork & combat HUD take center stage */
+.fp-viewport-frame.scene-state-combat .topdown-map-stage {
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+/* Section 8 Simplified Exploration UI:
+   - Top-down map takes ~82% of main workspace
+   - Hide redundant 5x5 minimap, large combat chronicle, hands/AC/XP bars in Player Mode */
+.dev-mode-collapsed .dm-main-grid {
+  grid-template-columns: minmax(0, 1fr) clamp(220px, 17vw, 250px);
+}
+
+.dev-mode-collapsed #dm-minimap-card {
+  display: none !important;
+}
+
+.dev-mode-collapsed .dm-hands-and-bars {
+  display: none !important;
+}
+
+.dev-mode-collapsed.ui-mode-exploration #fp-bottom-chronicle:not(.is-expanded),
+.dev-mode-collapsed.ui-mode-town #fp-bottom-chronicle:not(.is-expanded) {
+  display: none !important;
+}
+
+.dev-mode-collapsed.ui-mode-exploration #fp-discovery-layer,
+.dev-mode-collapsed.ui-mode-town #fp-discovery-layer,
+.dev-mode-collapsed.ui-mode-exploration #fp-tension-ribbon-wrap,
+.dev-mode-collapsed.ui-mode-town #fp-tension-ribbon-wrap,
+.dev-mode-collapsed #fp-poi-trigger-wrap,
+.dev-mode-collapsed #fp-expedition-pill-wrap,
+.dev-mode-collapsed #fp-facing-pill {
+  display: none !important;
+}
+
+.dev-mode-collapsed .dm-top-deck {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  gap: 12px;
+}
+
+.dev-mode-collapsed .dm-vitals-readout {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.dev-mode-collapsed .dm-hp-Readout-box {
+  min-width: 190px;
+  max-width: 260px;
+}
+
+.topdown-stronghold-card,
+.topdown-town-bar {
+  background: rgba(9, 13, 18, 0.92) !important;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.85);
+}
+
+
+.dev-mode-collapsed #fp-fov-strip,
+.dev-mode-collapsed #fp-scene-caption-line,
+.dev-mode-collapsed .fp-location-sub {
+  display: none !important;
+}
+
+.dev-mode-collapsed.ui-mode-exploration .dm-stat-chip:not(.is-potion-chip),
+.dev-mode-collapsed.ui-mode-town .dm-stat-chip:not(.is-potion-chip) {
+  display: none !important;
+}
+
+.fp-monster-hud-plate {
+  max-width: 620px;
+}
+
+.fp-monster-title-row {
+  flex-wrap: wrap;
+  row-gap: 4px;
 }

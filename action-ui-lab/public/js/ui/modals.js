@@ -26,7 +26,8 @@ export function openLabModal(modalName) {
       modalName === 'create-character' ||
       modalName === 'character' ||
       modalName === 'market' ||
-      modalName === 'bounties'
+      modalName === 'bounties' ||
+      modalName === 'quests'
     );
   }
   backdrop.hidden = false;
@@ -82,9 +83,111 @@ export function renderModalContent(modalName) {
     renderBackpackModal(titleEl, bodyEl);
   } else if (modalName === 'market') {
     renderMarketModal(titleEl, bodyEl, hero);
+  } else if (modalName === 'quests') {
+    renderQuestsModal(titleEl, bodyEl);
   } else if (modalName === 'bounties') {
     renderBountiesModal(titleEl, bodyEl);
   }
+}
+
+export function renderQuestsModal(titleEl, bodyEl) {
+  titleEl.textContent = 'Quests — Oakhaven & Blackwood Forest [J]';
+  const st = store.currentState || {};
+  const q = st.quest || {
+    key: 'THE_GOBLIN_CHIEFTAIN',
+    title: 'The Goblin Chieftain',
+    description: 'A goblin chieftain has taken control of an old stronghold deep within Blackwood Forest. Travelers are disappearing. Find the stronghold and defeat the chieftain.',
+    status: 'NOT_ACCEPTED',
+    statusLabel: 'Not Accepted',
+    bossSlain: false,
+    rewardGold: 100,
+    rewardXp: 120,
+    canAccept: Boolean(st.isSafeCity),
+    canClaimReward: false
+  };
+
+  const statusColorMap = {
+    NOT_ACCEPTED: '#94a3b8',
+    ACTIVE: '#fde68a',
+    COMPLETED: '#86efac',
+    REWARD_CLAIMED: '#60a5fa'
+  };
+  const badgeColor = statusColorMap[q.status] || '#fde68a';
+
+  let actionSectionHtml = '';
+  if (q.status === 'NOT_ACCEPTED') {
+    if (st.isSafeCity) {
+      actionSectionHtml = `
+        <button type="button" class="btn-action-gold" id="modal-btn-accept-quest" style="padding: 7px 16px; font-size: 0.82rem;" onclick="dispatchAction('ACCEPT_QUEST')">
+          ${q.bossSlain ? 'Report Chieftain Slain & Accept Quest' : 'Accept Quest: The Goblin Chieftain'}
+        </button>
+      `;
+    } else {
+      actionSectionHtml = `
+        <div style="font-size: 0.78rem; color: var(--text-muted);">
+          Return to <strong>Oakhaven Sanctuary [7, 7]</strong> to formally accept this quest from Captain Vane (or venture directly to the Goblin Stronghold at <strong>[7, 1]</strong>).
+        </div>
+      `;
+    }
+  } else if (q.status === 'ACTIVE') {
+    actionSectionHtml = `
+      <div style="font-size: 0.80rem; color: #fde68a;">
+        <strong>Objective:</strong> Travel North through Blackwood Forest to the <strong>Goblin Stronghold [7, 1]</strong> and defeat <strong>Warchief Grak the Goblin Chieftain</strong>.
+      </div>
+    `;
+  } else if (q.status === 'COMPLETED') {
+    if (st.isSafeCity) {
+      actionSectionHtml = `
+        <button type="button" class="btn-action-gold" id="modal-btn-claim-quest-reward" style="padding: 7px 16px; font-size: 0.82rem;" onclick="dispatchAction('CLAIM_QUEST_REWARD')">
+          Claim Reward (+${q.rewardGold} Gold, +${q.rewardXp} XP)
+        </button>
+      `;
+    } else {
+      actionSectionHtml = `
+        <div style="font-size: 0.80rem; color: #86efac; font-weight: 600;">
+          Warchief Grak is slain! Return South to <strong>Oakhaven Sanctuary [7, 7]</strong> to claim your reward (+${q.rewardGold} Gold &amp; +${q.rewardXp} XP).
+        </div>
+      `;
+    }
+  } else if (q.status === 'REWARD_CLAIMED') {
+    actionSectionHtml = `
+      <div style="font-size: 0.80rem; color: #86efac; font-weight: 600;">
+        Quest Complete &amp; Reward Claimed — Oakhaven honors your victory over the Goblin Stronghold!
+      </div>
+    `;
+  }
+
+  bodyEl.innerHTML = `
+    <div class="qa-card" style="padding: 16px 18px; border-color: var(--border-gold);">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px; margin-bottom: 12px;">
+        <div>
+          <div style="font-family: var(--font-serif); font-size: 1.05rem; font-weight: 800; color: var(--accent-gold-bright);">
+            ${escapeHtml(q.title)}
+          </div>
+          <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">
+            Given by Captain Vane • Oakhaven Sanctuary [7, 7] • Target: Goblin Stronghold [7, 1]
+          </div>
+        </div>
+        <span class="lab-badge" id="quest-status-badge" style="font-size: 0.75rem; padding: 4px 10px; color: ${badgeColor}; border-color: ${badgeColor};">
+          Status: ${escapeHtml(q.statusLabel)}
+        </span>
+      </div>
+
+      <p style="font-size: 0.86rem; color: var(--text-body); line-height: 1.5; font-style: italic; margin: 0 0 14px 0; padding: 10px 14px; background: rgba(9, 12, 18, 0.65); border-left: 3px solid var(--accent-gold); border-radius: 4px;">
+        “${escapeHtml(q.description)}”
+      </p>
+
+      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; font-family: var(--font-mono); font-size: 0.80rem;">
+        <span style="color: var(--accent-gold-bright);">Reward: <strong>+${q.rewardGold} Gold</strong></span>
+        <span style="color: #93c5fd;">Experience: <strong>+${q.rewardXp} XP</strong></span>
+        <span style="color: ${q.bossSlain ? '#86efac' : '#fca5a5'};">Stronghold Chieftain: <strong>${q.bossSlain ? 'Defeated' : 'Alive at [7, 1]'}</strong></span>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--border-subtle);">
+        ${actionSectionHtml}
+      </div>
+    </div>
+  `;
 }
 
 export function selectAtlasTile(x, y) {

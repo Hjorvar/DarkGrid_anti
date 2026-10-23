@@ -106,18 +106,18 @@
     </div>
 
     <!-- Always-Visible Player Header Actions + Lab Tools Progressive Disclosure Toggle -->
-    <div class="lab-header-actions" role="group" aria-label="Player Account, Journal, Help, and Lab Tools Toggle">
+    <div class="lab-header-actions" role="group" aria-label="Player Account, Quests, Menu, and Lab Tools Toggle">
       <button type="button" class="lab-pill lab-pill-account" id="btn-open-account" onclick="openLabModal('account')" title="Open Account, Session & Custom Hero Creator" aria-label="Open Account and Hero Creator">
-        👤 <span id="lbl-header-account">Account</span>
+        <span id="lbl-header-account">Menu</span>
       </button>
-      <button type="button" class="lab-pill lab-pill-journal" id="btn-open-journal" onclick="openLabModal('journal')" title="Open Expedition Journal & Exploration Progress [L]" aria-label="Open Expedition Journal [L]">
-        📖 Journal <kbd class="pill-kbd">L</kbd>
+      <button type="button" class="lab-pill lab-pill-journal" id="btn-open-journal" onclick="openLabModal('quests')" title="Open Quests [J]" aria-label="Open Quests [J]">
+        Quests <kbd class="pill-kbd">J</kbd>
       </button>
-      <button type="button" class="lab-pill lab-pill-help" id="btn-open-help" onclick="openLabModal('help')" title="Open Keyboard Shortcuts & Tactical Guide [?]" aria-label="Open Controls Help [?]">
-        ❓ Controls <kbd class="pill-kbd">?</kbd>
+      <button type="button" class="lab-pill lab-pill-help" id="btn-open-help" onclick="openLabModal('help')" title="Open Controls & Guide [?]" aria-label="Open Controls Help [?]">
+        Controls <kbd class="pill-kbd">?</kbd>
       </button>
       <button type="button" class="lab-pill lab-pill-devtools-toggle" id="btn-toggle-devtools" onclick="toggleDevToolsDrawer()" aria-expanded="false" aria-controls="lab-devtools-drawer" title="Toggle Developer & Lab Tools Drawer [Backquote / `]">
-        🛠️ <span id="lbl-toggle-devtools">Lab Tools</span> <kbd class="pill-kbd">`</kbd>
+        <span id="lbl-toggle-devtools">Lab Tools</span> <kbd class="pill-kbd">`</kbd>
       </button>
     </div>
 
@@ -493,43 +493,43 @@
           </div>
         </div>
 
-        <!-- 3. First-Person Navigation Pad (Turn Left/Right, Forward/Back, Strafe Left/Right) -->
+        <!-- 3. Top-Down Grid Navigation Pad (Move North/South/East/West) -->
         <div class="dm-deck-card dm-movement-deck" id="dm-movement-deck">
           <div class="dm-deck-header">
-            <span class="dm-deck-title">🕹️ Navigation</span>
-            <span class="dm-header-status" id="nav-deck-status-lbl">WASD • QE</span>
+            <span class="dm-deck-title">Move</span>
+            <span class="dm-header-status" id="nav-deck-status-lbl">WASD • Arrows</span>
           </div>
 
           <!-- Contextual Combat Lock Notice (Shown when engaged in Stage 2 Melee or Ambush) -->
           <div class="dm-nav-combat-banner" id="dm-nav-combat-banner" hidden role="status" aria-live="polite">
-            ⚔️ Engaged in Melee — Use Tactical Actions [1–4] or Flee [4/F]
+            Engaged in Combat — Use Combat Actions [1–4] or Flee [4/F]
           </div>
 
-          <div class="dm-pad-grid" role="group" aria-label="First-Person Movement and Turning Pad">
-            <!-- Row 1: Turn Left [A] | Move Forward [W] | Turn Right [D] -->
-            <button type="button" class="dm-pad-btn is-turn" id="pad-turn-left" onclick="dispatchTurn('LEFT')" title="Turn 90° Counter-Clockwise [A / Left Arrow]" aria-label="Turn Left">
-              <span class="pad-key">A / ◀</span>
+          <div class="dm-pad-grid" role="group" aria-label="Top-Down Cardinal Movement Pad">
+            <!-- Row 1: Turn Left [Q] (Hidden in Player Mode) | Move North [W / Up] | Turn Right [E] (Hidden in Player Mode) -->
+            <button type="button" class="dm-pad-btn is-turn" id="pad-turn-left" onclick="dispatchTurn('LEFT')" title="Turn Counter-Clockwise [Q]" aria-label="Turn Left" style="opacity:0.32;">
+              <span class="pad-key">Q</span>
               <span class="pad-arrow">↶</span>
-              <span class="pad-label" id="lbl-turn-left">Turn W</span>
+              <span class="pad-label" id="lbl-turn-left">Turn</span>
             </button>
 
-            <button type="button" class="dm-pad-btn is-cardinal" id="pad-forward" onclick="dispatchRelativeMove('FORWARD')" title="Move Forward in facing direction [W / Up Arrow]" aria-label="Move Forward">
+            <button type="button" class="dm-pad-btn is-cardinal" id="pad-forward" onclick="dispatchMove('NORTH')" title="Move North [W / Up Arrow]" aria-label="Move North">
               <span class="pad-key">W / ▲</span>
               <span class="pad-arrow">▲</span>
-              <span class="pad-label" id="lbl-forward">Forward (N)</span>
+              <span class="pad-label" id="lbl-forward">North</span>
             </button>
 
-            <button type="button" class="dm-pad-btn is-turn" id="pad-turn-right" onclick="dispatchTurn('RIGHT')" title="Turn 90° Clockwise [D / Right Arrow]" aria-label="Turn Right">
-              <span class="pad-key">D / ▶</span>
+            <button type="button" class="dm-pad-btn is-turn" id="pad-turn-right" onclick="dispatchTurn('RIGHT')" title="Turn Clockwise [E]" aria-label="Turn Right" style="opacity:0.32;">
+              <span class="pad-key">E</span>
               <span class="pad-arrow">↷</span>
-              <span class="pad-label" id="lbl-turn-right">Turn E</span>
+              <span class="pad-label" id="lbl-turn-right">Turn</span>
             </button>
 
-            <!-- Row 2: Strafe Left [Q] | Center Facing Indicator | Strafe Right [E] -->
-            <button type="button" class="dm-pad-btn is-strafe" id="pad-strafe-left" onclick="dispatchRelativeMove('STRAFE_LEFT')" title="Strafe Left [Q]" aria-label="Strafe Left">
-              <span class="pad-key">Q</span>
+            <!-- Row 2: Move West [A / Left] | Center Area Indicator | Move East [D / Right] -->
+            <button type="button" class="dm-pad-btn is-cardinal" id="pad-strafe-left" onclick="dispatchMove('WEST')" title="Move West [A / Left Arrow]" aria-label="Move West">
+              <span class="pad-key">A / ◀</span>
               <span class="pad-arrow">◄</span>
-              <span class="pad-label" id="lbl-strafe-left">Strafe (W)</span>
+              <span class="pad-label" id="lbl-strafe-left">West</span>
             </button>
 
             <div class="dm-pad-center-compass" id="pad-center" title="Current Facing & Tile Coordinates" aria-live="polite">
@@ -537,45 +537,44 @@
               <span class="pad-label" id="pad-center-lbl">NORTH</span>
             </div>
 
-            <button type="button" class="dm-pad-btn is-strafe" id="pad-strafe-right" onclick="dispatchRelativeMove('STRAFE_RIGHT')" title="Strafe Right [E]" aria-label="Strafe Right">
-              <span class="pad-key">E</span>
+            <button type="button" class="dm-pad-btn is-cardinal" id="pad-strafe-right" onclick="dispatchMove('EAST')" title="Move East [D / Right Arrow]" aria-label="Move East">
+              <span class="pad-key">D / ▶</span>
               <span class="pad-arrow">►</span>
-              <span class="pad-label" id="lbl-strafe-right">Strafe (E)</span>
+              <span class="pad-label" id="lbl-strafe-right">East</span>
             </button>
 
-            <!-- Row 3: Decorative Plinth | Move Backward [S] | Decorative Plinth -->
-            <div class="dm-pad-spacer" aria-hidden="true">
-              <span class="spacer-rune">ᛉ</span>
-            </div>
+            <!-- Row 3: Decorative Plinth | Move South [S / Down] | Decorative Plinth -->
+            <div class="dm-pad-spacer" aria-hidden="true"></div>
 
-            <button type="button" class="dm-pad-btn is-cardinal" id="pad-backward" onclick="dispatchRelativeMove('BACKWARD')" title="Step Backward [S / Down Arrow]" aria-label="Move Backward">
+            <button type="button" class="dm-pad-btn is-cardinal" id="pad-backward" onclick="dispatchMove('SOUTH')" title="Move South [S / Down Arrow]" aria-label="Move South">
               <span class="pad-key">S / ▼</span>
               <span class="pad-arrow">▼</span>
-              <span class="pad-label" id="lbl-backward">Back (S)</span>
+              <span class="pad-label" id="lbl-backward">South</span>
             </button>
 
-            <div class="dm-pad-spacer" aria-hidden="true">
-              <span class="spacer-rune">ᛉ</span>
-            </div>
+            <div class="dm-pad-spacer" aria-hidden="true"></div>
           </div>
 
-          <!-- Single Grimoire Drawer Strip (No Duplicates) -->
-          <div class="dm-utility-strip" role="group" aria-label="Grimoire and Sanctuary Drawers">
-            <button type="button" class="dm-util-btn" id="util-btn-hero" onclick="openLabModal('character')" title="Open Champion Sheet [C]">
-              <span>👤 Hero</span>
+          <!-- Simplified Exploration Drawer Strip: Hero, Inventory, Quests, Menu (+ Shop in Town) -->
+          <div class="dm-utility-strip" role="group" aria-label="Hero, Inventory, Quests, and Menu">
+            <button type="button" class="dm-util-btn" id="util-btn-hero" onclick="openLabModal('character')" title="Open Hero Sheet [C]">
+              <span>Hero</span>
               <span class="util-hotkey">C</span>
             </button>
-            <button type="button" class="dm-util-btn" id="util-btn-pack" onclick="openLabModal('backpack')" title="Open Equipment & Backpack [B]">
-              <span id="util-pack-lbl">🎒 Pack</span>
+            <button type="button" class="dm-util-btn" id="util-btn-pack" onclick="openLabModal('backpack')" title="Open Inventory & Equipment [B]">
+              <span id="util-pack-lbl">Inventory</span>
               <span class="util-hotkey">B</span>
             </button>
-            <button type="button" class="dm-util-btn" id="util-btn-market" onclick="openLabModal('market')" title="Open Oakhaven Market [M]">
-              <span>🛒 Market</span>
+            <button type="button" class="dm-util-btn" id="util-btn-board" onclick="openLabModal('quests')" title="Open Quests [J]">
+              <span id="util-quests-lbl">Quests</span>
+              <span class="util-hotkey">J</span>
+            </button>
+            <button type="button" class="dm-util-btn" id="util-btn-market" onclick="openLabModal('market')" title="Open Town Shop [M]">
+              <span>Shop</span>
               <span class="util-hotkey">M</span>
             </button>
-            <button type="button" class="dm-util-btn" id="util-btn-board" onclick="openLabModal('bounties')" title="Open The Watcher's Board [J]">
-              <span>🎯 Board</span>
-              <span class="util-hotkey">J</span>
+            <button type="button" class="dm-util-btn" id="util-btn-menu" onclick="openLabModal('account')" title="Open Game Menu & Hero Select">
+              <span>Menu</span>
             </button>
           </div>
         </div>

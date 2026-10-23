@@ -159,7 +159,7 @@ export function renderGameState(state, options = {}) {
   renderMinimap(state);
   renderActionDeckAndPad(state);
 
-  if (store.currentOpenModal === 'journal' || store.currentOpenModal === 'director' || store.currentOpenModal === 'help' || store.currentOpenModal === 'account' || store.currentOpenModal === 'create-character' || store.currentOpenModal === 'character') {
+  if (store.currentOpenModal === 'journal' || store.currentOpenModal === 'director' || store.currentOpenModal === 'help' || store.currentOpenModal === 'account' || store.currentOpenModal === 'create-character' || store.currentOpenModal === 'character' || store.currentOpenModal === 'quests') {
     renderModalContent(store.currentOpenModal);
   }
 

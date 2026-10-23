@@ -32,7 +32,17 @@ export function renderActionDeckAndPad(state) {
   const slot3 = document.getElementById('action-slot-3');
   const slot4 = document.getElementById('action-slot-4');
 
-  // SLOT 1: Primary Context Action (Attack / Engage Threat / Sanctuary Rest / Inspect Landmark / Continue)
+  const shCoord = (state.topdownMap && state.topdownMap.strongholdCoord) || { x: 7, y: 1 };
+  const isAtStrongholdGate = Boolean(
+    state.topdownMap &&
+    !state.topdownMap.bossSlain &&
+    (state.topdownMap.atStronghold ||
+      (state.currentTile &&
+        Number(state.currentTile.x) === Number(shCoord.x) &&
+        Number(state.currentTile.y) === Number(shCoord.y)))
+  );
+
+  // SLOT 1: Primary Context Action (Attack / Engage Threat / Stronghold Boss / Sanctuary Rest / Inspect Landmark / Continue)
   if (enc && enc.status === 'IN_COMBAT') {
     slot1.disabled = false;
     document.getElementById('slot1-icon').textContent = cStats.isRangedActive ? '🏹' : '⚔️';
@@ -45,7 +55,13 @@ export function renderActionDeckAndPad(state) {
     document.getElementById('slot1-icon').textContent = '⚔️';
     document.getElementById('slot1-title').textContent = enc.isAmbush ? 'Face Ambush' : 'Engage Threat';
     document.getElementById('slot1-sub').textContent = 'Reveal & Fight';
-    slot1.title = 'Step forward into the mist and engage the threat [Space / 1]';
+    slot1.title = 'Step forward and engage the threat [Space / 1]';
+  } else if (isAtStrongholdGate && !state.victory) {
+    slot1.disabled = false;
+    document.getElementById('slot1-icon').textContent = '⚔️';
+    document.getElementById('slot1-title').textContent = 'Challenge Chieftain';
+    document.getElementById('slot1-sub').textContent = 'Goblin Stronghold Boss';
+    slot1.title = 'Challenge Warchief Grak the Goblin Chieftain at the Stronghold Gates [Space / 1]';
   } else if (state.isSafeCity) {
     slot1.disabled = false;
     document.getElementById('slot1-icon').textContent = '🛌';
@@ -157,56 +173,75 @@ export function renderActionDeckAndPad(state) {
     }
   }
 
-  const leftCard = relMoves.STRAFE_LEFT ? relMoves.STRAFE_LEFT.cardinal : 'WEST';
-  const rightCard = relMoves.STRAFE_RIGHT ? relMoves.STRAFE_RIGHT.cardinal : 'EAST';
-  const fwdCard = relMoves.FORWARD ? relMoves.FORWARD.cardinal : 'NORTH';
-  const backCard = relMoves.BACKWARD ? relMoves.BACKWARD.cardinal : 'SOUTH';
-
-  document.getElementById('lbl-turn-left').textContent = `Turn ${leftCard[0]}`;
-  document.getElementById('lbl-turn-right').textContent = `Turn ${rightCard[0]}`;
-  document.getElementById('lbl-forward').textContent = `Forward (${fwdCard[0]})`;
-  document.getElementById('lbl-backward').textContent = `Back (${backCard[0]})`;
-  document.getElementById('lbl-strafe-left').textContent = `Strafe (${leftCard[0]})`;
-  document.getElementById('lbl-strafe-right').textContent = `Strafe (${rightCard[0]})`;
+  document.getElementById('lbl-turn-left').textContent = `Turn`;
+  document.getElementById('lbl-turn-right').textContent = `Turn`;
+  document.getElementById('lbl-forward').textContent = `North`;
+  document.getElementById('lbl-backward').textContent = `South`;
+  document.getElementById('lbl-strafe-left').textContent = `West`;
+  document.getElementById('lbl-strafe-right').textContent = `East`;
 
   document.getElementById('pad-center-glyph').textContent = fMeta.arrow;
-  document.getElementById('pad-center-lbl').textContent = facing;
+  document.getElementById('pad-center-lbl').textContent = state.currentTile ? `[${state.currentTile.x},${state.currentTile.y}]` : facing;
 
-  const padMap = [
-    { id: 'pad-forward', rel: 'FORWARD', label: 'Forward' },
-    { id: 'pad-backward', rel: 'BACKWARD', label: 'Backward' },
-    { id: 'pad-strafe-left', rel: 'STRAFE_LEFT', label: 'Strafe Left' },
-    { id: 'pad-strafe-right', rel: 'STRAFE_RIGHT', label: 'Strafe Right' }
+  const dirs = state.directions || {};
+  const mapTiles = (state.topdownMap && Array.isArray(state.topdownMap.tiles)) ? state.topdownMap.tiles : [];
+  const checkCardinalOpen = (cardinal) => {
+    const dInfo = dirs[cardinal];
+    if (!dInfo || !dInfo.available) return { open: false, name: (dInfo && dInfo.tile && dInfo.tile.name) || 'Blocked', reason: (dInfo && dInfo.reason) || 'Impassable' };
+    if (mapTiles.length > 0 && dInfo.tile) {
+      const inRegion = mapTiles.find(t => t.x === dInfo.tile.x && t.y === dInfo.tile.y);
+      if (!inRegion || !inRegion.isPassable) {
+        return { open: false, name: dInfo.tile.name || 'Forest Edge', reason: 'Dense forest boundary' };
+      }
+    }
+    return { open: true, name: (dInfo.tile && dInfo.tile.name) || cardinal, reason: null };
+  };
+
+  const padCardinalMap = [
+    { id: 'pad-forward', dir: 'NORTH', label: 'Move North' },
+    { id: 'pad-backward', dir: 'SOUTH', label: 'Move South' },
+    { id: 'pad-strafe-left', dir: 'WEST', label: 'Move West' },
+    { id: 'pad-strafe-right', dir: 'EAST', label: 'Move East' }
   ];
 
-  padMap.forEach(({ id, rel, label }) => {
+  padCardinalMap.forEach(({ id, dir, label }) => {
     const btn = document.getElementById(id);
     if (!btn) return;
-    const mInfo = relMoves[rel];
-    const canStep = !isMoveLockedByCombat && mInfo && mInfo.available;
+    const cInfo = checkCardinalOpen(dir);
+    const canStep = !isMoveLockedByCombat && cInfo.open;
     btn.classList.toggle('is-blocked-dir', !canStep);
     if (isMoveLockedByCombat) {
       btn.title = enc.isAmbush
         ? 'Ambush! You cannot move away without facing the threat'
         : 'Locked in melee combat — use Flee [4/F] to retreat';
-    } else if (mInfo) {
-      btn.title = mInfo.available
-        ? `${label} (${mInfo.cardinal}): ${mInfo.tileName}${enc && enc.status === 'DISCOVERED' ? ' (Slips past threat)' : ''}`
-        : `Blocked (${mInfo.cardinal}): ${mInfo.reason}`;
+    } else {
+      btn.title = cInfo.open
+        ? `${label} (${dir}): ${cInfo.name}${enc && enc.status === 'DISCOVERED' ? ' (Slips past threat)' : ''}`
+        : `Blocked (${dir}): ${cInfo.name}`;
     }
   });
 
-  // Update Single Pack Counter
+  // Update Single Pack Counter & Quest Status Indicator
   const packLbl = document.getElementById('util-pack-lbl');
   if (packLbl) {
-    packLbl.textContent = `🎒 Pack (${state.inventory.length})`;
+    packLbl.textContent = `Inventory (${state.inventory.length})`;
+  }
+  const questsLbl = document.getElementById('util-quests-lbl');
+  if (questsLbl && state.quest) {
+    if (state.quest.status === 'COMPLETED') {
+      questsLbl.textContent = 'Quests (!)';
+    } else if (state.quest.status === 'ACTIVE') {
+      questsLbl.textContent = 'Quests (1)';
+    } else {
+      questsLbl.textContent = 'Quests';
+    }
   }
 
   // Contextual slot visibility & primary action emphasis (Phase 4 Player-First UI)
   const isStage1 = Boolean(enc && enc.status === 'DISCOVERED');
   const isStage2 = Boolean(enc && enc.status === 'IN_COMBAT');
   const hasClericPrayer = Boolean(!enc && hero.class === 'CLERIC' && state.clericHealInfo);
-  const slot1IsIdleFiller = Boolean(!enc && !state.isSafeCity && !poi && !state.victory);
+  const slot1IsIdleFiller = Boolean(!enc && !state.isSafeCity && !poi && !state.victory && !isAtStrongholdGate);
 
   slot1.classList.toggle('is-contextual-inactive', slot1IsIdleFiller);
   slot2.classList.toggle('is-contextual-inactive', isStage1);
@@ -295,10 +330,10 @@ export function renderActionDeckAndPad(state) {
     }
   }
 
-  // Highlight Move Forward [W] as Primary Exploration Action when path ahead is open
+  // Highlight Move North [W] as Primary Exploration Action when northern path is open
   const fwdBtn = document.getElementById('pad-forward');
   if (fwdBtn) {
-    const canAdvance = Boolean(!enc && relMoves.FORWARD && relMoves.FORWARD.available);
+    const canAdvance = Boolean(!enc && checkCardinalOpen('NORTH').open);
     fwdBtn.classList.toggle('is-primary-move', canAdvance);
   }
 

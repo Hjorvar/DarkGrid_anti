@@ -17,6 +17,7 @@ const {
 } = require('../../../src/domain/character/rules');
 const { normalizeSceneMode } = require('../../scene-catalog');
 const { buildClientState } = require('../services/client-state-service');
+const { ensureStrongholdBossInstance } = require('../services/topdown-world-service');
 const {
   FAVORED_ENEMY_OPTIONS,
   isProductionMode,
@@ -111,6 +112,7 @@ function executeCreateCharacterForUser(db, userId, payload = {}) {
     initialSceneMode,
     hero.id
   );
+  ensureStrongholdBossInstance(db, { respawnIfDefeated: true });
 
   return getLivingCharacterByUserId(db, userId);
 }

@@ -34,6 +34,10 @@ const {
 } = require('../services/facing-service');
 const { inspectSceneTile } = require('../services/viewport-scene-service');
 const { buildClientState } = require('../services/client-state-service');
+const {
+  isCoordInTopdownRegion,
+  checkGoblinForestEncounter
+} = require('../services/topdown-world-service');
 
 function handleNavigationAction({ db, userId, options, action, payload, character, currentFacing, labToolsAllowed = false, res }) {
       // 0a. SET_SCENE_MODE ('A' | 'B' | 'C' | 'LEGACY') — Live comparison switcher
@@ -103,6 +107,7 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
 
         let direction = '';
         let moveKind = 'FORWARD';
+        let updateFacingToDirection = false;
 
         if (relInput && relMap[relInput]) {
           direction = relMap[relInput];
@@ -110,6 +115,7 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
         } else {
           direction = String(payload.direction || '').toUpperCase().trim();
           moveKind = getMoveKindFromCardinal(currentFacing, direction);
+          updateFacingToDirection = Boolean(FACING_ORDER.includes(direction) && payload.keepFacing !== true);
         }
 
         if (!FACING_ORDER.includes(direction)) {
@@ -164,11 +170,17 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
         const dirVec = FACING_VECTORS[direction];
         const targetTile = currentTile ? getTileByCoords(db, currentTile.x + dirVec.dx, currentTile.y + dirVec.dy) : null;
 
-        if (!targetTile) {
+        const advForBounds = getOrCreateAdventureState(character.id, currentTile);
+        const enforceTopdownBounds =
+          currentTile &&
+          isCoordInTopdownRegion(currentTile.x, currentTile.y) &&
+          (!advForBounds || advForBounds.expeditionKey !== 'ROTTEN_LANDS_EXPEDITION');
+
+        if (!targetTile || (enforceTopdownBounds && !isCoordInTopdownRegion(targetTile.x, targetTile.y))) {
           return res.json({
             ok: false,
             state: buildClientState(db, userId, {
-              errorMessage: 'You stand at the edge of the world; you cannot travel further in this direction.',
+              errorMessage: 'Dense primeval timber and impassable cliffs seal the perimeter of Blackwood Forest.',
               fxCue: { type: 'BLOCKED_MOVE', direction, moveKind, relativeMove: moveKind }
             })
           });
@@ -184,6 +196,7 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
           });
         }
 
+        const effectiveFacing = updateFacingToDirection ? direction : currentFacing;
         let spawnedEncounter = null;
         let bypassedEncounter = false;
         let pacingDecision = null;
@@ -198,13 +211,14 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
             }
           }
 
-          // Clear any pending victory overlay and update character tile_id
-          tx.prepare('UPDATE characters SET tile_id = ?, pending_victory_encounter_id = NULL WHERE id = ?').run(
+          // Clear any pending victory overlay and update character tile_id (and facing if moving cardinally)
+          tx.prepare('UPDATE characters SET tile_id = ?, facing = ?, pending_victory_encounter_id = NULL WHERE id = ?').run(
             targetTile.id,
+            effectiveFacing,
             character.id
           );
 
-          // Roll for encounter on the new tile unless safe city
+          // Roll for encounter on the new tile unless safe city or Stronghold entrance
           if (!(targetTile.terrain === 'CITY' && targetTile.is_safe === 1)) {
             const encounterOpts = {};
             if (options.rng) encounterOpts.rng = options.rng;
@@ -222,7 +236,7 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
               });
               encounterOpts.forcedChance = pacingDecision.chancePercent;
             }
-            spawnedEncounter = checkTileEncounter(tx, character, targetTile, encounterOpts);
+            spawnedEncounter = checkGoblinForestEncounter(tx, character, targetTile, encounterOpts);
           } else {
             pacingDecision = {
               chancePercent: 0,
@@ -238,7 +252,7 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
           : null;
 
         // Compute new tile's directional neighbors & persistent threat awareness for atomic travel continuity
-        const stepRelDirs = getRelativeCardinalMap(currentFacing);
+        const stepRelDirs = getRelativeCardinalMap(effectiveFacing);
         const stepAheadVec = FACING_VECTORS[stepRelDirs.FORWARD];
         const stepBackVec = FACING_VECTORS[stepRelDirs.BACKWARD];
         const stepLeftVec = FACING_VECTORS[stepRelDirs.STRAFE_LEFT];
@@ -269,7 +283,7 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
           stepAdjacentPersistentCount,
           {
             db,
-            facing: currentFacing,
+            facing: effectiveFacing,
             moveAction: moveKind,
             aheadTile: stepAheadTile,
             leftTile: stepLeftTile,
@@ -288,7 +302,7 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
               direction,
               moveKind,
               relativeMove: moveKind,
-              facing: currentFacing,
+              facing: effectiveFacing,
               bypassedEncounter,
               bypassedPrevious: bypassedEncounter
             }

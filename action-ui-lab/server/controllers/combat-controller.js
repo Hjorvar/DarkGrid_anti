@@ -24,8 +24,49 @@ const {
   captureCombatBeforeSnapshot
 } = require('../services/combat-sequence-service');
 const { buildClientState } = require('../services/client-state-service');
+const {
+  startStrongholdBossEncounter,
+  syncCharacterQuestState
+} = require('../services/topdown-world-service');
 
 function handleCombatAction({ db, userId, options, action, payload, character, labToolsAllowed = false, res }) {
+  // 1b. STRONGHOLD BOSS: ENGAGE THE GOBLIN CHIEFTAIN AT [7, 1]
+  if (action === 'ENGAGE_STRONGHOLD_BOSS' || action === 'CHALLENGE_STRONGHOLD_BOSS') {
+    const currentTile = getTileById(db, character.tile_id);
+    const bossResult = startStrongholdBossEncounter(db, character, options);
+    const enc = bossResult.encounter;
+    const beforeSnap = captureCombatBeforeSnapshot(db, character, enc);
+    const isOpeningVictory =
+      (enc && enc.status === 'VICTORY') ||
+      Boolean(bossResult.investigateResult && (bossResult.investigateResult.status === 'VICTORY' || bossResult.investigateResult.monsterDied));
+
+    if (isOpeningVictory) {
+      db.prepare('UPDATE characters SET pending_victory_encounter_id = ? WHERE id = ?').run(bossResult.encounterId, character.id);
+      syncCharacterQuestState(db, character.id);
+      const victoryData = getVictoryData(db, character.id, bossResult.encounterId);
+      recordEncounterOutcome(character.id, currentTile, 'Warchief Grak the Goblin Chieftain', 'VICTORY');
+      const nextState = buildClientState(db, userId, {
+        labToolsAllowed,
+        victory: victoryData,
+        fxCue: { type: 'VICTORY', openingShotKill: true }
+      });
+      nextState.combatSequence = buildCombatSequence(db, bossResult.encounterId, 0, beforeSnap, nextState);
+      return res.json({ ok: true, state: nextState });
+    }
+
+    const advState = getOrCreateAdventureState(character.id, currentTile);
+    recordEncounterStart(advState, currentTile, {
+      status: 'IN_COMBAT',
+      monsterName: 'Warchief Grak the Goblin Chieftain'
+    });
+    const nextState = buildClientState(db, userId, {
+      labToolsAllowed,
+      infoMessage: 'The timber gates of Goblin Stronghold burst open! Warchief Grak charges forth with a notched iron cleaver!',
+      fxCue: { type: 'REVEAL_MONSTER', isBoss: true }
+    });
+    nextState.combatSequence = buildCombatSequence(db, bossResult.encounterId, 0, beforeSnap, nextState);
+    return res.json({ ok: true, state: nextState });
+  }
   // 2. ENCOUNTER: INVESTIGATE / ENGAGE (Enter Stage 2 Combat)
   if (action === 'INVESTIGATE' || action === 'ENGAGE') {
     const activeEnc = getActiveEncounterForCharacter(db, character.id, character.class);
@@ -39,6 +80,7 @@ function handleCombatAction({ db, userId, options, action, payload, character, l
     const result = investigateEncounter(db, character.id, activeEnc.id, character.class);
     if (result && (result.status === 'VICTORY' || result.monsterDied)) {
       db.prepare('UPDATE characters SET pending_victory_encounter_id = ? WHERE id = ?').run(activeEnc.id, character.id);
+      syncCharacterQuestState(db, character.id);
       const victoryData = getVictoryData(db, character.id, activeEnc.id);
       recordEncounterOutcome(
         character.id,
@@ -132,6 +174,7 @@ function handleCombatAction({ db, userId, options, action, payload, character, l
 
     if (resultState.encounter && resultState.encounter.status === 'VICTORY') {
       db.prepare('UPDATE characters SET pending_victory_encounter_id = ? WHERE id = ?').run(activeEnc.id, character.id);
+      syncCharacterQuestState(db, character.id);
       const victoryData = getVictoryData(db, character.id, activeEnc.id);
       recordEncounterOutcome(
         character.id,

@@ -7,6 +7,7 @@ import { syncAtmosphericEffects, stopAtmosphericParticleLoop } from './atmospher
 import { applyFlankClass, buildMapConnectedSceneSvg } from './legacy-svg.js';
 import { buildSizeComparisonArenaHtml, computeClientMonsterVisualScale } from '../combat/size-arena.js';
 import { buildCombatMonsterActorHtml } from '../combat/combat-ui.js';
+import { renderTopdownWorld } from './topdown-renderer.js';
 
 export function syncSceneModeButtons(mode) {
   const norm = ['A', 'B', 'C', 'LEGACY'].includes(mode) ? mode : 'C';
@@ -289,6 +290,7 @@ window.__waitForSceneReady = async function () {
 };
 
 export function renderViewportScene(state) {
+  renderTopdownWorld(state);
   const scene = state.viewportScene;
   if (!scene) return;
 
@@ -687,24 +689,91 @@ export function renderViewportCenterStage(state) {
 
   // CASE D: SAFE HAVEN CITY (Compact non-intrusive sanctuary bar at bottom of stage)
   if (state.isSafeCity) {
-    const aheadCity = state.viewportScene && state.viewportScene.ahead1;
-    const aheadSub = cleanHorizonHint
-      ? escapeHtml(cleanHorizonHint)
-      : (aheadCity
-        ? `Looking ${escapeHtml(FacingLabel)} toward <strong>${escapeHtml(aheadCity.name)}</strong>`
-        : 'Safe within the timber walls');
+    const q = state.quest || {};
+    let questBtnHtml = `<button type="button" class="btn-action-stone" style="padding: 4px 12px; font-size: 0.74rem;" onclick="openLabModal('quests')">📜 Quests (${escapeHtml(q.statusLabel || 'Available')}) [J]</button>`;
+    if (q.canAccept) {
+      questBtnHtml = `<button type="button" class="btn-action-gold" id="btn-town-accept-quest" style="padding: 4px 12px; font-size: 0.74rem;" onclick="dispatchAction('ACCEPT_QUEST')">📜 Accept Quest: The Goblin Chieftain</button>`;
+    } else if (q.canClaimReward) {
+      questBtnHtml = `<button type="button" class="btn-action-gold" id="btn-town-claim-reward" style="padding: 4px 12px; font-size: 0.74rem;" onclick="dispatchAction('CLAIM_QUEST_REWARD')">🏆 Claim Quest Reward (+${q.rewardGold || 100}g, +${q.rewardXp || 120} XP)</button>`;
+    }
     stage.innerHTML = `
-      <div class="fp-threat-whisper-plate" style="margin-top: auto; max-width: 560px;">
-        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; font-family: var(--font-serif); font-size: 0.86rem; color: var(--accent-gold); font-weight: 700;">
-          <span>🏛️ Sanctuary of ${escapeHtml(state.currentTile.name)}</span>
-          ${revisitBadgeHtml}
-        </div>
-        <div style="font-size: 0.75rem; color: var(--text-body);">
-          ${aheadSub} • Press <strong>[Space]</strong> to rest, <strong>[W/A/S/D]</strong> to navigate, or open Market <strong>[M]</strong>.
+      <div class="fp-threat-whisper-plate topdown-town-bar" style="margin-top: auto; max-width: 660px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+          <div style="text-align: left;">
+            <div style="font-family: var(--font-serif); font-size: 0.88rem; color: var(--accent-gold-bright); font-weight: 700;">
+              Oakhaven Sanctuary — Safe Town
+            </div>
+            <div style="font-size: 0.74rem; color: var(--text-body);">
+              Step North <strong>[W / ↑]</strong> or East <strong>[D / →]</strong> to enter <strong>Blackwood Goblin Forest</strong>.
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <button type="button" class="btn-action-stone" id="btn-town-rest" style="padding: 4px 11px; font-size: 0.74rem;" onclick="dispatchAction('REST')">
+              Rest (Free Heal)
+            </button>
+            <button type="button" class="btn-action-stone" id="btn-town-shop" style="padding: 4px 11px; font-size: 0.74rem;" onclick="openLabModal('market')">
+              Shop [M]
+            </button>
+            ${questBtnHtml}
+          </div>
         </div>
       </div>
     `;
     return;
+  }
+
+  // CASE D.2: GOBLIN STRONGHOLD ENTRANCE AT [7, 1] (Visual Landmark Card + Boss Challenge)
+  const shCoord = (state.topdownMap && state.topdownMap.strongholdCoord) || { x: 7, y: 1 };
+  const isAtStrongholdEntrance = Boolean(
+    (state.topdownMap && state.topdownMap.atStronghold) ||
+    (state.currentTile &&
+      (state.currentTile.feature === 'GOBLIN_STRONGHOLD' ||
+        (Number(state.currentTile.x) === Number(shCoord.x) && Number(state.currentTile.y) === Number(shCoord.y))))
+  );
+  if (isAtStrongholdEntrance) {
+    const bossSlain = Boolean(state.topdownMap && state.topdownMap.bossSlain);
+    const q = state.quest || {};
+    if (!bossSlain) {
+      stage.innerHTML = `
+        <div class="fp-threat-whisper-plate topdown-stronghold-card" id="stronghold-entrance-card" style="margin-top: auto; max-width: 640px; border-color: var(--accent-gold);">
+          <div style="display: flex; align-items: center; gap: 14px; text-align: left;">
+            <img src="/images/terrain/terrain_town_gates.webp" alt="Goblin Stronghold Gate" style="width: 118px; height: 78px; object-fit: cover; border-radius: 5px; border: 1px solid var(--border-gold); flex-shrink: 0;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-family: var(--font-serif); font-size: 0.92rem; color: var(--accent-gold-bright); font-weight: 800;">
+                GOBLIN STRONGHOLD — THE CHIEFTAIN'S GATE
+              </div>
+              <p style="font-size: 0.75rem; color: var(--text-body); margin: 3px 0 7px 0; line-height: 1.35;">
+                Sharpened timber palisades, a crudely lashed watchtower, and iron-bound gates seal the northern ravine. War-drums echo from within where <strong>Warchief Grak the Goblin Chieftain</strong> rules.
+              </p>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn-action-gold" id="btn-engage-stronghold-boss" style="padding: 5px 14px; font-size: 0.76rem;" onclick="dispatchAction('ENGAGE_STRONGHOLD_BOSS')">
+                  ⚔️ Challenge the Goblin Chieftain [Space]
+                </button>
+                <span style="font-size: 0.70rem; color: var(--text-muted);">Step South <strong>[S / ↓]</strong> to retreat down the trail</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    } else {
+      stage.innerHTML = `
+        <div class="fp-threat-whisper-plate topdown-stronghold-card" id="stronghold-cleared-card" style="margin-top: auto; max-width: 620px; border-color: rgba(74, 222, 128, 0.55);">
+          <div style="display: flex; align-items: center; gap: 12px; text-align: left;">
+            <img src="/images/terrain/terrain_town_gates.webp" alt="Cleared Goblin Stronghold" style="width: 96px; height: 64px; object-fit: cover; border-radius: 5px; border: 1px solid rgba(74, 222, 128, 0.45); filter: grayscale(0.35) brightness(0.85); flex-shrink: 0;">
+            <div style="flex: 1;">
+              <div style="font-family: var(--font-serif); font-size: 0.88rem; color: #86efac; font-weight: 800;">
+                GOBLIN STRONGHOLD — SILENCED
+              </div>
+              <div style="font-size: 0.75rem; color: var(--text-body); margin-top: 2px;">
+                Warchief Grak lies defeated and the stronghold gates stand broken. ${q.status === 'COMPLETED' ? '<strong>Return South to Oakhaven Sanctuary to claim your reward!</strong>' : 'Blackwood Forest is safer for your deed.'}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
   }
 
   // CASE E: CLEAR WILDERNESS VISTA (Unobstructed first-person view of the cohesive scene)
@@ -744,12 +813,11 @@ export function renderViewportCenterStage(state) {
     }
   }
 
-  const revisitStatusAttr = (adv && (adv.revisitStatus || (adv.travelContinuity && adv.travelContinuity.revisitStatus))) || 'FIRST_VISIT';
+  const shortEventMsg = state.infoMessage || state.errorMessage || (state.currentTile && state.currentTile.description) || 'Use WASD, Arrow Keys, or click adjacent tiles to explore Blackwood Forest.';
   stage.innerHTML = `
-    <div class="fp-vista-bar ${isBlocked ? 'is-blocked-vista' : ''} ${hasActiveDiscovery && !isBlocked ? 'is-subdued-vista' : ''}" data-revisit-status="${escapeHtml(revisitStatusAttr)}">
-      ${revisitBadgeHtml}
-      <span class="fp-vista-text" style="font-size: 0.76rem; color: var(--text-body);">
-        ${vistaHint}
+    <div class="fp-vista-bar ${state.errorMessage ? 'is-blocked-vista' : ''}" data-revisit-status="EXPLORATION">
+      <span class="fp-vista-text" style="font-size: 0.76rem; color: ${state.errorMessage ? '#fca5a5' : 'var(--text-body)'};">
+        ${escapeHtml(shortEventMsg)}
       </span>
     </div>
   `;

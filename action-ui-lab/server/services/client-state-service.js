@@ -67,6 +67,10 @@ const {
   getPublicUserById,
   buildClassAbilitySummary
 } = require('./legacy-compatibility-service');
+const {
+  syncCharacterQuestState,
+  buildTopdownMapPayload
+} = require('./topdown-world-service');
 
 function normalizeContractGrammar(text) {
   if (!text || typeof text !== 'string') return '';
@@ -488,6 +492,8 @@ function buildClientState(db, userId, extra = {}) {
   }
 
   const compendiumKnowledge = getCharacterCompendiumKnowledge(db, effectiveHero);
+  const quest = syncCharacterQuestState(db, character.id);
+  const topdownMap = buildTopdownMapPayload(db, effectiveHero, currentTile);
 
   return {
     mode: safeEncounter ? safeEncounter.status : (isSafeCity ? 'CITY' : 'EXPLORATION'),
@@ -501,6 +507,8 @@ function buildClientState(db, userId, extra = {}) {
     facingMeta: FACING_VECTORS[facing],
     sceneMode,
     viewportScene,
+    topdownMap,
+    quest,
     character: {
       id: effectiveHero.id,
       name: effectiveHero.name,

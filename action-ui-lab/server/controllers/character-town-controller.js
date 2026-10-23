@@ -14,6 +14,10 @@ const { getActiveEncounterForCharacter } = require('../../../src/domain/encounte
 const { buyItem, sellItem } = require('../../../src/domain/economy/shop');
 const { acceptContract, abandonContract } = require('../../../src/domain/bounties/board');
 const { buildClientState } = require('../services/client-state-service');
+const {
+  acceptGoblinChieftainQuest,
+  claimGoblinChieftainReward
+} = require('../services/topdown-world-service');
 
 function assertCharacterOwnsItem(db, characterId, itemInstanceId) {
   const id = Number(itemInstanceId);
@@ -198,6 +202,51 @@ function handleCharacterTownAction({ db, userId, action, payload, character, lab
       state: buildClientState(db, userId, {
         labToolsAllowed,
         infoMessage: 'Hunting contract abandoned.'
+      })
+    });
+  }
+
+  // 10d. THE GOBLIN CHIEFTAIN QUEST: ACCEPT_QUEST & CLAIM_QUEST_REWARD
+  if (action === 'ACCEPT_QUEST') {
+    const currentTile = getTileById(db, character.tile_id);
+    if (!currentTile || currentTile.terrain !== 'CITY' || currentTile.is_safe !== 1) {
+      throw new Error('You must be in Oakhaven Sanctuary to accept The Goblin Chieftain quest.');
+    }
+    const activeEnc = getActiveEncounterForCharacter(db, character.id, character.class);
+    if (activeEnc) {
+      throw new Error('Cannot accept a quest during an active encounter.');
+    }
+    const result = acceptGoblinChieftainQuest(db, character.id);
+    return res.json({
+      ok: true,
+      quest: result.quest,
+      state: buildClientState(db, userId, {
+        labToolsAllowed,
+        infoMessage: result.message
+      })
+    });
+  }
+
+  if (action === 'CLAIM_QUEST_REWARD') {
+    const currentTile = getTileById(db, character.tile_id);
+    if (!currentTile || currentTile.terrain !== 'CITY' || currentTile.is_safe !== 1) {
+      throw new Error('Return to Oakhaven Sanctuary to claim your quest reward from Captain Vane.');
+    }
+    const activeEnc = getActiveEncounterForCharacter(db, character.id, character.class);
+    if (activeEnc) {
+      throw new Error('Cannot claim a quest reward during an active encounter.');
+    }
+    const result = claimGoblinChieftainReward(db, character.id);
+    return res.json({
+      ok: true,
+      quest: result.quest,
+      rewardGold: result.rewardGold,
+      rewardXp: result.rewardXp,
+      leveledUp: result.leveledUp,
+      state: buildClientState(db, userId, {
+        labToolsAllowed,
+        infoMessage: result.message,
+        fxCue: { type: 'HEAL' }
       })
     });
   }

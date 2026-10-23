@@ -20,6 +20,7 @@ const { lookupMonsterSizeEntry } = require('../../monster-size-catalog');
 const { normalizeFacing } = require('../services/facing-service');
 const { ensureLivingHero } = require('../services/sandbox-db-service');
 const { buildClientState } = require('../services/client-state-service');
+const { ensureStrongholdBossInstance, STRONGHOLD_BOSS_PROFILE } = require('../services/topdown-world-service');
 
 function handleAdventureScenarioAction({ db, userId, options = {}, action, payload, character, currentFacing, labToolsAllowed = false, res }) {
       // 11b. ADVENTURE EXPERIENCE ACTIONS (Isolated Lab-Only Layer — Phases 3, 5, 6, 8, 9)
@@ -342,18 +343,34 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
           });
         }
 
+        if (scenario === 'STRONGHOLD' || scenario === 'GOBLIN_STRONGHOLD') {
+          const shTile = getTileByCoords(db, 7, 1);
+          const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
+          if (shTile) {
+            db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(shTile.id, targetFacing, character.id);
+          }
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: 'Positioned at Goblin Stronghold Gate [7, 1].',
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
         if (scenario === 'RESET_WORLD') {
-          db.prepare("UPDATE monster_instances SET status = 'SLAIN' WHERE status = 'ACTIVE'").run();
+          db.prepare("UPDATE monster_instances SET status = 'DEFEATED' WHERE status = 'ACTIVE'").run();
           db.prepare("UPDATE encounters SET status = 'ESCAPED' WHERE status IN ('DISCOVERED', 'IN_COMBAT')").run();
           const cityTile = db.prepare("SELECT id FROM map_tiles WHERE terrain = 'CITY' AND is_safe = 1 LIMIT 1").get();
           if (cityTile) {
-            db.prepare("UPDATE characters SET tile_id = ?, current_hp = max_hp, facing = 'NORTH', pending_victory_encounter_id = NULL WHERE id = ?").run(cityTile.id, character.id);
+            db.prepare("UPDATE characters SET tile_id = ?, current_hp = max_hp, facing = 'NORTH', pending_victory_encounter_id = NULL, quest_goblin_chieftain_status = 'NOT_ACCEPTED', goblin_chieftain_slain = 0 WHERE id = ?").run(cityTile.id, character.id);
           }
+          ensureStrongholdBossInstance(db, { forceRespawn: true });
           resetAdventureState(character.id);
           return res.json({
             ok: true,
             state: buildClientState(db, userId, {
-              infoMessage: 'Sandbox world reset: cleared persistent monster instances and returned to Oakhaven Sanctuary.',
+              infoMessage: 'Sandbox world reset: restored Goblin Stronghold Chieftain, reset quest state, and returned to Oakhaven Sanctuary.',
               fxCue: { type: 'HEAL' }
             })
           });
@@ -426,7 +443,7 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
           if (tile) {
             db.prepare('UPDATE characters SET tile_id = ?, facing = ?, current_hp = max_hp WHERE id = ?').run(tile.id, targetFacing, character.id);
             // Clear any leftover persistent monster_instances on the test tile so scenario spawn is clean and predictable
-            db.prepare("UPDATE monster_instances SET status = 'SLAIN' WHERE tile_id = ? AND status = 'ACTIVE'").run(tile.id);
+            db.prepare("UPDATE monster_instances SET status = 'DEFEATED' WHERE tile_id = ? AND status = 'ACTIVE' AND (custom_title IS NULL OR custom_title != ?)").run(tile.id, STRONGHOLD_BOSS_PROFILE.customTitle);
           }
 
           let monster = null;

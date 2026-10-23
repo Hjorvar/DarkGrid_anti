@@ -5,7 +5,7 @@ import { store } from '../state/store.js';
 import { isEditableTarget } from './utils.js';
 import { closeLabModal, openLabModal } from './modals.js';
 import { toggleMonsterSizeComparisonLab } from '../combat/size-arena.js';
-import { closePoiPlaque, dispatchRelativeMove, dispatchTurn, triggerInspectPoi } from '../api/client.js';
+import { closePoiPlaque, dispatchMove, dispatchRelativeMove, dispatchTurn, triggerInspectPoi } from '../api/client.js';
 import { toggleChronicleHistory } from './chronicle.js';
 import { toggleDevToolsDrawer } from './hud.js';
 import {
@@ -59,35 +59,35 @@ export function setupKeyboardShortcuts() {
       case 'W':
       case 'ArrowUp':
         e.preventDefault();
-        dispatchRelativeMove('FORWARD');
+        dispatchMove('NORTH');
         break;
       case 's':
       case 'S':
       case 'ArrowDown':
         e.preventDefault();
-        dispatchRelativeMove('BACKWARD');
+        dispatchMove('SOUTH');
         break;
       case 'a':
       case 'A':
       case 'ArrowLeft':
         e.preventDefault();
-        dispatchTurn('LEFT');
+        dispatchMove('WEST');
         break;
       case 'd':
       case 'D':
       case 'ArrowRight':
         e.preventDefault();
-        dispatchTurn('RIGHT');
+        dispatchMove('EAST');
         break;
       case 'q':
       case 'Q':
         e.preventDefault();
-        dispatchRelativeMove('STRAFE_LEFT');
+        dispatchTurn('LEFT');
         break;
       case 'e':
       case 'E':
         e.preventDefault();
-        dispatchRelativeMove('STRAFE_RIGHT');
+        dispatchTurn('RIGHT');
         break;
       case ' ':
       case '1':
@@ -169,7 +169,7 @@ export function setupKeyboardShortcuts() {
       case 'j':
       case 'J':
         e.preventDefault();
-        openLabModal('bounties');
+        openLabModal('quests');
         break;
       case 'l':
       case 'L':
