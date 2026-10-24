@@ -938,8 +938,8 @@ function primeRowHashCache(db) {
 /**
  * Computes changed (upserted) and deleted rows since last prime/sync for differential persistence
  */
-function computeDirtyDelta(db) {
-  const previous = lastRowHashesByDb.get(db) || new Map();
+function computeDirtyDelta(db, options = {}) {
+  const previous = options.forceFull ? new Map() : (lastRowHashesByDb.get(db) || new Map());
   const current = computeTableRowMap(db);
   const upserts = {};
   const deletes = {};
@@ -1148,7 +1148,7 @@ let firestoreDailyWrites = 0;
  * Enforces a runaway-loop safety cap (default 250,000 writes/day) aligned with the $25/month budget.
  */
 async function pushDeltaToFirestoreServer(db, options = {}) {
-  const delta = computeDirtyDelta(db);
+  const delta = computeDirtyDelta(db, options);
   if (delta.totalChanges === 0 && !options.forceFull) {
     return { synced: true, changes: 0 };
   }
