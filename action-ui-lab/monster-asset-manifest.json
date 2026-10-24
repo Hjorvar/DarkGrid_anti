@@ -172,7 +172,7 @@
       "sourceUrl": "https://www.d20pfsrd.com/bestiary/monster-listings/plants/assassin-vine/",
       "cardAsset": {
         "imagePath": "/images/monsters/assassin_vine.png",
-        "labAssetPath": "/lab-assets/images/monsters/assassin_vine.png",
+        "labAssetPath": "/images/monsters/assassin_vine.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -302,7 +302,7 @@
       }
     },
     {
-      "id": 4,
+      "id": 2,
       "catalogOrder": 2,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -333,7 +333,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Wolf",
       "cardAsset": {
         "imagePath": "/images/monsters/wolf.png",
-        "labAssetPath": "/lab-assets/images/monsters/wolf.png",
+        "labAssetPath": "/images/monsters/wolf.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -473,7 +473,7 @@
       }
     },
     {
-      "id": 5,
+      "id": 3,
       "catalogOrder": 3,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -504,7 +504,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Troll",
       "cardAsset": {
         "imagePath": "/images/monsters/troll.png",
-        "labAssetPath": "/lab-assets/images/monsters/troll.png",
+        "labAssetPath": "/images/monsters/troll.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -624,7 +624,7 @@
       }
     },
     {
-      "id": 126,
+      "id": 4,
       "catalogOrder": 4,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -655,7 +655,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Ghoul",
       "cardAsset": {
         "imagePath": "/images/monsters/ghoul.png",
-        "labAssetPath": "/lab-assets/images/monsters/ghoul.png",
+        "labAssetPath": "/images/monsters/ghoul.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -775,7 +775,7 @@
       }
     },
     {
-      "id": 127,
+      "id": 5,
       "catalogOrder": 5,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -806,7 +806,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Giant%20Spider",
       "cardAsset": {
         "imagePath": "/images/monsters/giant_spider.png",
-        "labAssetPath": "/lab-assets/images/monsters/giant_spider.png",
+        "labAssetPath": "/images/monsters/giant_spider.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -956,7 +956,7 @@
       }
     },
     {
-      "id": 128,
+      "id": 6,
       "catalogOrder": 6,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -987,7 +987,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Choker",
       "cardAsset": {
         "imagePath": "/images/monsters/choker.png",
-        "labAssetPath": "/lab-assets/images/monsters/choker.png",
+        "labAssetPath": "/images/monsters/choker.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -1073,7 +1073,7 @@
       }
     },
     {
-      "id": 129,
+      "id": 7,
       "catalogOrder": 7,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -1104,7 +1104,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Rust%20Monster",
       "cardAsset": {
         "imagePath": "/images/monsters/rust_monster.png",
-        "labAssetPath": "/lab-assets/images/monsters/rust_monster.png",
+        "labAssetPath": "/images/monsters/rust_monster.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -1254,7 +1254,7 @@
       }
     },
     {
-      "id": 130,
+      "id": 8,
       "catalogOrder": 8,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -1285,7 +1285,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Manticore",
       "cardAsset": {
         "imagePath": "/images/monsters/manticore.png",
-        "labAssetPath": "/lab-assets/images/monsters/manticore.png",
+        "labAssetPath": "/images/monsters/manticore.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -1384,7 +1384,7 @@
       }
     },
     {
-      "id": 495,
+      "id": 9,
       "catalogOrder": 9,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -1415,7 +1415,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Kobold",
       "cardAsset": {
         "imagePath": "/images/monsters/kobold.png",
-        "labAssetPath": "/lab-assets/images/monsters/kobold.png",
+        "labAssetPath": "/images/monsters/kobold.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -1535,7 +1535,7 @@
       }
     },
     {
-      "id": 496,
+      "id": 10,
       "catalogOrder": 10,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -1566,7 +1566,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Goblin",
       "cardAsset": {
         "imagePath": "/images/monsters/goblin.png",
-        "labAssetPath": "/lab-assets/images/monsters/goblin.png",
+        "labAssetPath": "/images/monsters/goblin.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -1686,7 +1686,7 @@
       }
     },
     {
-      "id": 497,
+      "id": 11,
       "catalogOrder": 11,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -1717,7 +1717,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Human%20Skeleton",
       "cardAsset": {
         "imagePath": "/images/monsters/human_skeleton.png",
-        "labAssetPath": "/lab-assets/images/monsters/human_skeleton.png",
+        "labAssetPath": "/images/monsters/human_skeleton.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -1837,7 +1837,7 @@
       }
     },
     {
-      "id": 498,
+      "id": 12,
       "catalogOrder": 12,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -1868,7 +1868,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Hobgoblin",
       "cardAsset": {
         "imagePath": "/images/monsters/hobgoblin.png",
-        "labAssetPath": "/lab-assets/images/monsters/hobgoblin.png",
+        "labAssetPath": "/images/monsters/hobgoblin.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -1954,7 +1954,7 @@
       }
     },
     {
-      "id": 499,
+      "id": 13,
       "catalogOrder": 13,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -1985,7 +1985,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Human%20Zombie",
       "cardAsset": {
         "imagePath": "/images/monsters/human_zombie.png",
-        "labAssetPath": "/lab-assets/images/monsters/human_zombie.png",
+        "labAssetPath": "/images/monsters/human_zombie.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -2105,7 +2105,7 @@
       }
     },
     {
-      "id": 500,
+      "id": 14,
       "catalogOrder": 14,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -2136,7 +2136,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Troglodyte",
       "cardAsset": {
         "imagePath": "/images/monsters/troglodyte.png",
-        "labAssetPath": "/lab-assets/images/monsters/troglodyte.png",
+        "labAssetPath": "/images/monsters/troglodyte.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -2222,7 +2222,7 @@
       }
     },
     {
-      "id": 501,
+      "id": 15,
       "catalogOrder": 15,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -2253,7 +2253,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Darkmantle",
       "cardAsset": {
         "imagePath": "/images/monsters/darkmantle.png",
-        "labAssetPath": "/lab-assets/images/monsters/darkmantle.png",
+        "labAssetPath": "/images/monsters/darkmantle.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -2349,7 +2349,7 @@
       }
     },
     {
-      "id": 502,
+      "id": 16,
       "catalogOrder": 16,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -2380,7 +2380,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Lizardfolk",
       "cardAsset": {
         "imagePath": "/images/monsters/lizardfolk.png",
-        "labAssetPath": "/lab-assets/images/monsters/lizardfolk.png",
+        "labAssetPath": "/images/monsters/lizardfolk.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -2500,7 +2500,7 @@
       }
     },
     {
-      "id": 503,
+      "id": 17,
       "catalogOrder": 17,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -2531,7 +2531,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Hyena",
       "cardAsset": {
         "imagePath": "/images/monsters/hyena.png",
-        "labAssetPath": "/lab-assets/images/monsters/hyena.png",
+        "labAssetPath": "/images/monsters/hyena.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -2637,7 +2637,7 @@
       }
     },
     {
-      "id": 504,
+      "id": 18,
       "catalogOrder": 18,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -2668,7 +2668,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Gnoll",
       "cardAsset": {
         "imagePath": "/images/monsters/gnoll.png",
-        "labAssetPath": "/lab-assets/images/monsters/gnoll.png",
+        "labAssetPath": "/images/monsters/gnoll.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -2788,7 +2788,7 @@
       }
     },
     {
-      "id": 505,
+      "id": 19,
       "catalogOrder": 19,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -2819,7 +2819,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Giant%20Frog",
       "cardAsset": {
         "imagePath": "/images/monsters/giant_frog.png",
-        "labAssetPath": "/lab-assets/images/monsters/giant_frog.png",
+        "labAssetPath": "/images/monsters/giant_frog.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -2925,7 +2925,7 @@
       }
     },
     {
-      "id": 506,
+      "id": 20,
       "catalogOrder": 20,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -2956,7 +2956,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Boar",
       "cardAsset": {
         "imagePath": "/images/monsters/boar.png",
-        "labAssetPath": "/lab-assets/images/monsters/boar.png",
+        "labAssetPath": "/images/monsters/boar.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -3062,7 +3062,7 @@
       }
     },
     {
-      "id": 507,
+      "id": 21,
       "catalogOrder": 21,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -3093,7 +3093,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Yellow%20Musk%20Creeper",
       "cardAsset": {
         "imagePath": "/images/monsters/yellow_musk_creeper.png",
-        "labAssetPath": "/lab-assets/images/monsters/yellow_musk_creeper.png",
+        "labAssetPath": "/images/monsters/yellow_musk_creeper.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -3189,7 +3189,7 @@
       }
     },
     {
-      "id": 508,
+      "id": 22,
       "catalogOrder": 22,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -3220,7 +3220,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Bugbear",
       "cardAsset": {
         "imagePath": "/images/monsters/bugbear.png",
-        "labAssetPath": "/lab-assets/images/monsters/bugbear.png",
+        "labAssetPath": "/images/monsters/bugbear.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -3340,7 +3340,7 @@
       }
     },
     {
-      "id": 509,
+      "id": 23,
       "catalogOrder": 23,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -3371,7 +3371,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Boggard",
       "cardAsset": {
         "imagePath": "/images/monsters/boggard.png",
-        "labAssetPath": "/lab-assets/images/monsters/boggard.png",
+        "labAssetPath": "/images/monsters/boggard.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -3457,7 +3457,7 @@
       }
     },
     {
-      "id": 510,
+      "id": 24,
       "catalogOrder": 24,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -3488,7 +3488,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Death%20Dog",
       "cardAsset": {
         "imagePath": "/images/monsters/death_dog.png",
-        "labAssetPath": "/lab-assets/images/monsters/death_dog.png",
+        "labAssetPath": "/images/monsters/death_dog.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -3594,7 +3594,7 @@
       }
     },
     {
-      "id": 511,
+      "id": 25,
       "catalogOrder": 25,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -3625,7 +3625,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Giant%20Crab",
       "cardAsset": {
         "imagePath": "/images/monsters/giant_crab.png",
-        "labAssetPath": "/lab-assets/images/monsters/giant_crab.png",
+        "labAssetPath": "/images/monsters/giant_crab.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -3775,7 +3775,7 @@
       }
     },
     {
-      "id": 512,
+      "id": 26,
       "catalogOrder": 26,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -3806,7 +3806,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Ettercap",
       "cardAsset": {
         "imagePath": "/images/monsters/ettercap.png",
-        "labAssetPath": "/lab-assets/images/monsters/ettercap.png",
+        "labAssetPath": "/images/monsters/ettercap.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -3892,7 +3892,7 @@
       }
     },
     {
-      "id": 513,
+      "id": 27,
       "catalogOrder": 27,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -3923,7 +3923,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Cockatrice",
       "cardAsset": {
         "imagePath": "/images/monsters/cockatrice.png",
-        "labAssetPath": "/lab-assets/images/monsters/cockatrice.png",
+        "labAssetPath": "/images/monsters/cockatrice.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -3988,7 +3988,7 @@
       }
     },
     {
-      "id": 514,
+      "id": 28,
       "catalogOrder": 28,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -4019,7 +4019,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Ankheg",
       "cardAsset": {
         "imagePath": "/images/monsters/ankheg.png",
-        "labAssetPath": "/lab-assets/images/monsters/ankheg.png",
+        "labAssetPath": "/images/monsters/ankheg.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -4169,7 +4169,7 @@
       }
     },
     {
-      "id": 515,
+      "id": 29,
       "catalogOrder": 29,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -4200,7 +4200,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Ogre",
       "cardAsset": {
         "imagePath": "/images/monsters/ogre.png",
-        "labAssetPath": "/lab-assets/images/monsters/ogre.png",
+        "labAssetPath": "/images/monsters/ogre.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -4320,7 +4320,7 @@
       }
     },
     {
-      "id": 516,
+      "id": 30,
       "catalogOrder": 30,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -4351,7 +4351,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Shadow",
       "cardAsset": {
         "imagePath": "/images/monsters/shadow.png",
-        "labAssetPath": "/lab-assets/images/monsters/shadow.png",
+        "labAssetPath": "/images/monsters/shadow.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -4450,7 +4450,7 @@
       }
     },
     {
-      "id": 517,
+      "id": 31,
       "catalogOrder": 31,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -4481,7 +4481,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Owlbear",
       "cardAsset": {
         "imagePath": "/images/monsters/owlbear.png",
-        "labAssetPath": "/lab-assets/images/monsters/owlbear.png",
+        "labAssetPath": "/images/monsters/owlbear.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -4621,7 +4621,7 @@
       }
     },
     {
-      "id": 518,
+      "id": 32,
       "catalogOrder": 32,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -4652,7 +4652,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Minotaur",
       "cardAsset": {
         "imagePath": "/images/monsters/minotaur.png",
-        "labAssetPath": "/lab-assets/images/monsters/minotaur.png",
+        "labAssetPath": "/images/monsters/minotaur.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -4772,7 +4772,7 @@
       }
     },
     {
-      "id": 519,
+      "id": 33,
       "catalogOrder": 33,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -4803,7 +4803,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Yeti",
       "cardAsset": {
         "imagePath": "/images/monsters/yeti.png",
-        "labAssetPath": "/lab-assets/images/monsters/yeti.png",
+        "labAssetPath": "/images/monsters/yeti.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -4889,7 +4889,7 @@
       }
     },
     {
-      "id": 520,
+      "id": 34,
       "catalogOrder": 34,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -4920,7 +4920,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Gargoyle",
       "cardAsset": {
         "imagePath": "/images/monsters/gargoyle.png",
-        "labAssetPath": "/lab-assets/images/monsters/gargoyle.png",
+        "labAssetPath": "/images/monsters/gargoyle.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -5019,7 +5019,7 @@
       }
     },
     {
-      "id": 521,
+      "id": 35,
       "catalogOrder": 35,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -5050,7 +5050,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Basilisk",
       "cardAsset": {
         "imagePath": "/images/monsters/basilisk.png",
-        "labAssetPath": "/lab-assets/images/monsters/basilisk.png",
+        "labAssetPath": "/images/monsters/basilisk.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -5190,7 +5190,7 @@
       }
     },
     {
-      "id": 522,
+      "id": 36,
       "catalogOrder": 36,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -5221,7 +5221,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Mummy",
       "cardAsset": {
         "imagePath": "/images/monsters/mummy.png",
-        "labAssetPath": "/lab-assets/images/monsters/mummy.png",
+        "labAssetPath": "/images/monsters/mummy.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -5341,7 +5341,7 @@
       }
     },
     {
-      "id": 523,
+      "id": 37,
       "catalogOrder": 37,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -5372,7 +5372,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Ochre%20Jelly",
       "cardAsset": {
         "imagePath": "/images/monsters/ochre_jelly.png",
-        "labAssetPath": "/lab-assets/images/monsters/ochre_jelly.png",
+        "labAssetPath": "/images/monsters/ochre_jelly.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -5502,7 +5502,7 @@
       }
     },
     {
-      "id": 524,
+      "id": 38,
       "catalogOrder": 38,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -5533,7 +5533,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Winter%20Wolf",
       "cardAsset": {
         "imagePath": "/images/monsters/winter_wolf.png",
-        "labAssetPath": "/lab-assets/images/monsters/winter_wolf.png",
+        "labAssetPath": "/images/monsters/winter_wolf.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -5673,7 +5673,7 @@
       }
     },
     {
-      "id": 2691,
+      "id": 39,
       "catalogOrder": 39,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -5704,7 +5704,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Stirge",
       "cardAsset": {
         "imagePath": "/images/monsters/stirge.png",
-        "labAssetPath": "/lab-assets/images/monsters/stirge.png",
+        "labAssetPath": "/images/monsters/stirge.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -5803,7 +5803,7 @@
       }
     },
     {
-      "id": 2692,
+      "id": 40,
       "catalogOrder": 40,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -5834,7 +5834,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Dire%20Rat",
       "cardAsset": {
         "imagePath": "/images/monsters/dire_rat.png",
-        "labAssetPath": "/lab-assets/images/monsters/dire_rat.png",
+        "labAssetPath": "/images/monsters/dire_rat.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -5974,7 +5974,7 @@
       }
     },
     {
-      "id": 2693,
+      "id": 41,
       "catalogOrder": 41,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -6005,7 +6005,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Viper",
       "cardAsset": {
         "imagePath": "/images/monsters/viper.png",
-        "labAssetPath": "/lab-assets/images/monsters/viper.png",
+        "labAssetPath": "/images/monsters/viper.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -6135,7 +6135,7 @@
       }
     },
     {
-      "id": 2694,
+      "id": 42,
       "catalogOrder": 42,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -6166,7 +6166,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Giant%20Centipede",
       "cardAsset": {
         "imagePath": "/images/monsters/giant_centipede.png",
-        "labAssetPath": "/lab-assets/images/monsters/giant_centipede.png",
+        "labAssetPath": "/images/monsters/giant_centipede.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -6262,7 +6262,7 @@
       }
     },
     {
-      "id": 2695,
+      "id": 43,
       "catalogOrder": 43,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -6293,7 +6293,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Iron%20Cobra",
       "cardAsset": {
         "imagePath": "/images/monsters/iron_cobra.png",
-        "labAssetPath": "/lab-assets/images/monsters/iron_cobra.png",
+        "labAssetPath": "/images/monsters/iron_cobra.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -6389,7 +6389,7 @@
       }
     },
     {
-      "id": 2696,
+      "id": 44,
       "catalogOrder": 44,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -6420,7 +6420,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Skeletal%20Champion",
       "cardAsset": {
         "imagePath": "/images/monsters/skeletal_champion.png",
-        "labAssetPath": "/lab-assets/images/monsters/skeletal_champion.png",
+        "labAssetPath": "/images/monsters/skeletal_champion.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -6540,7 +6540,7 @@
       }
     },
     {
-      "id": 2697,
+      "id": 45,
       "catalogOrder": 45,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -6571,7 +6571,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Blink%20Dog",
       "cardAsset": {
         "imagePath": "/images/monsters/blink_dog.png",
-        "labAssetPath": "/lab-assets/images/monsters/blink_dog.png",
+        "labAssetPath": "/images/monsters/blink_dog.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -6677,7 +6677,7 @@
       }
     },
     {
-      "id": 2698,
+      "id": 46,
       "catalogOrder": 46,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -6708,7 +6708,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Duergar",
       "cardAsset": {
         "imagePath": "/images/monsters/duergar.png",
-        "labAssetPath": "/lab-assets/images/monsters/duergar.png",
+        "labAssetPath": "/images/monsters/duergar.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -6794,7 +6794,7 @@
       }
     },
     {
-      "id": 2699,
+      "id": 47,
       "catalogOrder": 47,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -6825,7 +6825,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Drow",
       "cardAsset": {
         "imagePath": "/images/monsters/drow.png",
-        "labAssetPath": "/lab-assets/images/monsters/drow.png",
+        "labAssetPath": "/images/monsters/drow.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -6911,7 +6911,7 @@
       }
     },
     {
-      "id": 2700,
+      "id": 48,
       "catalogOrder": 48,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -6942,7 +6942,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Orc",
       "cardAsset": {
         "imagePath": "/images/monsters/orc.png",
-        "labAssetPath": "/lab-assets/images/monsters/orc.png",
+        "labAssetPath": "/images/monsters/orc.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -7062,7 +7062,7 @@
       }
     },
     {
-      "id": 2701,
+      "id": 49,
       "catalogOrder": 49,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -7093,7 +7093,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Wight",
       "cardAsset": {
         "imagePath": "/images/monsters/wight.png",
-        "labAssetPath": "/lab-assets/images/monsters/wight.png",
+        "labAssetPath": "/images/monsters/wight.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -7179,7 +7179,7 @@
       }
     },
     {
-      "id": 2702,
+      "id": 50,
       "catalogOrder": 50,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -7210,7 +7210,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Harpy",
       "cardAsset": {
         "imagePath": "/images/monsters/harpy.png",
-        "labAssetPath": "/lab-assets/images/monsters/harpy.png",
+        "labAssetPath": "/images/monsters/harpy.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -7309,7 +7309,7 @@
       }
     },
     {
-      "id": 2703,
+      "id": 51,
       "catalogOrder": 51,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -7340,7 +7340,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Doppelganger",
       "cardAsset": {
         "imagePath": "/images/monsters/doppelganger.png",
-        "labAssetPath": "/lab-assets/images/monsters/doppelganger.png",
+        "labAssetPath": "/images/monsters/doppelganger.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -7426,7 +7426,7 @@
       }
     },
     {
-      "id": 2704,
+      "id": 52,
       "catalogOrder": 52,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -7457,7 +7457,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Griffon",
       "cardAsset": {
         "imagePath": "/images/monsters/griffon.png",
-        "labAssetPath": "/lab-assets/images/monsters/griffon.png",
+        "labAssetPath": "/images/monsters/griffon.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -7556,7 +7556,7 @@
       }
     },
     {
-      "id": 2705,
+      "id": 53,
       "catalogOrder": 53,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -7587,7 +7587,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Giant%20Scorpion",
       "cardAsset": {
         "imagePath": "/images/monsters/giant_scorpion.png",
-        "labAssetPath": "/lab-assets/images/monsters/giant_scorpion.png",
+        "labAssetPath": "/images/monsters/giant_scorpion.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -7737,7 +7737,7 @@
       }
     },
     {
-      "id": 2706,
+      "id": 54,
       "catalogOrder": 54,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -7768,7 +7768,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Cloaker",
       "cardAsset": {
         "imagePath": "/images/monsters/cloaker.png",
-        "labAssetPath": "/lab-assets/images/monsters/cloaker.png",
+        "labAssetPath": "/images/monsters/cloaker.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -7833,7 +7833,7 @@
       }
     },
     {
-      "id": 2707,
+      "id": 55,
       "catalogOrder": 55,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -7864,7 +7864,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Phase%20Spider",
       "cardAsset": {
         "imagePath": "/images/monsters/phase_spider.png",
-        "labAssetPath": "/lab-assets/images/monsters/phase_spider.png",
+        "labAssetPath": "/images/monsters/phase_spider.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -7980,7 +7980,7 @@
       }
     },
     {
-      "id": 2708,
+      "id": 56,
       "catalogOrder": 56,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -8011,7 +8011,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Wraith",
       "cardAsset": {
         "imagePath": "/images/monsters/wraith.png",
-        "labAssetPath": "/lab-assets/images/monsters/wraith.png",
+        "labAssetPath": "/images/monsters/wraith.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -8110,7 +8110,7 @@
       }
     },
     {
-      "id": 2709,
+      "id": 57,
       "catalogOrder": 57,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -8141,7 +8141,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Gibbering%20Mouther",
       "cardAsset": {
         "imagePath": "/images/monsters/gibbering_mouther.png",
-        "labAssetPath": "/lab-assets/images/monsters/gibbering_mouther.png",
+        "labAssetPath": "/images/monsters/gibbering_mouther.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -8237,7 +8237,7 @@
       }
     },
     {
-      "id": 2710,
+      "id": 58,
       "catalogOrder": 58,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -8268,7 +8268,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Peryton",
       "cardAsset": {
         "imagePath": "/images/monsters/peryton.png",
-        "labAssetPath": "/lab-assets/images/monsters/peryton.png",
+        "labAssetPath": "/images/monsters/peryton.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -8333,7 +8333,7 @@
       }
     },
     {
-      "id": 2711,
+      "id": 59,
       "catalogOrder": 59,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -8364,7 +8364,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Giant%20Stag%20Beetle",
       "cardAsset": {
         "imagePath": "/images/monsters/giant_stag_beetle.png",
-        "labAssetPath": "/lab-assets/images/monsters/giant_stag_beetle.png",
+        "labAssetPath": "/images/monsters/giant_stag_beetle.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -8480,7 +8480,7 @@
       }
     },
     {
-      "id": 2712,
+      "id": 60,
       "catalogOrder": 60,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -8511,7 +8511,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Vegepygmy",
       "cardAsset": {
         "imagePath": "/images/monsters/vegepygmy.png",
-        "labAssetPath": "/lab-assets/images/monsters/vegepygmy.png",
+        "labAssetPath": "/images/monsters/vegepygmy.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -8597,7 +8597,7 @@
       }
     },
     {
-      "id": 2713,
+      "id": 61,
       "catalogOrder": 61,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -8628,7 +8628,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Ghast",
       "cardAsset": {
         "imagePath": "/images/monsters/ghast.png",
-        "labAssetPath": "/lab-assets/images/monsters/ghast.png",
+        "labAssetPath": "/images/monsters/ghast.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -8714,7 +8714,7 @@
       }
     },
     {
-      "id": 2714,
+      "id": 62,
       "catalogOrder": 62,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -8745,7 +8745,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Bat,%20Dire",
       "cardAsset": {
         "imagePath": "/images/monsters/giant_bat.png",
-        "labAssetPath": "/lab-assets/images/monsters/giant_bat.png",
+        "labAssetPath": "/images/monsters/giant_bat.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -8810,7 +8810,7 @@
       }
     },
     {
-      "id": 2715,
+      "id": 63,
       "catalogOrder": 63,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -8841,7 +8841,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Morlock",
       "cardAsset": {
         "imagePath": "/images/monsters/morlock.png",
-        "labAssetPath": "/lab-assets/images/monsters/morlock.png",
+        "labAssetPath": "/images/monsters/morlock.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -8927,7 +8927,7 @@
       }
     },
     {
-      "id": 2716,
+      "id": 64,
       "catalogOrder": 64,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -8958,7 +8958,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Violet%20Fungus",
       "cardAsset": {
         "imagePath": "/images/monsters/violet_fungus.png",
-        "labAssetPath": "/lab-assets/images/monsters/violet_fungus.png",
+        "labAssetPath": "/images/monsters/violet_fungus.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -9054,7 +9054,7 @@
       }
     },
     {
-      "id": 2717,
+      "id": 65,
       "catalogOrder": 65,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -9085,7 +9085,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Grick",
       "cardAsset": {
         "imagePath": "/images/monsters/grick.png",
-        "labAssetPath": "/lab-assets/images/monsters/grick.png",
+        "labAssetPath": "/images/monsters/grick.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -9181,7 +9181,7 @@
       }
     },
     {
-      "id": 2718,
+      "id": 66,
       "catalogOrder": 66,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -9212,7 +9212,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Krenshar",
       "cardAsset": {
         "imagePath": "/images/monsters/krenshar.png",
-        "labAssetPath": "/lab-assets/images/monsters/krenshar.png",
+        "labAssetPath": "/images/monsters/krenshar.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -9318,7 +9318,7 @@
       }
     },
     {
-      "id": 2719,
+      "id": 67,
       "catalogOrder": 67,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -9349,7 +9349,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Bunyip",
       "cardAsset": {
         "imagePath": "/images/monsters/bunyip.png",
-        "labAssetPath": "/lab-assets/images/monsters/bunyip.png",
+        "labAssetPath": "/images/monsters/bunyip.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -9455,7 +9455,7 @@
       }
     },
     {
-      "id": 2720,
+      "id": 68,
       "catalogOrder": 68,
       "catalogBatch": "CORE_68",
       "isReferenceSpecimen": false,
@@ -9486,7 +9486,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Sahuagin",
       "cardAsset": {
         "imagePath": "/images/monsters/sahuagin.png",
-        "labAssetPath": "/lab-assets/images/monsters/sahuagin.png",
+        "labAssetPath": "/images/monsters/sahuagin.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -9572,7 +9572,7 @@
       }
     },
     {
-      "id": 9143,
+      "id": 69,
       "catalogOrder": 69,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -9603,7 +9603,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Mite",
       "cardAsset": {
         "imagePath": "/images/monsters/mite.png",
-        "labAssetPath": "/lab-assets/images/monsters/mite.png",
+        "labAssetPath": "/images/monsters/mite.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -9689,7 +9689,7 @@
       }
     },
     {
-      "id": 9144,
+      "id": 70,
       "catalogOrder": 70,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -9720,7 +9720,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Water%20Strider,%20Giant",
       "cardAsset": {
         "imagePath": "/images/monsters/bog_strider.png",
-        "labAssetPath": "/lab-assets/images/monsters/bog_strider.png",
+        "labAssetPath": "/images/monsters/bog_strider.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -9836,7 +9836,7 @@
       }
     },
     {
-      "id": 9145,
+      "id": 71,
       "catalogOrder": 71,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -9867,7 +9867,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Hawk",
       "cardAsset": {
         "imagePath": "/images/monsters/blood_hawk.png",
-        "labAssetPath": "/lab-assets/images/monsters/blood_hawk.png",
+        "labAssetPath": "/images/monsters/blood_hawk.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -9966,7 +9966,7 @@
       }
     },
     {
-      "id": 9146,
+      "id": 72,
       "catalogOrder": 72,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -9997,7 +9997,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Viper",
       "cardAsset": {
         "imagePath": "/images/monsters/jungle_viper.png",
-        "labAssetPath": "/lab-assets/images/monsters/jungle_viper.png",
+        "labAssetPath": "/images/monsters/jungle_viper.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -10093,7 +10093,7 @@
       }
     },
     {
-      "id": 9147,
+      "id": 73,
       "catalogOrder": 73,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -10124,7 +10124,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Plague%20Zombie",
       "cardAsset": {
         "imagePath": "/images/monsters/plague_zombie.png",
-        "labAssetPath": "/lab-assets/images/monsters/plague_zombie.png",
+        "labAssetPath": "/images/monsters/plague_zombie.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -10210,7 +10210,7 @@
       }
     },
     {
-      "id": 9148,
+      "id": 74,
       "catalogOrder": 74,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -10241,7 +10241,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Grippli",
       "cardAsset": {
         "imagePath": "/images/monsters/grippli_scout.png",
-        "labAssetPath": "/lab-assets/images/monsters/grippli_scout.png",
+        "labAssetPath": "/images/monsters/grippli_scout.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -10327,7 +10327,7 @@
       }
     },
     {
-      "id": 9149,
+      "id": 75,
       "catalogOrder": 75,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -10358,7 +10358,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Worg",
       "cardAsset": {
         "imagePath": "/images/monsters/worg.png",
-        "labAssetPath": "/lab-assets/images/monsters/worg.png",
+        "labAssetPath": "/images/monsters/worg.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -10464,7 +10464,7 @@
       }
     },
     {
-      "id": 9150,
+      "id": 76,
       "catalogOrder": 76,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -10495,7 +10495,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Hippogriff",
       "cardAsset": {
         "imagePath": "/images/monsters/hippogriff.png",
-        "labAssetPath": "/lab-assets/images/monsters/hippogriff.png",
+        "labAssetPath": "/images/monsters/hippogriff.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -10560,7 +10560,7 @@
       }
     },
     {
-      "id": 9151,
+      "id": 77,
       "catalogOrder": 77,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -10591,7 +10591,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Toad,%20Giant",
       "cardAsset": {
         "imagePath": "/images/monsters/giant_toad.png",
-        "labAssetPath": "/lab-assets/images/monsters/giant_toad.png",
+        "labAssetPath": "/images/monsters/giant_toad.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -10697,7 +10697,7 @@
       }
     },
     {
-      "id": 9152,
+      "id": 78,
       "catalogOrder": 78,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -10728,7 +10728,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Carbuncle",
       "cardAsset": {
         "imagePath": "/images/monsters/carbuncle.png",
-        "labAssetPath": "/lab-assets/images/monsters/carbuncle.png",
+        "labAssetPath": "/images/monsters/carbuncle.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -10834,7 +10834,7 @@
       }
     },
     {
-      "id": 9153,
+      "id": 79,
       "catalogOrder": 79,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -10865,7 +10865,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Phantom%20Fungus",
       "cardAsset": {
         "imagePath": "/images/monsters/phantom_fungus.png",
-        "labAssetPath": "/lab-assets/images/monsters/phantom_fungus.png",
+        "labAssetPath": "/images/monsters/phantom_fungus.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -10961,7 +10961,7 @@
       }
     },
     {
-      "id": 9154,
+      "id": 80,
       "catalogOrder": 80,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -10992,7 +10992,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Gnoll",
       "cardAsset": {
         "imagePath": "/images/monsters/gnoll_packmaster.png",
-        "labAssetPath": "/lab-assets/images/monsters/gnoll_packmaster.png",
+        "labAssetPath": "/images/monsters/gnoll_packmaster.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -11078,7 +11078,7 @@
       }
     },
     {
-      "id": 9155,
+      "id": 81,
       "catalogOrder": 81,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -11109,7 +11109,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Mantis,%20Giant",
       "cardAsset": {
         "imagePath": "/images/monsters/giant_mantis.png",
-        "labAssetPath": "/lab-assets/images/monsters/giant_mantis.png",
+        "labAssetPath": "/images/monsters/giant_mantis.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -11225,7 +11225,7 @@
       }
     },
     {
-      "id": 9156,
+      "id": 82,
       "catalogOrder": 82,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -11256,7 +11256,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Spriggan",
       "cardAsset": {
         "imagePath": "/images/monsters/spriggan.png",
-        "labAssetPath": "/lab-assets/images/monsters/spriggan.png",
+        "labAssetPath": "/images/monsters/spriggan.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -11342,7 +11342,7 @@
       }
     },
     {
-      "id": 9157,
+      "id": 83,
       "catalogOrder": 83,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -11373,7 +11373,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Will-o%27-Wisp",
       "cardAsset": {
         "imagePath": "/images/monsters/will_o_wisp.png",
-        "labAssetPath": "/lab-assets/images/monsters/will_o_wisp.png",
+        "labAssetPath": "/images/monsters/will_o_wisp.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -11472,7 +11472,7 @@
       }
     },
     {
-      "id": 9158,
+      "id": 84,
       "catalogOrder": 84,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -11503,7 +11503,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Cheetah",
       "cardAsset": {
         "imagePath": "/images/monsters/cheetah.png",
-        "labAssetPath": "/lab-assets/images/monsters/cheetah.png",
+        "labAssetPath": "/images/monsters/cheetah.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -11609,7 +11609,7 @@
       }
     },
     {
-      "id": 9159,
+      "id": 85,
       "catalogOrder": 85,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -11640,7 +11640,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Draugr",
       "cardAsset": {
         "imagePath": "/images/monsters/draugr.png",
-        "labAssetPath": "/lab-assets/images/monsters/draugr.png",
+        "labAssetPath": "/images/monsters/draugr.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -11726,7 +11726,7 @@
       }
     },
     {
-      "id": 9160,
+      "id": 86,
       "catalogOrder": 86,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -11757,7 +11757,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Hobgoblin",
       "cardAsset": {
         "imagePath": "/images/monsters/hobgoblin_captain.png",
-        "labAssetPath": "/lab-assets/images/monsters/hobgoblin_captain.png",
+        "labAssetPath": "/images/monsters/hobgoblin_captain.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -11843,7 +11843,7 @@
       }
     },
     {
-      "id": 9161,
+      "id": 87,
       "catalogOrder": 87,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -11874,7 +11874,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Phase%20Spider",
       "cardAsset": {
         "imagePath": "/images/monsters/displacer_beast.png",
-        "labAssetPath": "/lab-assets/images/monsters/displacer_beast.png",
+        "labAssetPath": "/images/monsters/displacer_beast.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -11980,7 +11980,7 @@
       }
     },
     {
-      "id": 9162,
+      "id": 88,
       "catalogOrder": 88,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -12011,7 +12011,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Shambling%20Mound",
       "cardAsset": {
         "imagePath": "/images/monsters/shambling_mound.png",
-        "labAssetPath": "/lab-assets/images/monsters/shambling_mound.png",
+        "labAssetPath": "/images/monsters/shambling_mound.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -12107,7 +12107,7 @@
       }
     },
     {
-      "id": 9163,
+      "id": 89,
       "catalogOrder": 89,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -12138,7 +12138,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Leucrotta",
       "cardAsset": {
         "imagePath": "/images/monsters/leucrotta.png",
-        "labAssetPath": "/lab-assets/images/monsters/leucrotta.png",
+        "labAssetPath": "/images/monsters/leucrotta.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -12244,7 +12244,7 @@
       }
     },
     {
-      "id": 9164,
+      "id": 90,
       "catalogOrder": 90,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -12275,7 +12275,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Boar,%20Dire",
       "cardAsset": {
         "imagePath": "/images/monsters/dire_boar.png",
-        "labAssetPath": "/lab-assets/images/monsters/dire_boar.png",
+        "labAssetPath": "/images/monsters/dire_boar.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -12381,7 +12381,7 @@
       }
     },
     {
-      "id": 9165,
+      "id": 91,
       "catalogOrder": 91,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -12412,7 +12412,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Forest%20Drake",
       "cardAsset": {
         "imagePath": "/images/monsters/forest_drake.png",
-        "labAssetPath": "/lab-assets/images/monsters/forest_drake.png",
+        "labAssetPath": "/images/monsters/forest_drake.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -12477,7 +12477,7 @@
       }
     },
     {
-      "id": 9166,
+      "id": 92,
       "catalogOrder": 92,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -12508,7 +12508,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Otyugh",
       "cardAsset": {
         "imagePath": "/images/monsters/otyugh.png",
-        "labAssetPath": "/lab-assets/images/monsters/otyugh.png",
+        "labAssetPath": "/images/monsters/otyugh.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -12604,7 +12604,7 @@
       }
     },
     {
-      "id": 9167,
+      "id": 93,
       "catalogOrder": 93,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -12635,7 +12635,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Wyvern",
       "cardAsset": {
         "imagePath": "/images/monsters/wyvern.png",
-        "labAssetPath": "/lab-assets/images/monsters/wyvern.png",
+        "labAssetPath": "/images/monsters/wyvern.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -12734,7 +12734,7 @@
       }
     },
     {
-      "id": 9168,
+      "id": 94,
       "catalogOrder": 94,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -12765,7 +12765,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Girallon",
       "cardAsset": {
         "imagePath": "/images/monsters/girallon.png",
-        "labAssetPath": "/lab-assets/images/monsters/girallon.png",
+        "labAssetPath": "/images/monsters/girallon.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -12851,7 +12851,7 @@
       }
     },
     {
-      "id": 9169,
+      "id": 95,
       "catalogOrder": 95,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -12882,7 +12882,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Catoblepas",
       "cardAsset": {
         "imagePath": "/images/monsters/catoblepas.png",
-        "labAssetPath": "/lab-assets/images/monsters/catoblepas.png",
+        "labAssetPath": "/images/monsters/catoblepas.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -12988,7 +12988,7 @@
       }
     },
     {
-      "id": 9170,
+      "id": 96,
       "catalogOrder": 96,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -13019,7 +13019,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Wight",
       "cardAsset": {
         "imagePath": "/images/monsters/barrow_wight.png",
-        "labAssetPath": "/lab-assets/images/monsters/barrow_wight.png",
+        "labAssetPath": "/images/monsters/barrow_wight.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -13105,7 +13105,7 @@
       }
     },
     {
-      "id": 9171,
+      "id": 97,
       "catalogOrder": 97,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -13136,7 +13136,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Green%20Hag",
       "cardAsset": {
         "imagePath": "/images/monsters/green_hag.png",
-        "labAssetPath": "/lab-assets/images/monsters/green_hag.png",
+        "labAssetPath": "/images/monsters/green_hag.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -13222,7 +13222,7 @@
       }
     },
     {
-      "id": 9172,
+      "id": 98,
       "catalogOrder": 98,
       "catalogBatch": "SEED_010_EXPANSION",
       "isReferenceSpecimen": false,
@@ -13253,7 +13253,7 @@
       "sourceUrl": "https://aonprd.com/MonsterDisplay.aspx?ItemName=Orc",
       "cardAsset": {
         "imagePath": "/images/monsters/orc_warchief.png",
-        "labAssetPath": "/lab-assets/images/monsters/orc_warchief.png",
+        "labAssetPath": "/images/monsters/orc_warchief.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -13372,7 +13372,7 @@
       "sourceUrl": "https://www.aonprd.com/Rules.aspx?Name=Combat&Category=Gamemastering",
       "cardAsset": {
         "imagePath": "/images/monsters/giant_spider.png",
-        "labAssetPath": "/lab-assets/images/monsters/giant_spider.png",
+        "labAssetPath": "/images/monsters/giant_spider.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -13393,7 +13393,7 @@
         "hasVerifiedCutout": true,
         "status": "NEWLY_PRODUCED_VERIFIED",
         "cutoutImagePath": "/lab-assets/images/monsters-cutout/giant_spider.png",
-        "diskRelativePath": "action-ui-lab/public/images/monsters-cutout/ref_fine_spore_mite.png",
+        "diskRelativePath": "action-ui-lab/public/images/monsters-cutout/giant_spider.png",
         "existsOnDisk": true,
         "cutoutContentBounds": {
           "width": 860,
@@ -13533,7 +13533,7 @@
       "sourceUrl": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Toad",
       "cardAsset": {
         "imagePath": "/images/monsters/giant_crab.png",
-        "labAssetPath": "/lab-assets/images/monsters/giant_crab.png",
+        "labAssetPath": "/images/monsters/giant_crab.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -13554,7 +13554,7 @@
         "hasVerifiedCutout": true,
         "status": "NEWLY_PRODUCED_VERIFIED",
         "cutoutImagePath": "/lab-assets/images/monsters-cutout/giant_crab.png",
-        "diskRelativePath": "action-ui-lab/public/images/monsters-cutout/ref_diminutive_toad.png",
+        "diskRelativePath": "action-ui-lab/public/images/monsters-cutout/giant_crab.png",
         "existsOnDisk": true,
         "cutoutContentBounds": {
           "width": 880,
@@ -13684,7 +13684,7 @@
       "sourceUrl": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Treant",
       "cardAsset": {
         "imagePath": "/images/monsters/ogre.png",
-        "labAssetPath": "/lab-assets/images/monsters/ogre.png",
+        "labAssetPath": "/images/monsters/ogre.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -13705,7 +13705,7 @@
         "hasVerifiedCutout": true,
         "status": "NEWLY_PRODUCED_VERIFIED",
         "cutoutImagePath": "/lab-assets/images/monsters-cutout/ogre.png",
-        "diskRelativePath": "action-ui-lab/public/images/monsters-cutout/ref_huge_elder_troll.png",
+        "diskRelativePath": "action-ui-lab/public/images/monsters-cutout/ogre.png",
         "existsOnDisk": true,
         "cutoutContentBounds": {
           "width": 854,
@@ -13815,7 +13815,7 @@
       "sourceUrl": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Purple%20Worm",
       "cardAsset": {
         "imagePath": "/images/monsters/wyvern.png",
-        "labAssetPath": "/lab-assets/images/monsters/wyvern.png",
+        "labAssetPath": "/images/monsters/wyvern.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -13836,7 +13836,7 @@
         "hasVerifiedCutout": true,
         "status": "NEWLY_PRODUCED_VERIFIED",
         "cutoutImagePath": "/lab-assets/images/monsters-cutout/wyvern.png",
-        "diskRelativePath": "action-ui-lab/public/images/monsters-cutout/ref_gargantuan_wyrm.png",
+        "diskRelativePath": "action-ui-lab/public/images/monsters-cutout/wyvern.png",
         "existsOnDisk": true,
         "cutoutContentBounds": {
           "width": 905,
@@ -13946,7 +13946,7 @@
       "sourceUrl": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Tarrasque",
       "cardAsset": {
         "imagePath": "/images/monsters/assassin_vine.png",
-        "labAssetPath": "/lab-assets/images/monsters/assassin_vine.png",
+        "labAssetPath": "/images/monsters/assassin_vine.png",
         "existsOnDisk": true,
         "cardContentBounds": {
           "width": 1024,
@@ -13967,7 +13967,7 @@
         "hasVerifiedCutout": true,
         "status": "NEWLY_PRODUCED_VERIFIED",
         "cutoutImagePath": "/lab-assets/images/monsters-cutout/assassin_vine.png",
-        "diskRelativePath": "action-ui-lab/public/images/monsters-cutout/ref_colossal_titan.png",
+        "diskRelativePath": "action-ui-lab/public/images/monsters-cutout/assassin_vine.png",
         "existsOnDisk": true,
         "cutoutContentBounds": {
           "width": 796,

@@ -115,7 +115,7 @@
       "notes": "Verified RGBA cutout (796x885, transparent=52.8%, borderClean=100.0%)"
     },
     {
-      "id": 4,
+      "id": 2,
       "catalogOrder": 2,
       "catalogBatch": "CORE_68",
       "slug": "wolf",
@@ -199,7 +199,7 @@
       "notes": "Verified RGBA cutout (827x777, transparent=53.0%, borderClean=100.0%)"
     },
     {
-      "id": 5,
+      "id": 3,
       "catalogOrder": 3,
       "catalogBatch": "CORE_68",
       "slug": "troll",
@@ -283,7 +283,7 @@
       "notes": "Verified RGBA cutout (643x860, transparent=42.6%, borderClean=100.0%)"
     },
     {
-      "id": 126,
+      "id": 4,
       "catalogOrder": 4,
       "catalogBatch": "CORE_68",
       "slug": "ghoul",
@@ -367,7 +367,7 @@
       "notes": "Verified RGBA cutout (783x706, transparent=59.9%, borderClean=100.0%)"
     },
     {
-      "id": 127,
+      "id": 5,
       "catalogOrder": 5,
       "catalogBatch": "CORE_68",
       "slug": "giant_spider",
@@ -451,7 +451,7 @@
       "notes": "Verified RGBA cutout (860x570, transparent=68.4%, borderClean=100.0%)"
     },
     {
-      "id": 128,
+      "id": 6,
       "catalogOrder": 6,
       "catalogBatch": "CORE_68",
       "slug": "choker",
@@ -502,7 +502,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 129,
+      "id": 7,
       "catalogOrder": 7,
       "catalogBatch": "CORE_68",
       "slug": "rust_monster",
@@ -586,7 +586,7 @@
       "notes": "Verified RGBA cutout (818x848, transparent=61.7%, borderClean=100.0%)"
     },
     {
-      "id": 130,
+      "id": 8,
       "catalogOrder": 8,
       "catalogBatch": "CORE_68",
       "slug": "manticore",
@@ -670,7 +670,7 @@
       "notes": "Verified RGBA cutout (1022x845, transparent=66.9%, borderClean=100.0%)"
     },
     {
-      "id": 495,
+      "id": 9,
       "catalogOrder": 9,
       "catalogBatch": "CORE_68",
       "slug": "kobold",
@@ -754,7 +754,7 @@
       "notes": "Verified RGBA cutout (622x653, transparent=59.6%, borderClean=100.0%)"
     },
     {
-      "id": 496,
+      "id": 10,
       "catalogOrder": 10,
       "catalogBatch": "CORE_68",
       "slug": "goblin",
@@ -838,7 +838,7 @@
       "notes": "Verified RGBA cutout (697x855, transparent=59.2%, borderClean=100.0%)"
     },
     {
-      "id": 497,
+      "id": 11,
       "catalogOrder": 11,
       "catalogBatch": "CORE_68",
       "slug": "human_skeleton",
@@ -922,7 +922,7 @@
       "notes": "Verified RGBA cutout (761x918, transparent=76.8%, borderClean=100.0%)"
     },
     {
-      "id": 498,
+      "id": 12,
       "catalogOrder": 12,
       "catalogBatch": "CORE_68",
       "slug": "hobgoblin",
@@ -973,7 +973,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 499,
+      "id": 13,
       "catalogOrder": 13,
       "catalogBatch": "CORE_68",
       "slug": "human_zombie",
@@ -1057,7 +1057,7 @@
       "notes": "Verified RGBA cutout (618x905, transparent=67.2%, borderClean=100.0%)"
     },
     {
-      "id": 500,
+      "id": 14,
       "catalogOrder": 14,
       "catalogBatch": "CORE_68",
       "slug": "troglodyte",
@@ -1108,7 +1108,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 501,
+      "id": 15,
       "catalogOrder": 15,
       "catalogBatch": "CORE_68",
       "slug": "darkmantle",
@@ -1159,7 +1159,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 502,
+      "id": 16,
       "catalogOrder": 16,
       "catalogBatch": "CORE_68",
       "slug": "lizardfolk",
@@ -1243,7 +1243,7 @@
       "notes": "Verified RGBA cutout (803x880, transparent=54.0%, borderClean=100.0%)"
     },
     {
-      "id": 503,
+      "id": 17,
       "catalogOrder": 17,
       "catalogBatch": "CORE_68",
       "slug": "hyena",
@@ -1294,7 +1294,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 504,
+      "id": 18,
       "catalogOrder": 18,
       "catalogBatch": "CORE_68",
       "slug": "gnoll",
@@ -1378,7 +1378,7 @@
       "notes": "Verified RGBA cutout (721x916, transparent=46.5%, borderClean=100.0%)"
     },
     {
-      "id": 505,
+      "id": 19,
       "catalogOrder": 19,
       "catalogBatch": "CORE_68",
       "slug": "giant_frog",
@@ -1429,7 +1429,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 506,
+      "id": 20,
       "catalogOrder": 20,
       "catalogBatch": "CORE_68",
       "slug": "boar",
@@ -1480,7 +1480,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 507,
+      "id": 21,
       "catalogOrder": 21,
       "catalogBatch": "CORE_68",
       "slug": "yellow_musk_creeper",
@@ -1531,7 +1531,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 508,
+      "id": 22,
       "catalogOrder": 22,
       "catalogBatch": "CORE_68",
       "slug": "bugbear",
@@ -1615,7 +1615,7 @@
       "notes": "Verified RGBA cutout (737x947, transparent=47.3%, borderClean=100.0%)"
     },
     {
-      "id": 509,
+      "id": 23,
       "catalogOrder": 23,
       "catalogBatch": "CORE_68",
       "slug": "boggard",
@@ -1666,7 +1666,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 510,
+      "id": 24,
       "catalogOrder": 24,
       "catalogBatch": "CORE_68",
       "slug": "death_dog",
@@ -1717,7 +1717,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 511,
+      "id": 25,
       "catalogOrder": 25,
       "catalogBatch": "CORE_68",
       "slug": "giant_crab",
@@ -1801,7 +1801,7 @@
       "notes": "Verified RGBA cutout (880x837, transparent=56.4%, borderClean=100.0%)"
     },
     {
-      "id": 512,
+      "id": 26,
       "catalogOrder": 26,
       "catalogBatch": "CORE_68",
       "slug": "ettercap",
@@ -1852,7 +1852,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 513,
+      "id": 27,
       "catalogOrder": 27,
       "catalogBatch": "CORE_68",
       "slug": "cockatrice",
@@ -1903,7 +1903,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 514,
+      "id": 28,
       "catalogOrder": 28,
       "catalogBatch": "CORE_68",
       "slug": "ankheg",
@@ -1987,7 +1987,7 @@
       "notes": "Verified RGBA cutout (684x830, transparent=62.4%, borderClean=100.0%)"
     },
     {
-      "id": 515,
+      "id": 29,
       "catalogOrder": 29,
       "catalogBatch": "CORE_68",
       "slug": "ogre",
@@ -2071,7 +2071,7 @@
       "notes": "Verified RGBA cutout (854x983, transparent=53.3%, borderClean=100.0%)"
     },
     {
-      "id": 516,
+      "id": 30,
       "catalogOrder": 30,
       "catalogBatch": "CORE_68",
       "slug": "shadow",
@@ -2155,7 +2155,7 @@
       "notes": "Verified RGBA cutout (531x838, transparent=60.7%, borderClean=100.0%)"
     },
     {
-      "id": 517,
+      "id": 31,
       "catalogOrder": 31,
       "catalogBatch": "CORE_68",
       "slug": "owlbear",
@@ -2239,7 +2239,7 @@
       "notes": "Verified RGBA cutout (773x867, transparent=41.7%, borderClean=100.0%)"
     },
     {
-      "id": 518,
+      "id": 32,
       "catalogOrder": 32,
       "catalogBatch": "CORE_68",
       "slug": "minotaur",
@@ -2323,7 +2323,7 @@
       "notes": "Verified RGBA cutout (823x943, transparent=49.7%, borderClean=100.0%)"
     },
     {
-      "id": 519,
+      "id": 33,
       "catalogOrder": 33,
       "catalogBatch": "CORE_68",
       "slug": "yeti",
@@ -2374,7 +2374,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 520,
+      "id": 34,
       "catalogOrder": 34,
       "catalogBatch": "CORE_68",
       "slug": "gargoyle",
@@ -2458,7 +2458,7 @@
       "notes": "Verified RGBA cutout (764x835, transparent=45.8%, borderClean=100.0%)"
     },
     {
-      "id": 521,
+      "id": 35,
       "catalogOrder": 35,
       "catalogBatch": "CORE_68",
       "slug": "basilisk",
@@ -2542,7 +2542,7 @@
       "notes": "Verified RGBA cutout (749x576, transparent=52.0%, borderClean=100.0%)"
     },
     {
-      "id": 522,
+      "id": 36,
       "catalogOrder": 36,
       "catalogBatch": "CORE_68",
       "slug": "mummy",
@@ -2626,7 +2626,7 @@
       "notes": "Verified RGBA cutout (709x928, transparent=67.9%, borderClean=100.0%)"
     },
     {
-      "id": 523,
+      "id": 37,
       "catalogOrder": 37,
       "catalogBatch": "CORE_68",
       "slug": "ochre_jelly",
@@ -2710,7 +2710,7 @@
       "notes": "Verified RGBA cutout (928x714, transparent=53.7%, borderClean=100.0%)"
     },
     {
-      "id": 524,
+      "id": 38,
       "catalogOrder": 38,
       "catalogBatch": "CORE_68",
       "slug": "winter_wolf",
@@ -2794,7 +2794,7 @@
       "notes": "Verified RGBA cutout (831x776, transparent=51.0%, borderClean=100.0%)"
     },
     {
-      "id": 2691,
+      "id": 39,
       "catalogOrder": 39,
       "catalogBatch": "CORE_68",
       "slug": "stirge",
@@ -2878,7 +2878,7 @@
       "notes": "Verified RGBA cutout (753x746, transparent=71.0%, borderClean=100.0%)"
     },
     {
-      "id": 2692,
+      "id": 40,
       "catalogOrder": 40,
       "catalogBatch": "CORE_68",
       "slug": "dire_rat",
@@ -2962,7 +2962,7 @@
       "notes": "Verified RGBA cutout (856x722, transparent=58.0%, borderClean=100.0%)"
     },
     {
-      "id": 2693,
+      "id": 41,
       "catalogOrder": 41,
       "catalogBatch": "CORE_68",
       "slug": "viper",
@@ -3046,7 +3046,7 @@
       "notes": "Verified RGBA cutout (850x851, transparent=45.5%, borderClean=100.0%)"
     },
     {
-      "id": 2694,
+      "id": 42,
       "catalogOrder": 42,
       "catalogBatch": "CORE_68",
       "slug": "giant_centipede",
@@ -3097,7 +3097,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2695,
+      "id": 43,
       "catalogOrder": 43,
       "catalogBatch": "CORE_68",
       "slug": "iron_cobra",
@@ -3148,7 +3148,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2696,
+      "id": 44,
       "catalogOrder": 44,
       "catalogBatch": "CORE_68",
       "slug": "skeletal_champion",
@@ -3232,7 +3232,7 @@
       "notes": "Verified RGBA cutout (579x860, transparent=52.1%, borderClean=100.0%)"
     },
     {
-      "id": 2697,
+      "id": 45,
       "catalogOrder": 45,
       "catalogBatch": "CORE_68",
       "slug": "blink_dog",
@@ -3283,7 +3283,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2698,
+      "id": 46,
       "catalogOrder": 46,
       "catalogBatch": "CORE_68",
       "slug": "duergar",
@@ -3334,7 +3334,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2699,
+      "id": 47,
       "catalogOrder": 47,
       "catalogBatch": "CORE_68",
       "slug": "drow",
@@ -3385,7 +3385,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2700,
+      "id": 48,
       "catalogOrder": 48,
       "catalogBatch": "CORE_68",
       "slug": "orc",
@@ -3469,7 +3469,7 @@
       "notes": "Verified RGBA cutout (684x904, transparent=42.3%, borderClean=100.0%)"
     },
     {
-      "id": 2701,
+      "id": 49,
       "catalogOrder": 49,
       "catalogBatch": "CORE_68",
       "slug": "wight",
@@ -3520,7 +3520,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2702,
+      "id": 50,
       "catalogOrder": 50,
       "catalogBatch": "CORE_68",
       "slug": "harpy",
@@ -3604,7 +3604,7 @@
       "notes": "Verified RGBA cutout (842x930, transparent=57.4%, borderClean=100.0%)"
     },
     {
-      "id": 2703,
+      "id": 51,
       "catalogOrder": 51,
       "catalogBatch": "CORE_68",
       "slug": "doppelganger",
@@ -3655,7 +3655,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2704,
+      "id": 52,
       "catalogOrder": 52,
       "catalogBatch": "CORE_68",
       "slug": "griffon",
@@ -3739,7 +3739,7 @@
       "notes": "Verified RGBA cutout (825x824, transparent=50.3%, borderClean=100.0%)"
     },
     {
-      "id": 2705,
+      "id": 53,
       "catalogOrder": 53,
       "catalogBatch": "CORE_68",
       "slug": "giant_scorpion",
@@ -3823,7 +3823,7 @@
       "notes": "Verified RGBA cutout (881x837, transparent=70.7%, borderClean=100.0%)"
     },
     {
-      "id": 2706,
+      "id": 54,
       "catalogOrder": 54,
       "catalogBatch": "CORE_68",
       "slug": "cloaker",
@@ -3874,7 +3874,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2707,
+      "id": 55,
       "catalogOrder": 55,
       "catalogBatch": "CORE_68",
       "slug": "phase_spider",
@@ -3925,7 +3925,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2708,
+      "id": 56,
       "catalogOrder": 56,
       "catalogBatch": "CORE_68",
       "slug": "wraith",
@@ -4009,7 +4009,7 @@
       "notes": "Verified RGBA cutout (723x972, transparent=58.3%, borderClean=100.0%)"
     },
     {
-      "id": 2709,
+      "id": 57,
       "catalogOrder": 57,
       "catalogBatch": "CORE_68",
       "slug": "gibbering_mouther",
@@ -4060,7 +4060,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2710,
+      "id": 58,
       "catalogOrder": 58,
       "catalogBatch": "CORE_68",
       "slug": "peryton",
@@ -4111,7 +4111,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2711,
+      "id": 59,
       "catalogOrder": 59,
       "catalogBatch": "CORE_68",
       "slug": "giant_stag_beetle",
@@ -4162,7 +4162,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2712,
+      "id": 60,
       "catalogOrder": 60,
       "catalogBatch": "CORE_68",
       "slug": "vegepygmy",
@@ -4213,7 +4213,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2713,
+      "id": 61,
       "catalogOrder": 61,
       "catalogBatch": "CORE_68",
       "slug": "ghast",
@@ -4264,7 +4264,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2714,
+      "id": 62,
       "catalogOrder": 62,
       "catalogBatch": "CORE_68",
       "slug": "giant_bat",
@@ -4315,7 +4315,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2715,
+      "id": 63,
       "catalogOrder": 63,
       "catalogBatch": "CORE_68",
       "slug": "morlock",
@@ -4366,7 +4366,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2716,
+      "id": 64,
       "catalogOrder": 64,
       "catalogBatch": "CORE_68",
       "slug": "violet_fungus",
@@ -4417,7 +4417,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2717,
+      "id": 65,
       "catalogOrder": 65,
       "catalogBatch": "CORE_68",
       "slug": "grick",
@@ -4468,7 +4468,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2718,
+      "id": 66,
       "catalogOrder": 66,
       "catalogBatch": "CORE_68",
       "slug": "krenshar",
@@ -4519,7 +4519,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2719,
+      "id": 67,
       "catalogOrder": 67,
       "catalogBatch": "CORE_68",
       "slug": "bunyip",
@@ -4570,7 +4570,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 2720,
+      "id": 68,
       "catalogOrder": 68,
       "catalogBatch": "CORE_68",
       "slug": "sahuagin",
@@ -4621,7 +4621,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9143,
+      "id": 69,
       "catalogOrder": 69,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "mite",
@@ -4672,7 +4672,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9144,
+      "id": 70,
       "catalogOrder": 70,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "bog_strider",
@@ -4723,7 +4723,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9145,
+      "id": 71,
       "catalogOrder": 71,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "blood_hawk",
@@ -4807,7 +4807,7 @@
       "notes": "Verified RGBA cutout (877x834, transparent=59.3%, borderClean=100.0%)"
     },
     {
-      "id": 9146,
+      "id": 72,
       "catalogOrder": 72,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "jungle_viper",
@@ -4858,7 +4858,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9147,
+      "id": 73,
       "catalogOrder": 73,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "plague_zombie",
@@ -4909,7 +4909,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9148,
+      "id": 74,
       "catalogOrder": 74,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "grippli_scout",
@@ -4960,7 +4960,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9149,
+      "id": 75,
       "catalogOrder": 75,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "worg",
@@ -5011,7 +5011,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9150,
+      "id": 76,
       "catalogOrder": 76,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "hippogriff",
@@ -5062,7 +5062,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9151,
+      "id": 77,
       "catalogOrder": 77,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "giant_toad",
@@ -5113,7 +5113,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9152,
+      "id": 78,
       "catalogOrder": 78,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "carbuncle",
@@ -5164,7 +5164,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9153,
+      "id": 79,
       "catalogOrder": 79,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "phantom_fungus",
@@ -5215,7 +5215,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9154,
+      "id": 80,
       "catalogOrder": 80,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "gnoll_packmaster",
@@ -5266,7 +5266,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9155,
+      "id": 81,
       "catalogOrder": 81,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "giant_mantis",
@@ -5317,7 +5317,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9156,
+      "id": 82,
       "catalogOrder": 82,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "spriggan",
@@ -5368,7 +5368,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9157,
+      "id": 83,
       "catalogOrder": 83,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "will_o_wisp",
@@ -5452,7 +5452,7 @@
       "notes": "Verified RGBA cutout (654x619, transparent=41.5%, borderClean=100.0%)"
     },
     {
-      "id": 9158,
+      "id": 84,
       "catalogOrder": 84,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "cheetah",
@@ -5503,7 +5503,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9159,
+      "id": 85,
       "catalogOrder": 85,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "draugr",
@@ -5554,7 +5554,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9160,
+      "id": 86,
       "catalogOrder": 86,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "hobgoblin_captain",
@@ -5605,7 +5605,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9161,
+      "id": 87,
       "catalogOrder": 87,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "displacer_beast",
@@ -5656,7 +5656,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9162,
+      "id": 88,
       "catalogOrder": 88,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "shambling_mound",
@@ -5707,7 +5707,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9163,
+      "id": 89,
       "catalogOrder": 89,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "leucrotta",
@@ -5758,7 +5758,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9164,
+      "id": 90,
       "catalogOrder": 90,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "dire_boar",
@@ -5809,7 +5809,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9165,
+      "id": 91,
       "catalogOrder": 91,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "forest_drake",
@@ -5860,7 +5860,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9166,
+      "id": 92,
       "catalogOrder": 92,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "otyugh",
@@ -5911,7 +5911,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9167,
+      "id": 93,
       "catalogOrder": 93,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "wyvern",
@@ -5995,7 +5995,7 @@
       "notes": "Verified RGBA cutout (905x934, transparent=59.0%, borderClean=100.0%)"
     },
     {
-      "id": 9168,
+      "id": 94,
       "catalogOrder": 94,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "girallon",
@@ -6046,7 +6046,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9169,
+      "id": 95,
       "catalogOrder": 95,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "catoblepas",
@@ -6097,7 +6097,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9170,
+      "id": 96,
       "catalogOrder": 96,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "barrow_wight",
@@ -6148,7 +6148,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9171,
+      "id": 97,
       "catalogOrder": 97,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "green_hag",
@@ -6199,7 +6199,7 @@
       "notes": "Complex multi-depth painted scene; retained on safe adaptive CARD presentation for Tier 2/3 batch."
     },
     {
-      "id": 9172,
+      "id": 98,
       "catalogOrder": 98,
       "catalogBatch": "SEED_010_EXPANSION",
       "slug": "orc_warchief",

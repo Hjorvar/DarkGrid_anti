@@ -10,7 +10,7 @@
     "dev:legacy": "node --watch legacy-game/server.js",
     "start:lab": "node src/server.js",
     "dev:lab": "node --watch src/server.js",
-    "test": "node --require ./tests/test_helpers.js --test tests/*.test.js action-ui-lab/tests/phase-6-1-hardening.test.js action-ui-lab/tests/phase-6-legacy-integration.test.js action-ui-lab/tests/phase8-world-and-systems.test.js action-ui-lab/tests/phase9b-world-expansion.test.js action-ui-lab/tests/phase9c-dungeons-and-highlands.test.js action-ui-lab/tests/topdown-experiment.test.js",
+    "test": "node --require ./tests/test_helpers.js --test tests/*.test.js action-ui-lab/tests/phase-6-1-hardening.test.js action-ui-lab/tests/phase-6-legacy-integration.test.js action-ui-lab/tests/phase8-world-and-systems.test.js action-ui-lab/tests/phase9a-threat-and-landmarks.test.js action-ui-lab/tests/phase9b-world-expansion.test.js action-ui-lab/tests/phase9c-dungeons-and-highlands.test.js action-ui-lab/tests/phase10-*.test.js action-ui-lab/tests/topdown-experiment.test.js",
     "test:legacy": "node --require ./legacy-game/tests/test_helpers.js --test legacy-game/tests/*.test.js",
     "test:lab": "node --test action-ui-lab/tests/phase8-world-and-systems.test.js action-ui-lab/tests/phase9b-world-expansion.test.js action-ui-lab/tests/phase9c-dungeons-and-highlands.test.js action-ui-lab/tests/topdown-experiment.test.js",
     "db:setup": "node scripts/setup_db.js",

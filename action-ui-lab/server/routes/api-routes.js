@@ -6,6 +6,8 @@ const session = require('express-session');
 const config = require('../../../src/config');
 const { saveDurableSnapshotFile, pushDeltaToFirestoreServer } = require('../../../src/db/durable-store');
 const {
+  originCsrfProtection,
+  authRateLimiter,
   gameRateLimiter,
   maintenanceModeGuard,
   budgetKillSwitchHandler
@@ -18,6 +20,7 @@ const {
   SqliteSessionStore,
   securityHeaders,
   isProductionMode,
+  resolveRequestUserId,
   labAntiTamperMiddleware,
   createLabIdempotencyMiddleware
 } = require('../services/legacy-compatibility-service');
@@ -26,6 +29,18 @@ function registerApiRoutes(app, { db, userId, options = {} }) {
   const router = express.Router();
   const isProd = isProductionMode(options);
   const sessionSecret = options.sessionSecret || process.env.SESSION_SECRET || config.sessionSecret;
+
+  if (
+    isProd &&
+    (!sessionSecret ||
+      sessionSecret === 'darkgrid-dev-secret-change-in-prod' ||
+      sessionSecret === 'darkgrid-dev-secret-key-change-in-production' ||
+      String(sessionSecret).length < 16)
+  ) {
+    throw new Error(
+      'CRITICAL SECURITY ERROR: Production mode requires a strong SESSION_SECRET (minimum 16 characters, not the default development secret).'
+    );
+  }
 
   // Lightweight health check for Cloud Run / App Hosting probes (zero DB/Firestore read cost)
   app.get(['/healthz', '/api/health'], (req, res) => {
@@ -39,10 +54,10 @@ function registerApiRoutes(app, { db, userId, options = {} }) {
   // Cloud Billing Pub/Sub Hard Kill-Switch Webhook
   app.post('/internal/budget-killswitch', budgetKillSwitchHandler);
 
-  // Security headers & persistent SQLite session middleware (__session cookie)
+  // Security headers, Origin/CSRF protection & persistent SQLite session middleware (__session cookie)
   app.use(securityHeaders);
+  app.use(originCsrfProtection);
   app.use(maintenanceModeGuard);
-  app.use(gameRateLimiter());
   app.use(
     session({
       name: '__session',
@@ -58,6 +73,7 @@ function registerApiRoutes(app, { db, userId, options = {} }) {
       }
     })
   );
+  app.use(gameRateLimiter());
 
   // Durable write-through after state-changing POST requests in production / durable mode
   app.use((req, res, next) => {
@@ -80,8 +96,57 @@ function registerApiRoutes(app, { db, userId, options = {} }) {
     next();
   });
 
-  // Anti-tamper & idempotency protection for all state-mutating POST requests
+  // Anti-tamper, auth rate-limiting, session-fixation rotation & idempotency protection
   const idempotencyGuard = createLabIdempotencyMiddleware({ db, defaultUserId: userId, options });
+  const authLimiter = authRateLimiter();
+
+  function regenerateSessionBeforeAuth(req, res, next) {
+    if (!req.session || typeof req.session.regenerate !== 'function') {
+      return next();
+    }
+    const wasLoggedOut = Boolean(req.session.loggedOut);
+    req.session.regenerate((err) => {
+      if (err) return next(err);
+      if (wasLoggedOut && req.session) {
+        req.session.loggedOut = true;
+      }
+      next();
+    });
+  }
+
+  function conditionalActionAuthGuard(req, res, next) {
+    const rawAction = String((req.body && req.body.action) || '').toUpperCase().trim();
+    if (rawAction === 'LOGIN' || rawAction === 'REGISTER') {
+      return authLimiter(req, res, (err) => {
+        if (err) return next(err);
+        return regenerateSessionBeforeAuth(req, res, next);
+      });
+    }
+    if (rawAction === 'ENTER_DUNGEON' || rawAction === 'EXPLORE_GOBLIN_CAVE' || rawAction === 'ENTER_ANCIENT_CRYPT') {
+      const effectiveUid = resolveRequestUserId(req, db, userId, options);
+      if (effectiveUid) {
+        const hero = db.prepare('SELECT id, tile_id FROM characters WHERE user_id = ? AND is_alive = 1 LIMIT 1').get(effectiveUid);
+        if (hero) {
+          const tile = db.prepare('SELECT x, y FROM map_tiles WHERE id = ?').get(hero.tile_id);
+          const payload = { ...(req.body || {}), ...((req.body && req.body.payload) || {}) };
+          const dungeonKey = rawAction === 'ENTER_ANCIENT_CRYPT'
+            ? 'ANCIENT_CRYPT'
+            : rawAction === 'EXPLORE_GOBLIN_CAVE'
+              ? 'GOBLIN_CAVE'
+              : String(payload.dungeonKey || 'GOBLIN_CAVE').toUpperCase();
+          const requiredCoord = dungeonKey === 'ANCIENT_CRYPT' ? { x: 26, y: 5 } : { x: 9, y: 12 };
+          if (!tile || Number(tile.x) !== requiredCoord.x || Number(tile.y) !== requiredCoord.y) {
+            return res.status(400).json({
+              ok: false,
+              error: `You must be standing at the ${dungeonKey === 'ANCIENT_CRYPT' ? 'Ancient Crypt' : 'Goblin Cave'} entrance to enter this dungeon.`
+            });
+          }
+        }
+      }
+    }
+    return next();
+  }
+
   router.use(labAntiTamperMiddleware);
 
   const stateCtrl = createStateControllers({ db, userId, options });
@@ -99,14 +164,14 @@ function registerApiRoutes(app, { db, userId, options = {} }) {
 
   // Auth & Character Creation REST Endpoints
   router.get('/api/auth/session', authCharCtrl.getSession);
-  router.post('/api/auth/register', idempotencyGuard, authCharCtrl.postRegister);
-  router.post('/api/auth/login', authCharCtrl.postLogin);
+  router.post('/api/auth/register', authLimiter, regenerateSessionBeforeAuth, idempotencyGuard, authCharCtrl.postRegister);
+  router.post('/api/auth/login', authLimiter, regenerateSessionBeforeAuth, authCharCtrl.postLogin);
   router.post('/api/auth/logout', authCharCtrl.postLogout);
   router.post('/api/character/create', idempotencyGuard, authCharCtrl.postCreateCharacter);
   router.post('/api/character/attributes/spend', idempotencyGuard, authCharCtrl.postSpendAttributePoint);
 
   // Unified Game Action Endpoint
-  router.post('/api/action', idempotencyGuard, postAction);
+  router.post('/api/action', conditionalActionAuthGuard, idempotencyGuard, postAction);
 
   app.use('/', router);
 }

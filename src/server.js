@@ -40,6 +40,17 @@ async function startServer(options = {}) {
       loadDurableSnapshotFile(db, process.env.DURABLE_SNAPSHOT_PATH);
     }
 
+    // Hydrate from Cloud Firestore before accepting requests if server-side Firestore persistence is enabled
+    if (isFirestoreSyncEnabled()) {
+      try {
+        await pullFromFirestoreServer(db, { allowCliRefresh: false });
+      } catch (err) {
+        logError('STARTUP_FIRESTORE_HYDRATE_ERROR', 'Non-fatal error hydrating from Firestore on startup', {
+          error: err.message
+        });
+      }
+    }
+
     primeRowHashCache(db);
   } catch (err) {
     console.error('Fatal: Could not initialize Darkgrid main game server:', err);
@@ -48,7 +59,7 @@ async function startServer(options = {}) {
 
   const port = options.port !== undefined ? options.port : config.port;
 
-  // Bind to 0.0.0.0:PORT immediately so Cloud Run health checks succeed without waiting on network I/O
+  // Bind to 0.0.0.0:PORT after state initialization and hydration
   const server = app.listen(port, '0.0.0.0', () => {
     const actualPort = server.address()?.port || port;
     console.log('===============================================');
@@ -61,17 +72,6 @@ async function startServer(options = {}) {
       nodeEnv: config.nodeEnv
     });
   });
-
-  // Hydrate from Cloud Firestore if server-side Firestore persistence is enabled
-  if (isFirestoreSyncEnabled()) {
-    try {
-      await pullFromFirestoreServer(db);
-    } catch (err) {
-      logError('STARTUP_FIRESTORE_HYDRATE_ERROR', 'Non-fatal error hydrating from Firestore on startup', {
-        error: err.message
-      });
-    }
-  }
 
   async function handleShutdown() {
     console.log('\nClosing Darkgrid server...');

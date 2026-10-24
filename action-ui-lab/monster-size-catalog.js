@@ -614,7 +614,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 4,
+    "id": 2,
     "catalogOrder": 2,
     "catalogBatch": "CORE_68",
     "name": "Wolf",
@@ -715,7 +715,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 5,
+    "id": 3,
     "catalogOrder": 3,
     "catalogBatch": "CORE_68",
     "name": "Troll",
@@ -816,7 +816,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 126,
+    "id": 4,
     "catalogOrder": 4,
     "catalogBatch": "CORE_68",
     "name": "Ghoul",
@@ -917,7 +917,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 127,
+    "id": 5,
     "catalogOrder": 5,
     "catalogBatch": "CORE_68",
     "name": "Giant Spider",
@@ -1018,7 +1018,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 128,
+    "id": 6,
     "catalogOrder": 6,
     "catalogBatch": "CORE_68",
     "name": "Choker",
@@ -1086,7 +1086,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 129,
+    "id": 7,
     "catalogOrder": 7,
     "catalogBatch": "CORE_68",
     "name": "Rust Monster",
@@ -1187,7 +1187,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 130,
+    "id": 8,
     "catalogOrder": 8,
     "catalogBatch": "CORE_68",
     "name": "Manticore",
@@ -1288,7 +1288,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 495,
+    "id": 9,
     "catalogOrder": 9,
     "catalogBatch": "CORE_68",
     "name": "Kobold",
@@ -1389,7 +1389,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 496,
+    "id": 10,
     "catalogOrder": 10,
     "catalogBatch": "CORE_68",
     "name": "Goblin",
@@ -1490,7 +1490,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 497,
+    "id": 11,
     "catalogOrder": 11,
     "catalogBatch": "CORE_68",
     "name": "Human Skeleton",
@@ -1591,7 +1591,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 498,
+    "id": 12,
     "catalogOrder": 12,
     "catalogBatch": "CORE_68",
     "name": "Hobgoblin",
@@ -1659,7 +1659,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 499,
+    "id": 13,
     "catalogOrder": 13,
     "catalogBatch": "CORE_68",
     "name": "Human Zombie",
@@ -1760,7 +1760,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 500,
+    "id": 14,
     "catalogOrder": 14,
     "catalogBatch": "CORE_68",
     "name": "Troglodyte",
@@ -1828,7 +1828,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 501,
+    "id": 15,
     "catalogOrder": 15,
     "catalogBatch": "CORE_68",
     "name": "Darkmantle",
@@ -1896,7 +1896,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 502,
+    "id": 16,
     "catalogOrder": 16,
     "catalogBatch": "CORE_68",
     "name": "Lizardfolk",
@@ -1997,7 +1997,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 503,
+    "id": 17,
     "catalogOrder": 17,
     "catalogBatch": "CORE_68",
     "name": "Hyena",
@@ -2065,7 +2065,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 504,
+    "id": 18,
     "catalogOrder": 18,
     "catalogBatch": "CORE_68",
     "name": "Gnoll",
@@ -2166,7 +2166,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 505,
+    "id": 19,
     "catalogOrder": 19,
     "catalogBatch": "CORE_68",
     "name": "Giant Frog",
@@ -2234,7 +2234,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 506,
+    "id": 20,
     "catalogOrder": 20,
     "catalogBatch": "CORE_68",
     "name": "Boar",
@@ -2302,7 +2302,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 507,
+    "id": 21,
     "catalogOrder": 21,
     "catalogBatch": "CORE_68",
     "name": "Yellow Musk Creeper",
@@ -2370,7 +2370,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 508,
+    "id": 22,
     "catalogOrder": 22,
     "catalogBatch": "CORE_68",
     "name": "Bugbear",
@@ -2471,7 +2471,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 509,
+    "id": 23,
     "catalogOrder": 23,
     "catalogBatch": "CORE_68",
     "name": "Boggard",
@@ -2539,7 +2539,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 510,
+    "id": 24,
     "catalogOrder": 24,
     "catalogBatch": "CORE_68",
     "name": "Death Dog",
@@ -2607,7 +2607,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 511,
+    "id": 25,
     "catalogOrder": 25,
     "catalogBatch": "CORE_68",
     "name": "Giant Crab",
@@ -2708,7 +2708,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 512,
+    "id": 26,
     "catalogOrder": 26,
     "catalogBatch": "CORE_68",
     "name": "Ettercap",
@@ -2776,7 +2776,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 513,
+    "id": 27,
     "catalogOrder": 27,
     "catalogBatch": "CORE_68",
     "name": "Cockatrice",
@@ -2844,7 +2844,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 514,
+    "id": 28,
     "catalogOrder": 28,
     "catalogBatch": "CORE_68",
     "name": "Ankheg",
@@ -2945,7 +2945,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 515,
+    "id": 29,
     "catalogOrder": 29,
     "catalogBatch": "CORE_68",
     "name": "Ogre",
@@ -3046,7 +3046,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 516,
+    "id": 30,
     "catalogOrder": 30,
     "catalogBatch": "CORE_68",
     "name": "Shadow",
@@ -3147,7 +3147,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 517,
+    "id": 31,
     "catalogOrder": 31,
     "catalogBatch": "CORE_68",
     "name": "Owlbear",
@@ -3248,7 +3248,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 518,
+    "id": 32,
     "catalogOrder": 32,
     "catalogBatch": "CORE_68",
     "name": "Minotaur",
@@ -3349,7 +3349,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 519,
+    "id": 33,
     "catalogOrder": 33,
     "catalogBatch": "CORE_68",
     "name": "Yeti",
@@ -3417,7 +3417,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 520,
+    "id": 34,
     "catalogOrder": 34,
     "catalogBatch": "CORE_68",
     "name": "Gargoyle",
@@ -3518,7 +3518,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 521,
+    "id": 35,
     "catalogOrder": 35,
     "catalogBatch": "CORE_68",
     "name": "Basilisk",
@@ -3619,7 +3619,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 522,
+    "id": 36,
     "catalogOrder": 36,
     "catalogBatch": "CORE_68",
     "name": "Mummy",
@@ -3720,7 +3720,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 523,
+    "id": 37,
     "catalogOrder": 37,
     "catalogBatch": "CORE_68",
     "name": "Ochre Jelly",
@@ -3821,7 +3821,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 524,
+    "id": 38,
     "catalogOrder": 38,
     "catalogBatch": "CORE_68",
     "name": "Winter Wolf",
@@ -3922,7 +3922,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 2691,
+    "id": 39,
     "catalogOrder": 39,
     "catalogBatch": "CORE_68",
     "name": "Stirge",
@@ -4023,7 +4023,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 2692,
+    "id": 40,
     "catalogOrder": 40,
     "catalogBatch": "CORE_68",
     "name": "Dire Rat",
@@ -4124,7 +4124,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 2693,
+    "id": 41,
     "catalogOrder": 41,
     "catalogBatch": "CORE_68",
     "name": "Viper",
@@ -4225,7 +4225,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 2694,
+    "id": 42,
     "catalogOrder": 42,
     "catalogBatch": "CORE_68",
     "name": "Giant Centipede",
@@ -4293,7 +4293,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2695,
+    "id": 43,
     "catalogOrder": 43,
     "catalogBatch": "CORE_68",
     "name": "Iron Cobra",
@@ -4361,7 +4361,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2696,
+    "id": 44,
     "catalogOrder": 44,
     "catalogBatch": "CORE_68",
     "name": "Skeletal Champion",
@@ -4462,7 +4462,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 2697,
+    "id": 45,
     "catalogOrder": 45,
     "catalogBatch": "CORE_68",
     "name": "Blink Dog",
@@ -4530,7 +4530,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2698,
+    "id": 46,
     "catalogOrder": 46,
     "catalogBatch": "CORE_68",
     "name": "Duergar",
@@ -4598,7 +4598,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2699,
+    "id": 47,
     "catalogOrder": 47,
     "catalogBatch": "CORE_68",
     "name": "Drow",
@@ -4666,7 +4666,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2700,
+    "id": 48,
     "catalogOrder": 48,
     "catalogBatch": "CORE_68",
     "name": "Orc",
@@ -4767,7 +4767,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 2701,
+    "id": 49,
     "catalogOrder": 49,
     "catalogBatch": "CORE_68",
     "name": "Wight",
@@ -4835,7 +4835,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2702,
+    "id": 50,
     "catalogOrder": 50,
     "catalogBatch": "CORE_68",
     "name": "Harpy",
@@ -4936,7 +4936,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 2703,
+    "id": 51,
     "catalogOrder": 51,
     "catalogBatch": "CORE_68",
     "name": "Doppelganger",
@@ -5004,7 +5004,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2704,
+    "id": 52,
     "catalogOrder": 52,
     "catalogBatch": "CORE_68",
     "name": "Griffon",
@@ -5105,7 +5105,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 2705,
+    "id": 53,
     "catalogOrder": 53,
     "catalogBatch": "CORE_68",
     "name": "Giant Scorpion",
@@ -5206,7 +5206,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 2706,
+    "id": 54,
     "catalogOrder": 54,
     "catalogBatch": "CORE_68",
     "name": "Cloaker",
@@ -5274,7 +5274,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2707,
+    "id": 55,
     "catalogOrder": 55,
     "catalogBatch": "CORE_68",
     "name": "Phase Spider",
@@ -5342,7 +5342,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2708,
+    "id": 56,
     "catalogOrder": 56,
     "catalogBatch": "CORE_68",
     "name": "Wraith",
@@ -5443,7 +5443,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 2709,
+    "id": 57,
     "catalogOrder": 57,
     "catalogBatch": "CORE_68",
     "name": "Gibbering Mouther",
@@ -5511,7 +5511,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2710,
+    "id": 58,
     "catalogOrder": 58,
     "catalogBatch": "CORE_68",
     "name": "Peryton",
@@ -5579,7 +5579,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2711,
+    "id": 59,
     "catalogOrder": 59,
     "catalogBatch": "CORE_68",
     "name": "Giant Stag Beetle",
@@ -5647,7 +5647,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2712,
+    "id": 60,
     "catalogOrder": 60,
     "catalogBatch": "CORE_68",
     "name": "Vegepygmy",
@@ -5715,7 +5715,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2713,
+    "id": 61,
     "catalogOrder": 61,
     "catalogBatch": "CORE_68",
     "name": "Ghast",
@@ -5783,7 +5783,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2714,
+    "id": 62,
     "catalogOrder": 62,
     "catalogBatch": "CORE_68",
     "name": "Giant Bat",
@@ -5851,7 +5851,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2715,
+    "id": 63,
     "catalogOrder": 63,
     "catalogBatch": "CORE_68",
     "name": "Morlock",
@@ -5919,7 +5919,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2716,
+    "id": 64,
     "catalogOrder": 64,
     "catalogBatch": "CORE_68",
     "name": "Violet Fungus",
@@ -5987,7 +5987,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2717,
+    "id": 65,
     "catalogOrder": 65,
     "catalogBatch": "CORE_68",
     "name": "Grick",
@@ -6055,7 +6055,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2718,
+    "id": 66,
     "catalogOrder": 66,
     "catalogBatch": "CORE_68",
     "name": "Krenshar",
@@ -6123,7 +6123,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2719,
+    "id": 67,
     "catalogOrder": 67,
     "catalogBatch": "CORE_68",
     "name": "Bunyip",
@@ -6191,7 +6191,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 2720,
+    "id": 68,
     "catalogOrder": 68,
     "catalogBatch": "CORE_68",
     "name": "Sahuagin",
@@ -6259,7 +6259,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9143,
+    "id": 69,
     "catalogOrder": 69,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Mite",
@@ -6327,7 +6327,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9144,
+    "id": 70,
     "catalogOrder": 70,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Bog Strider",
@@ -6395,7 +6395,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9145,
+    "id": 71,
     "catalogOrder": 71,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Blood Hawk",
@@ -6496,7 +6496,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 9146,
+    "id": 72,
     "catalogOrder": 72,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Jungle Viper",
@@ -6564,7 +6564,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9147,
+    "id": 73,
     "catalogOrder": 73,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Plague Zombie",
@@ -6632,7 +6632,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9148,
+    "id": 74,
     "catalogOrder": 74,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Grippli Scout",
@@ -6700,7 +6700,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9149,
+    "id": 75,
     "catalogOrder": 75,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Worg",
@@ -6768,7 +6768,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9150,
+    "id": 76,
     "catalogOrder": 76,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Hippogriff",
@@ -6836,7 +6836,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9151,
+    "id": 77,
     "catalogOrder": 77,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Giant Toad",
@@ -6904,7 +6904,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9152,
+    "id": 78,
     "catalogOrder": 78,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Carbuncle",
@@ -6972,7 +6972,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9153,
+    "id": 79,
     "catalogOrder": 79,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Phantom Fungus",
@@ -7040,7 +7040,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9154,
+    "id": 80,
     "catalogOrder": 80,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Gnoll Packmaster",
@@ -7108,7 +7108,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9155,
+    "id": 81,
     "catalogOrder": 81,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Giant Mantis",
@@ -7176,7 +7176,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9156,
+    "id": 82,
     "catalogOrder": 82,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Spriggan",
@@ -7244,7 +7244,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9157,
+    "id": 83,
     "catalogOrder": 83,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Will-o'-Wisp",
@@ -7345,7 +7345,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 9158,
+    "id": 84,
     "catalogOrder": 84,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Cheetah",
@@ -7413,7 +7413,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9159,
+    "id": 85,
     "catalogOrder": 85,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Draugr",
@@ -7481,7 +7481,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9160,
+    "id": 86,
     "catalogOrder": 86,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Hobgoblin Captain",
@@ -7549,7 +7549,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9161,
+    "id": 87,
     "catalogOrder": 87,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Displacer Beast",
@@ -7617,7 +7617,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9162,
+    "id": 88,
     "catalogOrder": 88,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Shambling Mound",
@@ -7685,7 +7685,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9163,
+    "id": 89,
     "catalogOrder": 89,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Leucrotta",
@@ -7753,7 +7753,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9164,
+    "id": 90,
     "catalogOrder": 90,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Dire Boar",
@@ -7821,7 +7821,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9165,
+    "id": 91,
     "catalogOrder": 91,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Forest Drake",
@@ -7889,7 +7889,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9166,
+    "id": 92,
     "catalogOrder": 92,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Otyugh",
@@ -7957,7 +7957,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9167,
+    "id": 93,
     "catalogOrder": 93,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Wyvern",
@@ -8058,7 +8058,7 @@ const MONSTER_SIZE_CATALOG = [
     }
   },
   {
-    "id": 9168,
+    "id": 94,
     "catalogOrder": 94,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Girallon",
@@ -8126,7 +8126,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9169,
+    "id": 95,
     "catalogOrder": 95,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Catoblepas",
@@ -8194,7 +8194,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9170,
+    "id": 96,
     "catalogOrder": 96,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Barrow Wight",
@@ -8262,7 +8262,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9171,
+    "id": 97,
     "catalogOrder": 97,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Green Hag",
@@ -8330,7 +8330,7 @@ const MONSTER_SIZE_CATALOG = [
     "cutoutValidationMetrics": null
   },
   {
-    "id": 9172,
+    "id": 98,
     "catalogOrder": 98,
     "catalogBatch": "SEED_010_EXPANSION",
     "name": "Orc Warchief",
@@ -8600,9 +8600,94 @@ for (const item of [...MONSTER_SIZE_CATALOG, ...PF1E_SIZE_REFERENCE_SPECIMENS]) 
     });
   }
 }
-// Alias support
-BY_SLUG.set('creeping_vine', BY_SLUG.get('assassin_vine'));
-BY_NAME.set('creeping vine', BY_SLUG.get('assassin_vine'));
+// Alias support (creatures, overworld bosses, dungeon bosses, and fixed dungeon guards)
+const BOSS_AND_SPECIAL_MONSTER_ALIASES = {
+  // Creature aliases
+  'creeping_vine': 'assassin_vine',
+  'creeping vine': 'assassin_vine',
+  'skeleton': 'human_skeleton',
+  'zombie': 'human_zombie',
+  'giant_rat': 'dire_rat',
+  'giant rat': 'dire_rat',
+  'timber_wolf': 'wolf',
+  'timber wolf': 'wolf',
+  'feral_wolf': 'wolf',
+  'feral wolf': 'wolf',
+  'grave_troll': 'troll',
+  'grave troll': 'troll',
+  'will-o\'-wisp': 'will_o_wisp',
+  'will_o_the_wisp': 'will_o_wisp',
+  // Overworld Bosses & Dungeon Bosses
+  'warchief_grak': 'goblin',
+  'warchief grak': 'goblin',
+  'warchief_grak_the_goblin_chieftain': 'goblin',
+  'warchief grak the goblin chieftain': 'goblin',
+  'goblin_chieftain_grak': 'goblin',
+  'skulkrip': 'bugbear',
+  'skulkrip_the_cave_brood_king': 'bugbear',
+  'skulkrip the cave brood-king': 'bugbear',
+  'skulkrip the cave brood king': 'bugbear',
+  'goblin_cave_brood_king': 'bugbear',
+  'brood_king_skulkrip': 'bugbear',
+  'lord_malakor': 'barrow_wight',
+  'lord malakor': 'barrow_wight',
+  'lord_malakor_the_barrow_wight_king': 'barrow_wight',
+  'lord malakor the barrow-wight king': 'barrow_wight',
+  'lord malakor the barrow wight king': 'barrow_wight',
+  'ancient_crypt_barrow_king': 'barrow_wight',
+  'barrow_king_malakor': 'barrow_wight',
+  'warlord_kraug': 'ogre',
+  'warlord kraug': 'ogre',
+  'warlord_kraug_the_crag_breaker': 'ogre',
+  'warlord kraug the crag-breaker': 'ogre',
+  'warlord kraug the crag breaker': 'ogre',
+  'crag_warlord_kraug': 'ogre',
+  // Fixed Dungeon Guards & Sentries
+  'broodmother_spinner': 'giant_spider',
+  'broodmother spinner': 'giant_spider',
+  'cave_spider_brood': 'giant_spider',
+  'cave_entrance_webs': 'giant_spider',
+  'crag_tunnel_taskmaster': 'hobgoblin',
+  'crag-tunnel taskmaster': 'hobgoblin',
+  'crag tunnel taskmaster': 'hobgoblin',
+  'cave_warcamp_sentry': 'hobgoblin',
+  'cave_guard_post': 'hobgoblin',
+  'chasm_guard_stalker': 'bugbear',
+  'chasm-guard stalker': 'bugbear',
+  'chasm guard stalker': 'bugbear',
+  'cave_bridge_bugbear': 'bugbear',
+  'cave_chasm_ambush': 'bugbear',
+  'sepulcher_honor_guard': 'skeletal_champion',
+  'sepulcher honor-guard': 'skeletal_champion',
+  'sepulcher honor guard': 'skeletal_champion',
+  'crypt_nave_warden': 'skeletal_champion',
+  'crypt_vestibule_sentry': 'skeletal_champion',
+  'sarcophagus_stalker': 'ghoul',
+  'sarcophagus stalker': 'ghoul',
+  'crypt_tomb_ghoul': 'ghoul',
+  'crypt_gallery_prowler': 'ghoul',
+  'whispering_shade_of_the_ossuary': 'shadow',
+  'whispering shade of the ossuary': 'shadow',
+  'crypt_catacomb_shadow': 'shadow',
+  'crypt_ossuary_haunt': 'shadow',
+  'crypt_bearer_of_the_inner_seal': 'wight',
+  'crypt-bearer of the inner seal': 'wight',
+  'crypt bearer of the inner seal': 'wight',
+  'crypt_ossuary_wight': 'wight',
+  'crypt_antechamber_warden': 'wight',
+  'anointed_tomb_guardian': 'mummy',
+  'anointed tomb-guardian': 'mummy',
+  'anointed tomb guardian': 'mummy',
+  'crypt_mummy_sentinel': 'mummy',
+  'crypt_embalming_guardian': 'mummy'
+};
+for (const [aliasKey, targetSlug] of Object.entries(BOSS_AND_SPECIAL_MONSTER_ALIASES)) {
+  const targetEntry = BY_SLUG.get(targetSlug);
+  if (targetEntry) {
+    if (!BY_SLUG.has(aliasKey)) BY_SLUG.set(aliasKey, targetEntry);
+    if (!BY_NAME.has(aliasKey)) BY_NAME.set(aliasKey, targetEntry);
+  }
+}
 
 function clamp(val, min, max) {
   return Math.min(max, Math.max(min, val));
@@ -9143,10 +9228,39 @@ function lookupMonsterSizeEntry(monsterOrKey) {
     if (monsterOrKey.pfSizeCategory && monsterOrKey.visualBodyProfile && monsterOrKey.bodyProportions) {
       return monsterOrKey;
     }
-    const slug = String(monsterOrKey.monsterSlug || monsterOrKey.imageSlug || monsterOrKey.slug || '').trim().toLowerCase();
-    if (slug && BY_SLUG.has(slug)) return BY_SLUG.get(slug);
-    const name = String(monsterOrKey.baseMonsterName || monsterOrKey.monsterName || monsterOrKey.cleanMonsterName || monsterOrKey.name || '').trim().toLowerCase();
-    if (name && BY_NAME.has(name)) return BY_NAME.get(name);
+    const candidateSlugs = [
+      monsterOrKey.monsterSlug,
+      monsterOrKey.imageSlug,
+      monsterOrKey.combatImageSlug,
+      monsterOrKey.slug,
+      monsterOrKey.bossKey,
+      monsterOrKey.dungeonBossKey,
+      monsterOrKey.fixedEncounterKey,
+      monsterOrKey.eventKey
+    ];
+    for (const rawS of candidateSlugs) {
+      const s = String(rawS || '').trim().toLowerCase();
+      if (!s) continue;
+      if (BY_SLUG.has(s)) return BY_SLUG.get(s);
+      const normS = s.replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+      if (normS && BY_SLUG.has(normS)) return BY_SLUG.get(normS);
+    }
+    const candidateNames = [
+      monsterOrKey.baseMonsterName,
+      monsterOrKey.customTitle,
+      monsterOrKey.custom_title,
+      monsterOrKey.monsterName,
+      monsterOrKey.cleanMonsterName,
+      monsterOrKey.name,
+      monsterOrKey.preferredMonsterName
+    ];
+    for (const rawN of candidateNames) {
+      const n = String(rawN || '').trim().toLowerCase();
+      if (!n) continue;
+      if (BY_NAME.has(n)) return BY_NAME.get(n);
+      const normN = n.replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+      if (normN && BY_SLUG.has(normN)) return BY_SLUG.get(normN);
+    }
     if (monsterOrKey.sizeMetadata && monsterOrKey.sizeMetadata.pfSizeCategory) {
       return monsterOrKey.sizeMetadata;
     }
@@ -10425,7 +10539,7 @@ function getMonsterAssetManifest(options = {}) {
       sourceUrl: m.sourceUrl,
       cardAsset: {
         imagePath: m.imagePath,
-        labAssetPath: `/lab-assets${m.imagePath}`,
+        labAssetPath: m.imagePath,
         existsOnDisk: true,
         cardContentBounds: m.cardContentBounds
       },
@@ -10434,7 +10548,7 @@ function getMonsterAssetManifest(options = {}) {
         status: cutoutStatus,
         cutoutImagePath: modeInfo.cutoutImageUrl,
         diskRelativePath: modeInfo.cutoutImageUrl
-          ? `action-ui-lab/public/images/monsters-cutout/${m.slug}.png`
+          ? `action-ui-lab/public/images/monsters-cutout/${String(modeInfo.cutoutImageUrl).split('/').pop()}`
           : null,
         existsOnDisk: modeInfo.existsOnDisk,
         cutoutContentBounds: modeInfo.cutoutContentBounds,

@@ -7,7 +7,8 @@
  *    is_alive, or spoofed user/character IDs) in `req.body` or `req.query`.
  * 2. Rate Limiting: Protects authentication and gameplay endpoints against spam/DoS
  *    and prevents runaway Cloud Run / database costs.
- * 3. Security Headers: Standard HTTP hardening headers.
+ * 3. Security Headers & Origin/CSRF Guard: Standard HTTP hardening headers and
+ *    cross-origin state-mutation blocking (`Origin` & `Sec-Fetch-Site`).
  * 4. Maintenance Mode Guard: Blocks writes cleanly during database migration windows.
  */
 
@@ -56,11 +57,73 @@ const FORBIDDEN_CLIENT_FIELDS = new Set([
 ]);
 
 const rateBuckets = new Map();
+const authRateBuckets = new Map();
 
 function securityHeaders(req, res, next) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'"
+  );
+  next();
+}
+
+function originCsrfProtection(req, res, next) {
+  if (
+    req.method === 'GET' ||
+    req.method === 'HEAD' ||
+    req.method === 'OPTIONS' ||
+    req.path === '/internal/budget-killswitch'
+  ) {
+    return next();
+  }
+
+  const secFetchSite = String(req.headers['sec-fetch-site'] || '').trim().toLowerCase();
+  if (secFetchSite === 'cross-site') {
+    logSecurity('SECURITY_CSRF_CROSS_SITE', 'Blocked cross-site state-changing request via Sec-Fetch-Site', {
+      path: req.originalUrl || req.url,
+      method: req.method,
+      secFetchSite
+    });
+    return res.status(403).json({
+      ok: false,
+      error: 'Forbidden: Cross-site state-changing requests are not permitted.'
+    });
+  }
+
+  const originHeader = req.headers.origin;
+  if (originHeader !== undefined) {
+    const rawOrigin = String(originHeader).trim();
+    const targetHost = String(req.headers['x-forwarded-host'] || req.headers.host || '')
+      .split(',')[0]
+      .trim()
+      .toLowerCase();
+
+    let originHost = null;
+    if (rawOrigin && rawOrigin.toLowerCase() !== 'null') {
+      try {
+        originHost = new URL(rawOrigin).host.toLowerCase();
+      } catch {
+        originHost = null;
+      }
+    }
+
+    if (!originHost || (targetHost && originHost !== targetHost)) {
+      logSecurity('SECURITY_CSRF_ORIGIN_MISMATCH', 'Blocked cross-origin state-changing request via Origin header', {
+        path: req.originalUrl || req.url,
+        method: req.method,
+        origin: rawOrigin,
+        targetHost
+      });
+      return res.status(403).json({
+        ok: false,
+        error: 'Forbidden: Cross-origin request blocked by Origin/CSRF protection.'
+      });
+    }
+  }
+
   next();
 }
 
@@ -91,6 +154,7 @@ function antiTamperProtection(req, res, next) {
     const message = `Security violation: Client-supplied game state or identity parameters (${tamperedFields.join(', ')}) are strictly forbidden.`;
     if (req.xhr || req.headers.accept?.includes('application/json')) {
       return res.status(400).json({
+        ok: false,
         error: message,
         tamperedFields
       });
@@ -104,16 +168,70 @@ function antiTamperProtection(req, res, next) {
   next();
 }
 
-function gameRateLimiter(maxRequests = 120, windowMs = 60 * 1000) {
+function authRateLimiter(maxAttempts = 15, windowMs = 60 * 1000) {
   return (req, res, next) => {
     const enforceInTest = req.headers['x-enforce-rate-limit'] === '1';
-    if (process.env.NODE_ENV === 'test' && !enforceInTest) {
+    if ((process.env.NODE_ENV === 'test' || process.env.NODE_TEST_CONTEXT) && !enforceInTest) {
       return next();
     }
 
-    const key = req.session?.userId
-      ? `user:${req.session.userId}`
-      : `ip:${req.ip || req.socket?.remoteAddress || 'unknown'}`;
+    const clientId = req.headers['x-test-client-id'] || req.ip || req.socket?.remoteAddress || 'unknown';
+    const key = `auth:${clientId}`;
+    const now = Date.now();
+    const effectiveLimit = req.headers['x-auth-rate-limit-max']
+      ? parseInt(req.headers['x-auth-rate-limit-max'], 10)
+      : maxAttempts;
+
+    let bucket = authRateBuckets.get(key);
+    if (!bucket || now >= bucket.resetAt) {
+      bucket = { count: 1, resetAt: now + windowMs };
+      authRateBuckets.set(key, bucket);
+      return next();
+    }
+
+    bucket.count += 1;
+    if (bucket.count > effectiveLimit) {
+      logSecurity('SECURITY_AUTH_RATE_LIMIT_EXCEEDED', 'Authentication rate limit exceeded for client', {
+        key,
+        path: req.originalUrl || req.url,
+        method: req.method,
+        count: bucket.count
+      });
+
+      if (
+        req.xhr ||
+        req.headers.accept?.includes('application/json') ||
+        req.headers['content-type']?.includes('application/json') ||
+        req.originalUrl?.startsWith('/api/') ||
+        req.url?.startsWith('/api/')
+      ) {
+        return res.status(429).json({
+          ok: false,
+          error: 'Too many authentication attempts. Please wait a minute and try again.'
+        });
+      }
+      return res.status(429).render('error', {
+        title: '429 - Too Many Authentication Attempts',
+        message: 'Too many authentication attempts. Please wait a minute and try again.'
+      });
+    }
+
+    next();
+  };
+}
+
+function gameRateLimiter(maxRequests = 120, windowMs = 60 * 1000) {
+  return (req, res, next) => {
+    const enforceInTest = req.headers['x-enforce-rate-limit'] === '1';
+    if ((process.env.NODE_ENV === 'test' || process.env.NODE_TEST_CONTEXT) && !enforceInTest) {
+      return next();
+    }
+
+    const key = req.headers['x-test-client-id']
+      ? `test:${req.headers['x-test-client-id']}`
+      : req.session?.userId
+        ? `user:${req.session.userId}`
+        : `ip:${req.ip || req.socket?.remoteAddress || 'unknown'}`;
     const now = Date.now();
     const effectiveLimit = req.headers['x-rate-limit-max']
       ? parseInt(req.headers['x-rate-limit-max'], 10)
@@ -135,8 +253,15 @@ function gameRateLimiter(maxRequests = 120, windowMs = 60 * 1000) {
         count: bucket.count
       });
 
-      if (req.xhr || req.headers.accept?.includes('application/json')) {
+      if (
+        req.xhr ||
+        req.headers.accept?.includes('application/json') ||
+        req.headers['content-type']?.includes('application/json') ||
+        req.originalUrl?.startsWith('/api/') ||
+        req.url?.startsWith('/api/')
+      ) {
         return res.status(429).json({
+          ok: false,
           error: 'Too many requests. Please slow down before taking another action.'
         });
       }
@@ -314,7 +439,9 @@ function maintenanceModeGuard(req, res, next) {
 module.exports = {
   FORBIDDEN_CLIENT_FIELDS,
   securityHeaders,
+  originCsrfProtection,
   antiTamperProtection,
+  authRateLimiter,
   gameRateLimiter,
   maintenanceModeGuard,
   budgetKillSwitchHandler,

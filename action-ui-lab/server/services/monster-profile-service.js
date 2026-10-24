@@ -224,11 +224,20 @@ for (const entry of MONSTER_SIZE_CATALOG) {
 
 function resolveMonsterIntegratedProfile(cleanSlug, isAirborne = false, monsterLookupHint = null, options = {}) {
   const key = String(cleanSlug || '').toLowerCase().trim();
-  const sizeEntry = lookupMonsterSizeEntry(key || monsterLookupHint);
+  let sizeEntry = lookupMonsterSizeEntry(key || monsterLookupHint);
+  if ((!sizeEntry || sizeEntry.isFallbackMetadata) && monsterLookupHint) {
+    const hintedEntry = lookupMonsterSizeEntry(monsterLookupHint);
+    if (hintedEntry && !hintedEntry.isFallbackMetadata) {
+      sizeEntry = hintedEntry;
+    }
+  }
   const canonicalSlug = (sizeEntry && sizeEntry.slug) ? sizeEntry.slug : key;
   const profile = INTEGRATED_MONSTER_PROFILES[canonicalSlug] || INTEGRATED_MONSTER_PROFILES[key];
 
-  const fileDiskPath = path.join(__dirname, '../../public/images/monsters-cutout', `${canonicalSlug}.png`);
+  const cutoutFileName = (sizeEntry && sizeEntry.cutoutImagePath)
+    ? String(sizeEntry.cutoutImagePath).split('/').pop()
+    : `${canonicalSlug}.png`;
+  const fileDiskPath = path.join(__dirname, '../../public/images/monsters-cutout', cutoutFileName);
   const diskExists = options.cutoutExistsOnDisk !== undefined
     ? Boolean(options.cutoutExistsOnDisk)
     : fs.existsSync(fileDiskPath);

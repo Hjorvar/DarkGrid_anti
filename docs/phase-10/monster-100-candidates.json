@@ -1,0 +1,4578 @@
+[
+  {
+    "rank": 1,
+    "name": "Goblin Dog",
+    "cr": 1,
+    "tier": "CR_1_4",
+    "creature_type": "Animal",
+    "subtype": "rodent",
+    "creature_subtype": "rodent",
+    "monster_family": "LUPINE_CANINE_BEASTS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 9,
+      "ac": 13,
+      "touch_ac": 12,
+      "flat_footed_ac": 11,
+      "initiative_bonus": 2,
+      "attack_bonus": 2,
+      "damage_dice": "1d6+1",
+      "damage_bonus": 1,
+      "fort_save": 6,
+      "ref_save": 4,
+      "will_save": 1,
+      "xp_reward": 400
+    },
+    "special_abilities": [
+      "Allergic Reaction (Disease DC 12)",
+      "Immune to Allergic Reaction",
+      "Scent",
+      "Low-Light Vision"
+    ],
+    "terrains": [
+      "FOREST",
+      "HILLS",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 157",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Goblin%20Dog",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar núverandi disease rider í abilities.js (sama mynstur og Dire Rat)."
+  },
+  {
+    "rank": 2,
+    "name": "Goblin Commando",
+    "cr": 1,
+    "tier": "CR_1_4",
+    "creature_type": "Humanoid",
+    "subtype": "goblinoid",
+    "creature_subtype": "goblinoid",
+    "monster_family": "GOBLINOIDS",
+    "size_category": "Small",
+    "stats": {
+      "hp": 12,
+      "ac": 17,
+      "touch_ac": 14,
+      "flat_footed_ac": 14,
+      "initiative_bonus": 3,
+      "attack_bonus": 4,
+      "damage_dice": "1d8+1",
+      "damage_bonus": 1,
+      "fort_save": 3,
+      "ref_save": 5,
+      "will_save": 2,
+      "xp_reward": 400
+    },
+    "special_abilities": [
+      "Favored Enemy (Humans)",
+      "Mounted Archery",
+      "Opening Ambush",
+      "Darkvision 60 ft."
+    ],
+    "terrains": [
+      "FOREST",
+      "HILLS",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Monster Codex pg. 104",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Goblin",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Styðst beint við openingStrike í abilities.js (eins og Goblin og Hobgoblin)."
+  },
+  {
+    "rank": 3,
+    "name": "Venomous Snake",
+    "cr": 1,
+    "tier": "CR_1_4",
+    "creature_type": "Animal",
+    "subtype": "reptilian",
+    "creature_subtype": "reptilian",
+    "monster_family": "ANIMALS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 13,
+      "ac": 14,
+      "touch_ac": 12,
+      "flat_footed_ac": 12,
+      "initiative_bonus": 6,
+      "attack_bonus": 5,
+      "damage_dice": "1d4-1",
+      "damage_bonus": -1,
+      "fort_save": 5,
+      "ref_save": 5,
+      "will_save": 1,
+      "xp_reward": 400
+    },
+    "special_abilities": [
+      "Poison (DC 13, 1d2 Con)",
+      "Scent",
+      "Low-Light Vision"
+    ],
+    "terrains": [
+      "FOREST",
+      "SWAMP",
+      "HILLS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 255",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Venomous%20Snake",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar núverandi poison rider í abilities.js (sama mynstur og Viper)."
+  },
+  {
+    "rank": 4,
+    "name": "Giant Gecko",
+    "cr": 1,
+    "tier": "CR_1_4",
+    "creature_type": "Animal",
+    "subtype": "reptilian",
+    "creature_subtype": "reptilian",
+    "monster_family": "ANIMALS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 13,
+      "ac": 15,
+      "touch_ac": 13,
+      "flat_footed_ac": 12,
+      "initiative_bonus": 7,
+      "attack_bonus": 3,
+      "damage_dice": "2d4+2",
+      "damage_bonus": 2,
+      "fort_save": 5,
+      "ref_save": 6,
+      "will_save": 2,
+      "xp_reward": 400
+    },
+    "special_abilities": [
+      "Expert Climber (Natural Spider Climb)",
+      "Low-Light Vision"
+    ],
+    "terrains": [
+      "FOREST",
+      "HILLS",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_CAVE",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 186",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Giant%20Gecko",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Hrein melee árás með openingStrike úr hellislofti í abilities.js."
+  },
+  {
+    "rank": 5,
+    "name": "Pseudodragon",
+    "cr": 1,
+    "tier": "CR_1_4",
+    "creature_type": "Dragon",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "DRAGONS_DRAKES",
+    "size_category": "Tiny",
+    "stats": {
+      "hp": 15,
+      "ac": 16,
+      "touch_ac": 14,
+      "flat_footed_ac": 14,
+      "initiative_bonus": 2,
+      "attack_bonus": 6,
+      "damage_dice": "1d3-2",
+      "damage_bonus": -2,
+      "fort_save": 4,
+      "ref_save": 5,
+      "will_save": 4,
+      "xp_reward": 400
+    },
+    "special_abilities": [
+      "Poison (Sleep DC 14)",
+      "Spell Resistance 12",
+      "Blindsense 60 ft.",
+      "Flight"
+    ],
+    "terrains": [
+      "FOREST",
+      "HILLS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 229",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Pseudodragon",
+    "already_in_db": false,
+    "engine_support": "PARTIAL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Svefneitur má útfæra með poison/paralysis rider í abilities.js."
+  },
+  {
+    "rank": 6,
+    "name": "Shrieker",
+    "cr": 1,
+    "tier": "CR_1_4",
+    "creature_type": "Plant",
+    "subtype": "fungus",
+    "creature_subtype": "fungus",
+    "monster_family": "DANGEROUS_PLANTS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 13,
+      "ac": 10,
+      "touch_ac": 5,
+      "flat_footed_ac": 10,
+      "initiative_bonus": -5,
+      "attack_bonus": 2,
+      "damage_dice": "1d4+1",
+      "damage_bonus": 1,
+      "fort_save": 5,
+      "ref_save": -5,
+      "will_save": 0,
+      "xp_reward": 400
+    },
+    "special_abilities": [
+      "Piercing Shriek Aura",
+      "Plant Traits",
+      "Low-Light Vision"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "SWAMP"
+    ],
+    "recommended_regions": [
+      "GOBLIN_CAVE",
+      "ANCIENT_CRYPT"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 137",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Shrieker",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar combatStartAura (FEAR/SHAKEN) í abilities.js fyrir ærandi óp sveppsins."
+  },
+  {
+    "rank": 7,
+    "name": "Tick Swarm",
+    "cr": 1,
+    "tier": "CR_1_4",
+    "creature_type": "Vermin",
+    "subtype": "swarm",
+    "creature_subtype": "swarm",
+    "monster_family": "ARACHNIDS",
+    "size_category": "Tiny",
+    "stats": {
+      "hp": 16,
+      "ac": 18,
+      "touch_ac": 14,
+      "flat_footed_ac": 16,
+      "initiative_bonus": 2,
+      "attack_bonus": 4,
+      "damage_dice": "1d6+1",
+      "damage_bonus": 1,
+      "fort_save": 4,
+      "ref_save": 3,
+      "will_save": 1,
+      "xp_reward": 400
+    },
+    "special_abilities": [
+      "Blood Drain",
+      "Cling",
+      "Disease (Bubonic Plague DC 12)",
+      "Distraction (DC 12)",
+      "Swarm Traits"
+    ],
+    "terrains": [
+      "FOREST",
+      "SWAMP",
+      "HILLS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 270",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Tick%20Swarm",
+    "already_in_db": false,
+    "engine_support": "PARTIAL",
+    "implementation_complexity": "MEDIUM",
+    "complexity_reason": "attachDrain og disease eru til í abilities.js; swarm-helmingun á vopnaskaða má útfæra með DR."
+  },
+  {
+    "rank": 8,
+    "name": "Ghost Scorpion",
+    "cr": 1,
+    "tier": "CR_1_4",
+    "creature_type": "Vermin",
+    "subtype": "arachnid",
+    "creature_subtype": "arachnid",
+    "monster_family": "ARACHNIDS",
+    "size_category": "Small",
+    "stats": {
+      "hp": 13,
+      "ac": 14,
+      "touch_ac": 13,
+      "flat_footed_ac": 12,
+      "initiative_bonus": 2,
+      "attack_bonus": 3,
+      "damage_dice": "1d4+1",
+      "damage_bonus": 1,
+      "fort_save": 4,
+      "ref_save": 2,
+      "will_save": 0,
+      "xp_reward": 400
+    },
+    "special_abilities": [
+      "Poison (DC 12, 1d2 Str)",
+      "Pounce",
+      "Translucent Chitin",
+      "Darkvision 60 ft."
+    ],
+    "terrains": [
+      "HILLS",
+      "MOUNTAINS",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 239",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Ghost%20Scorpion",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar openingStrike (Pounce) og poison í abilities.js."
+  },
+  {
+    "rank": 9,
+    "name": "Vishkanya",
+    "cr": 1,
+    "tier": "CR_1_4",
+    "creature_type": "Humanoid",
+    "subtype": "reptilian",
+    "creature_subtype": "reptilian",
+    "monster_family": "REPTILIAN_HUMANOIDS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 11,
+      "ac": 16,
+      "touch_ac": 14,
+      "flat_footed_ac": 12,
+      "initiative_bonus": 4,
+      "attack_bonus": 5,
+      "damage_dice": "1d4+1",
+      "damage_bonus": 1,
+      "fort_save": 1,
+      "ref_save": 6,
+      "will_save": 1,
+      "xp_reward": 400
+    },
+    "special_abilities": [
+      "Toxic Blood & Saliva (Venom DC 13)",
+      "Poison Resistance",
+      "Limber",
+      "Low-Light Vision"
+    ],
+    "terrains": [
+      "FOREST",
+      "SWAMP",
+      "CITY"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 280",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Vishkanya",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar poison rider og openingStrike í abilities.js."
+  },
+  {
+    "rank": 10,
+    "name": "Jinkin",
+    "cr": 1,
+    "tier": "CR_1_4",
+    "creature_type": "Fey",
+    "subtype": "gremlin",
+    "creature_subtype": "gremlin",
+    "monster_family": "FEY",
+    "size_category": "Tiny",
+    "stats": {
+      "hp": 6,
+      "ac": 16,
+      "touch_ac": 16,
+      "flat_footed_ac": 12,
+      "initiative_bonus": 4,
+      "attack_bonus": 6,
+      "damage_dice": "1d3-1",
+      "damage_bonus": -1,
+      "fort_save": 1,
+      "ref_save": 6,
+      "will_save": 4,
+      "xp_reward": 400
+    },
+    "special_abilities": [
+      "DR 5/cold iron",
+      "Sneak Attack +1d6",
+      "Tinker Hex",
+      "Spell Resistance 12"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "FOREST"
+    ],
+    "recommended_regions": [
+      "GOBLIN_CAVE",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 142",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Jinkin",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar DR og openingStrike (Sneak Attack) í abilities.js."
+  },
+  {
+    "rank": 11,
+    "name": "Gourd Leshy",
+    "cr": 1,
+    "tier": "CR_1_4",
+    "creature_type": "Plant",
+    "subtype": "leshy",
+    "creature_subtype": "leshy",
+    "monster_family": "DANGEROUS_PLANTS",
+    "size_category": "Small",
+    "stats": {
+      "hp": 9,
+      "ac": 14,
+      "touch_ac": 13,
+      "flat_footed_ac": 12,
+      "initiative_bonus": 2,
+      "attack_bonus": 3,
+      "damage_dice": "1d4+1",
+      "damage_bonus": 1,
+      "fort_save": 3,
+      "ref_save": 2,
+      "will_save": 1,
+      "xp_reward": 400
+    },
+    "special_abilities": [
+      "Ensnare (Entangle DC 13)",
+      "Change Shape",
+      "Verdant Burst",
+      "Plant Traits"
+    ],
+    "terrains": [
+      "FOREST",
+      "PLAINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 178",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Gourd%20Leshy",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar combatStartAura (ENTANGLE) í abilities.js."
+  },
+  {
+    "rank": 12,
+    "name": "Festrog",
+    "cr": 1,
+    "tier": "CR_1_4",
+    "creature_type": "Undead",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "UNDEAD",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 13,
+      "ac": 14,
+      "touch_ac": 11,
+      "flat_footed_ac": 13,
+      "initiative_bonus": 1,
+      "attack_bonus": 4,
+      "damage_dice": "1d6+3",
+      "damage_bonus": 3,
+      "fort_save": 2,
+      "ref_save": 1,
+      "will_save": 4,
+      "xp_reward": 400
+    },
+    "special_abilities": [
+      "Diseased Pustules (Filth Fever DC 12)",
+      "Trip",
+      "Feed",
+      "Four-Footed Run",
+      "Undead Traits"
+    ],
+    "terrains": [
+      "SWAMP",
+      "UNDERGROUND_RUINS",
+      "HILLS"
+    ],
+    "recommended_regions": [
+      "UNDEAD_LANDS",
+      "ANCIENT_CRYPT"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 116",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Festrog",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar trip og disease (Filth Fever) sem eru þegar til í abilities.js."
+  },
+  {
+    "rank": 13,
+    "name": "Black Bear",
+    "cr": 2,
+    "tier": "CR_1_4",
+    "creature_type": "Animal",
+    "subtype": "ursine",
+    "creature_subtype": "ursine",
+    "monster_family": "ANIMALS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 19,
+      "ac": 13,
+      "touch_ac": 11,
+      "flat_footed_ac": 12,
+      "initiative_bonus": 1,
+      "attack_bonus": 5,
+      "damage_dice": "1d4+3",
+      "damage_bonus": 3,
+      "fort_save": 5,
+      "ref_save": 4,
+      "will_save": 2,
+      "xp_reward": 600
+    },
+    "special_abilities": [
+      "Grab",
+      "Scent",
+      "Low-Light Vision"
+    ],
+    "terrains": [
+      "FOREST",
+      "HILLS",
+      "MOUNTAINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 31",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Grizzly%20Bear",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar grab í abilities.js (sama mynstur og Owlbear á lægra CR)."
+  },
+  {
+    "rank": 14,
+    "name": "Crocodile",
+    "cr": 2,
+    "tier": "CR_1_4",
+    "creature_type": "Animal",
+    "subtype": "reptilian",
+    "creature_subtype": "reptilian",
+    "monster_family": "ANIMALS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 22,
+      "ac": 14,
+      "touch_ac": 10,
+      "flat_footed_ac": 13,
+      "initiative_bonus": 5,
+      "attack_bonus": 5,
+      "damage_dice": "1d8+4",
+      "damage_bonus": 4,
+      "fort_save": 6,
+      "ref_save": 4,
+      "will_save": 2,
+      "xp_reward": 600
+    },
+    "special_abilities": [
+      "Death Roll (1d8+6 plus Trip)",
+      "Grab",
+      "Sprint",
+      "Hold Breath"
+    ],
+    "terrains": [
+      "SWAMP",
+      "RIVER_LAKE"
+    ],
+    "recommended_regions": [
+      "UNDEAD_LANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 51",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Crocodile",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar grab (með constrictFormula fyrir Death Roll) og trip í abilities.js."
+  },
+  {
+    "rank": 15,
+    "name": "Constrictor Snake",
+    "cr": 2,
+    "tier": "CR_1_4",
+    "creature_type": "Animal",
+    "subtype": "reptilian",
+    "creature_subtype": "reptilian",
+    "monster_family": "ANIMALS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 19,
+      "ac": 15,
+      "touch_ac": 13,
+      "flat_footed_ac": 12,
+      "initiative_bonus": 3,
+      "attack_bonus": 5,
+      "damage_dice": "1d4+4",
+      "damage_bonus": 4,
+      "fort_save": 5,
+      "ref_save": 6,
+      "will_save": 2,
+      "xp_reward": 600
+    },
+    "special_abilities": [
+      "Grab",
+      "Constrict (1d4+4)",
+      "Scent",
+      "Climb"
+    ],
+    "terrains": [
+      "FOREST",
+      "SWAMP",
+      "JUNGLE"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 255",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Constrictor%20Snake",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar grab og constrictFormula í abilities.js."
+  },
+  {
+    "rank": 16,
+    "name": "Leopard",
+    "cr": 2,
+    "tier": "CR_1_4",
+    "creature_type": "Animal",
+    "subtype": "feline",
+    "creature_subtype": "feline",
+    "monster_family": "ANIMALS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 19,
+      "ac": 15,
+      "touch_ac": 14,
+      "flat_footed_ac": 11,
+      "initiative_bonus": 4,
+      "attack_bonus": 6,
+      "damage_dice": "1d6+3",
+      "damage_bonus": 3,
+      "fort_save": 5,
+      "ref_save": 7,
+      "will_save": 2,
+      "xp_reward": 600
+    },
+    "special_abilities": [
+      "Pounce",
+      "Grab",
+      "Rake (2 claws 1d3+3)",
+      "Scent"
+    ],
+    "terrains": [
+      "FOREST",
+      "HILLS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 40",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Leopard",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar openingStrike (Pounce) og grab í abilities.js."
+  },
+  {
+    "rank": 17,
+    "name": "Wolverine",
+    "cr": 2,
+    "tier": "CR_1_4",
+    "creature_type": "Animal",
+    "subtype": "mustelid",
+    "creature_subtype": "mustelid",
+    "monster_family": "ANIMALS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 22,
+      "ac": 14,
+      "touch_ac": 12,
+      "flat_footed_ac": 12,
+      "initiative_bonus": 2,
+      "attack_bonus": 4,
+      "damage_dice": "1d6+2",
+      "damage_bonus": 2,
+      "fort_save": 6,
+      "ref_save": 5,
+      "will_save": 2,
+      "xp_reward": 600
+    },
+    "special_abilities": [
+      "Rage",
+      "Burrow",
+      "Climb",
+      "Scent"
+    ],
+    "terrains": [
+      "FOREST",
+      "HILLS",
+      "MOUNTAINS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 279",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Wolverine",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar bloodFrenzy í abilities.js fyrir Rage þegar skrímslið særist."
+  },
+  {
+    "rank": 18,
+    "name": "Duergar Taskmaster",
+    "cr": 2,
+    "tier": "CR_1_4",
+    "creature_type": "Humanoid",
+    "subtype": "duergar",
+    "creature_subtype": "duergar",
+    "monster_family": "SUBTERRANEAN_HUMANOIDS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 22,
+      "ac": 17,
+      "touch_ac": 11,
+      "flat_footed_ac": 16,
+      "initiative_bonus": 1,
+      "attack_bonus": 5,
+      "damage_dice": "1d8+3",
+      "damage_bonus": 3,
+      "fort_save": 5,
+      "ref_save": 1,
+      "will_save": 4,
+      "xp_reward": 600
+    },
+    "special_abilities": [
+      "Enlarge Person SLA",
+      "Invisibility SLA",
+      "Ironskin",
+      "Slow and Steady",
+      "Darkvision 120 ft."
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "MOUNTAINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_CAVE",
+      "ANCIENT_CRYPT",
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Monster Codex pg. 46",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Duergar",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar bloodFrenzy og openingStrike í abilities.js (líkt og Duergar)."
+  },
+  {
+    "rank": 19,
+    "name": "Giant Ant",
+    "cr": 2,
+    "tier": "CR_1_4",
+    "creature_type": "Vermin",
+    "subtype": "insect",
+    "creature_subtype": "insect",
+    "monster_family": "VERMIN_INSECTS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 18,
+      "ac": 15,
+      "touch_ac": 10,
+      "flat_footed_ac": 15,
+      "initiative_bonus": 0,
+      "attack_bonus": 3,
+      "damage_dice": "1d6+2",
+      "damage_bonus": 2,
+      "fort_save": 6,
+      "ref_save": 0,
+      "will_save": 1,
+      "xp_reward": 600
+    },
+    "special_abilities": [
+      "Grab",
+      "Sting Poison (DC 14, 1d2 Str)",
+      "Scent",
+      "Vermin Traits"
+    ],
+    "terrains": [
+      "FOREST",
+      "PLAINS",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 16",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Giant%20Ant",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar grab og poison í abilities.js."
+  },
+  {
+    "rank": 20,
+    "name": "Giant Leech",
+    "cr": 2,
+    "tier": "CR_1_4",
+    "creature_type": "Vermin",
+    "subtype": "aquatic",
+    "creature_subtype": "aquatic",
+    "monster_family": "VERMIN_INSECTS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 19,
+      "ac": 12,
+      "touch_ac": 12,
+      "flat_footed_ac": 10,
+      "initiative_bonus": 2,
+      "attack_bonus": 2,
+      "damage_dice": "1d6",
+      "damage_bonus": 0,
+      "fort_save": 5,
+      "ref_save": 3,
+      "will_save": 1,
+      "xp_reward": 600
+    },
+    "special_abilities": [
+      "Attach",
+      "Blood Drain (1 Str and 1 Con)",
+      "Blindsight 30 ft.",
+      "Scent"
+    ],
+    "terrains": [
+      "SWAMP",
+      "RIVER_LAKE"
+    ],
+    "recommended_regions": [
+      "UNDEAD_LANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 187",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Giant%20Leech",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar attachDrain í abilities.js (sama vélfræði og Stirge)."
+  },
+  {
+    "rank": 21,
+    "name": "Shocker Lizard",
+    "cr": 2,
+    "tier": "CR_1_4",
+    "creature_type": "Magical Beast",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "TERRESTRIAL_MAGICAL_BEASTS",
+    "size_category": "Small",
+    "stats": {
+      "hp": 13,
+      "ac": 16,
+      "touch_ac": 13,
+      "flat_footed_ac": 14,
+      "initiative_bonus": 6,
+      "attack_bonus": 4,
+      "damage_dice": "1d4",
+      "damage_bonus": 0,
+      "fort_save": 4,
+      "ref_save": 5,
+      "will_save": 2,
+      "xp_reward": 600
+    },
+    "special_abilities": [
+      "Stunning Shock (2d8 electricity, Ref DC 12)",
+      "Electricity Sense",
+      "Electricity Immunity"
+    ],
+    "terrains": [
+      "SWAMP",
+      "FOREST",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "UNDEAD_LANDS",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 248",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Shocker%20Lizard",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar elementalRider (electricity) og cooldownSpecial í abilities.js."
+  },
+  {
+    "rank": 22,
+    "name": "Orc Berserker",
+    "cr": 2,
+    "tier": "CR_1_4",
+    "creature_type": "Humanoid",
+    "subtype": "orc",
+    "creature_subtype": "orc",
+    "monster_family": "ORCS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 25,
+      "ac": 14,
+      "touch_ac": 10,
+      "flat_footed_ac": 14,
+      "initiative_bonus": 1,
+      "attack_bonus": 7,
+      "damage_dice": "1d12+6",
+      "damage_bonus": 6,
+      "fort_save": 6,
+      "ref_save": 1,
+      "will_save": 1,
+      "xp_reward": 600
+    },
+    "special_abilities": [
+      "Rage",
+      "Ferocity",
+      "Power Attack",
+      "Darkvision 60 ft."
+    ],
+    "terrains": [
+      "HILLS",
+      "MOUNTAINS",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Monster Codex pg. 168",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Orc",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar ferocity og bloodFrenzy í abilities.js (eins og Orc og Orc Warchief)."
+  },
+  {
+    "rank": 23,
+    "name": "Skum",
+    "cr": 2,
+    "tier": "CR_1_4",
+    "creature_type": "Monstrous Humanoid",
+    "subtype": "aquatic",
+    "creature_subtype": "aquatic",
+    "monster_family": "AMPHIBIAN_HUMANOIDS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 20,
+      "ac": 15,
+      "touch_ac": 11,
+      "flat_footed_ac": 14,
+      "initiative_bonus": 1,
+      "attack_bonus": 6,
+      "damage_dice": "1d8+4",
+      "damage_bonus": 4,
+      "fort_save": 4,
+      "ref_save": 4,
+      "will_save": 3,
+      "xp_reward": 600
+    },
+    "special_abilities": [
+      "Amphibious",
+      "Multiattack (Trident, Bite, Claw)",
+      "Cold Resistance 10",
+      "Darkvision 60 ft."
+    ],
+    "terrains": [
+      "SWAMP",
+      "RIVER_LAKE",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "UNDEAD_LANDS",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 253",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Skum",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar rend fyrir fylgiárásir (bite/claw) í abilities.js."
+  },
+  {
+    "rank": 24,
+    "name": "Huecuva",
+    "cr": 2,
+    "tier": "CR_1_4",
+    "creature_type": "Undead",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "UNDEAD",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 16,
+      "ac": 15,
+      "touch_ac": 11,
+      "flat_footed_ac": 14,
+      "initiative_bonus": 5,
+      "attack_bonus": 4,
+      "damage_dice": "1d4+2",
+      "damage_bonus": 2,
+      "fort_save": 2,
+      "ref_save": 2,
+      "will_save": 5,
+      "xp_reward": 600
+    },
+    "special_abilities": [
+      "DR 5/magic or silver",
+      "Aura of Faithlessness",
+      "Disease (Filth Fever DC 12)",
+      "False Humanity",
+      "Undead Traits"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "SWAMP"
+    ],
+    "recommended_regions": [
+      "ANCIENT_CRYPT",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 150",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Huecuva",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar DR (MAGIC), combatStartAura (FEAR) og disease í abilities.js."
+  },
+  {
+    "rank": 25,
+    "name": "Poltergeist",
+    "cr": 2,
+    "tier": "CR_1_4",
+    "creature_type": "Undead",
+    "subtype": "incorporeal",
+    "creature_subtype": "incorporeal",
+    "monster_family": "UNDEAD",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 16,
+      "ac": 12,
+      "touch_ac": 12,
+      "flat_footed_ac": 11,
+      "initiative_bonus": 1,
+      "attack_bonus": 3,
+      "damage_dice": "1d6",
+      "damage_bonus": 0,
+      "fort_save": 2,
+      "ref_save": 2,
+      "will_save": 4,
+      "xp_reward": 600
+    },
+    "special_abilities": [
+      "Incorporeal",
+      "Natural Invisibility",
+      "Frightener (Fear Will DC 12)",
+      "Telekinesis",
+      "Rejuvenation"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "CITY"
+    ],
+    "recommended_regions": [
+      "ANCIENT_CRYPT",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 211",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Poltergeist",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar evasion (INCORPOREAL) og combatStartAura (FEAR) í abilities.js."
+  },
+  {
+    "rank": 26,
+    "name": "Scarecrow",
+    "cr": 2,
+    "tier": "CR_1_4",
+    "creature_type": "Construct",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "CONSTRUCTS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 22,
+      "ac": 12,
+      "touch_ac": 9,
+      "flat_footed_ac": 12,
+      "initiative_bonus": -1,
+      "attack_bonus": 6,
+      "damage_dice": "1d8+4",
+      "damage_bonus": 4,
+      "fort_save": 1,
+      "ref_save": 0,
+      "will_save": 1,
+      "xp_reward": 600
+    },
+    "special_abilities": [
+      "Fascinating Gaze (Will DC 12)",
+      "Fear Touch (Will DC 12)",
+      "Immune to Cold",
+      "Vulnerable to Fire",
+      "Construct Traits"
+    ],
+    "terrains": [
+      "PLAINS",
+      "SWAMP",
+      "FOREST"
+    ],
+    "recommended_regions": [
+      "UNDEAD_LANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 240",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Scarecrow",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar combatStartAura (FEAR) í abilities.js."
+  },
+  {
+    "rank": 27,
+    "name": "Dire Wolf",
+    "cr": 3,
+    "tier": "CR_1_4",
+    "creature_type": "Animal",
+    "subtype": "canine",
+    "creature_subtype": "canine",
+    "monster_family": "LUPINE_CANINE_BEASTS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 37,
+      "ac": 14,
+      "touch_ac": 11,
+      "flat_footed_ac": 12,
+      "initiative_bonus": 2,
+      "attack_bonus": 7,
+      "damage_dice": "1d8+6",
+      "damage_bonus": 6,
+      "fort_save": 7,
+      "ref_save": 6,
+      "will_save": 2,
+      "xp_reward": 800
+    },
+    "special_abilities": [
+      "Trip",
+      "Scent",
+      "Low-Light Vision"
+    ],
+    "terrains": [
+      "FOREST",
+      "HILLS",
+      "MOUNTAINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 278",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Dire%20Wolf",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar trip í abilities.js (sama vélfræði og Wolf og Worg)."
+  },
+  {
+    "rank": 28,
+    "name": "Lion",
+    "cr": 3,
+    "tier": "CR_1_4",
+    "creature_type": "Animal",
+    "subtype": "feline",
+    "creature_subtype": "feline",
+    "monster_family": "ANIMALS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 32,
+      "ac": 15,
+      "touch_ac": 12,
+      "flat_footed_ac": 12,
+      "initiative_bonus": 7,
+      "attack_bonus": 7,
+      "damage_dice": "1d8+5",
+      "damage_bonus": 5,
+      "fort_save": 6,
+      "ref_save": 7,
+      "will_save": 2,
+      "xp_reward": 800
+    },
+    "special_abilities": [
+      "Pounce",
+      "Grab",
+      "Rake (2 claws 1d4+5)",
+      "Run",
+      "Scent"
+    ],
+    "terrains": [
+      "HILLS",
+      "PLAINS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 40",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Lion",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar openingStrike (Pounce), grab og rend (Rake) í abilities.js."
+  },
+  {
+    "rank": 29,
+    "name": "Dire Hyena",
+    "cr": 3,
+    "tier": "CR_1_4",
+    "creature_type": "Animal",
+    "subtype": "canine",
+    "creature_subtype": "canine",
+    "monster_family": "LUPINE_CANINE_BEASTS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 42,
+      "ac": 15,
+      "touch_ac": 11,
+      "flat_footed_ac": 13,
+      "initiative_bonus": 2,
+      "attack_bonus": 8,
+      "damage_dice": "1d8+9",
+      "damage_bonus": 9,
+      "fort_save": 8,
+      "ref_save": 6,
+      "will_save": 2,
+      "xp_reward": 800
+    },
+    "special_abilities": [
+      "Trip",
+      "Scent",
+      "Low-Light Vision"
+    ],
+    "terrains": [
+      "HILLS",
+      "PLAINS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 179",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Dire%20Hyena",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar trip í abilities.js."
+  },
+  {
+    "rank": 30,
+    "name": "Giant Wasp",
+    "cr": 3,
+    "tier": "CR_1_4",
+    "creature_type": "Vermin",
+    "subtype": "insect",
+    "creature_subtype": "insect",
+    "monster_family": "VERMIN_INSECTS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 34,
+      "ac": 14,
+      "touch_ac": 10,
+      "flat_footed_ac": 13,
+      "initiative_bonus": 1,
+      "attack_bonus": 6,
+      "damage_dice": "1d8+6",
+      "damage_bonus": 6,
+      "fort_save": 8,
+      "ref_save": 2,
+      "will_save": 2,
+      "xp_reward": 800
+    },
+    "special_abilities": [
+      "Poison (Sting DC 18, 1d2 Dex)",
+      "Flight (60 ft.)",
+      "Darkvision 60 ft."
+    ],
+    "terrains": [
+      "FOREST",
+      "HILLS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 275",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Giant%20Wasp",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar poison rider í abilities.js."
+  },
+  {
+    "rank": 31,
+    "name": "Gelatinous Cube",
+    "cr": 3,
+    "tier": "CR_1_4",
+    "creature_type": "Ooze",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "OOZES",
+    "size_category": "Large",
+    "stats": {
+      "hp": 50,
+      "ac": 4,
+      "touch_ac": 4,
+      "flat_footed_ac": 4,
+      "initiative_bonus": -5,
+      "attack_bonus": 2,
+      "damage_dice": "1d6",
+      "damage_bonus": 0,
+      "fort_save": 9,
+      "ref_save": -4,
+      "will_save": -4,
+      "xp_reward": 800
+    },
+    "special_abilities": [
+      "Acid (1d6)",
+      "Engulf (Ref DC 12)",
+      "Paralysis (3d6 rounds, Fort DC 20)",
+      "Transparent",
+      "Electricity Immunity",
+      "Ooze Traits"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_CAVE",
+      "ANCIENT_CRYPT"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 138",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Gelatinous%20Cube",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar elementalRider (acid), grab (Engulf) og paralysis í abilities.js."
+  },
+  {
+    "rank": 32,
+    "name": "Centaur",
+    "cr": 3,
+    "tier": "CR_1_4",
+    "creature_type": "Monstrous Humanoid",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "MONSTROUS_HUMANOIDS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 30,
+      "ac": 16,
+      "touch_ac": 11,
+      "flat_footed_ac": 14,
+      "initiative_bonus": 6,
+      "attack_bonus": 5,
+      "damage_dice": "1d8+2",
+      "damage_bonus": 2,
+      "fort_save": 3,
+      "ref_save": 6,
+      "will_save": 6,
+      "xp_reward": 800
+    },
+    "special_abilities": [
+      "Undersized Weapons",
+      "Hoof Trample Follow-up",
+      "Fast Movement (50 ft.)",
+      "Darkvision 60 ft."
+    ],
+    "terrains": [
+      "FOREST",
+      "PLAINS",
+      "HILLS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 42",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Centaur",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar openingStrike og rend (hoof follow-up) í abilities.js."
+  },
+  {
+    "rank": 33,
+    "name": "Dryad",
+    "cr": 3,
+    "tier": "CR_1_4",
+    "creature_type": "Fey",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "FEY",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 27,
+      "ac": 17,
+      "touch_ac": 14,
+      "flat_footed_ac": 13,
+      "initiative_bonus": 4,
+      "attack_bonus": 7,
+      "damage_dice": "1d4",
+      "damage_bonus": 0,
+      "fort_save": 5,
+      "ref_save": 9,
+      "will_save": 7,
+      "xp_reward": 800
+    },
+    "special_abilities": [
+      "DR 5/cold iron",
+      "Tree Dependent",
+      "Tree Meld",
+      "Entangle SLA (DC 15)",
+      "Wild Empathy"
+    ],
+    "terrains": [
+      "FOREST"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 116",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Dryad",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar DR og combatStartAura (ENTANGLE) í abilities.js."
+  },
+  {
+    "rank": 34,
+    "name": "Pegasus",
+    "cr": 3,
+    "tier": "CR_1_4",
+    "creature_type": "Magical Beast",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "TERRESTRIAL_MAGICAL_BEASTS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 34,
+      "ac": 14,
+      "touch_ac": 11,
+      "flat_footed_ac": 12,
+      "initiative_bonus": 2,
+      "attack_bonus": 7,
+      "damage_dice": "1d6+4",
+      "damage_bonus": 4,
+      "fort_save": 7,
+      "ref_save": 6,
+      "will_save": 4,
+      "xp_reward": 800
+    },
+    "special_abilities": [
+      "Flight (120 ft.)",
+      "Diving Hoof Strike",
+      "Detect Evil/Good",
+      "Scent"
+    ],
+    "terrains": [
+      "HILLS",
+      "MOUNTAINS",
+      "FOREST"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 225",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Pegasus",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar openingStrike (diving strike) í abilities.js."
+  },
+  {
+    "rank": 35,
+    "name": "River Drake",
+    "cr": 3,
+    "tier": "CR_1_4",
+    "creature_type": "Dragon",
+    "subtype": "aquatic",
+    "creature_subtype": "aquatic",
+    "monster_family": "DRAGONS_DRAKES",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 25,
+      "ac": 15,
+      "touch_ac": 13,
+      "flat_footed_ac": 12,
+      "initiative_bonus": 7,
+      "attack_bonus": 6,
+      "damage_dice": "2d4+3",
+      "damage_bonus": 3,
+      "fort_save": 5,
+      "ref_save": 6,
+      "will_save": 3,
+      "xp_reward": 800
+    },
+    "special_abilities": [
+      "Caustic Mucus Breath (2d8 acid + entangle, Ref DC 13)",
+      "Pounce",
+      "Speed Surge",
+      "Amphibious",
+      "Acid Resistance 20"
+    ],
+    "terrains": [
+      "RIVER_LAKE",
+      "SWAMP",
+      "FOREST"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 106",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=River%20Drake",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar cooldownSpecial (acid mucus) og combatStartAura (ENTANGLE) í abilities.js."
+  },
+  {
+    "rank": 36,
+    "name": "Gnoll Sergeant",
+    "cr": 3,
+    "tier": "CR_1_4",
+    "creature_type": "Humanoid",
+    "subtype": "gnoll",
+    "creature_subtype": "gnoll",
+    "monster_family": "GNOLLS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 32,
+      "ac": 17,
+      "touch_ac": 11,
+      "flat_footed_ac": 16,
+      "initiative_bonus": 1,
+      "attack_bonus": 8,
+      "damage_dice": "1d8+4",
+      "damage_bonus": 4,
+      "fort_save": 7,
+      "ref_save": 2,
+      "will_save": 2,
+      "xp_reward": 800
+    },
+    "special_abilities": [
+      "Coordinated Pack Assault",
+      "Power Attack",
+      "Cleave",
+      "Darkvision 60 ft."
+    ],
+    "terrains": [
+      "HILLS",
+      "PLAINS",
+      "FOREST"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Monster Codex pg. 94",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Gnoll",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar openingStrike og rend í abilities.js."
+  },
+  {
+    "rank": 37,
+    "name": "Moss Troll",
+    "cr": 3,
+    "tier": "CR_1_4",
+    "creature_type": "Humanoid",
+    "subtype": "giant",
+    "creature_subtype": "giant",
+    "monster_family": "TROLLS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 30,
+      "ac": 16,
+      "touch_ac": 12,
+      "flat_footed_ac": 13,
+      "initiative_bonus": 3,
+      "attack_bonus": 6,
+      "damage_dice": "1d6+4",
+      "damage_bonus": 4,
+      "fort_save": 6,
+      "ref_save": 4,
+      "will_save": 3,
+      "xp_reward": 800
+    },
+    "special_abilities": [
+      "Regeneration 5 (fire)",
+      "Rend (2 claws 1d6+6)",
+      "Tree Climber",
+      "Fear of Fire"
+    ],
+    "terrains": [
+      "FOREST",
+      "SWAMP"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 273",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Moss%20Troll",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar regeneration og rend í abilities.js (sama vélfræði og Troll)."
+  },
+  {
+    "rank": 38,
+    "name": "Necrophidius",
+    "cr": 3,
+    "tier": "CR_1_4",
+    "creature_type": "Construct",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "CONSTRUCTS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 36,
+      "ac": 15,
+      "touch_ac": 13,
+      "flat_footed_ac": 12,
+      "initiative_bonus": 3,
+      "attack_bonus": 6,
+      "damage_dice": "1d6+3",
+      "damage_bonus": 3,
+      "fort_save": 1,
+      "ref_save": 4,
+      "will_save": 1,
+      "xp_reward": 800
+    },
+    "special_abilities": [
+      "DR 5/bludgeoning",
+      "Dance of Death (Will DC 13)",
+      "Paralysis (1d4 rounds, Fort DC 13)",
+      "Stealthy",
+      "Construct Traits"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "ANCIENT_CRYPT",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 201",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Necrophidius",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar DR (B), combatStartAura og paralysis í abilities.js."
+  },
+  {
+    "rank": 39,
+    "name": "Grizzly Bear",
+    "cr": 4,
+    "tier": "CR_1_4",
+    "creature_type": "Animal",
+    "subtype": "ursine",
+    "creature_subtype": "ursine",
+    "monster_family": "ANIMALS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 42,
+      "ac": 16,
+      "touch_ac": 10,
+      "flat_footed_ac": 15,
+      "initiative_bonus": 1,
+      "attack_bonus": 7,
+      "damage_dice": "1d6+5",
+      "damage_bonus": 5,
+      "fort_save": 8,
+      "ref_save": 5,
+      "will_save": 2,
+      "xp_reward": 1200
+    },
+    "special_abilities": [
+      "Grab",
+      "Bear Hug Constrict",
+      "Scent",
+      "Low-Light Vision"
+    ],
+    "terrains": [
+      "FOREST",
+      "HILLS",
+      "MOUNTAINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 31",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Grizzly%20Bear",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar grab með constrictFormula í abilities.js."
+  },
+  {
+    "rank": 40,
+    "name": "Tiger",
+    "cr": 4,
+    "tier": "CR_1_4",
+    "creature_type": "Animal",
+    "subtype": "feline",
+    "creature_subtype": "feline",
+    "monster_family": "ANIMALS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 45,
+      "ac": 14,
+      "touch_ac": 11,
+      "flat_footed_ac": 12,
+      "initiative_bonus": 6,
+      "attack_bonus": 10,
+      "damage_dice": "1d8+6",
+      "damage_bonus": 6,
+      "fort_save": 8,
+      "ref_save": 7,
+      "will_save": 3,
+      "xp_reward": 1200
+    },
+    "special_abilities": [
+      "Pounce",
+      "Grab",
+      "Rake (2 claws 1d8+6)",
+      "Scent"
+    ],
+    "terrains": [
+      "FOREST",
+      "JUNGLE",
+      "HILLS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 265",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Tiger",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar openingStrike (Pounce), grab og rend í abilities.js."
+  },
+  {
+    "rank": 41,
+    "name": "Dire Wolverine",
+    "cr": 4,
+    "tier": "CR_1_4",
+    "creature_type": "Animal",
+    "subtype": "mustelid",
+    "creature_subtype": "mustelid",
+    "monster_family": "ANIMALS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 42,
+      "ac": 16,
+      "touch_ac": 12,
+      "flat_footed_ac": 13,
+      "initiative_bonus": 7,
+      "attack_bonus": 6,
+      "damage_dice": "1d8+4",
+      "damage_bonus": 4,
+      "fort_save": 7,
+      "ref_save": 7,
+      "will_save": 2,
+      "xp_reward": 1200
+    },
+    "special_abilities": [
+      "Rage (+4 Str/Con, -2 AC)",
+      "Climb",
+      "Scent",
+      "Low-Light Vision"
+    ],
+    "terrains": [
+      "HILLS",
+      "MOUNTAINS",
+      "FOREST"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 279",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Dire%20Wolverine",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar bloodFrenzy í abilities.js."
+  },
+  {
+    "rank": 42,
+    "name": "Giant Crocodile",
+    "cr": 4,
+    "tier": "CR_1_4",
+    "creature_type": "Animal",
+    "subtype": "reptilian",
+    "creature_subtype": "reptilian",
+    "monster_family": "ANIMALS",
+    "size_category": "Huge",
+    "stats": {
+      "hp": 59,
+      "ac": 18,
+      "touch_ac": 9,
+      "flat_footed_ac": 17,
+      "initiative_bonus": 5,
+      "attack_bonus": 11,
+      "damage_dice": "2d6+9",
+      "damage_bonus": 9,
+      "fort_save": 9,
+      "ref_save": 6,
+      "will_save": 4,
+      "xp_reward": 1200
+    },
+    "special_abilities": [
+      "Death Roll (2d6+13 plus Trip)",
+      "Grab",
+      "Tail Slap (1d12+4)",
+      "Sprint",
+      "Hold Breath"
+    ],
+    "terrains": [
+      "SWAMP",
+      "RIVER_LAKE"
+    ],
+    "recommended_regions": [
+      "UNDEAD_LANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 51",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Giant%20Crocodile",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar grab (Death Roll constrict) og trip í abilities.js."
+  },
+  {
+    "rank": 43,
+    "name": "Mimic",
+    "cr": 4,
+    "tier": "CR_1_4",
+    "creature_type": "Aberration",
+    "subtype": "shapechanger",
+    "creature_subtype": "shapechanger",
+    "monster_family": "ABERRATIONS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 52,
+      "ac": 16,
+      "touch_ac": 11,
+      "flat_footed_ac": 15,
+      "initiative_bonus": 5,
+      "attack_bonus": 10,
+      "damage_dice": "1d8+6",
+      "damage_bonus": 6,
+      "fort_save": 5,
+      "ref_save": 5,
+      "will_save": 6,
+      "xp_reward": 1200
+    },
+    "special_abilities": [
+      "Adhesive (Ref DC 16)",
+      "Constrict (1d8+6)",
+      "Mimic Object",
+      "Acid Immunity"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_CAVE",
+      "ANCIENT_CRYPT"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 204",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Mimic",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar openingStrike (Mimic Object surprise) og grab með constrictFormula í abilities.js."
+  },
+  {
+    "rank": 44,
+    "name": "Gray Ooze",
+    "cr": 4,
+    "tier": "CR_1_4",
+    "creature_type": "Ooze",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "OOZES",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 50,
+      "ac": 5,
+      "touch_ac": 5,
+      "flat_footed_ac": 5,
+      "initiative_bonus": -5,
+      "attack_bonus": 5,
+      "damage_dice": "1d6+3",
+      "damage_bonus": 3,
+      "fort_save": 8,
+      "ref_save": -4,
+      "will_save": -4,
+      "xp_reward": 1200
+    },
+    "special_abilities": [
+      "Acid (1d6 plus armor corrosion Ref DC 19)",
+      "Grab",
+      "Constrict (1d6+1 plus 1d6 acid)",
+      "Transparent",
+      "Cold & Fire Immunity",
+      "Ooze Traits"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "SWAMP"
+    ],
+    "recommended_regions": [
+      "GOBLIN_CAVE",
+      "ANCIENT_CRYPT",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 166",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Gray%20Ooze",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar elementalRider (acid), rust (corrosion) og grab í abilities.js."
+  },
+  {
+    "rank": 45,
+    "name": "Satyr",
+    "cr": 4,
+    "tier": "CR_1_4",
+    "creature_type": "Fey",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "FEY",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 44,
+      "ac": 18,
+      "touch_ac": 12,
+      "flat_footed_ac": 16,
+      "initiative_bonus": 2,
+      "attack_bonus": 6,
+      "damage_dice": "1d6+2",
+      "damage_bonus": 2,
+      "fort_save": 4,
+      "ref_save": 8,
+      "will_save": 8,
+      "xp_reward": 1200
+    },
+    "special_abilities": [
+      "DR 5/cold iron",
+      "Pipes (Fear/Sleep/Charm Will DC 16)",
+      "Woodland Stride",
+      "Low-Light Vision"
+    ],
+    "terrains": [
+      "FOREST",
+      "HILLS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 241",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Satyr",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar DR og combatStartAura (FEAR frá flautuleik) í abilities.js."
+  },
+  {
+    "rank": 46,
+    "name": "Bugbear Stalker",
+    "cr": 4,
+    "tier": "CR_1_4",
+    "creature_type": "Humanoid",
+    "subtype": "goblinoid",
+    "creature_subtype": "goblinoid",
+    "monster_family": "GOBLINOIDS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 42,
+      "ac": 19,
+      "touch_ac": 13,
+      "flat_footed_ac": 16,
+      "initiative_bonus": 6,
+      "attack_bonus": 8,
+      "damage_dice": "1d8+4",
+      "damage_bonus": 4,
+      "fort_save": 5,
+      "ref_save": 7,
+      "will_save": 3,
+      "xp_reward": 1200
+    },
+    "special_abilities": [
+      "Sneak Attack +2d6",
+      "Stalker Ambush",
+      "Intimidating Prowess",
+      "Scent",
+      "Darkvision 60 ft."
+    ],
+    "terrains": [
+      "FOREST",
+      "HILLS",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Monster Codex pg. 20",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Bugbear",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar openingStrike og combatStartAura (FEAR) í abilities.js."
+  },
+  {
+    "rank": 47,
+    "name": "Boggard Priest",
+    "cr": 4,
+    "tier": "CR_1_4",
+    "creature_type": "Humanoid",
+    "subtype": "boggard",
+    "creature_subtype": "boggard",
+    "monster_family": "AMPHIBIAN_HUMANOIDS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 41,
+      "ac": 17,
+      "touch_ac": 11,
+      "flat_footed_ac": 16,
+      "initiative_bonus": 1,
+      "attack_bonus": 7,
+      "damage_dice": "1d10+4",
+      "damage_bonus": 4,
+      "fort_save": 8,
+      "ref_save": 2,
+      "will_save": 6,
+      "xp_reward": 1200
+    },
+    "special_abilities": [
+      "Terrifying Croak (Will DC 15)",
+      "Sticky Tongue",
+      "Channel Negative Energy (2d6)",
+      "Swamp Stride"
+    ],
+    "terrains": [
+      "SWAMP",
+      "RIVER_LAKE"
+    ],
+    "recommended_regions": [
+      "UNDEAD_LANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 37",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Boggard",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar combatStartAura (FEAR), grab og cooldownSpecial (Channel Negative Energy) í abilities.js."
+  },
+  {
+    "rank": 48,
+    "name": "Allip",
+    "cr": 4,
+    "tier": "CR_1_4",
+    "creature_type": "Undead",
+    "subtype": "incorporeal",
+    "creature_subtype": "incorporeal",
+    "monster_family": "UNDEAD",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 30,
+      "ac": 14,
+      "touch_ac": 14,
+      "flat_footed_ac": 13,
+      "initiative_bonus": 5,
+      "attack_bonus": 4,
+      "damage_dice": "1d4",
+      "damage_bonus": 0,
+      "fort_save": 4,
+      "ref_save": 4,
+      "will_save": 4,
+      "xp_reward": 1200
+    },
+    "special_abilities": [
+      "Incorporeal",
+      "Babble (Fascinate Aura Will DC 15)",
+      "Touch of Insanity (1d4 Wis drain)",
+      "Channel Resistance +2",
+      "Madness"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "SWAMP"
+    ],
+    "recommended_regions": [
+      "ANCIENT_CRYPT",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 12",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Allip",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar evasion (INCORPOREAL), combatStartAura (FEAR/Babble) og drain í abilities.js."
+  },
+  {
+    "rank": 49,
+    "name": "Attic Whisperer",
+    "cr": 4,
+    "tier": "CR_1_4",
+    "creature_type": "Undead",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "UNDEAD",
+    "size_category": "Small",
+    "stats": {
+      "hp": 45,
+      "ac": 18,
+      "touch_ac": 16,
+      "flat_footed_ac": 13,
+      "initiative_bonus": 8,
+      "attack_bonus": 9,
+      "damage_dice": "1d4+2",
+      "damage_bonus": 2,
+      "fort_save": 5,
+      "ref_save": 6,
+      "will_save": 7,
+      "xp_reward": 1200
+    },
+    "special_abilities": [
+      "Aura of Sobbing (Will DC 16)",
+      "Steal Breath (Fort DC 16)",
+      "Steal Voice (Will DC 16)",
+      "Undead Traits"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "CITY"
+    ],
+    "recommended_regions": [
+      "ANCIENT_CRYPT",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 34",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Attic%20Whisperer",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar combatStartAura (Aura of Sobbing) og drain (Steal Breath) í abilities.js."
+  },
+  {
+    "rank": 50,
+    "name": "Caryatid Column",
+    "cr": 4,
+    "tier": "CR_1_4",
+    "creature_type": "Construct",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "CONSTRUCTS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 36,
+      "ac": 16,
+      "touch_ac": 10,
+      "flat_footed_ac": 16,
+      "initiative_bonus": 0,
+      "attack_bonus": 6,
+      "damage_dice": "1d8+3",
+      "damage_bonus": 3,
+      "fort_save": 1,
+      "ref_save": 1,
+      "will_save": 1,
+      "xp_reward": 1200
+    },
+    "special_abilities": [
+      "DR 5/-",
+      "Shatter Weapons (Ref DC 12)",
+      "Immunity to Magic",
+      "Statue",
+      "Construct Traits"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "ANCIENT_CRYPT",
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 46",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Caryatid%20Column",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar DR (NONE) og rust (Shatter Weapons) í abilities.js."
+  },
+  {
+    "rank": 51,
+    "name": "Crypt Thing",
+    "cr": 5,
+    "tier": "CR_5_8",
+    "creature_type": "Undead",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "UNDEAD",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 52,
+      "ac": 19,
+      "touch_ac": 13,
+      "flat_footed_ac": 16,
+      "initiative_bonus": 6,
+      "attack_bonus": 9,
+      "damage_dice": "1d8+2",
+      "damage_bonus": 2,
+      "fort_save": 4,
+      "ref_save": 6,
+      "will_save": 8,
+      "xp_reward": 1600
+    },
+    "special_abilities": [
+      "DR 10/magic or bludgeoning",
+      "Teleporting Burst (Will DC 17)",
+      "Channel Resistance +2",
+      "Quickened Ray of Exhaustion",
+      "Undead Traits"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "ANCIENT_CRYPT",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 62",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Crypt%20Thing",
+    "already_in_db": false,
+    "engine_support": "PARTIAL",
+    "implementation_complexity": "MEDIUM",
+    "complexity_reason": "DR og drain eru til; Teleporting Burst má útfæra sem disorienting aura eða flóttaþvingun."
+  },
+  {
+    "rank": 52,
+    "name": "Revenant",
+    "cr": 5,
+    "tier": "CR_5_8",
+    "creature_type": "Undead",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "UNDEAD",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 59,
+      "ac": 19,
+      "touch_ac": 12,
+      "flat_footed_ac": 17,
+      "initiative_bonus": 6,
+      "attack_bonus": 11,
+      "damage_dice": "1d8+5",
+      "damage_bonus": 5,
+      "fort_save": 6,
+      "ref_save": 4,
+      "will_save": 6,
+      "xp_reward": 1600
+    },
+    "special_abilities": [
+      "DR 5/slashing",
+      "Baleful Shriek (Will DC 17)",
+      "Grab",
+      "Constrict (1d8+5)",
+      "Reason to Hate",
+      "Undead Traits"
+    ],
+    "terrains": [
+      "SWAMP",
+      "UNDERGROUND_RUINS",
+      "HILLS"
+    ],
+    "recommended_regions": [
+      "UNDEAD_LANDS",
+      "ANCIENT_CRYPT"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 235",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Revenant",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar DR (S), combatStartAura (FEAR) og grab með constrictFormula í abilities.js."
+  },
+  {
+    "rank": 53,
+    "name": "Siren",
+    "cr": 5,
+    "tier": "CR_5_8",
+    "creature_type": "Magical Beast",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "TERRESTRIAL_MAGICAL_BEASTS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 52,
+      "ac": 18,
+      "touch_ac": 14,
+      "flat_footed_ac": 14,
+      "initiative_bonus": 8,
+      "attack_bonus": 12,
+      "damage_dice": "1d6+2",
+      "damage_bonus": 2,
+      "fort_save": 7,
+      "ref_save": 10,
+      "will_save": 8,
+      "xp_reward": 1600
+    },
+    "special_abilities": [
+      "Bardic Performance (Captivating Song Will DC 18)",
+      "Sneak Attack +2d6",
+      "Touch of Idiocy",
+      "Flight (60 ft.)"
+    ],
+    "terrains": [
+      "HILLS",
+      "MOUNTAINS",
+      "COAST"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 246",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Siren",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar combatStartAura (FEAR) og openingStrike í abilities.js (líkt og Harpy)."
+  },
+  {
+    "rank": 54,
+    "name": "Spider Eater",
+    "cr": 5,
+    "tier": "CR_5_8",
+    "creature_type": "Magical Beast",
+    "subtype": "insect",
+    "creature_subtype": "insect",
+    "monster_family": "ARACHNIDS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 57,
+      "ac": 18,
+      "touch_ac": 11,
+      "flat_footed_ac": 16,
+      "initiative_bonus": 2,
+      "attack_bonus": 10,
+      "damage_dice": "1d8+5",
+      "damage_bonus": 5,
+      "fort_save": 9,
+      "ref_save": 7,
+      "will_save": 6,
+      "xp_reward": 1600
+    },
+    "special_abilities": [
+      "Paralysis Poison (Sting DC 17, 1d6 rounds)",
+      "Implant",
+      "Freedom of Movement",
+      "Flight (60 ft.)"
+    ],
+    "terrains": [
+      "FOREST",
+      "HILLS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 252",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Spider%20Eater",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar paralysis og poison í abilities.js."
+  },
+  {
+    "rank": 55,
+    "name": "Scrag Troll",
+    "cr": 5,
+    "tier": "CR_5_8",
+    "creature_type": "Humanoid",
+    "subtype": "giant",
+    "creature_subtype": "giant",
+    "monster_family": "TROLLS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 63,
+      "ac": 16,
+      "touch_ac": 11,
+      "flat_footed_ac": 14,
+      "initiative_bonus": 2,
+      "attack_bonus": 8,
+      "damage_dice": "1d8+5",
+      "damage_bonus": 5,
+      "fort_save": 11,
+      "ref_save": 4,
+      "will_save": 3,
+      "xp_reward": 1600
+    },
+    "special_abilities": [
+      "Regeneration 5 (acid or fire)",
+      "Rend (2 claws 2d6+7)",
+      "Amphibious",
+      "Keen Scent"
+    ],
+    "terrains": [
+      "SWAMP",
+      "RIVER_LAKE",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "UNDEAD_LANDS",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 268",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Troll",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar regeneration og rend í abilities.js."
+  },
+  {
+    "rank": 56,
+    "name": "Cyclops",
+    "cr": 5,
+    "tier": "CR_5_8",
+    "creature_type": "Humanoid",
+    "subtype": "giant",
+    "creature_subtype": "giant",
+    "monster_family": "GIANTS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 65,
+      "ac": 19,
+      "touch_ac": 8,
+      "flat_footed_ac": 19,
+      "initiative_bonus": -1,
+      "attack_bonus": 11,
+      "damage_dice": "3d6+7",
+      "damage_bonus": 7,
+      "fort_save": 9,
+      "ref_save": 2,
+      "will_save": 4,
+      "xp_reward": 1600
+    },
+    "special_abilities": [
+      "Flash of Insight (1/day guaranteed natural 20)",
+      "Ferocity",
+      "Cleave",
+      "Power Attack",
+      "Low-Light Vision"
+    ],
+    "terrains": [
+      "HILLS",
+      "MOUNTAINS",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 52",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Cyclops",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar openingStrike (Flash of Insight) og ferocity í abilities.js."
+  },
+  {
+    "rank": 57,
+    "name": "Grimstalker",
+    "cr": 5,
+    "tier": "CR_5_8",
+    "creature_type": "Fey",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "FEY",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 45,
+      "ac": 19,
+      "touch_ac": 15,
+      "flat_footed_ac": 14,
+      "initiative_bonus": 8,
+      "attack_bonus": 8,
+      "damage_dice": "1d6+1",
+      "damage_bonus": 1,
+      "fort_save": 6,
+      "ref_save": 10,
+      "will_save": 6,
+      "xp_reward": 1600
+    },
+    "special_abilities": [
+      "DR 5/cold iron",
+      "Claw Poison (DC 17, 1d2 Dex)",
+      "Sneak Attack +3d6",
+      "Tree Climb",
+      "Woodland Stride"
+    ],
+    "terrains": [
+      "FOREST"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 148",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Grimstalker",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar DR, openingStrike (Sneak Attack) og poison í abilities.js."
+  },
+  {
+    "rank": 58,
+    "name": "Sabosan",
+    "cr": 5,
+    "tier": "CR_5_8",
+    "creature_type": "Monstrous Humanoid",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "MONSTROUS_HUMANOIDS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 52,
+      "ac": 18,
+      "touch_ac": 14,
+      "flat_footed_ac": 14,
+      "initiative_bonus": 7,
+      "attack_bonus": 10,
+      "damage_dice": "1d6+3",
+      "damage_bonus": 3,
+      "fort_save": 4,
+      "ref_save": 8,
+      "will_save": 7,
+      "xp_reward": 1600
+    },
+    "special_abilities": [
+      "Blood Drain (1d2 Con on grapple)",
+      "Grab",
+      "Blindsight 40 ft. (Echolocation)",
+      "Flight (40 ft.)"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "HILLS",
+      "MOUNTAINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_CAVE",
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 235",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Sabosan",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar grab og drain (Blood Drain) í abilities.js."
+  },
+  {
+    "rank": 59,
+    "name": "Emperor Cobra",
+    "cr": 5,
+    "tier": "CR_5_8",
+    "creature_type": "Animal",
+    "subtype": "reptilian",
+    "creature_subtype": "reptilian",
+    "monster_family": "ANIMALS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 51,
+      "ac": 18,
+      "touch_ac": 12,
+      "flat_footed_ac": 15,
+      "initiative_bonus": 7,
+      "attack_bonus": 8,
+      "damage_dice": "2d6+6",
+      "damage_bonus": 6,
+      "fort_save": 8,
+      "ref_save": 8,
+      "will_save": 5,
+      "xp_reward": 1600
+    },
+    "special_abilities": [
+      "Poison (Bite DC 17, 1d3 Con)",
+      "Swamp Stride",
+      "Scent",
+      "Low-Light Vision"
+    ],
+    "terrains": [
+      "SWAMP",
+      "FOREST"
+    ],
+    "recommended_regions": [
+      "UNDEAD_LANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 253",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Emperor%20Cobra",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar poison rider í abilities.js."
+  },
+  {
+    "rank": 60,
+    "name": "Sahuagin Mutant",
+    "cr": 5,
+    "tier": "CR_5_8",
+    "creature_type": "Monstrous Humanoid",
+    "subtype": "aquatic",
+    "creature_subtype": "aquatic",
+    "monster_family": "AMPHIBIAN_HUMANOIDS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 52,
+      "ac": 18,
+      "touch_ac": 12,
+      "flat_footed_ac": 16,
+      "initiative_bonus": 2,
+      "attack_bonus": 10,
+      "damage_dice": "1d8+5",
+      "damage_bonus": 5,
+      "fort_save": 6,
+      "ref_save": 7,
+      "will_save": 6,
+      "xp_reward": 1600
+    },
+    "special_abilities": [
+      "Four-Armed Multiattack",
+      "Blood Frenzy",
+      "Rend (2 claws 1d6+6)",
+      "Blindsense 30 ft."
+    ],
+    "terrains": [
+      "SWAMP",
+      "RIVER_LAKE",
+      "COAST"
+    ],
+    "recommended_regions": [
+      "UNDEAD_LANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 239",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Sahuagin",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar bloodFrenzy og rend (sama vélfræði og Sahuagin og Girallon)."
+  },
+  {
+    "rank": 61,
+    "name": "Army Ant Swarm",
+    "cr": 5,
+    "tier": "CR_5_8",
+    "creature_type": "Vermin",
+    "subtype": "swarm",
+    "creature_subtype": "swarm",
+    "monster_family": "VERMIN_INSECTS",
+    "size_category": "Tiny",
+    "stats": {
+      "hp": 49,
+      "ac": 18,
+      "touch_ac": 18,
+      "flat_footed_ac": 18,
+      "initiative_bonus": 0,
+      "attack_bonus": 8,
+      "damage_dice": "3d6",
+      "damage_bonus": 0,
+      "fort_save": 6,
+      "ref_save": 3,
+      "will_save": 4,
+      "xp_reward": 1600
+    },
+    "special_abilities": [
+      "Cling",
+      "Distraction (Fort DC 14)",
+      "Consume Flesh",
+      "Swarm Traits",
+      "Scent"
+    ],
+    "terrains": [
+      "FOREST",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 16",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Army%20Ant%20Swarm",
+    "already_in_db": false,
+    "engine_support": "PARTIAL",
+    "implementation_complexity": "MEDIUM",
+    "complexity_reason": "Notar bleed/attachDrain og combatStartAura (Distraction) ásamt DR fyrir swarm."
+  },
+  {
+    "rank": 62,
+    "name": "Basidirond",
+    "cr": 5,
+    "tier": "CR_5_8",
+    "creature_type": "Plant",
+    "subtype": "fungus",
+    "creature_subtype": "fungus",
+    "monster_family": "DANGEROUS_PLANTS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 52,
+      "ac": 18,
+      "touch_ac": 11,
+      "flat_footed_ac": 17,
+      "initiative_bonus": 1,
+      "attack_bonus": 10,
+      "damage_dice": "1d8+7",
+      "damage_bonus": 7,
+      "fort_save": 8,
+      "ref_save": 3,
+      "will_save": 2,
+      "xp_reward": 1600
+    },
+    "special_abilities": [
+      "Hallucination Cloud (20-ft. Aura Fort DC 16)",
+      "Spores (Disease Fort DC 16, 1d2 Con)",
+      "Cold Lethargy",
+      "Plant Traits"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "SWAMP"
+    ],
+    "recommended_regions": [
+      "GOBLIN_CAVE",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 28",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Basidirond",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar combatStartAura (Hallucination Cloud) og disease (Spores) í abilities.js."
+  },
+  {
+    "rank": 63,
+    "name": "Ettin",
+    "cr": 6,
+    "tier": "CR_5_8",
+    "creature_type": "Humanoid",
+    "subtype": "giant",
+    "creature_subtype": "giant",
+    "monster_family": "GIANTS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 65,
+      "ac": 18,
+      "touch_ac": 8,
+      "flat_footed_ac": 18,
+      "initiative_bonus": 3,
+      "attack_bonus": 12,
+      "damage_dice": "2d6+6",
+      "damage_bonus": 6,
+      "fort_save": 9,
+      "ref_save": 2,
+      "will_save": 5,
+      "xp_reward": 2400
+    },
+    "special_abilities": [
+      "Superior Two-Weapon Fighting (Dual Flails)",
+      "Javelin Volley",
+      "Keen Senses",
+      "Low-Light Vision"
+    ],
+    "terrains": [
+      "HILLS",
+      "MOUNTAINS",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 130",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Ettin",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar rend fyrir tvíhöfða flail-árás í abilities.js."
+  },
+  {
+    "rank": 64,
+    "name": "Rock Troll",
+    "cr": 6,
+    "tier": "CR_5_8",
+    "creature_type": "Humanoid",
+    "subtype": "giant",
+    "creature_subtype": "giant",
+    "monster_family": "TROLLS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 80,
+      "ac": 19,
+      "touch_ac": 10,
+      "flat_footed_ac": 18,
+      "initiative_bonus": 1,
+      "attack_bonus": 11,
+      "damage_dice": "1d8+7",
+      "damage_bonus": 7,
+      "fort_save": 12,
+      "ref_save": 3,
+      "will_save": 4,
+      "xp_reward": 2400
+    },
+    "special_abilities": [
+      "Regeneration 5 (acid or sonic)",
+      "Rend (2 claws 2d6+10)",
+      "Sunlight Petrification",
+      "Darkvision 60 ft."
+    ],
+    "terrains": [
+      "MOUNTAINS",
+      "HILLS",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 271",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Rock%20Troll",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar regeneration og rend í abilities.js."
+  },
+  {
+    "rank": 65,
+    "name": "Cave Giant",
+    "cr": 6,
+    "tier": "CR_5_8",
+    "creature_type": "Humanoid",
+    "subtype": "giant",
+    "creature_subtype": "giant",
+    "monster_family": "GIANTS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 67,
+      "ac": 19,
+      "touch_ac": 9,
+      "flat_footed_ac": 19,
+      "initiative_bonus": 0,
+      "attack_bonus": 12,
+      "damage_dice": "2d6+9",
+      "damage_bonus": 9,
+      "fort_save": 9,
+      "ref_save": 3,
+      "will_save": 3,
+      "xp_reward": 2400
+    },
+    "special_abilities": [
+      "Ferocity",
+      "Axe Wielder",
+      "Rock Catching",
+      "Light Sensitivity",
+      "Darkvision 120 ft."
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "MOUNTAINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_CAVE",
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 127",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Cave%20Giant",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar ferocity og openingStrike í abilities.js."
+  },
+  {
+    "rank": 66,
+    "name": "Tendriculos",
+    "cr": 6,
+    "tier": "CR_5_8",
+    "creature_type": "Plant",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "DANGEROUS_PLANTS",
+    "size_category": "Huge",
+    "stats": {
+      "hp": 76,
+      "ac": 17,
+      "touch_ac": 7,
+      "flat_footed_ac": 16,
+      "initiative_bonus": 1,
+      "attack_bonus": 13,
+      "damage_dice": "2d6+8",
+      "damage_bonus": 8,
+      "fort_save": 10,
+      "ref_save": 4,
+      "will_save": 5,
+      "xp_reward": 2400
+    },
+    "special_abilities": [
+      "Regeneration 10 (bludgeoning or acid)",
+      "Grab",
+      "Swallow Whole (2d6 acid + Paralysis Fort DC 18)",
+      "Plant Traits"
+    ],
+    "terrains": [
+      "FOREST",
+      "SWAMP"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 259",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Tendriculos",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar regeneration, grab, elementalRider (acid) og paralysis í abilities.js."
+  },
+  {
+    "rank": 67,
+    "name": "Redcap",
+    "cr": 6,
+    "tier": "CR_5_8",
+    "creature_type": "Fey",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "FEY",
+    "size_category": "Small",
+    "stats": {
+      "hp": 60,
+      "ac": 20,
+      "touch_ac": 15,
+      "flat_footed_ac": 15,
+      "initiative_bonus": 8,
+      "attack_bonus": 12,
+      "damage_dice": "2d4+10",
+      "damage_bonus": 10,
+      "fort_save": 8,
+      "ref_save": 10,
+      "will_save": 7,
+      "xp_reward": 2400
+    },
+    "special_abilities": [
+      "DR 10/cold iron",
+      "Fast Healing 3",
+      "Red Cap (+4 Damage)",
+      "Boot Stomp",
+      "Irreligious"
+    ],
+    "terrains": [
+      "FOREST",
+      "HILLS",
+      "MOUNTAINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 233",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Redcap",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar DR, regeneration (Fast Healing 3) og rend (Boot Stomp) í abilities.js."
+  },
+  {
+    "rank": 68,
+    "name": "Rusalka",
+    "cr": 6,
+    "tier": "CR_5_8",
+    "creature_type": "Fey",
+    "subtype": "aquatic",
+    "creature_subtype": "aquatic",
+    "monster_family": "FEY",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 68,
+      "ac": 19,
+      "touch_ac": 17,
+      "flat_footed_ac": 15,
+      "initiative_bonus": 7,
+      "attack_bonus": 12,
+      "damage_dice": "1d6+2",
+      "damage_bonus": 2,
+      "fort_save": 7,
+      "ref_save": 9,
+      "will_save": 8,
+      "xp_reward": 2400
+    },
+    "special_abilities": [
+      "DR 10/cold iron",
+      "Beckoning Call (Will DC 19)",
+      "Tresses (15-ft. Grab & Constrict 1d6+2)",
+      "Staggering Touch",
+      "Blur"
+    ],
+    "terrains": [
+      "RIVER_LAKE",
+      "SWAMP"
+    ],
+    "recommended_regions": [
+      "UNDEAD_LANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 232",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Rusalka",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar DR, evasion (BLINK fyrir Blur), combatStartAura og grab í abilities.js."
+  },
+  {
+    "rank": 69,
+    "name": "Lamia",
+    "cr": 6,
+    "tier": "CR_5_8",
+    "creature_type": "Monstrous Humanoid",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "MONSTROUS_HUMANOIDS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 67,
+      "ac": 18,
+      "touch_ac": 13,
+      "flat_footed_ac": 14,
+      "initiative_bonus": 3,
+      "attack_bonus": 13,
+      "damage_dice": "1d4+4",
+      "damage_bonus": 4,
+      "fort_save": 7,
+      "ref_save": 9,
+      "will_save": 9,
+      "xp_reward": 2400
+    },
+    "special_abilities": [
+      "Wisdom Drain (1d4 Wis on touch)",
+      "Charm Monster & Deep Slumber SLAs",
+      "Mirror Image",
+      "Undersized Weapons"
+    ],
+    "terrains": [
+      "HILLS",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "ANCIENT_CRYPT"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 186",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Lamia",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar drain (Wisdom Drain) og evasion (SHADOW_SHIFT fyrir Mirror Image) í abilities.js."
+  },
+  {
+    "rank": 70,
+    "name": "Annis Hag",
+    "cr": 6,
+    "tier": "CR_5_8",
+    "creature_type": "Monstrous Humanoid",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "MONSTROUS_HUMANOIDS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 66,
+      "ac": 20,
+      "touch_ac": 10,
+      "flat_footed_ac": 19,
+      "initiative_bonus": 1,
+      "attack_bonus": 13,
+      "damage_dice": "1d6+7",
+      "damage_bonus": 7,
+      "fort_save": 8,
+      "ref_save": 6,
+      "will_save": 6,
+      "xp_reward": 2400
+    },
+    "special_abilities": [
+      "DR 5/bludgeoning",
+      "Spell Resistance 17",
+      "Grab",
+      "Rend (2 claws 2d6+10)",
+      "Fog Cloud SLA"
+    ],
+    "terrains": [
+      "SWAMP",
+      "HILLS",
+      "FOREST"
+    ],
+    "recommended_regions": [
+      "UNDEAD_LANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 17",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Annis%20Hag",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar DR (B), grab og rend í abilities.js."
+  },
+  {
+    "rank": 71,
+    "name": "Wood Golem",
+    "cr": 6,
+    "tier": "CR_5_8",
+    "creature_type": "Construct",
+    "subtype": "golem",
+    "creature_subtype": "golem",
+    "monster_family": "CONSTRUCTS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 64,
+      "ac": 19,
+      "touch_ac": 13,
+      "flat_footed_ac": 16,
+      "initiative_bonus": 3,
+      "attack_bonus": 11,
+      "damage_dice": "2d6+3",
+      "damage_bonus": 3,
+      "fort_save": 2,
+      "ref_save": 5,
+      "will_save": 5,
+      "xp_reward": 2400
+    },
+    "special_abilities": [
+      "DR 5/adamantine",
+      "Immunity to Magic",
+      "Splintering Volley (6d6 slashing, Ref DC 14)",
+      "Vulnerable to Fire",
+      "Construct Traits"
+    ],
+    "terrains": [
+      "FOREST",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "ANCIENT_CRYPT"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 164",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Wood%20Golem",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar DR og cooldownSpecial (Splintering Volley) í abilities.js."
+  },
+  {
+    "rank": 72,
+    "name": "Deathweb",
+    "cr": 6,
+    "tier": "CR_5_8",
+    "creature_type": "Undead",
+    "subtype": "arachnid",
+    "creature_subtype": "arachnid",
+    "monster_family": "UNDEAD",
+    "size_category": "Large",
+    "stats": {
+      "hp": 71,
+      "ac": 18,
+      "touch_ac": 11,
+      "flat_footed_ac": 16,
+      "initiative_bonus": 6,
+      "attack_bonus": 12,
+      "damage_dice": "2d8+7",
+      "damage_bonus": 7,
+      "fort_save": 5,
+      "ref_save": 5,
+      "will_save": 8,
+      "xp_reward": 2400
+    },
+    "special_abilities": [
+      "Infestation Aura (1d6 plus Poison DC 17 & Nausea)",
+      "Web (+9 ranged, DC 17)",
+      "Compression",
+      "Undead Traits"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "FOREST",
+      "SWAMP"
+    ],
+    "recommended_regions": [
+      "ANCIENT_CRYPT",
+      "GOBLIN_CAVE",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 66",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Deathweb",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar combatStartAura (ENTANGLE/STENCH) og poison í abilities.js."
+  },
+  {
+    "rank": 73,
+    "name": "Sea Drake",
+    "cr": 6,
+    "tier": "CR_5_8",
+    "creature_type": "Dragon",
+    "subtype": "aquatic",
+    "creature_subtype": "aquatic",
+    "monster_family": "DRAGONS_DRAKES",
+    "size_category": "Large",
+    "stats": {
+      "hp": 68,
+      "ac": 19,
+      "touch_ac": 10,
+      "flat_footed_ac": 18,
+      "initiative_bonus": 5,
+      "attack_bonus": 11,
+      "damage_dice": "1d8+6",
+      "damage_bonus": 6,
+      "fort_save": 8,
+      "ref_save": 7,
+      "will_save": 6,
+      "xp_reward": 2400
+    },
+    "special_abilities": [
+      "Ball Lightning Breath (6d6 electricity, Ref DC 16)",
+      "Speed Surge",
+      "Amphibious",
+      "Electricity Immunity",
+      "Flight"
+    ],
+    "terrains": [
+      "COAST",
+      "RIVER_LAKE",
+      "HILLS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 110",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Sea%20Drake",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar elementalRider (electricity) og cooldownSpecial (Ball Lightning) í abilities.js."
+  },
+  {
+    "rank": 74,
+    "name": "Woolly Rhinoceros",
+    "cr": 6,
+    "tier": "CR_5_8",
+    "creature_type": "Animal",
+    "subtype": "megafauna",
+    "creature_subtype": "megafauna",
+    "monster_family": "ANIMALS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 76,
+      "ac": 19,
+      "touch_ac": 9,
+      "flat_footed_ac": 19,
+      "initiative_bonus": 0,
+      "attack_bonus": 14,
+      "damage_dice": "2d8+13",
+      "damage_bonus": 13,
+      "fort_save": 13,
+      "ref_save": 6,
+      "will_save": 3,
+      "xp_reward": 2400
+    },
+    "special_abilities": [
+      "Powerful Charge (4d8+18)",
+      "Trample (2d6+13, DC 23)",
+      "Scent",
+      "Low-Light Vision"
+    ],
+    "terrains": [
+      "HILLS",
+      "MOUNTAINS",
+      "PLAINS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 235",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Woolly%20Rhinoceros",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar openingStrike (Powerful Charge) og trip í abilities.js."
+  },
+  {
+    "rank": 75,
+    "name": "Seugathi",
+    "cr": 6,
+    "tier": "CR_5_8",
+    "creature_type": "Aberration",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "ABERRATIONS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 66,
+      "ac": 19,
+      "touch_ac": 13,
+      "flat_footed_ac": 15,
+      "initiative_bonus": 7,
+      "attack_bonus": 10,
+      "damage_dice": "2d6+3",
+      "damage_bonus": 3,
+      "fort_save": 5,
+      "ref_save": 6,
+      "will_save": 10,
+      "xp_reward": 2400
+    },
+    "special_abilities": [
+      "Aura of Madness (30-ft. Confusion Will DC 16)",
+      "Bite Poison (DC 16, 1d2 Wis)",
+      "Fast Healing 5",
+      "Spell Resistance 17"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "ANCIENT_CRYPT",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 244",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Seugathi",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar combatStartAura (FEAR/Madness), poison og regeneration (Fast Healing) í abilities.js."
+  },
+  {
+    "rank": 76,
+    "name": "Hill Giant",
+    "cr": 7,
+    "tier": "CR_5_8",
+    "creature_type": "Humanoid",
+    "subtype": "giant",
+    "creature_subtype": "giant",
+    "monster_family": "GIANTS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 85,
+      "ac": 21,
+      "touch_ac": 8,
+      "flat_footed_ac": 21,
+      "initiative_bonus": -1,
+      "attack_bonus": 14,
+      "damage_dice": "2d8+10",
+      "damage_bonus": 10,
+      "fort_save": 11,
+      "ref_save": 2,
+      "will_save": 3,
+      "xp_reward": 3200
+    },
+    "special_abilities": [
+      "Rock Throwing (120 ft., 1d8+10)",
+      "Rock Catching",
+      "Cleave",
+      "Power Attack",
+      "Low-Light Vision"
+    ],
+    "terrains": [
+      "HILLS",
+      "MOUNTAINS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 150",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Hill%20Giant",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar openingStrike (Rock Throwing / Greatclub Smash) í abilities.js."
+  },
+  {
+    "rank": 77,
+    "name": "Dire Bear",
+    "cr": 7,
+    "tier": "CR_5_8",
+    "creature_type": "Animal",
+    "subtype": "ursine",
+    "creature_subtype": "ursine",
+    "monster_family": "ANIMALS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 95,
+      "ac": 18,
+      "touch_ac": 10,
+      "flat_footed_ac": 17,
+      "initiative_bonus": 5,
+      "attack_bonus": 13,
+      "damage_dice": "1d8+7",
+      "damage_bonus": 7,
+      "fort_save": 12,
+      "ref_save": 8,
+      "will_save": 4,
+      "xp_reward": 3200
+    },
+    "special_abilities": [
+      "Grab",
+      "Crushing Maul",
+      "Scent",
+      "Low-Light Vision"
+    ],
+    "terrains": [
+      "FOREST",
+      "HILLS",
+      "MOUNTAINS",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "GOBLIN_FOREST",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 31",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Dire%20Bear%20(Cave%20Bear)",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar grab og rend í abilities.js."
+  },
+  {
+    "rank": 78,
+    "name": "Chimera",
+    "cr": 7,
+    "tier": "CR_5_8",
+    "creature_type": "Magical Beast",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "AVIAN_CHIMERAS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 85,
+      "ac": 19,
+      "touch_ac": 10,
+      "flat_footed_ac": 18,
+      "initiative_bonus": 5,
+      "attack_bonus": 12,
+      "damage_dice": "2d6+4",
+      "damage_bonus": 4,
+      "fort_save": 9,
+      "ref_save": 7,
+      "will_save": 6,
+      "xp_reward": 3200
+    },
+    "special_abilities": [
+      "Breath Weapon (3d8 elemental cone/line every 1d4 rounds, Ref DC 17)",
+      "Three-Headed Fury (Dragon Bite, Lion Bite, Goat Horns)",
+      "Flight (50 ft.)",
+      "Scent"
+    ],
+    "terrains": [
+      "HILLS",
+      "MOUNTAINS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 44",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Chimera",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar cooldownSpecial (Breath Weapon) og rend (Three-Headed Bite) í abilities.js."
+  },
+  {
+    "rank": 79,
+    "name": "Bulette",
+    "cr": 7,
+    "tier": "CR_5_8",
+    "creature_type": "Magical Beast",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "TERRESTRIAL_MAGICAL_BEASTS",
+    "size_category": "Huge",
+    "stats": {
+      "hp": 84,
+      "ac": 22,
+      "touch_ac": 10,
+      "flat_footed_ac": 20,
+      "initiative_bonus": 6,
+      "attack_bonus": 13,
+      "damage_dice": "2d8+9",
+      "damage_bonus": 9,
+      "fort_save": 11,
+      "ref_save": 8,
+      "will_save": 5,
+      "xp_reward": 3200
+    },
+    "special_abilities": [
+      "Leap (4 claw attacks at +15)",
+      "Savage Bite (19-20/x3)",
+      "Burrow (20 ft.)",
+      "Tremorsense 60 ft."
+    ],
+    "terrains": [
+      "HILLS",
+      "PLAINS",
+      "MOUNTAINS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 39",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Bulette",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar openingStrike (Burrowing Leap) og rend í abilities.js."
+  },
+  {
+    "rank": 80,
+    "name": "Medusa",
+    "cr": 7,
+    "tier": "CR_5_8",
+    "creature_type": "Monstrous Humanoid",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "MONSTROUS_HUMANOIDS",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 76,
+      "ac": 15,
+      "touch_ac": 12,
+      "flat_footed_ac": 13,
+      "initiative_bonus": 6,
+      "attack_bonus": 11,
+      "damage_dice": "1d8+2",
+      "damage_bonus": 2,
+      "fort_save": 6,
+      "ref_save": 8,
+      "will_save": 7,
+      "xp_reward": 3200
+    },
+    "special_abilities": [
+      "Petrifying Gaze (30 ft., Fort DC 18)",
+      "Snake Bite Poison (DC 18, 1d3 Str)",
+      "All-Around Vision",
+      "Darkvision 60 ft."
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "HILLS",
+      "SWAMP"
+    ],
+    "recommended_regions": [
+      "ANCIENT_CRYPT",
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 201",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Medusa",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar calcify (Petrifying Gaze, eins og Basilisk/Cockatrice) og poison í abilities.js."
+  },
+  {
+    "rank": 81,
+    "name": "Chuul",
+    "cr": 7,
+    "tier": "CR_5_8",
+    "creature_type": "Aberration",
+    "subtype": "aquatic",
+    "creature_subtype": "aquatic",
+    "monster_family": "ABERRATIONS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 85,
+      "ac": 22,
+      "touch_ac": 12,
+      "flat_footed_ac": 19,
+      "initiative_bonus": 7,
+      "attack_bonus": 14,
+      "damage_dice": "2d6+7",
+      "damage_bonus": 7,
+      "fort_save": 7,
+      "ref_save": 6,
+      "will_save": 9,
+      "xp_reward": 3200
+    },
+    "special_abilities": [
+      "Grab",
+      "Constrict (2d6+7)",
+      "Paralytic Tentacles (6 rounds, Fort DC 19)",
+      "Amphibious",
+      "Poison Immunity"
+    ],
+    "terrains": [
+      "SWAMP",
+      "RIVER_LAKE",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "UNDEAD_LANDS",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 46",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Chuul",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar grab (með constrictFormula) og paralysis í abilities.js."
+  },
+  {
+    "rank": 82,
+    "name": "Drider",
+    "cr": 7,
+    "tier": "CR_5_8",
+    "creature_type": "Aberration",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "ABERRATIONS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 76,
+      "ac": 20,
+      "touch_ac": 11,
+      "flat_footed_ac": 18,
+      "initiative_bonus": 2,
+      "attack_bonus": 9,
+      "damage_dice": "1d8+3",
+      "damage_bonus": 3,
+      "fort_save": 7,
+      "ref_save": 5,
+      "will_save": 9,
+      "xp_reward": 3200
+    },
+    "special_abilities": [
+      "Poison (Bite DC 18, 1d2 Str)",
+      "Web (+7 ranged, DC 18)",
+      "Spell Resistance 18",
+      "Cleric/Wizard 6th Spellcasting",
+      "Darkvision 120 ft."
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_CAVE",
+      "ANCIENT_CRYPT"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 113",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Drider",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar combatStartAura (ENTANGLE/Web) og poison í abilities.js."
+  },
+  {
+    "rank": 83,
+    "name": "Black Pudding",
+    "cr": 7,
+    "tier": "CR_5_8",
+    "creature_type": "Ooze",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "OOZES",
+    "size_category": "Huge",
+    "stats": {
+      "hp": 105,
+      "ac": 3,
+      "touch_ac": 3,
+      "flat_footed_ac": 3,
+      "initiative_bonus": -5,
+      "attack_bonus": 8,
+      "damage_dice": "2d6+4",
+      "damage_bonus": 4,
+      "fort_save": 9,
+      "ref_save": -2,
+      "will_save": -2,
+      "xp_reward": 3200
+    },
+    "special_abilities": [
+      "Acid (2d6 plus dissolves metal/leather Ref DC 21)",
+      "Grab",
+      "Constrict (2d6+4 plus 2d6 acid)",
+      "Split (slashing/piercing)",
+      "Suction",
+      "Ooze Traits"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_CAVE",
+      "ANCIENT_CRYPT"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 35",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Black%20Pudding",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar splitMitigation, elementalRider (acid), rust og grab í abilities.js (líkt og Ochre Jelly)."
+  },
+  {
+    "rank": 84,
+    "name": "Spectre",
+    "cr": 7,
+    "tier": "CR_5_8",
+    "creature_type": "Undead",
+    "subtype": "incorporeal",
+    "creature_subtype": "incorporeal",
+    "monster_family": "UNDEAD",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 52,
+      "ac": 15,
+      "touch_ac": 15,
+      "flat_footed_ac": 12,
+      "initiative_bonus": 7,
+      "attack_bonus": 10,
+      "damage_dice": "1d8",
+      "damage_bonus": 0,
+      "fort_save": 4,
+      "ref_save": 5,
+      "will_save": 9,
+      "xp_reward": 3200
+    },
+    "special_abilities": [
+      "Incorporeal",
+      "Energy Drain (2 levels, Fort DC 16)",
+      "Unnatural Aura (30 ft.)",
+      "Create Spawn",
+      "Channel Resistance +2",
+      "Sunlight Powerlessness"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "SWAMP"
+    ],
+    "recommended_regions": [
+      "ANCIENT_CRYPT",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 256",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Spectre",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar evasion (INCORPOREAL), combatStartAura (FEAR) og drain í abilities.js."
+  },
+  {
+    "rank": 85,
+    "name": "Ghost",
+    "cr": 7,
+    "tier": "CR_5_8",
+    "creature_type": "Undead",
+    "subtype": "incorporeal",
+    "creature_subtype": "incorporeal",
+    "monster_family": "UNDEAD",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 73,
+      "ac": 17,
+      "touch_ac": 17,
+      "flat_footed_ac": 12,
+      "initiative_bonus": 5,
+      "attack_bonus": 10,
+      "damage_dice": "3d6",
+      "damage_bonus": 0,
+      "fort_save": 7,
+      "ref_save": 9,
+      "will_save": 7,
+      "xp_reward": 3200
+    },
+    "special_abilities": [
+      "Incorporeal",
+      "Corrupting Touch",
+      "Draining Touch (1d4 ability drain)",
+      "Frightful Moan (30-ft. Panic Will DC 18)",
+      "Channel Resistance +4",
+      "Rejuvenation"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "SWAMP"
+    ],
+    "recommended_regions": [
+      "ANCIENT_CRYPT",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 144",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Ghost",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar evasion (INCORPOREAL), combatStartAura (Frightful Moan) og drain í abilities.js."
+  },
+  {
+    "rank": 86,
+    "name": "Nymph",
+    "cr": 7,
+    "tier": "CR_5_8",
+    "creature_type": "Fey",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "FEY",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 60,
+      "ac": 23,
+      "touch_ac": 23,
+      "flat_footed_ac": 17,
+      "initiative_bonus": 5,
+      "attack_bonus": 10,
+      "damage_dice": "1d4+2",
+      "damage_bonus": 2,
+      "fort_save": 12,
+      "ref_save": 17,
+      "will_save": 15,
+      "xp_reward": 3200
+    },
+    "special_abilities": [
+      "DR 10/cold iron",
+      "Blinding Beauty (30-ft. Fort DC 21)",
+      "Stunning Glance (Fort DC 21)",
+      "Unearthly Grace",
+      "Druid 7th Spells"
+    ],
+    "terrains": [
+      "FOREST",
+      "RIVER_LAKE"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 217",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Nymph",
+    "already_in_db": false,
+    "engine_support": "PARTIAL",
+    "implementation_complexity": "MEDIUM",
+    "complexity_reason": "Notar DR, combatStartAura (Blinding Beauty) og paralysis (Stunning Glance) í abilities.js."
+  },
+  {
+    "rank": 87,
+    "name": "Frost Drake",
+    "cr": 7,
+    "tier": "CR_5_8",
+    "creature_type": "Dragon",
+    "subtype": "cold",
+    "creature_subtype": "cold",
+    "monster_family": "DRAGONS_DRAKES",
+    "size_category": "Large",
+    "stats": {
+      "hp": 84,
+      "ac": 20,
+      "touch_ac": 10,
+      "flat_footed_ac": 19,
+      "initiative_bonus": 5,
+      "attack_bonus": 12,
+      "damage_dice": "2d6+5",
+      "damage_bonus": 5,
+      "fort_save": 10,
+      "ref_save": 7,
+      "will_save": 5,
+      "xp_reward": 3200
+    },
+    "special_abilities": [
+      "Freezing Mist Breath (7d6 cold + ice sheet, Ref DC 18)",
+      "Speed Surge",
+      "Icewalking",
+      "Cold Immunity",
+      "Vulnerable to Fire",
+      "Flight"
+    ],
+    "terrains": [
+      "MOUNTAINS",
+      "HILLS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 108",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Frost%20Drake",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar elementalRider (cold) og cooldownSpecial (Freezing Mist Breath) í abilities.js."
+  },
+  {
+    "rank": 88,
+    "name": "Dullahan",
+    "cr": 7,
+    "tier": "CR_5_8",
+    "creature_type": "Undead",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "UNDEAD",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 85,
+      "ac": 21,
+      "touch_ac": 11,
+      "flat_footed_ac": 20,
+      "initiative_bonus": 5,
+      "attack_bonus": 14,
+      "damage_dice": "1d8+7",
+      "damage_bonus": 7,
+      "fort_save": 9,
+      "ref_save": 4,
+      "will_save": 9,
+      "xp_reward": 3200
+    },
+    "special_abilities": [
+      "DR 5/bludgeoning",
+      "Spell Resistance 18",
+      "Fast Healing 5",
+      "Frightful Presence (Will DC 19)",
+      "Chilling Keen Blade (+2d6 cold)",
+      "Blindsight 60 ft."
+    ],
+    "terrains": [
+      "SWAMP",
+      "HILLS",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "UNDEAD_LANDS",
+      "ANCIENT_CRYPT"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 100",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Dullahan",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar DR (B), regeneration (Fast Healing), combatStartAura (FEAR) og elementalRider (cold) í abilities.js."
+  },
+  {
+    "rank": 89,
+    "name": "Dire Tiger",
+    "cr": 8,
+    "tier": "CR_5_8",
+    "creature_type": "Animal",
+    "subtype": "feline",
+    "creature_subtype": "feline",
+    "monster_family": "ANIMALS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 105,
+      "ac": 17,
+      "touch_ac": 11,
+      "flat_footed_ac": 15,
+      "initiative_bonus": 6,
+      "attack_bonus": 18,
+      "damage_dice": "2d6+8",
+      "damage_bonus": 8,
+      "fort_save": 12,
+      "ref_save": 11,
+      "will_save": 5,
+      "xp_reward": 4800
+    },
+    "special_abilities": [
+      "Pounce",
+      "Grab",
+      "Rake (2 claws 2d4+8)",
+      "Improved Critical (Bite)",
+      "Scent"
+    ],
+    "terrains": [
+      "FOREST",
+      "HILLS",
+      "MOUNTAINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 265",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Dire%20Tiger%20(Smilodon)",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar openingStrike (Pounce), grab og rend (Rake) í abilities.js."
+  },
+  {
+    "rank": 90,
+    "name": "Gorgon",
+    "cr": 8,
+    "tier": "CR_5_8",
+    "creature_type": "Magical Beast",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "TERRESTRIAL_MAGICAL_BEASTS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 100,
+      "ac": 20,
+      "touch_ac": 9,
+      "flat_footed_ac": 20,
+      "initiative_bonus": -1,
+      "attack_bonus": 14,
+      "damage_dice": "2d8+7",
+      "damage_bonus": 7,
+      "fort_save": 13,
+      "ref_save": 5,
+      "will_save": 6,
+      "xp_reward": 4800
+    },
+    "special_abilities": [
+      "Petrifying Breath (60-ft. cone, Fort DC 21)",
+      "Trample (2d8+10, DC 21)",
+      "Gore Charge",
+      "Scent"
+    ],
+    "terrains": [
+      "HILLS",
+      "MOUNTAINS",
+      "PLAINS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 165",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Gorgon",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar calcify (Petrifying Breath) og openingStrike (Trample) í abilities.js."
+  },
+  {
+    "rank": 91,
+    "name": "Treant",
+    "cr": 8,
+    "tier": "CR_5_8",
+    "creature_type": "Plant",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "DANGEROUS_PLANTS",
+    "size_category": "Huge",
+    "stats": {
+      "hp": 114,
+      "ac": 21,
+      "touch_ac": 7,
+      "flat_footed_ac": 21,
+      "initiative_bonus": -1,
+      "attack_bonus": 16,
+      "damage_dice": "2d6+9",
+      "damage_bonus": 9,
+      "fort_save": 13,
+      "ref_save": 3,
+      "will_save": 9,
+      "xp_reward": 4800
+    },
+    "special_abilities": [
+      "DR 10/slashing",
+      "Animate Trees",
+      "Rock Throwing (180 ft., 2d6+9)",
+      "Trample (2d6+13, DC 25)",
+      "Vulnerable to Fire",
+      "Plant Traits"
+    ],
+    "terrains": [
+      "FOREST"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 266",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Treant",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar DR (S), combatStartAura (ENTANGLE) og openingStrike í abilities.js."
+  },
+  {
+    "rank": 92,
+    "name": "Stone Giant",
+    "cr": 8,
+    "tier": "CR_5_8",
+    "creature_type": "Humanoid",
+    "subtype": "giant",
+    "creature_subtype": "giant",
+    "monster_family": "GIANTS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 102,
+      "ac": 22,
+      "touch_ac": 11,
+      "flat_footed_ac": 20,
+      "initiative_bonus": 2,
+      "attack_bonus": 16,
+      "damage_dice": "2d8+12",
+      "damage_bonus": 12,
+      "fort_save": 12,
+      "ref_save": 6,
+      "will_save": 7,
+      "xp_reward": 4800
+    },
+    "special_abilities": [
+      "Rock Throwing (180 ft., 1d8+12)",
+      "Improved Rock Catching",
+      "Power Attack",
+      "Darkvision 60 ft."
+    ],
+    "terrains": [
+      "MOUNTAINS",
+      "HILLS",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 151",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Stone%20Giant",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar openingStrike og cooldownSpecial (Rock Barrage) í abilities.js."
+  },
+  {
+    "rank": 93,
+    "name": "Bone Golem",
+    "cr": 8,
+    "tier": "CR_5_8",
+    "creature_type": "Construct",
+    "subtype": "golem",
+    "creature_subtype": "golem",
+    "monster_family": "CONSTRUCTS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 90,
+      "ac": 21,
+      "touch_ac": 11,
+      "flat_footed_ac": 19,
+      "initiative_bonus": 6,
+      "attack_bonus": 16,
+      "damage_dice": "2d6+6",
+      "damage_bonus": 6,
+      "fort_save": 3,
+      "ref_save": 5,
+      "will_save": 3,
+      "xp_reward": 4800
+    },
+    "special_abilities": [
+      "DR 5/adamantine and bludgeoning",
+      "Immunity to Magic",
+      "Bone Prison (Ranged Touch Entangle/Pin)",
+      "Construct Traits"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "ANCIENT_CRYPT",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 134",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Bone%20Golem",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar DR (B) og grab (Bone Prison) í abilities.js."
+  },
+  {
+    "rank": 94,
+    "name": "Mohrg",
+    "cr": 8,
+    "tier": "CR_5_8",
+    "creature_type": "Undead",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "UNDEAD",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 91,
+      "ac": 23,
+      "touch_ac": 15,
+      "flat_footed_ac": 18,
+      "initiative_bonus": 8,
+      "attack_bonus": 15,
+      "damage_dice": "2d8+5",
+      "damage_bonus": 5,
+      "fort_save": 6,
+      "ref_save": 10,
+      "will_save": 9,
+      "xp_reward": 4800
+    },
+    "special_abilities": [
+      "Paralysis (Tongue Touch, 1d4 minutes, Fort DC 21)",
+      "Grab",
+      "Create Spawn (Fast Zombies)",
+      "Undead Traits"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "SWAMP"
+    ],
+    "recommended_regions": [
+      "ANCIENT_CRYPT",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 208",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Mohrg",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar grab og paralysis í abilities.js."
+  },
+  {
+    "rank": 95,
+    "name": "Bodak",
+    "cr": 8,
+    "tier": "CR_5_8",
+    "creature_type": "Undead",
+    "subtype": "extraplanar",
+    "creature_subtype": "extraplanar",
+    "monster_family": "UNDEAD",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 85,
+      "ac": 20,
+      "touch_ac": 12,
+      "flat_footed_ac": 18,
+      "initiative_bonus": 6,
+      "attack_bonus": 11,
+      "damage_dice": "1d8+3",
+      "damage_bonus": 3,
+      "fort_save": 7,
+      "ref_save": 5,
+      "will_save": 9,
+      "xp_reward": 4800
+    },
+    "special_abilities": [
+      "DR 10/cold iron",
+      "Death Gaze (30 ft., 1d4 negative levels, Fort DC 19)",
+      "Electricity Immunity",
+      "Vulnerability to Sunlight",
+      "Undead Traits"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "SWAMP"
+    ],
+    "recommended_regions": [
+      "ANCIENT_CRYPT",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 48",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Bodak",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar DR og drain (Death Gaze negative levels) í abilities.js."
+  },
+  {
+    "rank": 96,
+    "name": "Greater Shadow",
+    "cr": 8,
+    "tier": "CR_5_8",
+    "creature_type": "Undead",
+    "subtype": "incorporeal",
+    "creature_subtype": "incorporeal",
+    "monster_family": "UNDEAD",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 58,
+      "ac": 18,
+      "touch_ac": 18,
+      "flat_footed_ac": 13,
+      "initiative_bonus": 5,
+      "attack_bonus": 11,
+      "damage_dice": "1d8",
+      "damage_bonus": 0,
+      "fort_save": 5,
+      "ref_save": 8,
+      "will_save": 7,
+      "xp_reward": 4800
+    },
+    "special_abilities": [
+      "Incorporeal",
+      "Strength Damage (1d8 Str)",
+      "Channel Resistance +2",
+      "Create Spawn",
+      "Flight (40 ft.)",
+      "Undead Traits"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "ANCIENT_CRYPT",
+      "UNDEAD_LANDS"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 245",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Greater%20Shadow",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar evasion (INCORPOREAL) og drain (sama vélfræði og Shadow á hærra CR)."
+  },
+  {
+    "rank": 97,
+    "name": "Intellect Devourer",
+    "cr": 8,
+    "tier": "CR_5_8",
+    "creature_type": "Aberration",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "ABERRATIONS",
+    "size_category": "Small",
+    "stats": {
+      "hp": 84,
+      "ac": 22,
+      "touch_ac": 17,
+      "flat_footed_ac": 16,
+      "initiative_bonus": 10,
+      "attack_bonus": 13,
+      "damage_dice": "1d4+1",
+      "damage_bonus": 1,
+      "fort_save": 7,
+      "ref_save": 8,
+      "will_save": 9,
+      "xp_reward": 4800
+    },
+    "special_abilities": [
+      "DR 10/adamantine and magic",
+      "Spell Resistance 23",
+      "Sneak Attack +3d6",
+      "Body Thief",
+      "Confusion & Daze Monster SLAs",
+      "Blindsight 60 ft."
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "ANCIENT_CRYPT",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 180",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Intellect%20Devourer",
+    "already_in_db": false,
+    "engine_support": "PARTIAL",
+    "implementation_complexity": "MEDIUM",
+    "complexity_reason": "Notar DR (MAGIC), openingStrike (Sneak Attack) og combatStartAura (psionic confusion)."
+  },
+  {
+    "rank": 98,
+    "name": "Dark Naga",
+    "cr": 8,
+    "tier": "CR_5_8",
+    "creature_type": "Aberration",
+    "subtype": "none",
+    "creature_subtype": null,
+    "monster_family": "ABERRATIONS",
+    "size_category": "Large",
+    "stats": {
+      "hp": 85,
+      "ac": 22,
+      "touch_ac": 15,
+      "flat_footed_ac": 16,
+      "initiative_bonus": 5,
+      "attack_bonus": 11,
+      "damage_dice": "2d4+5",
+      "damage_bonus": 5,
+      "fort_save": 7,
+      "ref_save": 10,
+      "will_save": 9,
+      "xp_reward": 4800
+    },
+    "special_abilities": [
+      "Sting Poison (DC 19, sleep + 1d2 Con)",
+      "Detect Thoughts (Will DC 19)",
+      "Sorcerer 7th Spellcasting (Lightning Bolt, Displacement)",
+      "Evasion",
+      "Guarded Thoughts"
+    ],
+    "terrains": [
+      "UNDERGROUND_RUINS",
+      "HILLS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_CAVE",
+      "ANCIENT_CRYPT"
+    ],
+    "source_book": "Pathfinder RPG Bestiary pg. 211",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Dark%20Naga",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar evasion (SHADOW_SHIFT), poison og cooldownSpecial (Lightning Bolt) í abilities.js."
+  },
+  {
+    "rank": 99,
+    "name": "Cold Rider",
+    "cr": 8,
+    "tier": "CR_5_8",
+    "creature_type": "Fey",
+    "subtype": "cold",
+    "creature_subtype": "cold",
+    "monster_family": "FEY",
+    "size_category": "Medium",
+    "stats": {
+      "hp": 97,
+      "ac": 22,
+      "touch_ac": 14,
+      "flat_footed_ac": 19,
+      "initiative_bonus": 7,
+      "attack_bonus": 13,
+      "damage_dice": "1d10+9",
+      "damage_bonus": 9,
+      "fort_save": 8,
+      "ref_save": 11,
+      "will_save": 11,
+      "xp_reward": 4800
+    },
+    "special_abilities": [
+      "DR 10/cold iron",
+      "Fast Healing 5",
+      "Icy Burst Glaive (+1d6 cold)",
+      "Cone of Cold & Ice Storm SLAs",
+      "Freezing Armor",
+      "Cold Immunity"
+    ],
+    "terrains": [
+      "MOUNTAINS",
+      "HILLS",
+      "FOREST"
+    ],
+    "recommended_regions": [
+      "RAVENCRAG_HIGHLANDS",
+      "GOBLIN_FOREST"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 2 pg. 60",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Cold%20Rider",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar DR, regeneration (Fast Healing), elementalRider (cold) og cooldownSpecial (Cone of Cold) í abilities.js."
+  },
+  {
+    "rank": 100,
+    "name": "Deadfall Scorpion",
+    "cr": 8,
+    "tier": "CR_5_8",
+    "creature_type": "Vermin",
+    "subtype": "arachnid",
+    "creature_subtype": "arachnid",
+    "monster_family": "ARACHNIDS",
+    "size_category": "Huge",
+    "stats": {
+      "hp": 105,
+      "ac": 21,
+      "touch_ac": 8,
+      "flat_footed_ac": 21,
+      "initiative_bonus": 0,
+      "attack_bonus": 14,
+      "damage_dice": "2d6+9",
+      "damage_bonus": 9,
+      "fort_save": 12,
+      "ref_save": 3,
+      "will_save": 5,
+      "xp_reward": 4800
+    },
+    "special_abilities": [
+      "Grab",
+      "Constrict (2d6+9)",
+      "Deadfall Sting Poison (DC 20, 1d4 Str)",
+      "Forest Camouflage",
+      "Tremorsense 60 ft."
+    ],
+    "terrains": [
+      "FOREST",
+      "UNDERGROUND_RUINS"
+    ],
+    "recommended_regions": [
+      "GOBLIN_FOREST",
+      "GOBLIN_CAVE"
+    ],
+    "source_book": "Pathfinder RPG Bestiary 3 pg. 239",
+    "aon_url": "https://www.aonprd.com/MonsterDisplay.aspx?ItemName=Deadfall%20Scorpion",
+    "already_in_db": false,
+    "engine_support": "FULL",
+    "implementation_complexity": "LOW",
+    "complexity_reason": "Notar openingStrike (ambush), grab með constrictFormula og poison í abilities.js."
+  }
+]

@@ -1957,3 +1957,42 @@
   font-size: 0.76rem;
   font-weight: 700;
 }
+
+/* ==========================================================================
+   PHASE 10: DUNGEON VISUAL IMPROVEMENTS & SUBTERRANEAN HUD POLISH
+   ========================================================================== */
+
+#topdown-map-canvas {
+  image-rendering: auto;
+  background-color: #050508;
+}
+
+#dungeon-vista-bar {
+  box-sizing: border-box;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.78), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: border-color 0.2s ease, background 0.2s ease;
+  overflow: hidden;
+}
+
+#dungeon-boss-sanctum-card,
+#dungeon-exit-stairs-card {
+  box-sizing: border-box;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  max-width: min(560px, calc(100% - 28px));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#dungeon-boss-sanctum-card .major-landmark-title,
+#dungeon-exit-stairs-card .major-landmark-title {
+  line-height: 1.2;
+  overflow-wrap: break-word;
+}
+
+#dungeon-boss-sanctum-card .major-landmark-desc,
+#dungeon-exit-stairs-card .major-landmark-desc {
+  line-height: 1.45;
+  overflow-wrap: break-word;
+}

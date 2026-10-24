@@ -32,15 +32,67 @@ const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'darkgrid-rpg';
 const REGION = process.env.CLOUD_RUN_REGION || 'europe-west1';
 const SERVICE_NAME = 'darkgrid-api';
 
-async function checkBillingStatus(token) {
-  const resp = await fetch(`https://cloudbilling.googleapis.com/v1/projects/${PROJECT_ID}/billingInfo`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  if (!resp.ok) {
-    return { billingEnabled: false, status: resp.status };
+async function checkBillingStatus(token, options = {}) {
+  const fetchImpl = options.fetchFn || global.fetch;
+  const projectId = options.projectId || PROJECT_ID;
+  if (!token) {
+    return {
+      ok: false,
+      status: 401,
+      errorCode: 'AUTH_EXPIRED',
+      billingEnabled: null,
+      message: 'Missing or expired OAuth access_token. Run `npx firebase-tools login --reauth`.'
+    };
   }
+
+  let resp;
+  try {
+    resp = await fetchImpl(`https://cloudbilling.googleapis.com/v1/projects/${projectId}/billingInfo`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  } catch (netErr) {
+    return {
+      ok: false,
+      status: 0,
+      errorCode: 'NETWORK_ERROR',
+      billingEnabled: null,
+      message: `Network error calling Cloud Billing API: ${netErr.message}`
+    };
+  }
+
+  if (resp.status === 401) {
+    return {
+      ok: false,
+      status: 401,
+      errorCode: 'AUTH_EXPIRED',
+      billingEnabled: null,
+      message: 'HTTP 401 UNAUTHENTICATED from Cloud Billing API: OAuth access_token is expired or invalid.'
+    };
+  }
+  if (resp.status === 403) {
+    return {
+      ok: false,
+      status: 403,
+      errorCode: 'INSUFFICIENT_PERMISSIONS',
+      billingEnabled: null,
+      message: 'HTTP 403 FORBIDDEN from Cloud Billing API: insufficient permissions to read billingInfo.'
+    };
+  }
+  if (!resp.ok) {
+    return {
+      ok: false,
+      status: resp.status,
+      errorCode: 'API_ERROR',
+      billingEnabled: null,
+      message: `Cloud Billing API returned unexpected HTTP ${resp.status}.`
+    };
+  }
+
   const data = await resp.json();
   return {
+    ok: true,
+    status: 200,
+    errorCode: null,
     billingEnabled: Boolean(data.billingEnabled),
     billingAccountName: data.billingAccountName || null
   };
@@ -232,6 +284,27 @@ async function buildAndDeployCloudRun(token) {
       }
     }
 
+    function writeZeroByteTreeStubs(srcRoot, dstRoot) {
+      if (!fs.existsSync(srcRoot)) return;
+      fs.mkdirSync(dstRoot, { recursive: true });
+      for (const entry of fs.readdirSync(srcRoot, { withFileTypes: true })) {
+        const s = path.join(srcRoot, entry.name);
+        const d = path.join(dstRoot, entry.name);
+        if (entry.isDirectory()) {
+          writeZeroByteTreeStubs(s, d);
+        } else if (/\.(png|webp|jpg|jpeg)$/i.test(entry.name)) {
+          fs.writeFileSync(d, '');
+        }
+      }
+    }
+    writeZeroByteTreeStubs(path.join(repoRoot, 'public', 'images'), path.join(stageDir, 'public', 'images'));
+    writeZeroByteTreeStubs(path.join(repoRoot, 'action-ui-lab', 'public', 'images'), path.join(stageLabDir, 'public', 'images'));
+    writeZeroByteTreeStubs(path.join(repoRoot, 'action-ui-lab', 'docs', 'phase-5', 'art-candidates'), path.join(stageLabDir, 'docs', 'phase-5', 'art-candidates'));
+    if (fs.existsSync(path.join(repoRoot, 'action-ui-lab', 'docs', 'visual-qa-results.json'))) {
+      fs.mkdirSync(path.join(stageLabDir, 'docs'), { recursive: true });
+      fs.copyFileSync(path.join(repoRoot, 'action-ui-lab', 'docs', 'visual-qa-results.json'), path.join(stageLabDir, 'docs', 'visual-qa-results.json'));
+    }
+
     const tarPath = path.join(os.tmpdir(), `darkgrid-source-${Date.now()}.tgz`);
     execSync(
       `tar -czf "${tarPath}" Dockerfile package.json package-lock.json index.js db public images src action-ui-lab scripts`,
@@ -321,10 +394,34 @@ async function buildAndDeployCloudRun(token) {
     headers: { Authorization: `Bearer ${token}` }
   });
 
-  // Preserve or generate deterministic production SESSION_SECRET
+  // Resolve a strong cryptographically random SESSION_SECRET (never predictable from PROJECT_ID)
+  const legacyPredictableSecret = crypto
+    .createHash('sha256')
+    .update(`darkgrid-rpg-prod-secret-${PROJECT_ID}-v1`)
+    .digest('hex');
+
   let sessionSecret = process.env.SESSION_SECRET;
+  if (sessionSecret && (sessionSecret === legacyPredictableSecret || sessionSecret.length < 32)) {
+    sessionSecret = null;
+  }
+  if (!sessionSecret && existingCheck.status === 200) {
+    try {
+      const existingData = await existingCheck.json();
+      const existingEnv = existingData?.template?.containers?.[0]?.env || [];
+      const existingSecretEntry = existingEnv.find(e => e && e.name === 'SESSION_SECRET');
+      if (
+        existingSecretEntry?.value &&
+        existingSecretEntry.value.length >= 32 &&
+        existingSecretEntry.value !== legacyPredictableSecret
+      ) {
+        sessionSecret = existingSecretEntry.value;
+      }
+    } catch {
+      // Ignore JSON parse error
+    }
+  }
   if (!sessionSecret) {
-    sessionSecret = crypto.createHash('sha256').update(`darkgrid-rpg-prod-secret-${PROJECT_ID}-v1`).digest('hex');
+    sessionSecret = crypto.randomBytes(32).toString('hex');
   }
 
   const serviceBody = {
@@ -469,7 +566,13 @@ function prepareStaticHostingAssets() {
 async function main() {
   console.log('=== Darkgrid RPG — Blaze Deployment Orchestrator ===');
 
-  const token = await getFirebaseCliToken();
+  let token;
+  try {
+    token = await getFirebaseCliToken({ throwOnExpired: true });
+  } catch (authErr) {
+    console.error(`Error (${authErr.code || 'AUTH_ERROR'}): ${authErr.message}`);
+    process.exit(1);
+  }
   if (!token) {
     console.error('Error: No Firebase CLI token found. Please run `npx firebase-tools login`.');
     process.exit(1);
@@ -489,6 +592,12 @@ async function main() {
   console.log('[3/5] Checking Cloud Billing status for project `darkgrid-rpg`...');
   const billing = await checkBillingStatus(token);
 
+  if (!billing.ok) {
+    console.error(`\n[ERROR] Cloud Billing verification failed (${billing.errorCode}, status=${billing.status}):`);
+    console.error(`        ${billing.message}`);
+    process.exit(1);
+  }
+
   if (!billing.billingEnabled) {
     console.log('\n[NOTICE] Project `darkgrid-rpg` currently has `billingEnabled: false` (Spark Plan).');
     console.log('         Cloud Run container deployment requires the project owner to upgrade to Blaze.');
@@ -506,7 +615,15 @@ async function main() {
   const db = initializeDatabase(dbPath);
   runMigrations(db);
   runSeeds(db);
-  await pullFromFirestoreServer(db, { accessToken: token });
+  try {
+    const { ensureNonDestructiveLabAdapter } = require('../action-ui-lab/server/services/legacy-compatibility-service');
+    const { applyTopdownExperimentWorld } = require('../action-ui-lab/server/services/topdown-world-service');
+    ensureNonDestructiveLabAdapter(db);
+    applyTopdownExperimentWorld(db);
+  } catch {
+    // Ignore if topdown-world-service is not required in minimal env
+  }
+  await pullFromFirestoreServer(db, { accessToken: token, strictAuth: true });
   await pushDeltaToFirestoreServer(db, { forceFull: true, token });
   db.close();
 

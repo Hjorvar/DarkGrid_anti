@@ -113,7 +113,7 @@ function exportDynamicState(db) {
     tables[table] = rows.map(r => ({ ...r }));
   }
 
-  const referenceMap = { monsters: {}, items: {} };
+  const referenceMap = { monsters: {}, items: {}, characterCoords: {} };
   if (tableExists(db, 'monsters')) {
     for (const m of db.prepare('SELECT id, name FROM monsters').all()) {
       referenceMap.monsters[m.id] = m.name;
@@ -124,12 +124,41 @@ function exportDynamicState(db) {
       referenceMap.items[item.id] = item.name;
     }
   }
+  if (tableExists(db, 'characters') && tableExists(db, 'map_tiles')) {
+    try {
+      const charTiles = db.prepare(`
+        SELECT c.id as char_id, m.x, m.y, m.landmark_key
+        FROM characters c
+        JOIN map_tiles m ON c.tile_id = m.id
+      `).all();
+      for (const ct of charTiles) {
+        referenceMap.characterCoords[ct.char_id] = {
+          x: Number(ct.x),
+          y: Number(ct.y),
+          landmark_key: ct.landmark_key || null
+        };
+      }
+    } catch {
+      // Ignore if map_tiles join fails
+    }
+  }
+
+  let worldVersion = null;
+  if (tableExists(db, 'game_config')) {
+    try {
+      const wvRow = db.prepare("SELECT value FROM game_config WHERE key = 'topdown_world_version'").get();
+      if (wvRow && wvRow.value) worldVersion = String(wvRow.value);
+    } catch {
+      // Ignore if game_config not queryable
+    }
+  }
 
   const canonicalPayload = JSON.stringify(tables);
   const checksum = sha256(canonicalPayload);
 
   return {
     version: '2.0.0-blaze',
+    worldVersion,
     exportedAt: new Date().toISOString(),
     projectId: process.env.FIREBASE_PROJECT_ID || 'darkgrid-rpg',
     checksum,
@@ -205,6 +234,176 @@ function resolveMonsterId(tx, rawId, refMap) {
     return allMonsters[idx].id;
   }
   return rawId;
+}
+
+const LEGACY_15X15_TO_44X30_COORDS = Object.freeze({
+  '7,7': { x: 15, y: 27 }, // Oakhaven
+  '7,6': { x: 15, y: 26 }, // Oakhaven North Gate
+  '8,7': { x: 19, y: 25 }, // The Old Stone Bridge
+  '9,7': { x: 21, y: 25 }, // Abandoned Watchpost
+  '7,5': { x: 15, y: 23 }, // Blackwood Crossroads
+  '7,4': { x: 15, y: 19 }, // Central Trail
+  '7,3': { x: 15, y: 15 }, // Ancient Black Oak
+  '9,3': { x: 20, y: 9 },  // Old Log Crossing
+  '7,2': { x: 15, y: 3 },  // Stronghold Approach
+  '7,1': { x: 15, y: 2 }   // Goblin Stronghold
+});
+
+function seedInitialDiscoveryAround(tx, characterId, charClass, centerX, centerY, maxX, maxY) {
+  if (!tableExists(tx, 'character_discovered_tiles')) return;
+  const radius = String(charClass || '').toUpperCase() === 'RANGER' ? 4 : 3;
+  const maxDistSq = radius * radius + 1;
+  const insertStmt = tx.prepare(`
+    INSERT OR IGNORE INTO character_discovered_tiles (character_id, x, y)
+    VALUES (?, ?, ?)
+  `);
+  // Always ensure Oakhaven (15, 27) and North Gate (15, 26) are known
+  insertStmt.run(characterId, 15, 27);
+  insertStmt.run(characterId, 15, 26);
+
+  for (let dy = -radius; dy <= radius; dy++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      if (dx * dx + dy * dy > maxDistSq) continue;
+      const txCoord = centerX + dx;
+      const tyCoord = centerY + dy;
+      if (txCoord >= 0 && txCoord <= maxX && tyCoord >= 0 && tyCoord <= maxY) {
+        insertStmt.run(characterId, txCoord, tyCoord);
+      }
+    }
+  }
+}
+
+/**
+ * Safely migrates character tile_id across world grid sizes (15x15 -> 30x30 -> 44x30)
+ * using snapshot worldVersion, tile coordinates, passability, and character discovery state.
+ * Never remaps legitimate 44x30 positions merely because they share a numeric ID with older maps.
+ */
+function migrateImportedCharacterTiles(tx, snapshot) {
+  if (!tableExists(tx, 'map_tiles') || !tableExists(tx, 'characters')) return;
+
+  const mapStats = tx.prepare('SELECT MAX(x) as maxX, MAX(y) as maxY, COUNT(*) as total FROM map_tiles').get();
+  // Only run 44x30 migration when the target DB actually has the 44x30 world loaded (1320 tiles)
+  if (!mapStats || Number(mapStats.total) < 1000 || Number(mapStats.maxX) < 40) {
+    return;
+  }
+
+  const oakhavenTile = tx.prepare('SELECT * FROM map_tiles WHERE x = 15 AND y = 27').get();
+  if (!oakhavenTile) return;
+
+  const metaWorldVersion = (snapshot.tables?.world_sync_meta || []).find(
+    r => r && (r.key === 'topdown_world_version' || r.key === 'world_version')
+  )?.value || null;
+  const snapshotWorldVersion = snapshot.worldVersion || metaWorldVersion || null;
+  const isSnapshot44x30 = snapshotWorldVersion === 'PHASE_9C_DUNGEONS_AND_HIGHLANDS';
+
+  const importedChars = Array.isArray(snapshot.tables?.characters) ? snapshot.tables.characters : [];
+  for (const ch of importedChars) {
+    const charRow = tx.prepare('SELECT * FROM characters WHERE id = ?').get(ch.id);
+    if (!charRow) continue;
+
+    const discRows = tableExists(tx, 'character_discovered_tiles')
+      ? tx.prepare('SELECT x, y FROM character_discovered_tiles WHERE character_id = ?').all(charRow.id)
+      : [];
+    const discSet = new Set(discRows.map(r => `${r.x},${r.y}`));
+    const currentTile = tx.prepare('SELECT * FROM map_tiles WHERE id = ?').get(charRow.tile_id);
+
+    const isCurrentTileValidAndDiscovered = Boolean(
+      currentTile &&
+      Number(currentTile.is_passable) === 1 &&
+      discRows.length > 0 &&
+      discSet.has(`${currentTile.x},${currentTile.y}`)
+    );
+
+    // If the snapshot is already from the 44x30 world (or the character has discovered this exact 44x30 passable tile
+    // and is not explicitly marked as an older world version), preserve their exact tile_id untouched!
+    if (
+      isCurrentTileValidAndDiscovered &&
+      snapshotWorldVersion !== '15X15' &&
+      snapshotWorldVersion !== 'PHASE_8_30X30' &&
+      snapshotWorldVersion !== 'PHASE_9A_THREAT_AND_LANDMARKS' &&
+      snapshotWorldVersion !== 'PHASE_9B_UNDEAD_LANDS'
+    ) {
+      continue;
+    }
+
+    let targetCoord = null;
+    const rawTileId = Number(charRow.tile_id || 0);
+
+    // Case 1: Legacy 15x15 character (0 discovered tiles in 44x30 or explicit 15X15 version, tile_id in 1..225)
+    if ((discRows.length === 0 || snapshotWorldVersion === '15X15') && rawTileId >= 1 && rawTileId <= 225) {
+      const old15X = (rawTileId - 1) % 15;
+      const old15Y = Math.floor((rawTileId - 1) / 15);
+      targetCoord = LEGACY_15X15_TO_44X30_COORDS[`${old15X},${old15Y}`] || { x: 15, y: 27 };
+    }
+
+    // Case 2: 30x30 world character (tile_id in 226..1125 with offset 226, or 1..900 with offset 1)
+    if (!targetCoord && !isSnapshot44x30) {
+      const candidates30x30 = [];
+      if (rawTileId >= 226 && rawTileId <= 1125) {
+        const idxA = rawTileId - 226;
+        candidates30x30.push({ x: idxA % 30, y: Math.floor(idxA / 30) });
+      }
+      if (rawTileId >= 1 && rawTileId <= 900) {
+        const idxB = rawTileId - 1;
+        candidates30x30.push({ x: idxB % 30, y: Math.floor(idxB / 30) });
+      }
+      for (const cand of candidates30x30) {
+        if (discSet.has(`${cand.x},${cand.y}`) || (cand.x === 15 && cand.y === 27)) {
+          const candTile = tx.prepare('SELECT * FROM map_tiles WHERE x = ? AND y = ?').get(cand.x, cand.y);
+          if (candTile && Number(candTile.is_passable) === 1) {
+            targetCoord = cand;
+            break;
+          }
+        }
+      }
+    }
+
+    // Case 2b: If snapshot referenceMap carries explicit characterCoords (from a DB with shifted autoincrement IDs)
+    if (!targetCoord && snapshot.referenceMap?.characterCoords?.[charRow.id]) {
+      const refCoord = snapshot.referenceMap.characterCoords[charRow.id];
+      if (refCoord && refCoord.x !== undefined && refCoord.y !== undefined) {
+        const candTile = tx.prepare('SELECT * FROM map_tiles WHERE x = ? AND y = ?').get(refCoord.x, refCoord.y);
+        if (candTile && Number(candTile.is_passable) === 1) {
+          targetCoord = { x: Number(refCoord.x), y: Number(refCoord.y) };
+        }
+      }
+    }
+
+    // Case 3: If currentTile is valid and passable in 44x30 and no 15x15/30x30 remap matched, keep currentTile
+    if (!targetCoord) {
+      if (currentTile && Number(currentTile.is_passable) === 1 && isCurrentTileValidAndDiscovered) {
+        continue;
+      }
+      targetCoord = { x: 15, y: 27 };
+    }
+
+    const targetTile =
+      tx.prepare('SELECT * FROM map_tiles WHERE x = ? AND y = ?').get(targetCoord.x, targetCoord.y) ||
+      oakhavenTile;
+
+    if (targetTile && Number(targetTile.id) !== Number(charRow.tile_id)) {
+      tx.prepare('UPDATE characters SET tile_id = ? WHERE id = ?').run(targetTile.id, charRow.id);
+      if (tableExists(tx, 'encounters')) {
+        tx.prepare(`
+          UPDATE encounters
+          SET tile_id = ?
+          WHERE character_id = ? AND status IN ('INVESTIGATING', 'IN_COMBAT')
+        `).run(targetTile.id, charRow.id);
+      }
+    }
+
+    if (Number(charRow.is_alive) === 1 && targetTile) {
+      seedInitialDiscoveryAround(
+        tx,
+        charRow.id,
+        charRow.class,
+        Number(targetTile.x),
+        Number(targetTile.y),
+        Number(mapStats.maxX),
+        Number(mapStats.maxY)
+      );
+    }
+  }
 }
 
 function resolveItemDefId(tx, rawId, refMap) {
@@ -676,6 +875,9 @@ function importDynamicState(db, snapshot, options = {}) {
       }
     }
 
+    // 12. Migrate any legacy 15x15 (tile_id=113) or 30x30 (tile_id=1051) character coordinates safely to 44x30 (tile_id=1429)
+    migrateImportedCharacterTiles(tx, snapshot);
+
     syncSqliteSequences(tx);
   });
 
@@ -829,50 +1031,110 @@ function docToObject(doc) {
   return obj;
 }
 
+function isFirebaseTokenConfigValid(cfg, minValidityMs = 30000) {
+  const token = cfg?.tokens?.access_token;
+  if (!token || typeof token !== 'string') return false;
+  const expiresAt = Number(cfg?.tokens?.expires_at || 0);
+  if (expiresAt > 0 && expiresAt <= Date.now() + minValidityMs) {
+    return false;
+  }
+  return true;
+}
+
 /**
  * Acquires a Google Cloud access token for server-side Firestore REST calls.
  * Supports:
- * 1. Explicit env var GOOGLE_OAUTH_ACCESS_TOKEN
+ * 1. Explicit options.accessToken / options.token or env var GOOGLE_OAUTH_ACCESS_TOKEN
  * 2. Cloud Run / GCE Metadata Server (automatic in Cloud Run / App Hosting)
- * 3. Local Firebase CLI configstore token (for local migration / backup scripts)
+ * 3. Local Firebase CLI configstore token with expiry validation and automatic CLI refresh
+ *
+ * Never logs or exposes raw access_token or refresh_token values.
  */
-async function getServerAccessToken() {
+async function getServerAccessToken(options = {}) {
+  if (options.accessToken || options.token) {
+    return options.accessToken || options.token;
+  }
   if (process.env.GOOGLE_OAUTH_ACCESS_TOKEN) {
     return process.env.GOOGLE_OAUTH_ACCESS_TOKEN;
   }
 
-  // Try Cloud Run / GCE metadata server
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 1500);
-    const res = await fetch(
-      'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token',
-      {
-        headers: { 'Metadata-Flavor': 'Google' },
-        signal: controller.signal
+  const fetchImpl = options.fetchFn || global.fetch;
+
+  // Try Cloud Run / GCE metadata server unless explicitly skipped in local unit tests
+  if (!options.skipMetadataServer && typeof fetchImpl === 'function') {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 1200);
+      const res = await fetchImpl(
+        'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token',
+        {
+          headers: { 'Metadata-Flavor': 'Google' },
+          signal: controller.signal
+        }
+      );
+      clearTimeout(timer);
+      if (res && res.ok) {
+        const data = await res.json();
+        if (data && data.access_token) return data.access_token;
       }
-    );
-    clearTimeout(timer);
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.access_token) return data.access_token;
+    } catch {
+      // Not running on GCP metadata environment
     }
-  } catch {
-    // Not running on GCP metadata environment
   }
 
   // Fallback to local Firebase CLI token if available
   const homeDir = process.env.USERPROFILE || process.env.HOME || '';
-  const fbCfgPath = path.join(homeDir, '.config/configstore/firebase-tools.json');
-  if (homeDir && fs.existsSync(fbCfgPath)) {
+  const fbCfgPath = options.firebaseConfigPath || (homeDir ? path.join(homeDir, '.config/configstore/firebase-tools.json') : '');
+  if (fbCfgPath && fs.existsSync(fbCfgPath)) {
+    let cfg = null;
     try {
-      const cfg = JSON.parse(fs.readFileSync(fbCfgPath, 'utf8'));
-      if (cfg?.tokens?.access_token) {
-        return cfg.tokens.access_token;
-      }
+      cfg = JSON.parse(fs.readFileSync(fbCfgPath, 'utf8'));
     } catch {
-      // Ignore
+      cfg = null;
     }
+
+    if (isFirebaseTokenConfigValid(cfg)) {
+      return cfg.tokens.access_token;
+    }
+
+    // Token is expired or missing access_token: attempt supported Firebase CLI refresh if refresh_token is present
+    const hasRefreshToken = Boolean(cfg?.tokens?.refresh_token);
+    if (hasRefreshToken && options.allowCliRefresh !== false) {
+      try {
+        if (typeof options.refreshCliTokenFn === 'function') {
+          await options.refreshCliTokenFn(fbCfgPath);
+        } else {
+          const { execSync } = require('child_process');
+          execSync('npx firebase-tools projects:list --json', {
+            stdio: 'ignore',
+            timeout: 25000
+          });
+        }
+        const refreshedCfg = JSON.parse(fs.readFileSync(fbCfgPath, 'utf8'));
+        if (isFirebaseTokenConfigValid(refreshedCfg, 0)) {
+          return refreshedCfg.tokens.access_token;
+        }
+      } catch {
+        // Refresh failed; fall through to expired handling
+      }
+    }
+
+    if (options.throwOnExpired) {
+      const err = new Error(
+        'Firebase CLI OAuth access_token is expired or invalid and automatic refresh did not succeed. Please run `npx firebase-tools login --reauth`.'
+      );
+      err.code = 'OAUTH_TOKEN_EXPIRED';
+      err.status = 401;
+      throw err;
+    }
+    return null;
+  }
+
+  if (options.throwOnExpired) {
+    const err = new Error('No Google Cloud / Firebase OAuth credentials found. Please run `npx firebase-tools login`.');
+    err.code = 'NO_OAUTH_TOKEN';
+    err.status = 401;
+    throw err;
   }
 
   return null;
@@ -971,19 +1233,27 @@ async function pushDeltaToFirestoreServer(db, options = {}) {
  * Hydrates SQLite on server startup from Cloud Firestore (`server_*` collections + legacy collections)
  */
 async function pullFromFirestoreServer(db, options = {}) {
-  const token = options.accessToken || await getServerAccessToken();
+  const token = options.accessToken || await getServerAccessToken(options);
   if (!token) {
     return { hydrated: false, reason: 'no_access_token' };
   }
 
+  const fetchImpl = options.fetchFn || global.fetch;
   const projectId = options.projectId || process.env.FIREBASE_PROJECT_ID || 'darkgrid-rpg';
   const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents`;
 
   const tables = {};
   for (const table of DYNAMIC_TABLES) {
-    const res = await fetch(`${baseUrl}/server_${table}?pageSize=1000`, {
+    const res = await fetchImpl(`${baseUrl}/server_${table}?pageSize=1000`, {
       headers: { Authorization: `Bearer ${token}` }
     });
+    if (res.status === 401 || res.status === 403) {
+      const err = new Error(`Firestore hydration rejected with HTTP ${res.status} on server_${table}.`);
+      err.status = res.status;
+      err.code = res.status === 401 ? 'FIRESTORE_UNAUTHENTICATED' : 'FIRESTORE_PERMISSION_DENIED';
+      if (options.strictAuth) throw err;
+      return { hydrated: false, reason: err.code, status: res.status };
+    }
     if (res.ok) {
       const data = await res.json();
       tables[table] = (data.documents || []).map(docToObject).filter(Boolean);
@@ -993,7 +1263,7 @@ async function pullFromFirestoreServer(db, options = {}) {
   }
 
   // Also check legacy `users` collection so any existing Spark-era accounts are automatically imported
-  const legacyUsersRes = await fetch(`${baseUrl}/users?pageSize=500`, {
+  const legacyUsersRes = await fetchImpl(`${baseUrl}/users?pageSize=500`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (legacyUsersRes.ok) {
@@ -1035,11 +1305,13 @@ async function pullFromFirestoreServer(db, options = {}) {
 
 module.exports = {
   DYNAMIC_TABLES,
+  LEGACY_15X15_TO_44X30_COORDS,
   sha256,
   uidToNumericId,
   exportDynamicState,
   verifySnapshotIntegrity,
   importDynamicState,
+  migrateImportedCharacterTiles,
   syncSqliteSequences,
   saveSnapshotToFile,
   restoreSnapshotFromFile,
@@ -1047,6 +1319,7 @@ module.exports = {
   loadDurableSnapshotFile: restoreSnapshotFromFile,
   primeRowHashCache,
   computeDirtyDelta,
+  isFirebaseTokenConfigValid,
   getServerAccessToken,
   getFirebaseCliToken: getServerAccessToken,
   pushDeltaToFirestoreServer,

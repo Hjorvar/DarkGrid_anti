@@ -1079,6 +1079,819 @@ function drawLandmarkStructure(ctx, cx, cy, tileSize, landmarkKey, bossSlain) {
   ctx.restore();
 }
 
+/**
+ * Draws richly detailed subterranean dungeon walls (Goblin Cave rugged rock strata vs Ancient Crypt arched ashlar masonry)
+ * with 2.5D bevels, directional drop-shadows, cracks, wooden support beams, skull bas-reliefs, and glowing runestones.
+ */
+function drawDungeonWallTile(ctx, gx, gy, x0, y0, tileSize, isCrypt, adjPassable, isVisibleNow) {
+  const n1 = hashCoord(gx, gy, 77);
+  const n2 = hashCoord(gx, gy, 113);
+  const n3 = hashCoord(gx, gy, 191);
+  const ix = Math.round(x0);
+  const iy = Math.round(y0);
+  const ts = Math.ceil(tileSize);
+
+  if (isCrypt) {
+    // ANCIENT CRYPT: Cold slate/granite sepulcher masonry with gothic recesses
+    ctx.fillStyle = n1 > 0.5 ? '#111622' : '#151b29';
+    ctx.fillRect(ix, iy, ts, ts);
+
+    // Upper stone crown face (2.5D perspective top face)
+    const inset = Math.max(3, Math.round(ts * 0.09));
+    const southLip = adjPassable.s ? Math.max(8, Math.round(ts * 0.22)) : inset;
+    const crownW = ts - inset * 2;
+    const crownH = Math.max(8, ts - inset - southLip);
+
+    ctx.fillStyle = n2 > 0.5 ? '#1e2738' : '#232d40';
+    ctx.fillRect(ix + inset, iy + inset, crownW, crownH);
+
+    // Ashlar dressed stone course lines (horizontal + staggered vertical mortar joints)
+    ctx.strokeStyle = 'rgba(10, 14, 23, 0.85)';
+    ctx.lineWidth = 1;
+    const midY = Math.round(iy + inset + crownH * 0.5);
+    ctx.beginPath();
+    ctx.moveTo(ix + inset, midY + 0.5);
+    ctx.lineTo(ix + inset + crownW, midY + 0.5);
+    const vSplit1 = Math.round(ix + inset + crownW * (0.35 + (n1 - 0.5) * 0.15));
+    const vSplit2 = Math.round(ix + inset + crownW * (0.65 + (n2 - 0.5) * 0.15));
+    ctx.moveTo(vSplit1 + 0.5, iy + inset);
+    ctx.lineTo(vSplit1 + 0.5, midY);
+    ctx.moveTo(vSplit2 + 0.5, midY);
+    ctx.lineTo(vSplit2 + 0.5, iy + inset + crownH);
+    ctx.stroke();
+
+    // Top/Left cold moonlight/crypt edge highlight on stone blocks
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+    ctx.strokeRect(ix + inset + 0.5, iy + inset + 0.5, crownW - 1, crownH - 1);
+
+    // South-facing 2.5D vertical wall facade when a passable floor lies south of this wall
+    if (adjPassable.s) {
+      const faceY = iy + inset + crownH;
+      const faceH = iy + ts - faceY;
+      const faceGrad = ctx.createLinearGradient(0, faceY, 0, iy + ts);
+      faceGrad.addColorStop(0, '#182030');
+      faceGrad.addColorStop(1, '#0b0f18');
+      ctx.fillStyle = faceGrad;
+      ctx.fillRect(ix + 1, faceY, ts - 2, faceH);
+
+      // Gothic arched burial niche or carved frieze on south-facing crypt walls
+      const archW = Math.max(10, Math.round(ts * 0.36));
+      const archH = Math.max(5, Math.round(faceH * 0.72));
+      const archX = Math.round(ix + ts * 0.5);
+      const archBot = iy + ts - 2;
+      ctx.fillStyle = '#070a10';
+      ctx.beginPath();
+      ctx.arc(archX, archBot - archH * 0.45, archW * 0.35, Math.PI, 0, false);
+      ctx.lineTo(archX + archW * 0.35, archBot);
+      ctx.lineTo(archX - archW * 0.35, archBot);
+      ctx.closePath();
+      ctx.fill();
+
+      // Skull bas-relief (hauskúpu-lágmynd) or glowing runestone (rúnasteinn) inside south facade/crown
+      if (n3 > 0.55) {
+        // Carved skull bas-relief emblem
+        const skX = Math.round(ix + ts * 0.5);
+        const skY = Math.round(iy + inset + crownH * 0.52);
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.arc(skX, skY - 1, Math.max(3, ts * 0.075), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillRect(skX - 2, skY + 1, 4, 3);
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(skX - 2, skY - 2, 1.5, 1.5);
+        ctx.fillRect(skX + 0.8, skY - 2, 1.5, 1.5);
+      } else if (n3 < 0.28) {
+        // Glowing eldritch runestone (rúnasteinn) carved into the crypt wall
+        const rx = Math.round(ix + ts * 0.5);
+        const ry = Math.round(iy + inset + crownH * 0.5);
+        ctx.strokeStyle = isVisibleNow ? 'rgba(56, 189, 248, 0.92)' : 'rgba(56, 189, 248, 0.45)';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(rx, ry - 4);
+        ctx.lineTo(rx, ry + 4);
+        ctx.moveTo(rx - 3, ry - 1);
+        ctx.lineTo(rx + 3, ry - 3);
+        ctx.moveTo(rx - 3, ry + 2);
+        ctx.lineTo(rx + 3, ry);
+        ctx.stroke();
+      }
+    } else if (n3 < 0.18) {
+      // Subtle weathered fracture in deep crypt masonry
+      ctx.strokeStyle = 'rgba(7, 10, 16, 0.9)';
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      ctx.moveTo(ix + inset + crownW * 0.3, iy + inset + crownH * 0.25);
+      ctx.lineTo(ix + inset + crownW * 0.48, iy + inset + crownH * 0.55);
+      ctx.lineTo(ix + inset + crownW * 0.42, iy + inset + crownH * 0.8);
+      ctx.stroke();
+    }
+  } else {
+    // GOBLIN CAVE: Rugged subterranean rock strata, jagged crags, damp moss, and timber mine supports
+    ctx.fillStyle = n1 > 0.5 ? '#161310' : '#1b1713';
+    ctx.fillRect(ix, iy, ts, ts);
+
+    const inset = Math.max(3, Math.round(ts * 0.08));
+    const southLip = adjPassable.s ? Math.max(8, Math.round(ts * 0.22)) : inset;
+    const crownW = ts - inset * 2;
+    const crownH = Math.max(8, ts - inset - southLip);
+
+    // Rough hewn earth-brown / slate rock mass
+    ctx.fillStyle = n2 > 0.5 ? '#2b241d' : '#322921';
+    ctx.fillRect(ix + inset, iy + inset, crownW, crownH);
+
+    // Jagged rock facets & natural crevices
+    ctx.fillStyle = 'rgba(20, 16, 12, 0.72)';
+    ctx.beginPath();
+    ctx.moveTo(ix + inset, iy + inset + crownH * 0.65);
+    ctx.lineTo(ix + inset + crownW * 0.45, iy + inset + crownH * (0.42 + n1 * 0.18));
+    ctx.lineTo(ix + inset + crownW, iy + inset + crownH * 0.72);
+    ctx.lineTo(ix + inset + crownW, iy + inset + crownH);
+    ctx.lineTo(ix + inset, iy + inset + crownH);
+    ctx.closePath();
+    ctx.fill();
+
+    // Rock strata fracture lines
+    ctx.strokeStyle = 'rgba(12, 9, 7, 0.88)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(ix + inset + crownW * 0.18, iy + inset + crownH * 0.28);
+    ctx.lineTo(ix + inset + crownW * 0.52, iy + inset + crownH * 0.48);
+    ctx.lineTo(ix + inset + crownW * 0.82, iy + inset + crownH * 0.34);
+    ctx.stroke();
+
+    // Warm ochre rock rim highlight
+    ctx.strokeStyle = 'rgba(180, 142, 98, 0.24)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(ix + inset + 0.5, iy + inset + 0.5, crownW - 1, crownH - 1);
+
+    // Damp cave moss / lichen patches on wall edges near floors
+    if ((adjPassable.s || adjPassable.e || adjPassable.w) && n3 > 0.48) {
+      ctx.fillStyle = 'rgba(34, 197, 94, 0.22)';
+      ctx.beginPath();
+      ctx.arc(ix + inset + crownW * (0.28 + n2 * 0.45), iy + inset + crownH * 0.76, Math.max(3, ts * 0.08), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // South-facing rough cliff wall drop + wooden support beams (viðarstoðir)
+    if (adjPassable.s) {
+      const faceY = iy + inset + crownH;
+      const faceH = iy + ts - faceY;
+      const cliffGrad = ctx.createLinearGradient(0, faceY, 0, iy + ts);
+      cliffGrad.addColorStop(0, '#221c16');
+      cliffGrad.addColorStop(1, '#0e0b09');
+      ctx.fillStyle = cliffGrad;
+      ctx.fillRect(ix + 1, faceY, ts - 2, faceH);
+
+      // Wooden timber shoring beams (viðarstoðir) along tunnel walls
+      if (n3 > 0.35) {
+        const beamW = Math.max(3, Math.round(ts * 0.09));
+        ctx.fillStyle = '#5c3a21';
+        ctx.strokeStyle = '#2a180d';
+        ctx.lineWidth = 1;
+        // Left & right vertical timber posts + crossbeam header
+        ctx.fillRect(ix + 3, faceY - 2, beamW, faceH + 1);
+        ctx.fillRect(ix + ts - 3 - beamW, faceY - 2, beamW, faceH + 1);
+        ctx.fillRect(ix + 2, faceY - 3, ts - 4, Math.max(3, Math.round(faceH * 0.38)));
+        ctx.strokeRect(ix + 2.5, faceY - 2.5, ts - 5, Math.max(3, Math.round(faceH * 0.38)));
+      }
+    }
+  }
+
+  // Crisp beveled stone border where wall meets adjacent passable floor (N, S, E, W)
+  ctx.save();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = isCrypt ? '#475569' : '#6b533b';
+  if (adjPassable.n) {
+    ctx.beginPath();
+    ctx.moveTo(ix, iy + 1);
+    ctx.lineTo(ix + ts, iy + 1);
+    ctx.stroke();
+  }
+  if (adjPassable.s) {
+    ctx.strokeStyle = isCrypt ? '#334155' : '#4a3828';
+    ctx.beginPath();
+    ctx.moveTo(ix, iy + ts - 1);
+    ctx.lineTo(ix + ts, iy + ts - 1);
+    ctx.stroke();
+  }
+  if (adjPassable.w) {
+    ctx.strokeStyle = isCrypt ? '#3b495e' : '#574330';
+    ctx.beginPath();
+    ctx.moveTo(ix + 1, iy);
+    ctx.lineTo(ix + 1, iy + ts);
+    ctx.stroke();
+  }
+  if (adjPassable.e) {
+    ctx.strokeStyle = isCrypt ? '#3b495e' : '#574330';
+    ctx.beginPath();
+    ctx.moveTo(ix + ts - 1, iy);
+    ctx.lineTo(ix + ts - 1, iy + ts);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/**
+ * Draws richly textured passable dungeon floors, ambient occlusion wall shadows,
+ * thematic props (glowing mushrooms, skeletal bones, wooden bridges, sarcophagi, runic slabs),
+ * and clear interactive event icons (Stairs, Guard Posts, Treasure Chests, Shrines, Hazards, Boss Sanctum).
+ */
+function drawDungeonFloorAndProps(ctx, tile, gx, gy, cx, cy, x0, y0, tileSize, isCrypt, adjWalls, isVisibleNow, mapData) {
+  const n1 = hashCoord(gx, gy, 77);
+  const n2 = hashCoord(gx, gy, 151);
+  const n3 = hashCoord(gx, gy, 229);
+  const ix = Math.round(x0);
+  const iy = Math.round(y0);
+  const ts = Math.ceil(tileSize);
+
+  const isBossTile = Boolean(tile.hasBoss || tile.feature === 'DUNGEON_BOSS' || tile.roomType === 'BOSS');
+  const isSanctumFloor = Boolean(isBossTile || tile.roomType === 'BOSS_SANCTUM');
+  const isTreasureTile = Boolean(tile.hasTreasure || tile.feature === 'TREASURE_CACHE' || tile.roomType === 'TREASURE');
+  const isHazardTile = Boolean(tile.roomType === 'HAZARD' || (tile.feature && String(tile.feature).startsWith('HAZARD_')));
+  const isGuardPost = Boolean(tile.feature === 'GUARD_POST' || tile.fixedEncounterKey);
+  const isExitStairs = Boolean(tile.roomType === 'EXIT_STAIRS' || tile.feature === 'DUNGEON_EXIT');
+  const isChamber = Boolean(tile.roomType === 'CHAMBER' || isSanctumFloor || isTreasureTile);
+
+  // 1. Base Passable Floor Tone — Distinct high-contrast separation from solid walls & corridors vs chambers
+  if (isCrypt) {
+    if (isSanctumFloor) {
+      ctx.fillStyle = (gx + gy) % 2 === 0 ? '#1b353b' : '#162c32';
+    } else if (isChamber) {
+      ctx.fillStyle = (gx + gy) % 2 === 0 ? '#2b3952' : '#253248';
+    } else {
+      ctx.fillStyle = n1 > 0.5 ? '#212d42' : '#1e293c';
+    }
+    ctx.fillRect(ix, iy, ts, ts);
+
+    // Dressed marble/slate flagstone grid & beveled stone joints
+    ctx.strokeStyle = isSanctumFloor ? 'rgba(52, 211, 153, 0.26)' : 'rgba(148, 163, 184, 0.24)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(ix + 0.5, iy + 0.5, ts - 1, ts - 1);
+
+    // Inner flagstone slab seam or diamond inlay in chambers
+    if (isChamber) {
+      ctx.strokeStyle = 'rgba(203, 213, 225, 0.14)';
+      ctx.strokeRect(ix + 4.5, iy + 4.5, ts - 9, ts - 9);
+    } else {
+      const subX = Math.round(ix + ts * (0.45 + (n2 - 0.5) * 0.12));
+      const subY = Math.round(iy + ts * 0.5);
+      ctx.strokeStyle = 'rgba(15, 23, 42, 0.55)';
+      ctx.beginPath();
+      ctx.moveTo(ix + 2, subY + 0.5);
+      ctx.lineTo(ix + ts - 2, subY + 0.5);
+      ctx.moveTo(subX + 0.5, iy + 2);
+      ctx.lineTo(subX + 0.5, subY);
+      ctx.stroke();
+    }
+
+    // Crypt Nave central royal runner / processional aisle (x === 10)
+    if (gx === 10 && gy >= 3 && gy <= 16) {
+      const runW = Math.max(10, Math.round(ts * 0.44));
+      ctx.fillStyle = isSanctumFloor ? 'rgba(16, 185, 129, 0.22)' : 'rgba(88, 28, 135, 0.34)';
+      ctx.fillRect(Math.round(cx - runW / 2), iy, runW, ts);
+      ctx.strokeStyle = isSanctumFloor ? 'rgba(52, 211, 153, 0.45)' : 'rgba(192, 132, 252, 0.35)';
+      ctx.beginPath();
+      ctx.moveTo(Math.round(cx - runW / 2) + 0.5, iy);
+      ctx.lineTo(Math.round(cx - runW / 2) + 0.5, iy + ts);
+      ctx.moveTo(Math.round(cx + runW / 2) - 0.5, iy);
+      ctx.lineTo(Math.round(cx + runW / 2) - 0.5, iy + ts);
+      ctx.stroke();
+    }
+  } else {
+    // GOBLIN CAVE: Earthy subterranean limestone, worn cobbles in chambers, packed gravel in tunnels
+    if (isSanctumFloor) {
+      ctx.fillStyle = n1 > 0.5 ? '#42261e' : '#3a211a';
+    } else if (isChamber) {
+      ctx.fillStyle = n1 > 0.5 ? '#3d3227' : '#372d23';
+    } else {
+      ctx.fillStyle = n1 > 0.5 ? '#31281f' : '#2c241c';
+    }
+    ctx.fillRect(ix, iy, ts, ts);
+
+    // Natural rough stone slab border & floor cracks
+    ctx.strokeStyle = isSanctumFloor ? 'rgba(239, 68, 68, 0.28)' : 'rgba(180, 146, 108, 0.24)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(ix + 0.5, iy + 0.5, ts - 1, ts - 1);
+
+    // Subterranean pebbles & floor cracks
+    ctx.fillStyle = 'rgba(20, 15, 11, 0.42)';
+    ctx.beginPath();
+    ctx.arc(ix + ts * (0.28 + n1 * 0.4), iy + ts * (0.32 + n2 * 0.38), Math.max(1.5, ts * 0.045), 0, Math.PI * 2);
+    ctx.arc(ix + ts * (0.68 - n2 * 0.3), iy + ts * (0.66 - n1 * 0.25), Math.max(1.2, ts * 0.035), 0, Math.PI * 2);
+    ctx.fill();
+
+    if (n3 < 0.35) {
+      ctx.strokeStyle = 'rgba(18, 14, 10, 0.55)';
+      ctx.beginPath();
+      ctx.moveTo(ix + ts * 0.22, iy + ts * 0.35);
+      ctx.lineTo(ix + ts * 0.48, iy + ts * 0.52);
+      ctx.lineTo(ix + ts * 0.66, iy + ts * 0.44);
+      ctx.stroke();
+    }
+  }
+
+  // 2. Directional Ambient Occlusion Drop-Shadows from adjacent solid walls (gives immediate 3D corridor depth)
+  if (adjWalls.n) {
+    const shH = Math.max(6, Math.round(ts * 0.26));
+    const gN = ctx.createLinearGradient(0, iy, 0, iy + shH);
+    gN.addColorStop(0, 'rgba(3, 5, 10, 0.72)');
+    gN.addColorStop(1, 'rgba(3, 5, 10, 0)');
+    ctx.fillStyle = gN;
+    ctx.fillRect(ix, iy, ts, shH);
+  }
+  if (adjWalls.s) {
+    const shH = Math.max(4, Math.round(ts * 0.14));
+    const gS = ctx.createLinearGradient(0, iy + ts - shH, 0, iy + ts);
+    gS.addColorStop(0, 'rgba(3, 5, 10, 0)');
+    gS.addColorStop(1, 'rgba(3, 5, 10, 0.48)');
+    ctx.fillStyle = gS;
+    ctx.fillRect(ix, iy + ts - shH, ts, shH);
+  }
+  if (adjWalls.w) {
+    const shW = Math.max(4, Math.round(ts * 0.16));
+    const gW = ctx.createLinearGradient(ix, 0, ix + shW, 0);
+    gW.addColorStop(0, 'rgba(3, 5, 10, 0.52)');
+    gW.addColorStop(1, 'rgba(3, 5, 10, 0)');
+    ctx.fillStyle = gW;
+    ctx.fillRect(ix, iy, shW, ts);
+  }
+  if (adjWalls.e) {
+    const shW = Math.max(4, Math.round(ts * 0.16));
+    const gE = ctx.createLinearGradient(ix + ts - shW, 0, ix + ts, 0);
+    gE.addColorStop(0, 'rgba(3, 5, 10, 0)');
+    gE.addColorStop(1, 'rgba(3, 5, 10, 0.52)');
+    ctx.fillStyle = gE;
+    ctx.fillRect(ix + ts - shW, iy, shW, ts);
+  }
+
+  // 3. Thematic Ambient Dungeon Architecture & Props (when not occupied by a primary interactive icon)
+  const isPlainFloor = !isExitStairs && !isTreasureTile && !isHazardTile && !isBossTile && !isGuardPost;
+  if (isPlainFloor) {
+    const roomName = String(tile.name || '');
+    if (!isCrypt) {
+      // GOBLIN CAVE thematic props:
+      // Rope & plank bridge across the Subterranean Chasm Bridge
+      if (roomName.includes('Chasm Bridge')) {
+        ctx.fillStyle = '#5c3a21';
+        ctx.strokeStyle = '#2a180d';
+        ctx.lineWidth = 1;
+        for (let p = -2; p <= 2; p++) {
+          const py = Math.round(cy + p * (ts * 0.17) - 2);
+          ctx.fillRect(ix + 4, py, ts - 8, 4);
+          ctx.strokeRect(ix + 4.5, py + 0.5, ts - 9, 3);
+        }
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(ix + 5, iy);
+        ctx.lineTo(ix + 5, iy + ts);
+        ctx.moveTo(ix + ts - 5, iy);
+        ctx.lineTo(ix + ts - 5, iy + ts);
+        ctx.stroke();
+      } else if (roomName.includes('Fungal Grotto') || (n3 < 0.24 && (adjWalls.n || adjWalls.w || adjWalls.e))) {
+        // Glowing bioluminescent cave mushrooms (blágrænir lýsandi sveppir)
+        const mx = Math.round(cx + (n1 - 0.5) * ts * 0.36);
+        const my = Math.round(cy + (n2 - 0.5) * ts * 0.32);
+        const glowG = ctx.createRadialGradient(mx, my, 1, mx, my, ts * 0.28);
+        glowG.addColorStop(0, 'rgba(45, 212, 191, 0.42)');
+        glowG.addColorStop(1, 'rgba(45, 212, 191, 0)');
+        ctx.fillStyle = glowG;
+        ctx.beginPath();
+        ctx.arc(mx, my, ts * 0.28, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Mushroom stems & glowing cyan/emerald caps
+        const cluster = [
+          { dx: -4, dy: 2, r: 3.2 },
+          { dx: 3, dy: 3, r: 2.6 },
+          { dx: 0, dy: -2, r: 4.0 }
+        ];
+        for (const m of cluster) {
+          ctx.fillStyle = '#cbd5e1';
+          ctx.fillRect(mx + m.dx - 1, my + m.dy, 2, 4);
+          ctx.fillStyle = '#2dd4bf';
+          ctx.strokeStyle = '#0f766e';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(mx + m.dx, my + m.dy, m.r, Math.PI, 0, false);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        }
+      } else if (roomName.includes('Spider-Silk Hollow')) {
+        // Corner cobweb strands in the Spider-Silk Hollow
+        ctx.strokeStyle = 'rgba(226, 232, 240, 0.36)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(ix + 2, iy + 2);
+        ctx.lineTo(ix + ts * 0.42, iy + 2);
+        ctx.lineTo(ix + 2, iy + ts * 0.42);
+        ctx.closePath();
+        ctx.stroke();
+      } else if (roomName.includes('Bone-Strewn') || (n3 > 0.84 && isChamber)) {
+        // Scattered bleached bone fragments & skull on cave floor
+        const bx = Math.round(cx + (n2 - 0.5) * ts * 0.28);
+        const by = Math.round(cy + (n1 - 0.5) * ts * 0.28);
+        ctx.strokeStyle = '#d6d3d1';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(bx - 5, by - 2);
+        ctx.lineTo(bx + 5, by + 3);
+        ctx.moveTo(bx - 4, by + 4);
+        ctx.lineTo(bx + 4, by - 3);
+        ctx.stroke();
+        ctx.fillStyle = '#e7e5e4';
+        ctx.beginPath();
+        ctx.arc(bx, by - 1, 2.8, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (roomName.includes('War-Camp') && n3 > 0.45) {
+        // Crude goblin timber weapon rack / planks
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(Math.round(cx - 7), Math.round(cy - 2), 14, 4);
+        ctx.strokeStyle = '#451a03';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(Math.round(cx - 7) + 0.5, Math.round(cy - 2) + 0.5, 13, 3);
+      }
+    } else {
+      // ANCIENT CRYPT thematic props:
+      if ((roomName.includes('Tomb Alcove') || roomName.includes('Catacomb Gallery') || roomName.includes('Mummy')) && (adjWalls.n || adjWalls.s) && n3 > 0.32) {
+        // Carved stone sarcophagus (steinkista) in crypt burial alcoves
+        const sw = Math.max(16, Math.round(ts * 0.54));
+        const sh = Math.max(10, Math.round(ts * 0.34));
+        const sx = Math.round(cx - sw / 2);
+        const sy = Math.round(cy - sh / 2);
+        ctx.fillStyle = '#334155';
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1.3;
+        ctx.fillRect(sx, sy, sw, sh);
+        ctx.strokeRect(sx + 0.5, sy + 0.5, sw - 1, sh - 1);
+        // Sarcophagus lid cross relief
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(sx + 4, cy + 0.5);
+        ctx.lineTo(sx + sw - 4, cy + 0.5);
+        ctx.moveTo(Math.round(cx - sw * 0.12) + 0.5, sy + 2);
+        ctx.lineTo(Math.round(cx - sw * 0.12) + 0.5, sy + sh - 2);
+        ctx.stroke();
+      } else if (roomName.includes('Pillared Crypt Nave') && (gx === 9 || gx === 11) && gy % 2 === 0) {
+        // Fluted stone colonnade pillars flanking the Crypt Nave
+        const pr = Math.max(4, Math.round(ts * 0.14));
+        ctx.fillStyle = '#475569';
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.arc(cx, cy, pr, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      } else if (roomName.includes('Ossuary') && n3 > 0.42) {
+        // Bronze ossuary floor grate & bone niche
+        const gw = Math.max(12, Math.round(ts * 0.36));
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.45)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(Math.round(cx - gw / 2) + 0.5, Math.round(cy - gw / 2) + 0.5, gw, gw);
+      } else if (isSanctumFloor && !isBossTile) {
+        // Eldritch pale-gold / emerald runic inlays on the Barrow-Wight Sanctum floor
+        ctx.strokeStyle = 'rgba(52, 211, 153, 0.38)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, ts * 0.24, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // 4. Local Tile Radial Illumination (only on VISIBLE tiles)
+  if (isVisibleNow) {
+    const glowR = ts * 0.52;
+    const grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, glowR);
+    if (isCrypt) {
+      grad.addColorStop(0, isSanctumFloor ? 'rgba(52, 211, 153, 0.24)' : 'rgba(129, 140, 248, 0.18)');
+      grad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+    } else {
+      grad.addColorStop(0, 'rgba(251, 191, 36, 0.22)');
+      grad.addColorStop(1, 'rgba(28, 25, 23, 0)');
+    }
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 5. Interactive Dungeon Features & Event Icons (only on discovered tiles)
+  if (isExitStairs) {
+    // ENTRANCE / EXIT STAIRS: Recessed stone stairwell with descending steps, iron handrails & daylight/lantern beacon
+    const sw = Math.round(ts * 0.64);
+    const sx = Math.round(cx - sw / 2);
+    const sy = Math.round(cy - sw / 2);
+
+    // Outer stone curb
+    ctx.fillStyle = isCrypt ? '#1e293b' : '#292524';
+    ctx.strokeStyle = '#fde047';
+    ctx.lineWidth = 2;
+    ctx.fillRect(sx, sy, sw, sw);
+    ctx.strokeRect(sx + 0.5, sy + 0.5, sw - 1, sw - 1);
+
+    // Descending carved steps with progressive shadow depth
+    const steps = 5;
+    const stepH = Math.floor((sw - 6) / steps);
+    for (let s = 0; s < steps; s++) {
+      const shade = 215 - s * 28;
+      ctx.fillStyle = `rgb(${shade}, ${shade - 8}, ${shade - 18})`;
+      ctx.fillRect(sx + 3, sy + 3 + s * stepH, sw - 6, Math.max(2, stepH - 1));
+    }
+
+    // Upward exit arrow indicator
+    ctx.fillStyle = '#fef08a';
+    ctx.beginPath();
+    ctx.moveTo(cx, sy + 4);
+    ctx.lineTo(cx - 5, sy + 10);
+    ctx.lineTo(cx + 5, sy + 10);
+    ctx.closePath();
+    ctx.fill();
+  } else if (isTreasureTile) {
+    const opened = Boolean(tile.eventResolved || tile.treasureLooted);
+    const isShrineOrAltar = Boolean(
+      tile.treasureKey === 'CAVE_FUNGAL_SHRINE' ||
+      tile.treasureKey === 'CRYPT_ROYAL_OFFERING' ||
+      String(tile.name || '').includes('Shrine') ||
+      String(tile.name || '').includes('Altar')
+    );
+
+    if (isShrineOrAltar) {
+      // SACRED SHRINE / ALTAR: Glowing pedestal with chalice/crystal aura
+      const auraR = ts * 0.36;
+      if (!opened) {
+        const sGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, auraR);
+        sGrad.addColorStop(0, isCrypt ? 'rgba(250, 204, 21, 0.55)' : 'rgba(45, 212, 191, 0.55)');
+        sGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = sGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, auraR, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Stone altar base
+      ctx.fillStyle = isCrypt ? '#334155' : '#3f3f46';
+      ctx.strokeStyle = opened ? '#64748b' : (isCrypt ? '#fde047' : '#2dd4bf');
+      ctx.lineWidth = 1.8;
+      ctx.fillRect(Math.round(cx - 11), Math.round(cy - 7), 22, 14);
+      ctx.strokeRect(Math.round(cx - 11) + 0.5, Math.round(cy - 7) + 0.5, 21, 13);
+
+      // Glowing gem / sacred flame on top of shrine
+      ctx.fillStyle = opened ? '#475569' : (isCrypt ? '#fef08a' : '#5eead4');
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 11);
+      ctx.lineTo(cx - 5, cy - 2);
+      ctx.lineTo(cx, cy + 3);
+      ctx.lineTo(cx + 5, cy - 2);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      // TREASURE CHEST: Domed oak/iron or silver-bound reliquary chest with gold lock & sparkles
+      if (!opened) {
+        const tGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, ts * 0.36);
+        tGrad.addColorStop(0, 'rgba(250, 204, 21, 0.42)');
+        tGrad.addColorStop(1, 'rgba(250, 204, 21, 0)');
+        ctx.fillStyle = tGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, ts * 0.36, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const cw = 24;
+      const ch = 16;
+      const bx = Math.round(cx - cw / 2);
+      const by = Math.round(cy - ch / 2 + 1);
+
+      // Chest body
+      ctx.fillStyle = opened ? '#334155' : (isCrypt ? '#475569' : '#78350f');
+      ctx.strokeStyle = opened ? '#64748b' : '#facc15';
+      ctx.lineWidth = 1.8;
+      ctx.fillRect(bx, by, cw, ch);
+      ctx.strokeRect(bx + 0.5, by + 0.5, cw - 1, ch - 1);
+
+      // Metal straps
+      ctx.fillStyle = opened ? '#475569' : '#eab308';
+      ctx.fillRect(bx + 4, by, 3, ch);
+      ctx.fillRect(bx + cw - 7, by, 3, ch);
+
+      if (!opened) {
+        // Closed lid seam & golden lock plate
+        ctx.strokeStyle = '#451a03';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(bx, by + 6.5);
+        ctx.lineTo(bx + cw, by + 6.5);
+        ctx.stroke();
+
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(Math.round(cx - 3), by + 4, 6, 6);
+
+        // Sparkle stars around unopened chest
+        ctx.fillStyle = '#fef9c3';
+        ctx.fillRect(bx - 3, by - 3, 2, 2);
+        ctx.fillRect(bx + cw + 1, by - 2, 2, 2);
+      } else {
+        // Dark open interior showing chest has been looted
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(bx + 2, by + 2, cw - 4, 5);
+      }
+    }
+  } else if (isHazardTile) {
+    // TRAP / HAZARD: Distinct iconography per hazard type (bone spikes, spider webs, necrotic mist, cursed brazier)
+    const triggered = Boolean(tile.eventResolved || tile.hazardTriggered);
+    const feat = String(tile.feature || '');
+
+    if (feat === 'HAZARD_SPIDER_WEBS') {
+      // Concentric spider web trap across the tunnel
+      ctx.strokeStyle = triggered ? 'rgba(148, 163, 184, 0.35)' : 'rgba(241, 245, 249, 0.82)';
+      ctx.lineWidth = 1.3;
+      const r = ts * 0.34;
+      ctx.beginPath();
+      for (let a = 0; a < 4; a++) {
+        const ang = (a * Math.PI) / 4;
+        ctx.moveTo(cx - Math.cos(ang) * r, cy - Math.sin(ang) * r);
+        ctx.lineTo(cx + Math.cos(ang) * r, cy + Math.sin(ang) * r);
+      }
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 0.45, 0, Math.PI * 2);
+      ctx.arc(cx, cy, r * 0.82, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (feat === 'HAZARD_BONE_SPIKES') {
+      // Jagged bone spikes erupting from floor sockets
+      const spikes = [
+        { dx: -7, dy: 4 },
+        { dx: 0, dy: 6 },
+        { dx: 7, dy: 4 },
+        { dx: -4, dy: -2 },
+        { dx: 4, dy: -2 }
+      ];
+      for (const sp of spikes) {
+        ctx.fillStyle = triggered ? '#64748b' : '#f8fafc';
+        ctx.strokeStyle = triggered ? '#334155' : '#ef4444';
+        ctx.lineWidth = 1.1;
+        ctx.beginPath();
+        ctx.moveTo(cx + sp.dx - 3, cy + sp.dy);
+        ctx.lineTo(cx + sp.dx, cy + sp.dy - 9);
+        ctx.lineTo(cx + sp.dx + 3, cy + sp.dy);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+    } else if (feat === 'HAZARD_CURSED_BRAZIER') {
+      // Dark-iron tripod brazier with purple-green soulfire
+      if (!triggered) {
+        const bGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, ts * 0.36);
+        bGrad.addColorStop(0, 'rgba(168, 85, 247, 0.50)');
+        bGrad.addColorStop(1, 'rgba(52, 211, 153, 0)');
+        ctx.fillStyle = bGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, ts * 0.36, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#1e293b';
+      ctx.strokeStyle = triggered ? '#64748b' : '#c084fc';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.arc(cx, cy + 2, 8, 0, Math.PI, false);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      if (!triggered) {
+        ctx.fillStyle = '#34d399';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 9);
+        ctx.lineTo(cx - 5, cy + 1);
+        ctx.lineTo(cx + 5, cy + 1);
+        ctx.closePath();
+        ctx.fill();
+      }
+    } else {
+      // HAZARD_NECROTIC_MIST or generic hazard vent
+      const mGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, ts * 0.36);
+      mGrad.addColorStop(0, triggered ? 'rgba(100, 116, 139, 0.25)' : 'rgba(52, 211, 153, 0.48)');
+      mGrad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+      ctx.fillStyle = mGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, ts * 0.36, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = triggered ? '#64748b' : (isCrypt ? '#34d399' : '#f97316');
+      ctx.lineWidth = 1.8;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.arc(cx, cy, ts * 0.25, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  } else if (isGuardPost) {
+    // GUARD POST / FIXED ENCOUNTER: Watchfire brazier, crossed blades, and threat marker
+    const cleared = Boolean(tile.eventResolved);
+    if (!cleared) {
+      const gGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, ts * 0.36);
+      gGrad.addColorStop(0, isCrypt ? 'rgba(56, 189, 248, 0.38)' : 'rgba(249, 115, 22, 0.42)');
+      gGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = gGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, ts * 0.36, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Crossed swords / halberds over guard post ring
+    ctx.strokeStyle = cleared ? 'rgba(100, 116, 139, 0.55)' : (isCrypt ? '#38bdf8' : '#fb923c');
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, ts * 0.22, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = cleared ? '#64748b' : '#f8fafc';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx - 7, cy - 7);
+    ctx.lineTo(cx + 7, cy + 7);
+    ctx.moveTo(cx + 7, cy - 7);
+    ctx.lineTo(cx - 7, cy + 7);
+    ctx.stroke();
+
+    if (!cleared) {
+      // Glowing watchfire ember in center
+      ctx.fillStyle = isCrypt ? '#38bdf8' : '#facc15';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 3.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (isBossTile) {
+    // BOSS SANCTUM: Grand ritual summoning circle, corner braziers, throne/sarcophagus dais & boss crown sigil
+    const bossDead = Boolean(mapData.bossSlain);
+    const rOuter = ts * 0.42;
+    const rInner = ts * 0.28;
+
+    const bGrad = ctx.createRadialGradient(cx, cy, 3, cx, cy, rOuter * 1.15);
+    if (bossDead) {
+      bGrad.addColorStop(0, 'rgba(34, 197, 94, 0.40)');
+      bGrad.addColorStop(1, 'rgba(34, 197, 94, 0)');
+    } else if (isCrypt) {
+      bGrad.addColorStop(0, 'rgba(52, 211, 153, 0.52)');
+      bGrad.addColorStop(0.6, 'rgba(168, 85, 247, 0.26)');
+      bGrad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+    } else {
+      bGrad.addColorStop(0, 'rgba(239, 68, 68, 0.55)');
+      bGrad.addColorStop(0.6, 'rgba(245, 158, 11, 0.25)');
+      bGrad.addColorStop(1, 'rgba(28, 25, 23, 0)');
+    }
+    ctx.fillStyle = bGrad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, rOuter * 1.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Outer & inner ritual rings
+    ctx.strokeStyle = bossDead ? '#4ade80' : (isCrypt ? '#34d399' : '#ef4444');
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, rOuter, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = bossDead ? 'rgba(74, 222, 128, 0.7)' : (isCrypt ? '#c084fc' : '#f59e0b');
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(cx, cy, rInner, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 4 Corner Sanctum Braziers
+    const bOff = ts * 0.34;
+    const corners = [
+      { dx: -bOff, dy: -bOff },
+      { dx: bOff, dy: -bOff },
+      { dx: -bOff, dy: bOff },
+      { dx: bOff, dy: bOff }
+    ];
+    for (const c of corners) {
+      ctx.fillStyle = bossDead ? '#4ade80' : (isCrypt ? '#34d399' : '#fb923c');
+      ctx.beginPath();
+      ctx.arc(cx + c.dx, cy + c.dy, 2.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Crown / Skull Boss Emblem in center
+    ctx.fillStyle = bossDead ? '#86efac' : '#fde047';
+    ctx.strokeStyle = '#090d16';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(cx - 8, cy + 5);
+    ctx.lineTo(cx - 9, cy - 4);
+    ctx.lineTo(cx - 4, cy + 1);
+    ctx.lineTo(cx, cy - 7);
+    ctx.lineTo(cx + 4, cy + 1);
+    ctx.lineTo(cx + 9, cy - 4);
+    ctx.lineTo(cx + 8, cy + 5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+}
+
 function drawDungeonWorld(state, mapData, w, h) {
   const tiles = mapData.tiles || [];
   const isCrypt = mapData.dungeonKey === 'ANCIENT_CRYPT';
@@ -1100,8 +1913,8 @@ function drawDungeonWorld(state, mapData, w, h) {
     endRow
   } = metrics;
 
-  // Pitch-black subterranean void backdrop
-  ctx.fillStyle = '#020305';
+  // Pitch-black subterranean void backdrop (#050508 per dungeon specification)
+  ctx.fillStyle = '#050508';
   ctx.fillRect(0, 0, w, h);
 
   const tileByKey = new Map();
@@ -1109,132 +1922,105 @@ function drawDungeonWorld(state, mapData, w, h) {
     tileByKey.set(`${t.x},${t.y}`, t);
   }
 
+  // Integer-snapped tile centers for razor-sharp rendering at 1440x900 and 1920x1080
   const toScreenCenter = (gx, gy) => ({
-    cx: (gx - minX + 0.5) * tileSize - camPxX,
-    cy: (gy - minY + 0.5) * tileSize - camPxY
+    cx: Math.round((gx - minX + 0.5) * tileSize - camPxX),
+    cy: Math.round((gy - minY + 0.5) * tileSize - camPxY)
   });
+
+  const isPassableAt = (gx, gy) => {
+    const t = tileByKey.get(`${gx},${gy}`);
+    return Boolean(t && t.isPassable);
+  };
 
   // 1. Render Dungeon Tiles with strict 3-State Fog of War (UNEXPLORED, EXPLORED_MEMORY, VISIBLE)
   for (let gy = startRow; gy <= endRow; gy++) {
     for (let gx = startCol; gx <= endCol; gx++) {
       const tile = tileByKey.get(`${gx},${gy}`);
       const { cx, cy } = toScreenCenter(gx, gy);
-      const x0 = cx - tileSize / 2;
-      const y0 = cy - tileSize / 2;
-      const n = hashCoord(gx, gy, 77);
+      const x0 = Math.round(cx - tileSize / 2);
+      const y0 = Math.round(cy - tileSize / 2);
+      const ts = Math.ceil(tileSize);
 
       const isDiscovered = Boolean(tile && tile.isDiscovered && tile.fogState !== 'UNEXPLORED');
       const isVisibleNow = Boolean(tile && (tile.isVisibleNow || tile.isVisible || tile.fogState === 'VISIBLE'));
 
-      // STATE 1: UNEXPLORED — Completely pitch black, zero leakage of walls, corridors, treasures, or bosses
+      // STATE 1: UNEXPLORED — Completely pitch black (#050508), zero leakage of walls, corridors, treasures, or bosses
       if (!isDiscovered) {
-        ctx.fillStyle = '#020305';
-        ctx.fillRect(x0 - 0.5, y0 - 0.5, tileSize + 1, tileSize + 1);
+        ctx.fillStyle = '#050508';
+        ctx.fillRect(x0, y0, ts, ts);
         continue;
       }
 
+      const adjPassable = {
+        n: isPassableAt(gx, gy - 1),
+        s: isPassableAt(gx, gy + 1),
+        w: isPassableAt(gx - 1, gy),
+        e: isPassableAt(gx + 1, gy)
+      };
+      const adjWalls = {
+        n: !adjPassable.n,
+        s: !adjPassable.s,
+        w: !adjPassable.w,
+        e: !adjPassable.e
+      };
+
       // STATE 2 & 3: Discovered Dungeon Wall or Passable Floor
       if (!tile.isPassable) {
-        // Solid Dungeon Rock / Crypt Masonry Wall
-        ctx.fillStyle = isCrypt ? (n > 0.5 ? '#101522' : '#141a29') : (n > 0.5 ? '#171614' : '#1c1a17');
-        ctx.fillRect(x0 - 0.5, y0 - 0.5, tileSize + 1, tileSize + 1);
-
-        // Beveled subterranean rock / stone block relief
-        const pad = tileSize * 0.08;
-        ctx.fillStyle = isCrypt ? '#1e293b' : '#292524';
-        ctx.strokeStyle = isCrypt ? '#334155' : '#4a4039';
-        ctx.lineWidth = 1.4;
-        ctx.fillRect(x0 + pad, y0 + pad, tileSize - pad * 2, tileSize - pad * 2);
-        ctx.strokeRect(x0 + pad, y0 + pad, tileSize - pad * 2, tileSize - pad * 2);
+        drawDungeonWallTile(ctx, gx, gy, x0, y0, tileSize, isCrypt, adjPassable, isVisibleNow);
       } else {
-        const isBossTile = Boolean(tile.hasBoss || tile.feature === 'DUNGEON_BOSS' || tile.roomType === 'BOSS');
-        const isSanctumFloor = Boolean(isBossTile || tile.roomType === 'BOSS_SANCTUM');
-        const isTreasureTile = Boolean(tile.hasTreasure || tile.feature === 'TREASURE_CACHE' || tile.roomType === 'TREASURE');
-        const isHazardTile = Boolean(tile.roomType === 'HAZARD' || (tile.feature && String(tile.feature).startsWith('HAZARD_')));
-
-        // Passable Subterranean Floor
-        if (isCrypt) {
-          ctx.fillStyle = isSanctumFloor
-            ? '#183034'
-            : (tile.roomType === 'CHAMBER' ? (n > 0.5 ? '#222d42' : '#263248') : (n > 0.5 ? '#1c2638' : '#202b3f'));
-        } else {
-          ctx.fillStyle = isSanctumFloor
-            ? '#36211c'
-            : (tile.roomType === 'CHAMBER' ? (n > 0.5 ? '#332a22' : '#382e25') : (n > 0.5 ? '#2a241d' : '#2f2820'));
-        }
-        ctx.fillRect(x0 - 0.5, y0 - 0.5, tileSize + 1, tileSize + 1);
-
-        // Subtle stone flagstone border & torch/necrotic ambient patch
-        ctx.strokeStyle = isCrypt ? 'rgba(148, 163, 184, 0.28)' : 'rgba(168, 138, 104, 0.28)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x0 + 1, y0 + 1, tileSize - 2, tileSize - 2);
-
-        if (isVisibleNow) {
-          const glowR = tileSize * 0.46;
-          const grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, glowR);
-          if (isCrypt) {
-            grad.addColorStop(0, 'rgba(52, 211, 153, 0.22)');
-            grad.addColorStop(1, 'rgba(15, 23, 42, 0)');
-          } else {
-            grad.addColorStop(0, 'rgba(245, 158, 11, 0.24)');
-            grad.addColorStop(1, 'rgba(28, 25, 23, 0)');
-          }
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // Room features (only drawn on discovered tiles)
-        if (tile.roomType === 'EXIT_STAIRS' || tile.feature === 'DUNGEON_EXIT') {
-          ctx.fillStyle = '#475569';
-          ctx.strokeStyle = '#fde047';
-          ctx.lineWidth = 2;
-          const sw = tileSize * 0.54;
-          ctx.fillRect(cx - sw / 2, cy - sw / 2, sw, sw);
-          ctx.strokeRect(cx - sw / 2, cy - sw / 2, sw, sw);
-          ctx.fillStyle = '#cbd5e1';
-          for (let s = -2; s <= 2; s++) {
-            ctx.fillRect(cx - sw * 0.38, cy + s * (sw * 0.16) - 1.5, sw * 0.76, 3);
-          }
-        } else if (isTreasureTile) {
-          const opened = Boolean(tile.eventResolved || tile.treasureLooted);
-          ctx.fillStyle = opened ? '#334155' : '#78350f';
-          ctx.strokeStyle = opened ? '#64748b' : '#facc15';
-          ctx.lineWidth = 2;
-          ctx.fillRect(cx - 11, cy - 8, 22, 16);
-          ctx.strokeRect(cx - 11, cy - 8, 22, 16);
-          if (!opened) {
-            ctx.fillStyle = '#fde047';
-            ctx.fillRect(cx - 3, cy - 2, 6, 5);
-          }
-        } else if (isHazardTile) {
-          ctx.strokeStyle = isCrypt ? 'rgba(52, 211, 153, 0.74)' : 'rgba(249, 115, 22, 0.74)';
-          ctx.lineWidth = 1.8;
-          ctx.beginPath();
-          ctx.arc(cx, cy, tileSize * 0.24, 0, Math.PI * 2);
-          ctx.stroke();
-        } else if (isBossTile) {
-          const bossDead = Boolean(mapData.bossSlain);
-          ctx.fillStyle = bossDead ? 'rgba(34, 197, 94, 0.26)' : (isCrypt ? 'rgba(52, 211, 153, 0.32)' : 'rgba(220, 38, 38, 0.34)');
-          ctx.strokeStyle = bossDead ? '#4ade80' : (isCrypt ? '#34d399' : '#ef4444');
-          ctx.lineWidth = 2.4;
-          ctx.beginPath();
-          ctx.arc(cx, cy, tileSize * 0.36, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
-        }
+        drawDungeonFloorAndProps(ctx, tile, gx, gy, cx, cy, x0, y0, tileSize, isCrypt, adjWalls, isVisibleNow, mapData);
       }
 
-      // STATE 2 SHROUD: Explored memory outside current Line of Sight
+      // STATE 2 SHROUD: Explored memory outside current Line of Sight (cool desaturated slate-blue memory shroud)
       if (!isVisibleNow) {
-        ctx.fillStyle = 'rgba(2, 4, 8, 0.62)';
-        ctx.fillRect(x0 - 0.5, y0 - 0.5, tileSize + 1, tileSize + 1);
+        ctx.fillStyle = isCrypt ? 'rgba(4, 7, 14, 0.64)' : 'rgba(5, 6, 10, 0.62)';
+        ctx.fillRect(x0, y0, ts, ts);
       }
     }
   }
 
-  // 2. Adjacent Passable Step Hints
+  // 2. Hero Torch / Lantern Radial Illumination across currently VISIBLE tiles
+  const { cx: heroCx, cy: heroCy } = toScreenCenter(focusX, focusY);
+  const visionRadius = Number(mapData.visionRadius || 2);
+  const torchRadiusPx = (visionRadius + 0.85) * tileSize;
+  ctx.save();
+  const torchGrad = ctx.createRadialGradient(heroCx, heroCy, tileSize * 0.18, heroCx, heroCy, torchRadiusPx);
+  if (isCrypt) {
+    // Cold blue-violet & pale gold lantern aura in the Ancient Crypt
+    torchGrad.addColorStop(0, 'rgba(254, 240, 138, 0.16)');
+    torchGrad.addColorStop(0.45, 'rgba(56, 189, 248, 0.10)');
+    torchGrad.addColorStop(1, 'rgba(5, 5, 8, 0)');
+  } else {
+    // Warm flickering amber-orange torchlight in the Goblin Cave
+    torchGrad.addColorStop(0, 'rgba(251, 191, 36, 0.20)');
+    torchGrad.addColorStop(0.5, 'rgba(234, 88, 12, 0.11)');
+    torchGrad.addColorStop(1, 'rgba(5, 5, 8, 0)');
+  }
+  ctx.fillStyle = torchGrad;
+  ctx.beginPath();
+  ctx.arc(heroCx, heroCy, torchRadiusPx, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Re-stamp strict #050508 darkness on any UNEXPLORED tiles within the radial gradient bounding box
+  // so zero torchlight ever bleeds onto undiscovered tiles!
+  for (let gy = startRow; gy <= endRow; gy++) {
+    for (let gx = startCol; gx <= endCol; gx++) {
+      const tile = tileByKey.get(`${gx},${gy}`);
+      const isDiscovered = Boolean(tile && tile.isDiscovered && tile.fogState !== 'UNEXPLORED');
+      if (!isDiscovered) {
+        const { cx, cy } = toScreenCenter(gx, gy);
+        const x0 = Math.round(cx - tileSize / 2);
+        const y0 = Math.round(cy - tileSize / 2);
+        const ts = Math.ceil(tileSize);
+        ctx.fillStyle = '#050508';
+        ctx.fillRect(x0, y0, ts, ts);
+      }
+    }
+  }
+
+  // 3. Adjacent Passable Step Hints
   const heroTileX = Number(mapData.heroX);
   const heroTileY = Number(mapData.heroY);
   const isLocked = Boolean(state.encounter && (state.encounter.status === 'IN_COMBAT' || state.encounter.isAmbush));
@@ -1251,57 +2037,99 @@ function drawDungeonWorld(state, mapData, w, h) {
       const { cx, cy } = toScreenCenter(adj.x, adj.y);
       const isHovered = Boolean(hoveredGridCoord && hoveredGridCoord.x === adj.x && hoveredGridCoord.y === adj.y);
       ctx.save();
-      ctx.strokeStyle = isHovered ? 'rgba(250, 204, 21, 0.90)' : 'rgba(197, 160, 89, 0.30)';
-      ctx.fillStyle = isHovered ? 'rgba(250, 204, 21, 0.16)' : 'rgba(197, 160, 89, 0.05)';
+      ctx.strokeStyle = isHovered ? 'rgba(250, 204, 21, 0.92)' : 'rgba(197, 160, 89, 0.34)';
+      ctx.fillStyle = isHovered ? 'rgba(250, 204, 21, 0.16)' : 'rgba(197, 160, 89, 0.06)';
       ctx.lineWidth = isHovered ? 2.2 : 1.2;
-      const box = tileSize * 0.72;
+      const box = Math.round(tileSize * 0.72);
+      const bx = Math.round(cx - box / 2);
+      const by = Math.round(cy - box / 2);
       ctx.beginPath();
-      if (ctx.roundRect) ctx.roundRect(cx - box / 2, cy - box / 2, box, box, 8);
-      else ctx.rect(cx - box / 2, cy - box / 2, box, box);
+      if (ctx.roundRect) ctx.roundRect(bx, by, box, box, 8);
+      else ctx.rect(bx, by, box, box);
       ctx.fill();
       ctx.stroke();
       ctx.restore();
     }
   }
 
-  // 3. Hero Token
-  const { cx: heroCx, cy: heroCy } = toScreenCenter(focusX, focusY);
+  // 4. Hero Token
   drawHeroToken(ctx, heroCx, heroCy, tileSize, state);
 
-  // 4. Labels for Visible/Discovered Exit Stairs, Boss Sanctum, or Hovered Room
+  // 5. Crisp, Non-Overlapping Labels for Visible/Discovered Exit Stairs, Boss Sanctum, Treasures, or Hovered Room
+  const placedLabelBoxes = [];
+  const labelCandidates = [];
   for (let gy = startRow; gy <= endRow; gy++) {
     for (let gx = startCol; gx <= endCol; gx++) {
       const tile = tileByKey.get(`${gx},${gy}`);
       if (!tile || !tile.isDiscovered || !tile.isPassable) continue;
-      const isSpecial = tile.roomType === 'EXIT_STAIRS' || tile.roomType === 'BOSS' || (tile.roomType === 'TREASURE' && tile.isVisibleNow);
       const isHovered = Boolean(hoveredGridCoord && hoveredGridCoord.x === gx && hoveredGridCoord.y === gy);
-      if (!isSpecial && !isHovered) continue;
+      const isBoss = tile.roomType === 'BOSS';
+      const isExit = tile.roomType === 'EXIT_STAIRS';
+      const isVisibleTreasure = tile.roomType === 'TREASURE' && tile.isVisibleNow && !tile.eventResolved && !tile.treasureLooted;
+      const isVisibleGuard = tile.feature === 'GUARD_POST' && tile.isVisibleNow && !tile.eventResolved;
+      if (!isHovered && !isBoss && !isExit && !isVisibleTreasure && !isVisibleGuard) continue;
 
-      const { cx, cy } = toScreenCenter(gx, gy);
-      let borderCol = '#c5a059';
-      let textCol = '#fde68a';
-      if (tile.roomType === 'BOSS') {
-        borderCol = mapData.bossSlain ? '#4ade80' : '#ef4444';
-        textCol = mapData.bossSlain ? '#86efac' : '#fca5a5';
-      } else if (tile.roomType === 'EXIT_STAIRS') {
-        borderCol = '#fde047';
-        textCol = '#fef08a';
-      }
-      drawMapLabel(ctx, cx, cy - tileSize * 0.42, tile.name, textCol, borderCol);
+      // Priority order: Hovered (1) > Boss (2) > Exit Stairs (3) > Visible Treasure (4) > Visible Guard Post (5)
+      const priority = isHovered ? 1 : (isBoss ? 2 : (isExit ? 3 : (isVisibleTreasure ? 4 : 5)));
+      labelCandidates.push({ tile, gx, gy, priority, isBoss, isExit, isVisibleTreasure, isVisibleGuard });
+    }
+  }
+  labelCandidates.sort((a, b) => a.priority - b.priority);
+
+  for (const item of labelCandidates) {
+    const { tile, gx, gy, isBoss, isExit, isVisibleGuard } = item;
+    const { cx, cy } = toScreenCenter(gx, gy);
+    let borderCol = '#c5a059';
+    let textCol = '#fde68a';
+    if (isBoss) {
+      borderCol = mapData.bossSlain ? '#4ade80' : '#ef4444';
+      textCol = mapData.bossSlain ? '#86efac' : '#fca5a5';
+    } else if (isExit) {
+      borderCol = '#fde047';
+      textCol = '#fef08a';
+    } else if (isVisibleGuard) {
+      borderCol = isCrypt ? '#38bdf8' : '#fb923c';
+      textCol = isCrypt ? '#bae6fd' : '#fed7aa';
+    }
+
+    const labelY = Math.round(cy - tileSize * 0.44);
+    ctx.save();
+    ctx.font = '700 11px Georgia, serif';
+    const estW = Math.ceil(ctx.measureText(tile.name).width) + 18;
+    const estH = 20;
+    ctx.restore();
+
+    const box = {
+      x1: Math.max(8, Math.min(w - estW - 8, Math.round(cx - estW / 2))),
+      y1: Math.max(8, Math.min(h - estH - 8, Math.round(labelY - estH / 2))),
+      x2: 0,
+      y2: 0
+    };
+    box.x2 = box.x1 + estW;
+    box.y2 = box.y1 + estH;
+
+    const overlaps = placedLabelBoxes.some(
+      (b) => !(box.x2 + 4 < b.x1 || box.x1 - 4 > b.x2 || box.y2 + 4 < b.y1 || box.y1 - 4 > b.y2)
+    );
+    if (!overlaps) {
+      placedLabelBoxes.push(box);
+      const clampedCx = Math.round((box.x1 + box.x2) / 2);
+      const clampedCy = Math.round((box.y1 + box.y2) / 2);
+      drawMapLabel(ctx, clampedCx, clampedCy, tile.name, textCol, borderCol);
     }
   }
 
-  // 5. Tight Subterranean Torch Vignette
+  // 6. Subterranean Vignette around outer viewport perimeter (preserving #050508 darkness)
   const edgeGrad = ctx.createRadialGradient(
     w / 2,
     h / 2,
-    Math.min(w, h) * 0.22,
+    Math.min(w, h) * 0.28,
     w / 2,
     h / 2,
-    Math.max(w, h) * 0.64
+    Math.max(w, h) * 0.68
   );
-  edgeGrad.addColorStop(0, 'rgba(2, 3, 5, 0)');
-  edgeGrad.addColorStop(1, 'rgba(2, 3, 5, 0.82)');
+  edgeGrad.addColorStop(0, 'rgba(5, 5, 8, 0)');
+  edgeGrad.addColorStop(1, 'rgba(5, 5, 8, 0.78)');
   ctx.fillStyle = edgeGrad;
   ctx.fillRect(0, 0, w, h);
 }
@@ -2067,22 +2895,29 @@ function drawHeroToken(ctx, cx, cy, tileSize, state) {
 }
 
 function drawMapLabel(ctx, cx, cy, text, textColor, borderColor) {
+  if (!text) return;
   ctx.save();
   ctx.font = '700 11px Georgia, serif';
   const metrics = ctx.measureText(text);
-  const padX = 7;
-  const boxW = metrics.width + padX * 2;
-  const boxH = 18;
+  const padX = 8;
+  const boxW = Math.ceil(metrics.width) + padX * 2;
+  const boxH = 19;
+  const bx = Math.round(cx - boxW / 2);
+  const by = Math.round(cy - boxH / 2);
 
-  ctx.fillStyle = 'rgba(8, 12, 16, 0.88)';
-  ctx.strokeStyle = borderColor || 'rgba(197, 160, 89, 0.65)';
-  ctx.lineWidth = 1;
+  // Subtle dark drop-shadow for crisp readability over dungeon stone & torchlight
+  ctx.fillStyle = 'rgba(2, 3, 6, 0.55)';
+  ctx.fillRect(bx + 1, by + 2, boxW, boxH);
+
+  ctx.fillStyle = 'rgba(7, 10, 15, 0.92)';
+  ctx.strokeStyle = borderColor || 'rgba(197, 160, 89, 0.72)';
+  ctx.lineWidth = 1.2;
 
   ctx.beginPath();
   if (ctx.roundRect) {
-    ctx.roundRect(cx - boxW / 2, cy - boxH / 2, boxW, boxH, 4);
+    ctx.roundRect(bx + 0.5, by + 0.5, boxW - 1, boxH - 1, 4);
   } else {
-    ctx.rect(cx - boxW / 2, cy - boxH / 2, boxW, boxH);
+    ctx.rect(bx + 0.5, by + 0.5, boxW - 1, boxH - 1);
   }
   ctx.fill();
   ctx.stroke();
@@ -2090,7 +2925,7 @@ function drawMapLabel(ctx, cx, cy, text, textColor, borderColor) {
   ctx.fillStyle = textColor || '#fde68a';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(text, cx, cy + 0.5);
+  ctx.fillText(text, Math.round(bx + boxW / 2), Math.round(by + boxH / 2));
   ctx.restore();
 }
 
@@ -2130,8 +2965,71 @@ export function renderRegionMapCanvas(canvas, state) {
   rCtx.scale(dpr, dpr);
 
   // Dark slate & parchment frame
-  rCtx.fillStyle = '#090d12';
+  rCtx.fillStyle = mapData.isDungeon ? '#050508' : '#090d12';
   rCtx.fillRect(0, 0, w, h);
+
+  if (mapData.isDungeon) {
+    const isCrypt = mapData.dungeonKey === 'ANCIENT_CRYPT';
+    rCtx.font = '700 11px Georgia, serif';
+    rCtx.textBaseline = 'middle';
+    rCtx.textAlign = 'center';
+    rCtx.fillStyle = isCrypt ? '#6ee7b7' : '#fde68a';
+    rCtx.fillText(
+      String(mapData.dungeonName || (isCrypt ? 'THE ANCIENT CRYPT' : 'THE GOBLIN CAVE')).toUpperCase(),
+      Math.round(w / 2),
+      13
+    );
+
+    rCtx.strokeStyle = isCrypt ? 'rgba(52, 211, 153, 0.45)' : 'rgba(245, 158, 11, 0.45)';
+    rCtx.lineWidth = 1.5;
+    rCtx.strokeRect(padX - 2, padTop - 2, cols * cellPx + 4, rows * cellPx + 4);
+
+    const tileByKey = new Map();
+    for (const t of tiles) {
+      tileByKey.set(`${t.x},${t.y}`, t);
+    }
+
+    for (let gy = minY; gy <= maxY; gy++) {
+      for (let gx = minX; gx <= maxX; gx++) {
+        const t = tileByKey.get(`${gx},${gy}`);
+        const x0 = padX + (gx - minX) * cellPx;
+        const y0 = padTop + (gy - minY) * cellPx;
+
+        if (!t || !t.isDiscovered || t.fogState === 'UNEXPLORED') {
+          rCtx.fillStyle = '#050508';
+          rCtx.fillRect(x0, y0, cellPx, cellPx);
+          continue;
+        }
+
+        if (!t.isPassable) {
+          rCtx.fillStyle = isCrypt ? '#1e293b' : '#29221b';
+        } else if (t.roomType === 'BOSS' || t.hasBoss) {
+          rCtx.fillStyle = mapData.bossSlain ? '#166534' : (isCrypt ? '#0f766e' : '#7f1d1d');
+        } else if (t.roomType === 'EXIT_STAIRS' || t.feature === 'DUNGEON_EXIT') {
+          rCtx.fillStyle = '#ca8a04';
+        } else if (t.roomType === 'TREASURE' || t.hasTreasure) {
+          rCtx.fillStyle = (t.eventResolved || t.treasureLooted) ? '#334155' : '#b45309';
+        } else {
+          rCtx.fillStyle = isCrypt ? '#334155' : '#44382c';
+        }
+        rCtx.fillRect(x0, y0, cellPx - 1, cellPx - 1);
+      }
+    }
+
+    const hX = typeof mapData.heroX === 'number' ? mapData.heroX : 3;
+    const hY = typeof mapData.heroY === 'number' ? mapData.heroY : 16;
+    const hCx = padX + (hX - minX + 0.5) * cellPx;
+    const hCy = padTop + (hY - minY + 0.5) * cellPx;
+    rCtx.fillStyle = '#38bdf8';
+    rCtx.strokeStyle = '#ffffff';
+    rCtx.lineWidth = 2;
+    rCtx.beginPath();
+    rCtx.arc(hCx, hCy, 4.5, 0, Math.PI * 2);
+    rCtx.fill();
+    rCtx.stroke();
+    rCtx.restore();
+    return;
+  }
 
   // Region Header Labels along top border
   rCtx.font = '700 10px Georgia, serif';

@@ -18,12 +18,18 @@ import {
   handleDivineShieldClick
 } from '../combat/combat-ui.js';
 import { renderViewportCenterStage } from '../world/scene-renderer.js';
+import { initGamepad } from './gamepad.js';
 
 let shortcutsInitialized = false;
 let lastRepeatMoveAt = 0;
 const KEY_REPEAT_MOVE_INTERVAL_MS = 165;
 
+export function initShortcuts() {
+  return setupKeyboardShortcuts();
+}
+
 export function setupKeyboardShortcuts() {
+  initGamepad();
   if (shortcutsInitialized) return;
   shortcutsInitialized = true;
 
