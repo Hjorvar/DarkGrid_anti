@@ -15,8 +15,8 @@ const { buyItem, sellItem } = require('../../../src/domain/economy/shop');
 const { acceptContract, abandonContract } = require('../../../src/domain/bounties/board');
 const { buildClientState } = require('../services/client-state-service');
 const {
-  acceptGoblinChieftainQuest,
-  claimGoblinChieftainReward
+  acceptQuestByKey,
+  claimQuestRewardByKey
 } = require('../services/topdown-world-service');
 
 function assertCharacterOwnsItem(db, characterId, itemInstanceId) {
@@ -206,17 +206,18 @@ function handleCharacterTownAction({ db, userId, action, payload, character, lab
     });
   }
 
-  // 10d. THE GOBLIN CHIEFTAIN QUEST: ACCEPT_QUEST & CLAIM_QUEST_REWARD
+  // 10d. OAKHAVEN STORY QUESTS: ACCEPT_QUEST & CLAIM_QUEST_REWARD
   if (action === 'ACCEPT_QUEST') {
     const currentTile = getTileById(db, character.tile_id);
     if (!currentTile || currentTile.terrain !== 'CITY' || currentTile.is_safe !== 1) {
-      throw new Error('You must be in Oakhaven Sanctuary to accept The Goblin Chieftain quest.');
+      throw new Error('You must be in Oakhaven Sanctuary to accept a quest.');
     }
     const activeEnc = getActiveEncounterForCharacter(db, character.id, character.class);
     if (activeEnc) {
       throw new Error('Cannot accept a quest during an active encounter.');
     }
-    const result = acceptGoblinChieftainQuest(db, character.id);
+    const questKey = payload.questKey || 'THE_GOBLIN_CHIEFTAIN';
+    const result = acceptQuestByKey(db, character.id, questKey);
     return res.json({
       ok: true,
       quest: result.quest,
@@ -236,7 +237,8 @@ function handleCharacterTownAction({ db, userId, action, payload, character, lab
     if (activeEnc) {
       throw new Error('Cannot claim a quest reward during an active encounter.');
     }
-    const result = claimGoblinChieftainReward(db, character.id);
+    const questKey = payload.questKey || 'THE_GOBLIN_CHIEFTAIN';
+    const result = claimQuestRewardByKey(db, character.id, questKey);
     return res.json({
       ok: true,
       quest: result.quest,

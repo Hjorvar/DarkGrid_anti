@@ -388,12 +388,21 @@ export function handleSlot1Click() {
   const enc = store.currentState.encounter;
   const tile = store.currentState.currentTile;
   const mapData = store.currentState.topdownMap;
+  const dMap = store.currentState.dungeonMap;
+  const inDungeon = Boolean(dMap && dMap.inDungeon);
   const shCoord = (mapData && mapData.strongholdCoord) || { x: 7, y: 1 };
   const isAtStrongholdGate = Boolean(
+    !inDungeon &&
     mapData &&
     !mapData.bossSlain &&
     (mapData.atStronghold ||
       (tile && Number(tile.x) === Number(shCoord.x) && Number(tile.y) === Number(shCoord.y)))
+  );
+  const isAtRavencragCitadel = Boolean(
+    !inDungeon &&
+    mapData &&
+    !mapData.highlandBossSlain &&
+    mapData.atRavencragCitadel
   );
 
   if (enc && enc.status === 'IN_COMBAT') {
@@ -402,8 +411,14 @@ export function handleSlot1Click() {
     dispatchAction('INVESTIGATE');
   } else if (store.currentState.victory) {
     dispatchAction('DISMISS_VICTORY');
+  } else if (inDungeon && dMap.atBossTile && !dMap.bossSlain) {
+    dispatchAction('ENGAGE_DUNGEON_BOSS');
+  } else if (inDungeon && dMap.atExitTile) {
+    dispatchAction('EXIT_DUNGEON');
   } else if (isAtStrongholdGate) {
     dispatchAction('ENGAGE_STRONGHOLD_BOSS');
+  } else if (isAtRavencragCitadel) {
+    dispatchAction('CONFRONT_HIGHLAND_WARLORD');
   } else if (store.currentState.isSafeCity) {
     dispatchAction('REST');
   } else if (store.currentState.viewportScene && store.currentState.viewportScene.pointOfInterest) {

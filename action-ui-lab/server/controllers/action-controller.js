@@ -192,12 +192,24 @@ function createActionController({ db, userId: defaultUserId, options = {} }) {
         });
       }
 
-      const character = getLivingCharacterByUserId(db, effectiveUserId);
+      let character = getLivingCharacterByUserId(db, effectiveUserId);
+      if (!character && labToolsAllowed && action === 'LAB_SCENARIO') {
+        ensureLivingHero(db, effectiveUserId, payload.classType || 'FIGHTER');
+        character = getLivingCharacterByUserId(db, effectiveUserId);
+      }
       if (!character) {
         return res.json({ ok: true, state: buildClientState(db, effectiveUserId, { labToolsAllowed }) });
       }
 
-      const charRow = db.prepare('SELECT facing, pending_victory_encounter_id, scene_mode FROM characters WHERE id = ?').get(character.id) || {};
+      let charRow = {};
+      try {
+        charRow = db.prepare('SELECT facing, pending_victory_encounter_id, scene_mode, active_dungeon_key, dungeon_x, dungeon_y FROM characters WHERE id = ?').get(character.id) || {};
+      } catch {
+        charRow = db.prepare('SELECT facing, pending_victory_encounter_id, scene_mode FROM characters WHERE id = ?').get(character.id) || {};
+      }
+      character.active_dungeon_key = charRow.active_dungeon_key || null;
+      character.dungeon_x = charRow.dungeon_x !== undefined && charRow.dungeon_x !== null ? Number(charRow.dungeon_x) : null;
+      character.dungeon_y = charRow.dungeon_y !== undefined && charRow.dungeon_y !== null ? Number(charRow.dungeon_y) : null;
       const currentFacing = normalizeFacing(charRow.facing || 'NORTH');
 
       const ctx = { db, userId: effectiveUserId, options, action, payload, character, currentFacing, labToolsAllowed, req, res };

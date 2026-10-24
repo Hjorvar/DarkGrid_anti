@@ -79,10 +79,10 @@ describe('Phase 8 — 30×30 World Architecture, Camera Viewport, Discovery, Que
     return { status: res.status, ...json };
   }
 
-  it('1. Map Integrity: 30x30 (900 tiles), zero isolated passable islands, 3 continuous routes (A/B/C), and 13 landmarks', () => {
-    assert.equal(TOPDOWN_BOUNDS.cols, 30);
+  it('1. Map Integrity: 44x30 (1320 tiles), zero isolated passable islands, 3 continuous routes (A/B/C), and landmarks', () => {
+    assert.equal(TOPDOWN_BOUNDS.cols, 44);
     assert.equal(TOPDOWN_BOUNDS.rows, 30);
-    assert.equal(TOPDOWN_TILES.length, 900);
+    assert.equal(TOPDOWN_TILES.length, 1320);
 
     const dbTileCount = db.prepare("SELECT COUNT(*) AS cnt FROM map_tiles WHERE region_key IN ('BLACKWOOD_FOREST', 'UNDEAD_LANDS')").get().cnt;
     assert.equal(dbTileCount, 900, 'All 900 tiles are persisted in map_tiles across BLACKWOOD_FOREST and UNDEAD_LANDS');
@@ -154,8 +154,8 @@ describe('Phase 8 — 30×30 World Architecture, Camera Viewport, Discovery, Que
     assert.equal(mTopLeft.camPxX, 0);
     assert.equal(mTopLeft.camPxY, 0);
 
-    // 3. Bottom-right corner [29, 29] clamps camera to max world bounds
-    const mBotRight = computeCameraViewportMetrics(1000, 680, mapData, 29, 29);
+    // 3. Bottom-right corner [43, 29] clamps camera to max world bounds
+    const mBotRight = computeCameraViewportMetrics(1000, 680, mapData, 43, 29);
     assert.equal(mBotRight.camPxX, mBotRight.worldPixelW - 1000);
     assert.equal(mBotRight.camPxY, mBotRight.worldPixelH - 680);
   });

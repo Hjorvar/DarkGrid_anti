@@ -79,11 +79,11 @@ describe('Top-Down Exploration — Town, 30×30 Goblin Forest, Stronghold & Phas
     assert.equal(state.currentTile.x, 15);
     assert.equal(state.currentTile.y, 27);
 
-    // Top-down map payload has 30x30 = 900 tiles
+    // Top-down map payload has 44x30 = 1320 tiles across 3 connected regions (900 in Blackwood/Undead + 420 in Ravencrag Highlands)
     assert.ok(state.topdownMap, 'topdownMap payload should exist');
-    assert.equal(state.topdownMap.bounds.cols, 30);
+    assert.equal(state.topdownMap.bounds.cols, 44);
     assert.equal(state.topdownMap.bounds.rows, 30);
-    assert.equal(state.topdownMap.tiles.length, 900);
+    assert.equal(state.topdownMap.tiles.length, 1320);
     assert.equal(state.topdownMap.bossSlain, false);
     assert.deepEqual(state.topdownMap.strongholdCoord, { x: 15, y: 2 });
     assert.deepEqual(state.topdownMap.townCoord, { x: 15, y: 27 });

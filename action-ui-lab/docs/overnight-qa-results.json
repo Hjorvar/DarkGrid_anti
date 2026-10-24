@@ -1,16 +1,13 @@
 {
-  "generatedAt": "2026-10-22T20:58:10.022Z",
+  "generatedAt": "2026-10-24T09:31:35.372Z",
   "areasVerified": 15,
   "screenshots": [
-    "01_area01_world_travel_continuity.png",
-    "02_area02_turning_and_relative_movement.png",
     "03_area03_stage1_secrecy_card.png",
     "04_area04_stage2_monster_reveal.png",
     "05_area05_combat_beats_and_chronicle.png",
     "06_area06_wounded_hero_and_monster_brackets.png",
     "07_area07_flee_and_exploration_recovery.png",
     "08_area08_post_reload_persistence.png",
-    "09_area09_expedition_journal_progress.png",
     "10_area10_size_comparison_arena.png",
     "11_area11_card_fallback_safety.png",
     "12a_area12_stirge_tiny_cutout.png",
@@ -55,22 +52,6 @@
       "noViewportRightDeckOverlap": true,
       "topDeckFits": true,
       "movementDeckFits": true
-    },
-    "1366x768": {
-      "vw": 1366,
-      "vh": 768,
-      "scrollW": 1366,
-      "scrollH": 768,
-      "noHorizontalOverflow": true,
-      "viewportVisible": true
-    },
-    "390x844": {
-      "vw": 390,
-      "vh": 844,
-      "scrollW": 390,
-      "scrollH": 844,
-      "noHorizontalOverflow": true,
-      "viewportVisible": true
     }
   },
   "monsterCutoutDomChecks": [
@@ -208,10 +189,10 @@
     }
   ],
   "performanceMetrics": {
-    "JSHeapUsedSizeMB": 2.4,
-    "JSHeapTotalSizeMB": 4.5,
-    "Nodes": 2629,
-    "JSEventListeners": 87
+    "JSHeapUsedSizeMB": 4.95,
+    "JSHeapTotalSizeMB": 22.5,
+    "Nodes": 2766,
+    "JSEventListeners": 96
   },
   "consoleErrorsCount": 0,
   "pageExceptionsCount": 0,

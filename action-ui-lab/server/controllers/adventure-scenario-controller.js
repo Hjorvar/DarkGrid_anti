@@ -26,13 +26,21 @@ const {
   STRONGHOLD_COORD,
   GOBLIN_CAVE_COORD,
   ANCIENT_CRYPT_COORD,
+  RAVENCRAG_CITADEL_COORD,
   STRONGHOLD_BOSS_PROFILE,
+  HIGHLAND_BOSS_PROFILE,
   ensureStrongholdBossInstance,
+  ensureHighlandBossInstance,
   recordTileDiscovery,
   syncCharacterQuestState,
+  syncAllCharacterQuests,
   updateCharacterLandmarkArrival,
   openLandmarkScene
 } = require('../services/topdown-world-service');
+const {
+  enterDungeon,
+  recordDungeonTileDiscovery
+} = require('../services/dungeon-service');
 
 function handleAdventureScenarioAction({ db, userId, options = {}, action, payload, character, currentFacing, labToolsAllowed = false, res }) {
       // 11b. ADVENTURE EXPERIENCE ACTIONS (Isolated Lab-Only Layer — Phases 3, 5, 6, 8, 9)
@@ -262,6 +270,91 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
         `).run(character.id);
         db.prepare('UPDATE characters SET pending_victory_encounter_id = NULL WHERE id = ?').run(character.id);
 
+        if (!['WOUNDED', 'HEAL', 'GOBLIN_CAVE_DUNGEON', 'ANCIENT_CRYPT_DUNGEON', 'ENTER_GOBLIN_CAVE', 'ENTER_ANCIENT_CRYPT_DUNGEON'].includes(scenario)) {
+          db.prepare('UPDATE characters SET active_dungeon_key = NULL, dungeon_x = NULL, dungeon_y = NULL WHERE id = ?').run(character.id);
+          character.active_dungeon_key = null;
+          character.dungeon_x = null;
+          character.dungeon_y = null;
+        }
+
+        if (scenario === 'GOBLIN_CAVE_DUNGEON' || scenario === 'ENTER_GOBLIN_CAVE') {
+          const caveTile = getTileByCoords(db, GOBLIN_CAVE_COORD.x, GOBLIN_CAVE_COORD.y);
+          if (caveTile) {
+            db.prepare('UPDATE characters SET tile_id = ?, current_hp = max_hp WHERE id = ?').run(caveTile.id, character.id);
+            character.tile_id = caveTile.id;
+            recordTileDiscovery(db, character, caveTile.x, caveTile.y);
+          }
+          enterDungeon(db, character, 'GOBLIN_CAVE');
+          if (payload.dungeonX !== undefined && payload.dungeonY !== undefined) {
+            const dx = Number(payload.dungeonX);
+            const dy = Number(payload.dungeonY);
+            db.prepare('UPDATE characters SET dungeon_x = ?, dungeon_y = ? WHERE id = ?').run(dx, dy, character.id);
+            recordDungeonTileDiscovery(db, character, 'GOBLIN_CAVE', dx, dy);
+          }
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: 'Entered The Goblin Cave subterranean network.',
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
+        if (scenario === 'ANCIENT_CRYPT_DUNGEON' || scenario === 'ENTER_ANCIENT_CRYPT_DUNGEON') {
+          const cryptTile = getTileByCoords(db, ANCIENT_CRYPT_COORD.x, ANCIENT_CRYPT_COORD.y);
+          if (cryptTile) {
+            db.prepare('UPDATE characters SET tile_id = ?, current_hp = max_hp WHERE id = ?').run(cryptTile.id, character.id);
+            character.tile_id = cryptTile.id;
+            recordTileDiscovery(db, character, cryptTile.x, cryptTile.y);
+          }
+          enterDungeon(db, character, 'ANCIENT_CRYPT');
+          if (payload.dungeonX !== undefined && payload.dungeonY !== undefined) {
+            const dx = Number(payload.dungeonX);
+            const dy = Number(payload.dungeonY);
+            db.prepare('UPDATE characters SET dungeon_x = ?, dungeon_y = ? WHERE id = ?').run(dx, dy, character.id);
+            recordDungeonTileDiscovery(db, character, 'ANCIENT_CRYPT', dx, dy);
+          }
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: 'Entered The Ancient Crypt subterranean sepulcher.',
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
+        if (scenario === 'RAVENCRAG_HIGHLANDS' || scenario === 'HIGHLANDS' || scenario === 'GIANTS_SPAN_BRIDGE') {
+          const hlTile = getTileByCoords(db, 35, 15);
+          const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
+          if (hlTile) {
+            db.prepare('UPDATE characters SET tile_id = ?, facing = ?, active_landmark_scene_key = NULL, dismissed_landmark_tile_id = NULL WHERE id = ?').run(hlTile.id, targetFacing, character.id);
+            recordTileDiscovery(db, character, hlTile.x, hlTile.y);
+          }
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: `Positioned at Giant’s Span Bridge [35, 15] in Ravencrag Highlands Facing ${targetFacing}.`,
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
+        if (scenario === 'RAVENCRAG_CITADEL' || scenario === 'CITADEL') {
+          const citTile = getTileByCoords(db, RAVENCRAG_CITADEL_COORD.x, RAVENCRAG_CITADEL_COORD.y);
+          const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
+          if (citTile) {
+            db.prepare('UPDATE characters SET tile_id = ?, facing = ?, active_landmark_scene_key = ?, dismissed_landmark_tile_id = NULL WHERE id = ?').run(citTile.id, targetFacing, 'RAVENCRAG_CITADEL', character.id);
+            recordTileDiscovery(db, character, citTile.x, citTile.y);
+          }
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: `Positioned at Ravencrag Citadel [${RAVENCRAG_CITADEL_COORD.x}, ${RAVENCRAG_CITADEL_COORD.y}] in Ravencrag Highlands.`,
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
         if (scenario === 'TELEPORT') {
           const tx = Number(payload.x ?? TOWN_COORD.x);
           const ty = Number(payload.y ?? TOWN_COORD.y);
@@ -482,24 +575,37 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
           const cityTile = getTileByCoords(db, TOWN_COORD.x, TOWN_COORD.y)
             || db.prepare("SELECT * FROM map_tiles WHERE terrain = 'CITY' AND is_safe = 1 LIMIT 1").get();
           if (cityTile) {
-            db.prepare("UPDATE characters SET tile_id = ?, current_hp = max_hp, facing = 'NORTH', pending_victory_encounter_id = NULL, quest_goblin_chieftain_status = 'NOT_ACCEPTED', goblin_chieftain_slain = 0, active_landmark_scene_key = 'OAKHAVEN', dismissed_landmark_tile_id = NULL WHERE id = ?").run(cityTile.id, character.id);
+            db.prepare(`
+              UPDATE characters
+              SET tile_id = ?, current_hp = max_hp, facing = 'NORTH',
+                  pending_victory_encounter_id = NULL,
+                  quest_goblin_chieftain_status = 'NOT_ACCEPTED', goblin_chieftain_slain = 0,
+                  quest_ancient_crypt_status = 'NOT_ACCEPTED', ancient_crypt_boss_slain = 0,
+                  quest_ravencrag_warlord_status = 'NOT_ACCEPTED', ravencrag_warlord_slain = 0,
+                  active_dungeon_key = NULL, dungeon_x = NULL, dungeon_y = NULL,
+                  active_landmark_scene_key = 'OAKHAVEN', dismissed_landmark_tile_id = NULL
+              WHERE id = ?
+            `).run(cityTile.id, character.id);
           }
           try {
             db.prepare('DELETE FROM character_quests WHERE character_id = ?').run(character.id);
             db.prepare('DELETE FROM character_discovered_tiles WHERE character_id = ?').run(character.id);
+            db.prepare('DELETE FROM character_dungeon_discovered_tiles WHERE character_id = ?').run(character.id);
+            db.prepare('DELETE FROM character_dungeon_events WHERE character_id = ?').run(character.id);
           } catch {
             // Ignore if tables not present
           }
           ensureStrongholdBossInstance(db, { forceRespawn: true });
-          recordTileDiscovery(db, character, TOWN_COORD.x, TOWN_COORD.y);
+          ensureHighlandBossInstance(db, { forceRespawn: true });
           recordTileDiscovery(db, character, TOWN_COORD.x, TOWN_COORD.y);
           openLandmarkScene(db, character.id);
           syncCharacterQuestState(db, character.id);
+          syncAllCharacterQuests(db, character.id);
           resetAdventureState(character.id);
           return res.json({
             ok: true,
             state: buildClientState(db, userId, {
-              infoMessage: 'Sandbox world reset: restored Goblin Stronghold Chieftain, reset quest & discovery state, and returned to Oakhaven Sanctuary.',
+              infoMessage: 'Sandbox world reset: restored regional bosses, reset quest & dungeon discovery state, and returned to Oakhaven Sanctuary.',
               fxCue: { type: 'HEAL' }
             })
           });

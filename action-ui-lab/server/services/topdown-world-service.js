@@ -29,19 +29,20 @@ const {
   investigateEncounter
 } = require('../../../src/domain/encounters/engine');
 const { startCombat } = require('../../../src/domain/combat/engine');
+const { isDungeonBossDefeated } = require('./dungeon-service');
 
-const TOPDOWN_WORLD_VERSION = 'PHASE_9B_WORLD_EXPANSION';
+const TOPDOWN_WORLD_VERSION = 'PHASE_9C_DUNGEONS_AND_HIGHLANDS';
 
 const TOPDOWN_REGION_BOUNDS = Object.freeze({
   minX: 0,
-  maxX: 29,
+  maxX: 43,
   minY: 0,
   maxY: 29,
-  width: 30,
+  width: 44,
   height: 30,
-  cols: 30,
+  cols: 44,
   rows: 30,
-  totalTiles: 900
+  totalTiles: 1320
 });
 
 const TOWN_COORD = Object.freeze({ x: 15, y: 27 });
@@ -49,6 +50,7 @@ const NORTH_GATE_COORD = Object.freeze({ x: 15, y: 26 });
 const STRONGHOLD_COORD = Object.freeze({ x: 15, y: 2 });
 const GOBLIN_CAVE_COORD = Object.freeze({ x: 9, y: 12 });
 const ANCIENT_CRYPT_COORD = Object.freeze({ x: 26, y: 5 });
+const RAVENCRAG_CITADEL_COORD = Object.freeze({ x: 37, y: 3 });
 
 const LANDMARK_DEFINITIONS = Object.freeze({
   OAKHAVEN: {
@@ -374,6 +376,122 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     alwaysKnown: false,
     description:
       'A monumental gothic mausoleum of black obsidian and iron gates rising from the northern Necropolis. Necrotic mist coils around the catacomb threshold where the Barrow Kings slumber.'
+  },
+  // ==========================================================================
+  // PHASE 9C — RAVENCRAG HIGHLANDS LANDMARKS (Minor POIs + Ravencrag Citadel)
+  // ==========================================================================
+  WINDSCAR_GATE: {
+    key: 'WINDSCAR_GATE',
+    x: 31,
+    y: 23,
+    name: 'Windscar Gate',
+    category: 'PASS',
+    regionKey: 'RAVENCRAG_HIGHLANDS',
+    terrain: 'HILLS',
+    feature: 'WINDSCAR_GATE',
+    visualType: 'HIGHLAND_PASS_GATE',
+    visualKind: 'HIGHLAND_LANDMARK',
+    isSafe: 0,
+    alwaysKnown: false,
+    description:
+      'Two weather-carved granite monoliths frame the western switchback pass into Ravencrag Highlands. Cold mountain gales howl through the cleft.'
+  },
+  HIGHLAND_PINE_TOR: {
+    key: 'HIGHLAND_PINE_TOR',
+    x: 34,
+    y: 21,
+    name: 'Whispering Pine Tor',
+    category: 'LANDMARK',
+    regionKey: 'RAVENCRAG_HIGHLANDS',
+    terrain: 'FOREST',
+    feature: 'HIGHLAND_PINE_TOR',
+    visualType: 'HIGHLAND_WOODS_TOR',
+    visualKind: 'HIGHLAND_WOODS',
+    isSafe: 0,
+    alwaysKnown: false,
+    description:
+      'A wind-twisted stand of gnarled alpine pines and weathered scout cairns clinging to the ochre-slate slopes of the Windscar Foothills.'
+  },
+  GIANTS_SPAN_BRIDGE: {
+    key: 'GIANTS_SPAN_BRIDGE',
+    x: 35,
+    y: 15,
+    name: 'Giant’s Span Bridge',
+    category: 'BRIDGE',
+    regionKey: 'RAVENCRAG_HIGHLANDS',
+    terrain: 'BRIDGE',
+    feature: 'GIANTS_SPAN_BRIDGE',
+    visualType: 'HIGHLAND_GORGE_BRIDGE',
+    visualKind: 'BRIDGE',
+    isSafe: 0,
+    alwaysKnown: false,
+    description:
+      'A colossal cyclopean stone arch bridge spanning the yawning abyss of Shattered Gorge, linking the southern foothills to the upper highland crags.'
+  },
+  CYCLOPS_WATCHTOWER: {
+    key: 'CYCLOPS_WATCHTOWER',
+    x: 39,
+    y: 13,
+    name: 'Ruined Cyclops Watchtower',
+    category: 'RUINS',
+    regionKey: 'RAVENCRAG_HIGHLANDS',
+    terrain: 'UNDERGROUND_RUINS',
+    feature: 'CYCLOPS_WATCHTOWER',
+    visualType: 'HIGHLAND_RUIN_TOWER',
+    visualKind: 'HIGHLAND_LANDMARK',
+    isSafe: 0,
+    alwaysKnown: false,
+    description:
+      'Shattered megalithic blocks and a collapsed signal-brazier overlook the eastern rim of Shattered Gorge where ogre sentries keep watch.'
+  },
+  STORMPEAK_CAIRN: {
+    key: 'STORMPEAK_CAIRN',
+    x: 37,
+    y: 8,
+    name: 'Stormpeak Watch Cairn',
+    category: 'CAIRN',
+    regionKey: 'RAVENCRAG_HIGHLANDS',
+    terrain: 'HILLS',
+    feature: 'STORMPEAK_CAIRN',
+    visualType: 'HIGHLAND_CAIRN',
+    visualKind: 'HIGHLAND_LANDMARK',
+    isSafe: 0,
+    alwaysKnown: false,
+    description:
+      'A towering cairn of frost-split granite and iron war-horns standing at the junction where the northern mountain trail climbs toward Ravencrag Citadel.'
+  },
+  CITADEL_APPROACH: {
+    key: 'CITADEL_APPROACH',
+    x: 37,
+    y: 4,
+    name: 'Citadel Switchback',
+    category: 'APPROACH',
+    regionKey: 'RAVENCRAG_HIGHLANDS',
+    terrain: 'HILLS',
+    feature: 'CITADEL_APPROACH',
+    visualType: 'HIGHLAND_CITADEL_APPROACH',
+    visualKind: 'HIGHLAND_PATH',
+    isSafe: 0,
+    alwaysKnown: false,
+    description:
+      'A steep stone ramp flanked by iron war-braziers and spiked barricades ascending directly to the gatehouse of Ravencrag Citadel.'
+  },
+  RAVENCRAG_CITADEL: {
+    key: 'RAVENCRAG_CITADEL',
+    x: 37,
+    y: 3,
+    name: 'Ravencrag Citadel',
+    category: 'FORTRESS_RUIN',
+    regionKey: 'RAVENCRAG_HIGHLANDS',
+    terrain: 'UNDERGROUND_RUINS',
+    feature: 'RAVENCRAG_CITADEL',
+    visualType: 'RAVENCRAG_CITADEL_GATE',
+    visualKind: 'CITADEL_GATE',
+    isSafe: 0,
+    alwaysKnown: false,
+    bossKey: 'WARLORD_KRAUG',
+    description:
+      'Perched atop the highest jagged granite spire of Ravencrag Highlands, the cyclopean fortress ruins of Ravencrag Citadel echo with war-horns where Warlord Kraug the Crag-Breaker commands his highland horde.'
   }
 });
 
@@ -389,6 +507,34 @@ const QUEST_GOBLIN_CHIEFTAIN = Object.freeze({
     'A goblin chieftain has taken control of an old stronghold deep within Blackwood Forest. Travelers are disappearing. Find the stronghold and defeat the chieftain.',
   rewardXpBase: 250,
   rewardGold: 100
+});
+
+const QUEST_ANCIENT_CRYPT = Object.freeze({
+  key: 'THE_ANCIENT_CRYPT',
+  title: 'The Crypt of the Barrow-King',
+  giver: 'Sister Meriel, Shrine Keeper of Oakhaven',
+  regionKey: 'UNDEAD_LANDS',
+  regionName: 'The Undead Lands',
+  strongholdName: 'Ancient Crypt',
+  strongholdCoord: { x: ANCIENT_CRYPT_COORD.x, y: ANCIENT_CRYPT_COORD.y },
+  description:
+    'Necrotic mist seeps westward from the Undead Lands. Journey to the Ancient Crypt in the northern Necropolis [26, 5], descend into its catacombs, and destroy Lord Malakor the Barrow-Wight King.',
+  rewardXpBase: 220,
+  rewardGold: 120
+});
+
+const QUEST_RAVENCRAG_WARLORD = Object.freeze({
+  key: 'THE_RAVENCRAG_WARLORD',
+  title: 'The Warlord of Ravencrag',
+  giver: 'Captain Vane of Oakhaven Watch',
+  regionKey: 'RAVENCRAG_HIGHLANDS',
+  regionName: 'Ravencrag Highlands',
+  strongholdName: 'Ravencrag Citadel',
+  strongholdCoord: { x: RAVENCRAG_CITADEL_COORD.x, y: RAVENCRAG_CITADEL_COORD.y },
+  description:
+    'Warlord Kraug the Crag-Breaker has united the highland orc clans, ogre brutes, and mountain trolls atop Ravencrag Citadel [37, 3]. Climb the eastern highland passes and break his hold on the Stormpeak Crags.',
+  rewardXpBase: 260,
+  rewardGold: 150
 });
 
 const QUEST_STATUS_LABELS = Object.freeze({
@@ -413,8 +559,24 @@ const STRONGHOLD_BOSS_PROFILE = Object.freeze({
     'Sharpened timber palisades and a crude watchtower rise through the choking mist of northern Blackwood Forest. Iron braziers burn with foul pitch beside the spiked gate where the Goblin Chieftain holds court.'
 });
 
+const HIGHLAND_BOSS_PROFILE = Object.freeze({
+  bossKey: 'WARLORD_KRAUG',
+  customTitle: 'Warlord Kraug the Crag-Breaker',
+  preferredMonsterName: 'Ogre',
+  fallbackMonsterName: 'Orc',
+  fallbackMonsterId: 15,
+  maxHp: 20,
+  heldGold: 80,
+  combatImageSlug: 'ogre',
+  combatImageUrl: '/images/monsters/ogre.png',
+  entranceImageUrl: '/lab-assets/images/perspective/barrier_darkmount_crags_pov.jpg',
+  entranceTitle: 'Ravencrag Citadel — Throne of the Crag-Breaker',
+  entranceDescription:
+    'Cyclopean granite walls and iron war-braziers crown the storm-swept peak of Ravencrag Citadel where Warlord Kraug the Crag-Breaker marshals his highland horde.'
+});
+
 // ============================================================================
-// AUTHORITATIVE ROUTE & TOPOGRAPHY DEFINITIONS FOR THE 30×30 WORLD
+// AUTHORITATIVE ROUTE & TOPOGRAPHY DEFINITIONS FOR THE 44×30 WORLD
 // ============================================================================
 
 const ROUTE_A_MAIN_TRAIL = Object.freeze([
@@ -457,6 +619,17 @@ const ROUTE_D_UNDEAD_SEPULCHER_ROAD = Object.freeze([
   [26, 8], [26, 7], [26, 6], [26, 5]
 ]);
 
+const ROUTE_E_RAVENCRAG_HIGHLAND_ROAD = Object.freeze([
+  [15, 27], [15, 26], [15, 25],
+  [16, 25], [17, 25], [18, 25], [19, 25], [20, 25], [21, 25],
+  [22, 25], [23, 25], [24, 25], [25, 25], [25, 24], [25, 23],
+  [26, 23], [27, 23], [28, 23], [29, 23], [30, 23], [31, 23],
+  [32, 23], [33, 23], [34, 23], [34, 22], [34, 21], [34, 20],
+  [35, 20], [35, 19], [35, 18], [35, 17], [35, 16], [35, 15],
+  [35, 14], [35, 13], [36, 13], [36, 12], [36, 11], [37, 11],
+  [37, 10], [37, 9], [37, 8], [37, 7], [37, 6], [37, 5], [37, 4], [37, 3]
+]);
+
 const CONNECTOR_TRAILS = Object.freeze([
   // Westgate outer commons connector
   [14, 27], [14, 26], [13, 26], [12, 26], [12, 25], [12, 24], [12, 23],
@@ -477,11 +650,23 @@ const CONNECTOR_TRAILS = Object.freeze([
   // Undead Lands Northern Ossuary Trail (Eastbank [22,9] -> Blighted Chapel [26,9])
   [22, 9], [23, 9], [24, 9], [25, 9], [26, 9],
   // Undead Lands Western Barrow Ridge Path
-  [24, 23], [24, 22], [24, 21], [24, 20], [24, 19], [24, 18], [24, 17], [24, 16], [24, 15]
+  [24, 23], [24, 22], [24, 21], [24, 20], [24, 19], [24, 18], [24, 17], [24, 16], [24, 15],
+  // Ravencrag Highlands — Southern Foothill Spur ([25,25] -> [31,25] -> [31,23])
+  [25, 25], [26, 25], [27, 25], [28, 25], [29, 25], [30, 25], [31, 25], [31, 24], [31, 23],
+  // Ravencrag Highlands — Central Gorge Pass (Weeping Barrow [26,15] -> West Gorge Arch [31,15] -> Giant's Span [35,15])
+  [26, 15], [27, 15], [28, 15], [29, 15], [30, 15], [31, 15], [31, 16], [32, 16], [33, 16], [34, 16], [35, 16], [35, 15],
+  // Ravencrag Highlands — Eastern Watchtower Ridge ([35,13] -> Ruined Cyclops Watchtower [39,13] -> Stormpeak Cairn [37,8])
+  [35, 13], [36, 13], [37, 13], [38, 13], [39, 13], [39, 12], [39, 11], [39, 10], [39, 9], [39, 8], [38, 8], [37, 8],
+  // Ravencrag Highlands — Northern Stormpeak Pass (Blighted Chapel [26,9] -> Stormpeak Watch Cairn [37,8])
+  [26, 9], [27, 9], [28, 9], [29, 9], [30, 9], [31, 9], [32, 9], [33, 9], [33, 8], [34, 8], [35, 8], [36, 8], [37, 8]
 ]);
 
 function isTileCoordInUndeadLands(x, y) {
   return Number(x) >= 23 && Number(x) <= 29 && Number(y) >= 0 && Number(y) <= 26;
+}
+
+function isTileCoordInRavencragHighlands(x, y) {
+  return Number(x) >= 30 && Number(x) <= 43 && Number(y) >= 0 && Number(y) <= 29;
 }
 
 function buildPhase8RegionTiles() {
@@ -496,6 +681,7 @@ function buildPhase8RegionTiles() {
     ROUTE_B_WESTERN_WILDERNESS,
     ROUTE_C_EASTERN_RIVER,
     ROUTE_D_UNDEAD_SEPULCHER_ROAD,
+    ROUTE_E_RAVENCRAG_HIGHLAND_ROAD,
     CONNECTOR_TRAILS
   ]) {
     for (const [x, y] of list) {
@@ -520,7 +706,15 @@ function buildPhase8RegionTiles() {
   riverSet.delete('20,9');
   riverSet.delete('20,4');
 
-  // Impassable Rock Crags (Stonefang Crag, Whispering Crags & Tombstone Monoliths)
+  // Shattered Gorge Chasm in Ravencrag Highlands (runs east-west along y = 15 for x = 30..42, crossed at [31,15] and [35,15])
+  const highlandGorgeChasmSet = new Set();
+  for (let gx = 30; gx <= 42; gx++) {
+    if (gx !== 31 && gx !== 35) {
+      highlandGorgeChasmSet.add(`${gx},15`);
+    }
+  }
+
+  // Impassable Rock Crags (Stonefang Crag, Whispering Crags, Tombstone Monoliths & Ravencrag Spires)
   const cragCoords = new Map([
     ['11,19', 'Stonefang Crag North-West'],
     ['12,19', 'Stonefang Crag North-East'],
@@ -535,7 +729,17 @@ function buildPhase8RegionTiles() {
     ['24,11', 'Obsidian Barrow Monolith'],
     ['24,12', 'Shattered Sepulcher Spire'],
     ['28,12', 'Jagged Tombstone Crag'],
-    ['28,13', 'Weathered Mausoleum Cliff']
+    ['28,13', 'Weathered Mausoleum Cliff'],
+    ['32,19', 'Windscar Fang Crag'],
+    ['33,19', 'Windscar Ridge Wall'],
+    ['38,20', 'Razorback Highland Crag'],
+    ['39,20', 'Razorback Granite Spire'],
+    ['33,11', 'Gorge Rim Buttress'],
+    ['33,12', 'Sheer Canyon Pillar'],
+    ['40,6', 'Stormpeak East Pinnacles'],
+    ['41,6', 'Stormpeak Ice-Cliffs'],
+    ['33,4', 'West Stormpeak Crag'],
+    ['34,4', 'Raven-Beak Spire']
   ]);
 
   // Impassable Briar Thickets in Goblin Forest
@@ -558,6 +762,7 @@ function buildPhase8RegionTiles() {
       const lm = landmarkByCoord.get(key) || null;
       const isOnTrail = trailSet.has(key);
       const inUndeadRegion = isTileCoordInUndeadLands(x, y);
+      const inHighlandsRegion = isTileCoordInRavencragHighlands(x, y);
 
       // Compute cardinal path connections for trail tiles
       const pathConnections = [];
@@ -570,12 +775,14 @@ function buildPhase8RegionTiles() {
 
       // 1. Explicit Landmarks
       if (lm) {
-        const lmRegion = lm.regionKey || (inUndeadRegion ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST');
+        const lmRegion = lm.regionKey || (inHighlandsRegion ? 'RAVENCRAG_HIGHLANDS' : (inUndeadRegion ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST'));
         const lmBiome = lm.terrain === 'CITY'
           ? 'SANCTUARY'
-          : (lmRegion === 'UNDEAD_LANDS'
-            ? (y <= 7 ? 'NECROPOLIS_SANCTUM' : (y <= 16 ? 'ASHEN_BARROWLANDS' : 'DEADMANS_MIRE'))
-            : 'BLACKWOOD_FOREST');
+          : (lmRegion === 'RAVENCRAG_HIGHLANDS'
+            ? (y <= 9 ? 'STORMPEAK_CRAGS' : (y <= 18 ? 'SHATTERED_GORGE' : 'WINDSCAR_FOOTHILLS'))
+            : (lmRegion === 'UNDEAD_LANDS'
+              ? (y <= 7 ? 'NECROPOLIS_SANCTUM' : (y <= 16 ? 'ASHEN_BARROWLANDS' : 'DEADMANS_MIRE'))
+              : 'BLACKWOOD_FOREST'));
         tiles.push({
           x,
           y,
@@ -591,7 +798,11 @@ function buildPhase8RegionTiles() {
           pathConnections,
           isLandmark: true,
           landmarkKey: lm.key,
-          encounterProfileKey: lm.isSafe ? 'SAFE_NONE' : (lmRegion === 'UNDEAD_LANDS' ? 'UNDEAD_LANDS' : 'GOBLIN_FOREST'),
+          encounterProfileKey: lm.isSafe
+            ? 'SAFE_NONE'
+            : (lmRegion === 'RAVENCRAG_HIGHLANDS'
+              ? 'RAVENCRAG_HIGHLANDS'
+              : (lmRegion === 'UNDEAD_LANDS' ? 'UNDEAD_LANDS' : 'GOBLIN_FOREST')),
           bossKey: lm.bossKey || null,
           description: lm.description
         });
@@ -690,6 +901,30 @@ function buildPhase8RegionTiles() {
         continue;
       }
 
+      // 2c. Ravencrag Citadel Flanking Fortress Walls in Northern Highlands ([35..39, 2] and [35,3], [36,3], [38,3], [39,3])
+      if ((y === 2 && x >= 35 && x <= 39) || (y === 3 && (x === 35 || x === 36 || x === 38 || x === 39))) {
+        tiles.push({
+          x,
+          y,
+          name: y === 2 ? 'Ravencrag Citadel Inner Keep' : 'Citadel Cyclopean Rampart',
+          terrain: 'MOUNTAINS',
+          feature: 'CITADEL_BASTION',
+          is_passable: 0,
+          is_safe: 0,
+          region_key: 'RAVENCRAG_HIGHLANDS',
+          biome: 'STORMPEAK_CRAGS',
+          visualType: 'CITADEL_WALL',
+          visualKind: 'CITADEL_WALL',
+          pathConnections: [],
+          isLandmark: false,
+          landmarkKey: null,
+          encounterProfileKey: 'SAFE_NONE',
+          bossKey: null,
+          description: 'Massive storm-blackened granite battlements and iron-spiked ramparts surrounding Ravencrag Citadel.'
+        });
+        continue;
+      }
+
       // 3. Blackwater River channel
       if (riverSet.has(key)) {
         tiles.push({
@@ -714,20 +949,76 @@ function buildPhase8RegionTiles() {
         continue;
       }
 
-      // 4. Outer World Perimeter (`x=0`, `x=29`, `y=0`, `y=29`)
-      if (x === 0 || x === 29 || y === 0 || y === 29) {
-        const isUndeadBorder = inUndeadRegion;
-        const isCliff = isUndeadBorder || (y >= 25) || (y === 0 && x >= 11 && x <= 19);
+      // 3b. Shattered Gorge Abyssal Chasm in Ravencrag Highlands (y = 15, x = 30..42 except crossings at [31,15] and [35,15])
+      if (highlandGorgeChasmSet.has(key)) {
         tiles.push({
           x,
           y,
-          name: isUndeadBorder ? 'Necropolis Chasm Escarpment' : (isCliff ? 'Frontier Escarpment' : 'Impassable Blackwood Bramble'),
+          name: 'Shattered Gorge Abyss',
+          terrain: 'MOUNTAINS',
+          feature: 'SHATTERED_GORGE_CHASM',
+          is_passable: 0,
+          is_safe: 0,
+          region_key: 'RAVENCRAG_HIGHLANDS',
+          biome: 'SHATTERED_GORGE',
+          visualType: 'HIGHLAND_CHASM',
+          visualKind: 'GORGE_CHASM',
+          pathConnections: [],
+          isLandmark: false,
+          landmarkKey: null,
+          encounterProfileKey: 'SAFE_NONE',
+          bossKey: null,
+          description: 'A sheer, wind-scoured canyon abyss plunging hundreds of feet between the Windscar Foothills and the upper Stormpeak Crags. Cross via Giant’s Span Bridge [35, 15] or West Gorge Arch [31, 15].'
+        });
+        continue;
+      }
+
+      // 3c. West Gorge Natural Stone Arch [31, 15]
+      if (x === 31 && y === 15) {
+        tiles.push({
+          x,
+          y,
+          name: 'West Gorge Stone Arch',
+          terrain: 'BRIDGE',
+          feature: 'WEST_GORGE_ARCH',
+          is_passable: 1,
+          is_safe: 0,
+          region_key: 'RAVENCRAG_HIGHLANDS',
+          biome: 'SHATTERED_GORGE',
+          visualType: 'HIGHLAND_GORGE_BRIDGE',
+          visualKind: 'BRIDGE',
+          pathConnections,
+          isLandmark: false,
+          landmarkKey: null,
+          encounterProfileKey: 'RAVENCRAG_HIGHLANDS',
+          bossKey: null,
+          description: 'A narrow wind-carved natural rock bridge spanning the western throat of Shattered Gorge.'
+        });
+        continue;
+      }
+
+      // 4. Outer World Perimeter (`x=0`, `x=43`, `y=0`, `y=29`) and Ridge Escarpment at `x=29` (except trail passes)
+      if (x === 0 || x === 43 || y === 0 || y === 29 || (x === 29 && !isOnTrail)) {
+        const tileRegion = inHighlandsRegion
+          ? 'RAVENCRAG_HIGHLANDS'
+          : (inUndeadRegion ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST');
+        const isCliff = tileRegion !== 'BLACKWOOD_FOREST' || (y >= 25) || (y === 0 && x >= 11 && x <= 19) || x === 29;
+        tiles.push({
+          x,
+          y,
+          name: tileRegion === 'RAVENCRAG_HIGHLANDS'
+            ? 'Ravencrag Frontier Escarpment'
+            : (tileRegion === 'UNDEAD_LANDS'
+              ? 'Necropolis Ridge Escarpment'
+              : (isCliff ? 'Frontier Escarpment' : 'Impassable Blackwood Bramble')),
           terrain: isCliff ? 'MOUNTAINS' : 'FOREST',
           feature: isCliff ? 'BORDER_CLIFF' : 'IMPASSABLE_THICKET',
           is_passable: 0,
           is_safe: 0,
-          region_key: isUndeadBorder ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST',
-          biome: isUndeadBorder ? 'UNDEAD_BORDER' : 'BLACKWOOD_BORDER',
+          region_key: tileRegion,
+          biome: tileRegion === 'RAVENCRAG_HIGHLANDS'
+            ? 'HIGHLAND_BORDER'
+            : (tileRegion === 'UNDEAD_LANDS' ? 'UNDEAD_BORDER' : 'BLACKWOOD_BORDER'),
           visualType: isCliff ? 'ROCK_CRAG' : 'THICKET_BLOCK',
           visualKind: isCliff ? 'MOUNTAIN_CRAG' : 'DENSE_WOODS',
           pathConnections: [],
@@ -735,17 +1026,19 @@ function buildPhase8RegionTiles() {
           landmarkKey: null,
           encounterProfileKey: 'SAFE_NONE',
           bossKey: null,
-          description: isUndeadBorder
-            ? 'Jagged slate cliffs and abyssal fissures sealing the outer boundary of the Undead Lands.'
-            : (isCliff
-              ? 'Sheer frontier cliffs sealing the outer boundary of the valley.'
-              : 'An impenetrable wall of primeval ironwood and razor-sharp blackbriar.')
+          description: tileRegion === 'RAVENCRAG_HIGHLANDS'
+            ? 'Towering knife-edged granite peaks sealing the outer perimeter of Ravencrag Highlands.'
+            : (tileRegion === 'UNDEAD_LANDS'
+              ? 'Jagged slate cliffs and abyssal fissures dividing the Undead Lands from the eastern mountain passes.'
+              : (isCliff
+                ? 'Sheer frontier cliffs sealing the outer boundary of the valley.'
+                : 'An impenetrable wall of primeval ironwood and razor-sharp blackbriar.'))
         });
         continue;
       }
 
-      // 5. Southern Frontier & Oakhaven Defensive Perimeter (`y = 28` and Oakhaven flanking walls on `y = 27`)
-      if (y === 28 || (y === 27 && ((x >= 11 && x <= 13) || x === 18 || x >= 22 || x <= 8))) {
+      // 5. Southern Frontier & Oakhaven Defensive Perimeter (`y = 28` and Oakhaven flanking walls on `y = 27` in Blackwood/Undead)
+      if (!inHighlandsRegion && (y === 28 || (y === 27 && ((x >= 11 && x <= 13) || x === 18 || x >= 22 || x <= 8)))) {
         const isTownWall = y === 28 && x >= 12 && x <= 18;
         tiles.push({
           x,
@@ -771,19 +1064,18 @@ function buildPhase8RegionTiles() {
         continue;
       }
 
-      // 6. Named Interior Crags (Stonefang Crag, Whispering Crags & Undead Monoliths)
-      if (cragCoords.has(key)) {
-        const cragName = cragCoords.get(key);
+      // 5b. Southern Highland Escarpment (`y = 28` in Ravencrag Highlands)
+      if (inHighlandsRegion && y === 28) {
         tiles.push({
           x,
           y,
-          name: cragName,
+          name: 'Windscar Southern Bluff',
           terrain: 'MOUNTAINS',
-          feature: inUndeadRegion ? 'BARROW_MONOLITH' : 'STONEFANG_CRAG',
+          feature: 'HIGHLAND_SOUTH_BLUFF',
           is_passable: 0,
           is_safe: 0,
-          region_key: inUndeadRegion ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST',
-          biome: inUndeadRegion ? 'ASHEN_BARROWLANDS' : 'BLACKWOOD_HIGHLANDS',
+          region_key: 'RAVENCRAG_HIGHLANDS',
+          biome: 'WINDSCAR_FOOTHILLS',
           visualType: 'ROCK_CRAG',
           visualKind: 'MOUNTAIN_CRAG',
           pathConnections: [],
@@ -791,9 +1083,41 @@ function buildPhase8RegionTiles() {
           landmarkKey: null,
           encounterProfileKey: 'SAFE_NONE',
           bossKey: null,
-          description: inUndeadRegion
-            ? 'Shattered black-slate monoliths and collapsed tomb masonry blocking direct passage.'
-            : 'A sheer wall of jagged black granite rising abruptly from the forest floor, blocking direct passage.'
+          description: 'Steep granite cliffs dropping away into the southern cloud-sea.'
+        });
+        continue;
+      }
+
+      // 6. Named Interior Crags (Stonefang Crag, Whispering Crags, Undead Monoliths & Ravencrag Spires)
+      if (cragCoords.has(key)) {
+        const cragName = cragCoords.get(key);
+        const cragRegion = inHighlandsRegion
+          ? 'RAVENCRAG_HIGHLANDS'
+          : (inUndeadRegion ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST');
+        tiles.push({
+          x,
+          y,
+          name: cragName,
+          terrain: 'MOUNTAINS',
+          feature: inHighlandsRegion ? 'HIGHLAND_CRAG' : (inUndeadRegion ? 'BARROW_MONOLITH' : 'STONEFANG_CRAG'),
+          is_passable: 0,
+          is_safe: 0,
+          region_key: cragRegion,
+          biome: inHighlandsRegion
+            ? (y <= 9 ? 'STORMPEAK_CRAGS' : (y <= 18 ? 'SHATTERED_GORGE' : 'WINDSCAR_FOOTHILLS'))
+            : (inUndeadRegion ? 'ASHEN_BARROWLANDS' : 'BLACKWOOD_HIGHLANDS'),
+          visualType: 'ROCK_CRAG',
+          visualKind: 'MOUNTAIN_CRAG',
+          pathConnections: [],
+          isLandmark: false,
+          landmarkKey: null,
+          encounterProfileKey: 'SAFE_NONE',
+          bossKey: null,
+          description: inHighlandsRegion
+            ? 'A sheer spire of wind-carved highland granite blocking direct passage.'
+            : (inUndeadRegion
+              ? 'Shattered black-slate monoliths and collapsed tomb masonry blocking direct passage.'
+              : 'A sheer wall of jagged black granite rising abruptly from the forest floor, blocking direct passage.')
         });
         continue;
       }
@@ -869,8 +1193,42 @@ function buildPhase8RegionTiles() {
         continue;
       }
 
-      // 9. Passable Trail Tiles (Goblin Forest Trails vs Undead Lands Sepulcher Roads)
+      // 9. Passable Trail Tiles (Ravencrag Highlands vs Undead Lands vs Goblin Forest)
       if (isOnTrail) {
+        if (inHighlandsRegion) {
+          const isStormpeak = y <= 9;
+          const isGorge = y >= 10 && y <= 18;
+          const highlandTrailName = isStormpeak
+            ? 'Stormpeak Switchback'
+            : (isGorge ? 'Shattered Gorge Ledge-Path' : 'Windscar Highland Road');
+          const highlandTrailDesc = isStormpeak
+            ? 'A steep wind-lashed stone switchback ascending the upper crags toward Ravencrag Citadel.'
+            : (isGorge
+              ? 'A narrow cliff-side track carved into the granite walls above Shattered Gorge.'
+              : 'An ancient cairn-marked highland road winding through heather slopes and windswept scree.');
+
+          tiles.push({
+            x,
+            y,
+            name: highlandTrailName,
+            terrain: 'HILLS',
+            feature: 'HIGHLAND_ROAD',
+            is_passable: 1,
+            is_safe: 0,
+            region_key: 'RAVENCRAG_HIGHLANDS',
+            biome: isStormpeak ? 'STORMPEAK_CRAGS' : (isGorge ? 'SHATTERED_GORGE' : 'WINDSCAR_FOOTHILLS'),
+            visualType: 'HIGHLAND_TRAIL',
+            visualKind: 'HIGHLAND_PATH',
+            pathConnections,
+            isLandmark: false,
+            landmarkKey: null,
+            encounterProfileKey: 'RAVENCRAG_HIGHLANDS',
+            bossKey: null,
+            description: highlandTrailDesc
+          });
+          continue;
+        }
+
         if (inUndeadRegion) {
           const isNecropolis = y <= 8;
           const isMire = y >= 18;
@@ -945,7 +1303,51 @@ function buildPhase8RegionTiles() {
         continue;
       }
 
-      // 10. Off-Trail Passable Wilderness (Undead Lands vs Goblin Forest)
+      // 10. Off-Trail Passable Wilderness (Ravencrag Highlands vs Undead Lands vs Goblin Forest)
+      if (inHighlandsRegion) {
+        const isStormpeak = y <= 9;
+        const isGorge = y >= 10 && y <= 18;
+        const isHighlandWoods = !isStormpeak && ((x * 3 + y * 7) % 6 === 0);
+        const isRuinOutcrop = ((x * 11 + y * 5) % 13 === 0);
+        const highlandBiome = isStormpeak ? 'STORMPEAK_CRAGS' : (isGorge ? 'SHATTERED_GORGE' : 'WINDSCAR_FOOTHILLS');
+        const highlandTerrain = isHighlandWoods ? 'FOREST' : (isRuinOutcrop ? 'UNDERGROUND_RUINS' : 'HILLS');
+        const highlandVisualType = isStormpeak
+          ? 'STORMPEAK_SLOPE'
+          : (isHighlandWoods ? 'HIGHLAND_PINE_GROVE' : (isGorge ? 'GORGE_OVERLOOK' : 'HIGHLAND_HEATHER'));
+        const highlandVisualKind = isHighlandWoods ? 'HIGHLAND_WOODS' : 'HIGHLAND_SLOPE';
+        const highlandName = isStormpeak
+          ? (isRuinOutcrop ? 'Shattered Watch-Bastion' : 'Stormpeak Crag Ledge')
+          : (isGorge
+            ? (isHighlandWoods ? 'Gorge-Rim Pine Stand' : 'Shattered Gorge Scree')
+            : (isHighlandWoods ? 'Wind-Bent Highland Woods' : 'Windscar Heather Slope'));
+        const highlandDesc = isStormpeak
+          ? 'Frost-rimed granite ledges and wind-scoured boulders beneath the shadow of Ravencrag Citadel.'
+          : (isGorge
+            ? 'Steep shale slopes and wind-carved ravines overlooking the abyss of Shattered Gorge.'
+            : 'Rolling highland heather, ochre slate outcrops, and stunted mountain pines swept by cold eastern winds.');
+
+        tiles.push({
+          x,
+          y,
+          name: highlandName,
+          terrain: highlandTerrain,
+          feature: isHighlandWoods ? 'HIGHLAND_WOODS' : (isRuinOutcrop ? 'HIGHLAND_RUIN' : 'HIGHLAND_SLOPE'),
+          is_passable: 1,
+          is_safe: 0,
+          region_key: 'RAVENCRAG_HIGHLANDS',
+          biome: highlandBiome,
+          visualType: highlandVisualType,
+          visualKind: highlandVisualKind,
+          pathConnections: [],
+          isLandmark: false,
+          landmarkKey: null,
+          encounterProfileKey: 'RAVENCRAG_HIGHLANDS',
+          bossKey: null,
+          description: highlandDesc
+        });
+        continue;
+      }
+
       if (inUndeadRegion) {
         const isNecropolis = y <= 7;
         const isMire = y >= 17;
@@ -1074,6 +1476,16 @@ function isAncientCryptTile(tile) {
   );
 }
 
+function isRavencragCitadelTile(tile) {
+  if (!tile) return false;
+  return (
+    (Number(tile.x) === RAVENCRAG_CITADEL_COORD.x && Number(tile.y) === RAVENCRAG_CITADEL_COORD.y) ||
+    tile.feature === 'RAVENCRAG_CITADEL' ||
+    tile.landmark_key === 'RAVENCRAG_CITADEL' ||
+    tile.landmarkKey === 'RAVENCRAG_CITADEL'
+  );
+}
+
 function isMajorLandmarkTile(tile) {
   if (!tile) return false;
   return (
@@ -1081,7 +1493,8 @@ function isMajorLandmarkTile(tile) {
     (tile.terrain === 'CITY' && Number(tile.is_safe) === 1) ||
     isGoblinStrongholdTile(tile) ||
     isGoblinCaveTile(tile) ||
-    isAncientCryptTile(tile)
+    isAncientCryptTile(tile) ||
+    isRavencragCitadelTile(tile)
   );
 }
 
@@ -1374,6 +1787,42 @@ const DANGER_ZONE_PROFILES = Object.freeze({
     streakDampeningPerEvent: 0.08,
     monsterPool: ['Skeleton', 'Ghoul', 'Shadow', 'Wight', 'Wraith', 'Specter'],
     description: 'The cursed Necropolis Sanctum surrounding the Ancient Crypt. Elite Barrow-Wights and incorporeal horrors guard the sepulcher steps.'
+  },
+  HIGHLAND_FOOTHILL_ROAD: {
+    zoneKey: 'HIGHLAND_FOOTHILL_ROAD',
+    zoneName: 'Windscar Foothills & Highland Road',
+    dangerLevel: 'MODERATE',
+    dangerLabel: 'Moderate',
+    encounterRate: 0.19,
+    ambushShare: 0.28,
+    minStepsBetweenCombats: 1,
+    streakDampeningPerEvent: 0.07,
+    monsterPool: ['Orc', 'Wolf', 'Dire Wolf', 'Worg', 'Harpy', 'Gnoll', 'Hobgoblin'],
+    description: 'Windswept switchback trails and heather-choked foothill passes climbing into Ravencrag Highlands. Orc outriders, worg packs, and cliff-perched harpies stalk travelers along the lower ridges.'
+  },
+  HIGHLAND_SHATTERED_GORGE: {
+    zoneKey: 'HIGHLAND_SHATTERED_GORGE',
+    zoneName: 'Shattered Gorge & Giant’s Span',
+    dangerLevel: 'HIGH',
+    dangerLabel: 'High',
+    encounterRate: 0.26,
+    ambushShare: 0.40,
+    minStepsBetweenCombats: 1,
+    streakDampeningPerEvent: 0.08,
+    monsterPool: ['Orc', 'Ogre', 'Worg', 'Harpy', 'Griffon', 'Bugbear', 'Gargoyle', 'Manticore'],
+    description: 'Deep windswept ravines, megalithic bridge spans, and sheer granite canyon walls splitting Ravencrag Highlands. Ogre brutes, manticores, and highland griffons ambush from the crags above.'
+  },
+  STORMPEAK_CITADEL_APPROACH: {
+    zoneKey: 'STORMPEAK_CITADEL_APPROACH',
+    zoneName: 'Stormpeak Crags & Citadel Approach',
+    dangerLevel: 'VERY_HIGH',
+    dangerLabel: 'Very High',
+    encounterRate: 0.33,
+    ambushShare: 0.46,
+    minStepsBetweenCombats: 1,
+    streakDampeningPerEvent: 0.08,
+    monsterPool: ['Ogre', 'Troll', 'Orc', 'Hill Giant', 'Manticore', 'Griffon', 'Wyvern', 'Stone Giant'],
+    description: 'Razor-backed storm crags, cyclopean watchtower ruins, and frost-scoured peaks beneath Ravencrag Citadel. Warband ogres, regenerating mountain trolls, and crag giants guard the highland fortress.'
   }
 });
 
@@ -1416,7 +1865,7 @@ const LANDMARK_SCENE_DEFINITIONS = Object.freeze({
     category: 'DUNGEON_ENTRANCE',
     title: 'The Goblin Cave',
     subtitle: 'Subterranean Lair of the Whispering Crags',
-    description: 'A jagged limestone maw yawns beneath the western cliffs, flanked by crude bone-totems, guttering pitch-torches, and gnawed shields. Chittering voices, clattering iron, and the dank stench of subterranean dens echo up from the dark warrens below.',
+    description: 'A jagged limestone maw yawns beneath the western cliffs, flanked by crude bone-totems, guttering pitch-torches, and gnawed shields. Chittering voices, clattering iron, and the dank stench of subterranean dens echo up from the vast tunnel network below.',
     artworkUrl: '/lab-assets/images/terrain/hills_raven_crags_ravine_pov.jpg',
     isMajorLandmark: true,
     autoOpenOnArrival: true,
@@ -1431,12 +1880,27 @@ const LANDMARK_SCENE_DEFINITIONS = Object.freeze({
     category: 'CRYPT',
     title: 'The Ancient Crypt',
     subtitle: 'Dread Sepulcher of the Undead Lands',
-    description: 'Towering obsidian obelisks and cracked marble archways frame a sunken staircase descending into the Necropolis Sanctum. Pale necrotic fire burns cold in iron braziers while the whispers of entombed Barrow-Kings echo from the sealed vault below.',
+    description: 'Towering obsidian obelisks and cracked marble archways frame a sunken staircase descending into the Necropolis Sanctum. Pale necrotic fire burns cold in iron braziers while the whispers of entombed Barrow-Kings echo from the catacomb halls below.',
     artworkUrl: '/images/terrain/terrain_underground_ruins.webp',
     isMajorLandmark: true,
     autoOpenOnArrival: true,
     actions: [
       { key: 'ENTER_ANCIENT_CRYPT', label: 'Breach the Sepulcher Vault', action: 'ENTER_ANCIENT_CRYPT', style: 'danger' },
+      { key: 'CONTINUE_EXPLORING', label: 'Continue Exploring', action: 'DISMISS_LANDMARK_SCENE', style: 'ghost' }
+    ]
+  },
+  RAVENCRAG_CITADEL: {
+    sceneKey: 'RAVENCRAG_CITADEL',
+    landmarkType: 'FORTRESS_RUIN',
+    category: 'MAJOR_LANDMARK',
+    title: 'Ravencrag Citadel — Throne of the Crag-Breaker',
+    subtitle: 'Highland War-Fortress & Cyclopean Ruin',
+    description: 'Perched atop the highest jagged granite spire of Ravencrag Highlands, the shattered cyclopean battlements of Ravencrag Citadel loom against storm-torn skies. Iron braziers burn along the breached gatehouse where Warlord Kraug the Crag-Breaker marshals his highland horde of orcs, ogres, and mountain trolls.',
+    artworkUrl: '/lab-assets/images/perspective/barrier_darkmount_crags_pov.jpg',
+    isMajorLandmark: true,
+    autoOpenOnArrival: true,
+    actions: [
+      { key: 'CONFRONT_HIGHLAND_WARLORD', label: 'Storm the Citadel Courtyard', action: 'CONFRONT_HIGHLAND_WARLORD', style: 'danger' },
       { key: 'CONTINUE_EXPLORING', label: 'Continue Exploring', action: 'DISMISS_LANDMARK_SCENE', style: 'ghost' }
     ]
   },
@@ -1572,20 +2036,24 @@ function applyTopdownExperimentWorld(db, options = {}) {
   ensurePhase8DefinitionsSeeded(db);
 
   let currentVersion = null;
-  let tileCount30x30 = 0;
+  let tileCountWorld = 0;
   try {
     const vRow = db.prepare("SELECT value FROM game_config WHERE key = 'topdown_world_version'").get();
     currentVersion = vRow ? vRow.value : null;
-    const cRow = db.prepare('SELECT COUNT(*) as cnt FROM map_tiles WHERE x BETWEEN 0 AND 29 AND y BETWEEN 0 AND 29').get();
-    tileCount30x30 = cRow ? Number(cRow.cnt) : 0;
+    const cRow = db.prepare('SELECT COUNT(*) as cnt FROM map_tiles WHERE x BETWEEN ? AND ? AND y BETWEEN ? AND ?').get(
+      TOPDOWN_REGION_BOUNDS.minX,
+      TOPDOWN_REGION_BOUNDS.maxX,
+      TOPDOWN_REGION_BOUNDS.minY,
+      TOPDOWN_REGION_BOUNDS.maxY
+    );
+    tileCountWorld = cRow ? Number(cRow.cnt) : 0;
   } catch {
     currentVersion = null;
   }
 
-  if (currentVersion === TOPDOWN_WORLD_VERSION && tileCount30x30 === TOPDOWN_REGION_BOUNDS.totalTiles && !options.forceRebuild) {
-    // World is already at Phase 8 30×30; ensure Stronghold boss row exists (without reviving if defeated)
-    // and ensure living characters have initial discovery seeded.
+  if (currentVersion === TOPDOWN_WORLD_VERSION && tileCountWorld === TOPDOWN_REGION_BOUNDS.totalTiles && !options.forceRebuild) {
     ensureStrongholdBossInstance(db);
+    ensureHighlandBossInstance(db);
     try {
       const livingChars = db.prepare('SELECT id, class, tile_id FROM characters WHERE is_alive = 1').all();
       for (const ch of livingChars) {
@@ -1617,6 +2085,12 @@ function applyTopdownExperimentWorld(db, options = {}) {
       WHERE custom_title = ?
       ORDER BY id DESC LIMIT 1
     `).get(STRONGHOLD_BOSS_PROFILE.customTitle);
+
+    const existingHighlandBoss = tx.prepare(`
+      SELECT * FROM monster_instances
+      WHERE custom_title = ?
+      ORDER BY id DESC LIMIT 1
+    `).get(HIGHLAND_BOSS_PROFILE.customTitle);
 
     const upsertStmt = tx.prepare(`
       INSERT INTO map_tiles (
@@ -1668,7 +2142,7 @@ function applyTopdownExperimentWorld(db, options = {}) {
       );
     }
 
-    // Relocate existing characters from legacy 8x7 / 15x15 coordinates to their 30x30 equivalents
+    // Relocate existing characters from legacy 8x7 / 15x15 coordinates to their 44x30 equivalents
     const newTownTile = getTileByCoords(tx, TOWN_COORD.x, TOWN_COORD.y);
     for (const ch of existingChars) {
       const mapped = mapLegacyCoordToPhase8(ch.old_x ?? 7, ch.old_y ?? 7);
@@ -1687,6 +2161,11 @@ function applyTopdownExperimentWorld(db, options = {}) {
       tx.prepare('UPDATE monster_instances SET tile_id = ? WHERE id = ?').run(newStrongholdTile.id, existingBoss.id);
     }
 
+    const newCitadelTile = getTileByCoords(tx, RAVENCRAG_CITADEL_COORD.x, RAVENCRAG_CITADEL_COORD.y);
+    if (existingHighlandBoss && newCitadelTile && existingHighlandBoss.tile_id !== newCitadelTile.id) {
+      tx.prepare('UPDATE monster_instances SET tile_id = ? WHERE id = ?').run(newCitadelTile.id, existingHighlandBoss.id);
+    }
+
     tx.prepare(`
       INSERT INTO game_config (key, value)
       VALUES ('topdown_world_version', ?)
@@ -1695,6 +2174,7 @@ function applyTopdownExperimentWorld(db, options = {}) {
   });
 
   ensureStrongholdBossInstance(db);
+  ensureHighlandBossInstance(db);
   try {
     const allChars = db.prepare('SELECT id FROM characters').all();
     for (const ch of allChars) {
@@ -1703,6 +2183,109 @@ function applyTopdownExperimentWorld(db, options = {}) {
   } catch {
     // Ignore
   }
+}
+
+/**
+ * Ensures the persistent Highland world boss ("Warlord Kraug the Crag-Breaker")
+ * exists on the Ravencrag Citadel tile [37, 3].
+ */
+function ensureHighlandBossInstance(db, options = {}) {
+  const citadelTile = getTileByCoords(db, RAVENCRAG_CITADEL_COORD.x, RAVENCRAG_CITADEL_COORD.y);
+  if (!citadelTile) return null;
+
+  const existingAny = db.prepare(`
+    SELECT mi.*, m.name as base_monster_name
+    FROM monster_instances mi
+    JOIN monsters m ON mi.monster_id = m.id
+    WHERE mi.tile_id = ? AND mi.custom_title = ?
+    ORDER BY mi.id DESC
+    LIMIT 1
+  `).get(citadelTile.id, HIGHLAND_BOSS_PROFILE.customTitle);
+
+  if (existingAny) {
+    if (options.respawnIfDefeated && existingAny.status !== 'ACTIVE') {
+      // Spawn fresh ACTIVE instance
+    } else if (!options.forceRespawn) {
+      return existingAny;
+    } else if (existingAny.status === 'ACTIVE') {
+      db.prepare(`
+        UPDATE monster_instances
+        SET current_hp = max_hp,
+            kill_count = 0,
+            held_gold = ?
+        WHERE id = ?
+      `).run(HIGHLAND_BOSS_PROFILE.heldGold, existingAny.id);
+      return db.prepare(`
+        SELECT mi.*, m.name as base_monster_name
+        FROM monster_instances mi
+        JOIN monsters m ON mi.monster_id = m.id
+        WHERE mi.id = ?
+      `).get(existingAny.id);
+    }
+  }
+
+  db.prepare(`
+    DELETE FROM monster_instances
+    WHERE tile_id = ? AND (custom_title IS NULL OR custom_title != ?)
+  `).run(citadelTile.id, HIGHLAND_BOSS_PROFILE.customTitle);
+
+  const bossMonster =
+    db.prepare('SELECT * FROM monsters WHERE LOWER(name) = LOWER(?) LIMIT 1').get(HIGHLAND_BOSS_PROFILE.preferredMonsterName) ||
+    db.prepare('SELECT * FROM monsters WHERE LOWER(name) = LOWER(?) LIMIT 1').get(HIGHLAND_BOSS_PROFILE.fallbackMonsterName) ||
+    db.prepare('SELECT * FROM monsters WHERE id = ? LIMIT 1').get(HIGHLAND_BOSS_PROFILE.fallbackMonsterId) ||
+    db.prepare("SELECT * FROM monsters WHERE LOWER(name) LIKE '%orc%' OR LOWER(name) LIKE '%ogre%' ORDER BY challenge_rating DESC LIMIT 1").get();
+
+  if (!bossMonster) return null;
+
+  const maxHp = Math.max(Number(bossMonster.base_hp || 12), HIGHLAND_BOSS_PROFILE.maxHp);
+  const res = db.prepare(`
+    INSERT INTO monster_instances (
+      monster_id, tile_id, current_hp, max_hp, held_gold, kill_count, custom_title, status
+    ) VALUES (?, ?, ?, ?, ?, 0, ?, 'ACTIVE')
+  `).run(
+    bossMonster.id,
+    citadelTile.id,
+    maxHp,
+    maxHp,
+    HIGHLAND_BOSS_PROFILE.heldGold,
+    HIGHLAND_BOSS_PROFILE.customTitle
+  );
+
+  return db.prepare(`
+    SELECT mi.*, m.name as base_monster_name
+    FROM monster_instances mi
+    JOIN monsters m ON mi.monster_id = m.id
+    WHERE mi.id = ?
+  `).get(Number(res.lastInsertRowid));
+}
+
+function markHighlandBossSlain(db, characterId) {
+  const citadelTile = getTileByCoords(db, RAVENCRAG_CITADEL_COORD.x, RAVENCRAG_CITADEL_COORD.y);
+  if (citadelTile) {
+    db.prepare(`
+      UPDATE monster_instances
+      SET status = 'DEFEATED', current_hp = 0
+      WHERE tile_id = ? AND custom_title = ? AND status = 'ACTIVE'
+    `).run(citadelTile.id, HIGHLAND_BOSS_PROFILE.customTitle);
+  }
+  if (characterId) {
+    try {
+      db.prepare('UPDATE characters SET ravencrag_warlord_slain = 1 WHERE id = ?').run(characterId);
+    } catch {
+      // Ignore if column not yet migrated
+    }
+    syncAllCharacterQuests(db, characterId);
+  }
+}
+
+function markAncientCryptBossSlain(db, characterId) {
+  if (!db || !characterId) return;
+  try {
+    db.prepare('UPDATE characters SET ancient_crypt_boss_slain = 1 WHERE id = ?').run(characterId);
+  } catch {
+    // Ignore
+  }
+  syncAllCharacterQuests(db, characterId);
 }
 
 /**
@@ -1958,12 +2541,180 @@ function syncCharacterQuestState(db, characterId) {
   };
 }
 
+function syncSecondaryQuestState(db, characterId, questDef, statusColName, slainColName, isBossDefeatedFn) {
+  if (!db || !characterId) return null;
+  let charRow;
+  try {
+    charRow = db.prepare(`SELECT * FROM characters WHERE id = ?`).get(characterId);
+  } catch {
+    return null;
+  }
+  if (!charRow) return null;
+
+  let cqRow = null;
+  try {
+    cqRow = db.prepare(`
+      SELECT * FROM character_quests
+      WHERE character_id = ? AND quest_key = ?
+    `).get(characterId, questDef.key);
+  } catch {
+    cqRow = null;
+  }
+
+  const bossSlain =
+    Number(charRow[slainColName] || 0) === 1 ||
+    Boolean(cqRow && Number(cqRow.objective_completed) === 1) ||
+    Boolean(isBossDefeatedFn && isBossDefeatedFn(db, characterId));
+
+  const colStatus = String(charRow[statusColName] || 'NOT_ACCEPTED').toUpperCase();
+  const tableStatus = cqRow ? String(cqRow.status || 'NOT_ACCEPTED').toUpperCase() : null;
+  const rank = { NOT_ACCEPTED: 0, ACTIVE: 1, COMPLETED: 2, REWARD_CLAIMED: 3 };
+
+  let status = (tableStatus && rank[tableStatus] !== undefined) ? tableStatus : colStatus;
+  if (rank[colStatus] !== undefined && rank[colStatus] > (rank[status] ?? 0)) {
+    status = colStatus;
+  }
+  if (!QUEST_STATUS_LABELS[status]) {
+    status = 'NOT_ACCEPTED';
+  }
+  if (bossSlain && status === 'ACTIVE') {
+    status = 'COMPLETED';
+  }
+
+  try {
+    if (status !== colStatus || (bossSlain ? 1 : 0) !== Number(charRow[slainColName] || 0)) {
+      db.prepare(`UPDATE characters SET ${statusColName} = ?, ${slainColName} = ? WHERE id = ?`).run(
+        status,
+        bossSlain ? 1 : 0,
+        characterId
+      );
+    }
+  } catch {
+    // Ignore if column not present
+  }
+
+  try {
+    const objDone = bossSlain ? 1 : 0;
+    if (!cqRow) {
+      db.prepare(`
+        INSERT INTO character_quests (
+          character_id, quest_key, status, objective_completed, progress_count, target_count,
+          accepted_at, completed_at, claimed_at
+        ) VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?)
+      `).run(
+        characterId,
+        questDef.key,
+        status,
+        objDone,
+        objDone,
+        status !== 'NOT_ACCEPTED' ? new Date().toISOString() : null,
+        (status === 'COMPLETED' || status === 'REWARD_CLAIMED') ? new Date().toISOString() : null,
+        status === 'REWARD_CLAIMED' ? new Date().toISOString() : null
+      );
+    } else if (cqRow.status !== status || Number(cqRow.objective_completed) !== objDone) {
+      db.prepare(`
+        UPDATE character_quests
+        SET status = ?,
+            objective_completed = ?,
+            progress_count = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(status, objDone, objDone, cqRow.id);
+    }
+  } catch {
+    // Ignore
+  }
+
+  const xpRewardPreview = calculateXpWithIntelligence(questDef.rewardXpBase, charRow.intelligence || 10);
+  const discoveredSet = getDiscoveredCoordSet(db, characterId);
+  const strongholdDiscovered = discoveredSet.has(`${questDef.strongholdCoord.x},${questDef.strongholdCoord.y}`);
+  const bossName = questDef.key === QUEST_ANCIENT_CRYPT.key
+    ? 'Lord Malakor the Barrow-Wight King'
+    : HIGHLAND_BOSS_PROFILE.customTitle;
+
+  return {
+    key: questDef.key,
+    questKey: questDef.key,
+    title: questDef.title,
+    giver: questDef.giver,
+    regionKey: questDef.regionKey,
+    regionName: questDef.regionName,
+    strongholdName: questDef.strongholdName,
+    strongholdCoord: questDef.strongholdCoord,
+    strongholdDiscovered,
+    description: questDef.description,
+    status,
+    statusLabel: QUEST_STATUS_LABELS[status] || 'Not Accepted',
+    bossSlain,
+    bossStatus: bossSlain ? 'DEFEATED' : 'ACTIVE',
+    bossName,
+    rewardXpBase: questDef.rewardXpBase,
+    rewardXp: xpRewardPreview,
+    rewardGold: questDef.rewardGold,
+    canAccept: status === 'NOT_ACCEPTED',
+    canClaimReward: status === 'COMPLETED',
+    objectives: [
+      {
+        key: `DEFEAT_${questDef.key}`,
+        label: `Reach ${questDef.strongholdName} in ${questDef.regionName} and defeat ${bossName}`,
+        completed: bossSlain
+      },
+      {
+        key: 'RETURN_TO_OAKHAVEN',
+        label: `Return to ${questDef.giver} in Oakhaven Sanctuary to claim your reward`,
+        completed: status === 'REWARD_CLAIMED'
+      }
+    ],
+    objectiveText:
+      status === 'REWARD_CLAIMED'
+        ? `${bossName} is vanquished and Oakhaven has rewarded your valor.`
+        : status === 'COMPLETED'
+          ? `${bossName} has been defeated! Return to Oakhaven Sanctuary to claim your reward.`
+          : status === 'ACTIVE'
+            ? `Journey into ${questDef.regionName}, locate ${questDef.strongholdName} [${questDef.strongholdCoord.x}, ${questDef.strongholdCoord.y}], and defeat ${bossName}.`
+            : `Speak with ${questDef.giver} in Oakhaven to accept this quest.`
+  };
+}
+
+function syncAllCharacterQuests(db, characterId) {
+  const primary = syncCharacterQuestState(db, characterId);
+  const cryptQuest = syncSecondaryQuestState(
+    db,
+    characterId,
+    QUEST_ANCIENT_CRYPT,
+    'quest_ancient_crypt_status',
+    'ancient_crypt_boss_slain',
+    (d, cid) => isDungeonBossDefeated(d, cid, 'ANCIENT_CRYPT')
+  );
+  const highlandQuest = syncSecondaryQuestState(
+    db,
+    characterId,
+    QUEST_RAVENCRAG_WARLORD,
+    'quest_ravencrag_warlord_status',
+    'ravencrag_warlord_slain',
+    (d) => {
+      const citadelTile = getTileByCoords(d, RAVENCRAG_CITADEL_COORD.x, RAVENCRAG_CITADEL_COORD.y);
+      if (!citadelTile) return false;
+      const inst = d.prepare(`
+        SELECT status FROM monster_instances
+        WHERE tile_id = ? AND custom_title = ?
+        ORDER BY id DESC LIMIT 1
+      `).get(citadelTile.id, HIGHLAND_BOSS_PROFILE.customTitle);
+      return Boolean(inst && inst.status !== 'ACTIVE');
+    }
+  );
+  const list = [primary, cryptQuest, highlandQuest].filter(Boolean);
+  list.goblinChieftain = primary;
+  list.ancientCrypt = cryptQuest;
+  list.ravencragWarlord = highlandQuest;
+  return list;
+}
+
 /**
  * Returns all quests for the character from the general quest system.
  */
 function getCharacterQuests(db, characterId) {
-  const primary = syncCharacterQuestState(db, characterId);
-  return primary ? [primary] : [];
+  return syncAllCharacterQuests(db, characterId);
 }
 
 function resolveCharacterArg(db, characterOrId) {
@@ -1972,6 +2723,121 @@ function resolveCharacterArg(db, characterOrId) {
     return characterOrId;
   }
   return db.prepare('SELECT * FROM characters WHERE id = ?').get(Number(characterOrId));
+}
+
+function acceptQuestByKey(db, characterOrId, questKey = QUEST_GOBLIN_CHIEFTAIN.key) {
+  const key = String(questKey || QUEST_GOBLIN_CHIEFTAIN.key).toUpperCase();
+  if (key === QUEST_GOBLIN_CHIEFTAIN.key) {
+    return acceptGoblinChieftainQuest(db, characterOrId);
+  }
+  const character = resolveCharacterArg(db, characterOrId);
+  if (!character) throw new Error('Character not found.');
+  const currentTile = getTileById(db, character.tile_id);
+  if (!currentTile || currentTile.terrain !== 'CITY' || currentTile.is_safe !== 1) {
+    throw new Error('You must be in Oakhaven Sanctuary to accept a quest.');
+  }
+
+  const isCrypt = key === QUEST_ANCIENT_CRYPT.key;
+  const questDef = isCrypt ? QUEST_ANCIENT_CRYPT : QUEST_RAVENCRAG_WARLORD;
+  const statusCol = isCrypt ? 'quest_ancient_crypt_status' : 'quest_ravencrag_warlord_status';
+  const slainCol = isCrypt ? 'ancient_crypt_boss_slain' : 'ravencrag_warlord_slain';
+
+  const allQuests = syncAllCharacterQuests(db, character.id);
+  const questState = allQuests.find((q) => q.key === questDef.key);
+  if (!questState) throw new Error('Quest not found.');
+  if (questState.status === 'REWARD_CLAIMED') {
+    throw new Error(`You have already completed ${questDef.title} and claimed your reward.`);
+  }
+
+  const nextStatus = questState.bossSlain ? 'COMPLETED' : 'ACTIVE';
+  db.prepare(`UPDATE characters SET ${statusCol} = ? WHERE id = ?`).run(nextStatus, character.id);
+  try {
+    db.prepare(`
+      UPDATE character_quests
+      SET status = ?, accepted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+      WHERE character_id = ? AND quest_key = ?
+    `).run(nextStatus, character.id, questDef.key);
+  } catch {
+    // Ignore
+  }
+
+  const updated = syncAllCharacterQuests(db, character.id).find((q) => q.key === questDef.key);
+  return {
+    quest: updated,
+    message: `Accepted Quest: "${questDef.title}" — ${questDef.description}`
+  };
+}
+
+function claimQuestRewardByKey(db, characterOrId, questKey = QUEST_GOBLIN_CHIEFTAIN.key) {
+  const key = String(questKey || QUEST_GOBLIN_CHIEFTAIN.key).toUpperCase();
+  if (key === QUEST_GOBLIN_CHIEFTAIN.key) {
+    return claimGoblinChieftainReward(db, characterOrId);
+  }
+  const character = resolveCharacterArg(db, characterOrId);
+  if (!character) throw new Error('Character not found.');
+  const currentTile = getTileById(db, character.tile_id);
+  if (!currentTile || currentTile.terrain !== 'CITY' || currentTile.is_safe !== 1) {
+    throw new Error('You must return to Oakhaven Sanctuary to claim your quest reward.');
+  }
+
+  const isCrypt = key === QUEST_ANCIENT_CRYPT.key;
+  const questDef = isCrypt ? QUEST_ANCIENT_CRYPT : QUEST_RAVENCRAG_WARLORD;
+  const statusCol = isCrypt ? 'quest_ancient_crypt_status' : 'quest_ravencrag_warlord_status';
+  const slainCol = isCrypt ? 'ancient_crypt_boss_slain' : 'ravencrag_warlord_slain';
+
+  return withTransaction(db, (tx) => {
+    const allQuests = syncAllCharacterQuests(tx, character.id);
+    const synced = allQuests.find((q) => q.key === questDef.key);
+    if (!synced) throw new Error('Quest not found.');
+    if (synced.status === 'REWARD_CLAIMED') {
+      throw new Error('Quest reward has already been claimed.');
+    }
+    if (!synced.bossSlain) {
+      throw new Error(`You must complete the objective for "${questDef.title}" before claiming this reward.`);
+    }
+
+    const charRow = tx.prepare('SELECT * FROM characters WHERE id = ?').get(character.id);
+    const xpAwarded = calculateXpWithIntelligence(questDef.rewardXpBase, charRow.intelligence || 10);
+    const goldAwarded = questDef.rewardGold;
+    const newXp = Number(charRow.xp || 0) + xpAwarded;
+
+    tx.prepare(`
+      UPDATE characters
+      SET gold = gold + ?,
+          ${statusCol} = 'REWARD_CLAIMED',
+          ${slainCol} = 1
+      WHERE id = ?
+    `).run(goldAwarded, character.id);
+
+    try {
+      tx.prepare(`
+        UPDATE character_quests
+        SET status = 'REWARD_CLAIMED',
+            claimed_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE character_id = ? AND quest_key = ?
+      `).run(character.id, questDef.key);
+    } catch {
+      // Ignore
+    }
+
+    const levelProgress = applyCharacterLevelUp(tx, character.id, newXp);
+    const updatedQuest = syncAllCharacterQuests(tx, character.id).find((q) => q.key === questDef.key);
+    let message = `Quest Complete: "${questDef.title}"! Awarded +${goldAwarded} Gold and +${xpAwarded} XP.`;
+    if (levelProgress && levelProgress.leveledUp) {
+      message += ` You have reached Level ${levelProgress.newLevel} (+${levelProgress.totalHpGain} Max HP)!`;
+    }
+    return {
+      quest: updatedQuest,
+      xpAwarded,
+      goldAwarded,
+      rewardXp: xpAwarded,
+      rewardGold: goldAwarded,
+      leveledUp: Boolean(levelProgress && levelProgress.leveledUp),
+      newLevel: levelProgress ? levelProgress.newLevel : charRow.level,
+      message
+    };
+  });
 }
 
 function acceptGoblinChieftainQuest(db, characterOrId) {
@@ -2335,6 +3201,123 @@ function selectUndeadLandsMonster(db, heroLevelOrRng = 1, maybeRng = Math.random
   return wrapResult(fallback, 'UNDEAD');
 }
 
+/**
+ * Initiates the fixed Ravencrag Citadel Boss encounter on [37, 3] ("Warlord Kraug the Crag-Breaker").
+ */
+function startHighlandBossEncounter(db, character, options = {}) {
+  const currentTile = getTileById(db, character.tile_id);
+  if (!isRavencragCitadelTile(currentTile)) {
+    throw new Error(`You must stand at the Ravencrag Citadel [${RAVENCRAG_CITADEL_COORD.x}, ${RAVENCRAG_CITADEL_COORD.y}] to confront Warlord Kraug.`);
+  }
+
+  const activeCombat = db.prepare(`
+    SELECT id FROM encounters
+    WHERE character_id = ? AND status = 'IN_COMBAT'
+    LIMIT 1
+  `).get(character.id);
+  if (activeCombat) {
+    throw new Error('You are already engaged in active combat.');
+  }
+
+  const bossInstance = ensureHighlandBossInstance(db);
+  if (!bossInstance || bossInstance.status !== 'ACTIVE') {
+    throw new Error('Warlord Kraug the Crag-Breaker has already been vanquished.');
+  }
+
+  return withTransaction(db, (tx) => {
+    tx.prepare(`
+      UPDATE encounters
+      SET status = 'ESCAPED'
+      WHERE character_id = ? AND status = 'DISCOVERED'
+    `).run(character.id);
+
+    const ins = tx.prepare(`
+      INSERT INTO encounters (
+        character_id, tile_id, monster_id, monster_instance_id,
+        status, current_monster_hp, monster_max_hp, combat_round,
+        spotted_by_hero, is_ambush, opening_shot_resolved
+      ) VALUES (?, ?, ?, ?, 'DISCOVERED', ?, ?, 0, 1, 0, 0)
+    `).run(
+      character.id,
+      currentTile.id,
+      bossInstance.monster_id,
+      bossInstance.id,
+      bossInstance.current_hp || bossInstance.max_hp,
+      bossInstance.max_hp
+    );
+
+    const encounterId = Number(ins.lastInsertRowid);
+    const investigateResult = investigateEncounter(
+      tx,
+      character.id,
+      encounterId,
+      character.class,
+      options.rng ? { rng: options.rng } : {}
+    );
+    const encounter = getEncounterById(tx, encounterId, character.class);
+    if (encounter && encounter.status === 'VICTORY') {
+      tx.prepare('UPDATE characters SET pending_victory_encounter_id = ? WHERE id = ?').run(encounterId, character.id);
+      markHighlandBossSlain(tx, character.id);
+    }
+    return {
+      encounterId,
+      investigateResult,
+      encounter,
+      ...(encounter || {})
+    };
+  });
+}
+
+/**
+ * Selects a monster for Ravencrag Highlands encounters (mountain beasts, orcs, ogres, trolls, griffons, harpies),
+ * escalating in danger from Windscar Foothills -> Shattered Gorge -> Stormpeak Crags.
+ */
+function selectRavencragHighlandsMonster(db, heroLevelOrRng = 1, maybeRng = Math.random, targetTile = null) {
+  const isSecondFn = typeof heroLevelOrRng === 'function';
+  const lvl = isSecondFn ? 1 : Math.max(1, Number(heroLevelOrRng || 1));
+  const rng = isSecondFn ? heroLevelOrRng : (typeof maybeRng === 'function' ? maybeRng : Math.random);
+  const y = targetTile && targetTile.y !== undefined ? Number(targetTile.y) : 16;
+
+  const wrapResult = (monster, bucket) => {
+    if (!monster) return null;
+    return { ...monster, monster, bucket };
+  };
+
+  let highlandNames;
+  let bucket = 'HIGHLAND_FOOTHILLS';
+  if (y <= 9) {
+    bucket = 'STORMPEAK_CRAGS';
+    highlandNames = lvl <= 1
+      ? ['Orc', 'Ogre', 'Worg', 'Harpy', 'Griffon', 'Bugbear']
+      : ['Ogre', 'Troll', 'Orc', 'Hill Giant', 'Manticore', 'Griffon', 'Wyvern'];
+  } else if (y <= 18) {
+    bucket = 'SHATTERED_GORGE';
+    highlandNames = lvl <= 1
+      ? ['Orc', 'Worg', 'Harpy', 'Hobgoblin', 'Bugbear', 'Ogre']
+      : ['Orc', 'Ogre', 'Worg', 'Harpy', 'Griffon', 'Bugbear', 'Manticore'];
+  } else {
+    bucket = 'HIGHLAND_FOOTHILLS';
+    highlandNames = lvl <= 1
+      ? ['Orc', 'Wolf', 'Worg', 'Hobgoblin', 'Harpy', 'Blood Hawk']
+      : ['Orc', 'Wolf', 'Dire Wolf', 'Worg', 'Harpy', 'Gnoll', 'Ogre'];
+  }
+
+  const placeholders = highlandNames.map(() => '?').join(', ');
+  const pool = db.prepare(`
+    SELECT * FROM monsters
+    WHERE name IN (${placeholders})
+    ORDER BY challenge_rating ASC, id ASC
+  `).all(...highlandNames);
+
+  if (pool.length > 0) {
+    const idx = Math.min(pool.length - 1, Math.floor(rng() * pool.length));
+    return wrapResult(pool[idx], bucket);
+  }
+
+  const fallback = db.prepare("SELECT * FROM monsters WHERE name IN ('Orc', 'Ogre', 'Wolf', 'Hobgoblin') ORDER BY id ASC LIMIT 1").get();
+  return wrapResult(fallback, bucket);
+}
+
 function selectRegionalEncounterMonster(db, targetTile, heroLevelOrRng = 1, maybeRng = Math.random) {
   if (!targetTile) {
     return selectGoblinForestMonster(db, heroLevelOrRng, maybeRng);
@@ -2342,9 +3325,12 @@ function selectRegionalEncounterMonster(db, targetTile, heroLevelOrRng = 1, mayb
   const x = Number(targetTile.x);
   const y = Number(targetTile.y);
   const meta = TILE_META_BY_COORD.get(`${x},${y}`);
-  const regionKey = targetTile.region_key || (meta && meta.region_key) || 'BLACKWOOD_FOREST';
+  const regionKey = targetTile.region_key || (meta && meta.region_key) || (x >= 30 ? 'RAVENCRAG_HIGHLANDS' : (x >= 23 && y <= 26 ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST'));
   const encounterProfileKey = targetTile.encounter_profile_key || (meta && meta.encounterProfileKey) || 'GOBLIN_FOREST';
 
+  if (regionKey === 'RAVENCRAG_HIGHLANDS' || encounterProfileKey === 'RAVENCRAG_HIGHLANDS') {
+    return selectRavencragHighlandsMonster(db, heroLevelOrRng, maybeRng, targetTile);
+  }
   if (regionKey === 'UNDEAD_LANDS' || encounterProfileKey === 'UNDEAD_LANDS') {
     return selectUndeadLandsMonster(db, heroLevelOrRng, maybeRng);
   }
@@ -2497,16 +3483,31 @@ function resolveTileDangerZone(db, tile) {
       description: 'The sealed obsidian sepulcher of the Ancient Crypt.'
     };
   }
+  if (isRavencragCitadelTile(tile)) {
+    return {
+      zoneKey: 'RAVENCRAG_CITADEL_GATE',
+      zoneName: 'Ravencrag Citadel Gate',
+      dangerLevel: 'EXTREME',
+      dangerLabel: 'Major Landmark (Highland Fortress)',
+      encounterRate: 0.0,
+      ambushShare: 0.0,
+      minStepsBetweenCombats: 0,
+      streakDampeningPerEvent: 0.0,
+      monsterPool: ['Orc', 'Hobgoblin', 'Bugbear', 'Ogre', 'Hill Giant', 'Troll'],
+      description: 'The storm-battered cyclopean gatehouse of Warlord Kraug the Crag-Breaker.'
+    };
+  }
 
   const x = Number(tile.x);
   const y = Number(tile.y);
   const meta = TILE_META_BY_COORD.get(`${x},${y}`);
   const landmarkKey = tile.landmark_key || (meta && meta.landmarkKey) || null;
-  const regionKey = tile.region_key || (meta && meta.region_key) || (x >= 23 && y <= 26 ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST');
+  const regionKey = tile.region_key || (meta && meta.region_key) || (x >= 30 ? 'RAVENCRAG_HIGHLANDS' : (x >= 23 && y <= 26 ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST'));
   const hasPathConnections = Boolean(
     (meta && Array.isArray(meta.pathConnections) && meta.pathConnections.length > 0) ||
     tile.feature === 'FOREST_TRAIL' ||
     tile.feature === 'SEPULCHER_ROAD' ||
+    tile.feature === 'HIGHLAND_TRAIL' ||
     tile.terrain === 'BRIDGE' ||
     tile.terrain === 'ROAD'
   );
@@ -2517,7 +3518,15 @@ function resolveTileDangerZone(db, tile) {
   const distToGoblinCaveX = Math.abs(x - GOBLIN_CAVE_COORD.x);
   const distToGoblinCaveY = Math.abs(y - GOBLIN_CAVE_COORD.y);
 
-  if (regionKey === 'UNDEAD_LANDS') {
+  if (regionKey === 'RAVENCRAG_HIGHLANDS') {
+    if (y <= 9 || landmarkKey === 'CITADEL_APPROACH' || landmarkKey === 'STORMPEAK_CAIRN') {
+      selectedKey = 'STORMPEAK_CITADEL_APPROACH';
+    } else if (y <= 18 || (!hasPathConnections && y <= 22)) {
+      selectedKey = 'HIGHLAND_SHATTERED_GORGE';
+    } else {
+      selectedKey = 'HIGHLAND_FOOTHILL_ROAD';
+    }
+  } else if (regionKey === 'UNDEAD_LANDS') {
     if (y <= 8 || landmarkKey === 'CRYPT_APPROACH' || landmarkKey === 'BLIGHTED_CHAPEL') {
       selectedKey = 'CRYPT_SEPULCHER_APPROACH';
     } else if (hasPathConnections) {
@@ -2716,14 +3725,14 @@ function checkGoblinForestEncounter(db, character, targetTile, options = {}) {
 
   const rng = options.rng || Math.random;
 
-  // Check if a persistent Nemesis monster (other than the Stronghold Chieftain) lurks on this tile
+  // Check if a persistent Nemesis monster (other than the Stronghold Chieftain or Highland Warlord) lurks on this tile
   const persistentMonster = db.prepare(`
     SELECT mi.*, m.name, m.symbol, m.color, m.descriptions, m.base_hp, m.initiative_bonus
     FROM monster_instances mi
     JOIN monsters m ON mi.monster_id = m.id
     WHERE mi.tile_id = ? AND mi.status = 'ACTIVE'
-      AND (mi.custom_title IS NULL OR mi.custom_title != ?)
-  `).get(targetTile.id, STRONGHOLD_BOSS_PROFILE.customTitle);
+      AND (mi.custom_title IS NULL OR (mi.custom_title != ? AND mi.custom_title != ?))
+  `).get(targetTile.id, STRONGHOLD_BOSS_PROFILE.customTitle, HIGHLAND_BOSS_PROFILE.customTitle);
 
   if (persistentMonster) {
     const ins = db.prepare(`
@@ -2799,7 +3808,7 @@ function checkGoblinForestEncounter(db, character, targetTile, options = {}) {
 }
 
 /**
- * Builds the complete 30×30 (900-tile) top-down map & Region Map payload for the frontend renderer.
+ * Resolves the Major Landmark Scene definition for a tile, if any.
  */
 function getMajorLandmarkSceneForTile(db, tile) {
   if (!tile) return null;
@@ -2821,6 +3830,8 @@ function getMajorLandmarkSceneForTile(db, tile) {
     sceneKey = 'GOBLIN_CAVE';
   } else if (isAncientCryptTile(tile) || landmarkKey === 'ANCIENT_CRYPT') {
     sceneKey = 'ANCIENT_CRYPT';
+  } else if (isRavencragCitadelTile(tile) || landmarkKey === 'RAVENCRAG_CITADEL') {
+    sceneKey = 'RAVENCRAG_CITADEL';
   } else if (landmarkKey && LANDMARK_SCENE_DEFINITIONS[landmarkKey]) {
     sceneKey = landmarkKey;
   }
@@ -2935,6 +3946,9 @@ function resolveLandmarkSceneState(db, character, currentTile, activeEncounter =
   if (!character || Number(character.is_alive) !== 1 || !currentTile) {
     return null;
   }
+  if (character.active_dungeon_key) {
+    return null;
+  }
   if (activeEncounter || victory) {
     return null;
   }
@@ -2963,8 +3977,9 @@ function resolveLandmarkSceneState(db, character, currentTile, activeEncounter =
     }
   }
 
-  const questState = syncCharacterQuestState(db, character.id);
-  const bossSlain = Boolean(questState && questState.bossSlain);
+  const allQuests = syncAllCharacterQuests(db, character.id);
+  const bossSlain = Boolean(allQuests.goblinChieftain && allQuests.goblinChieftain.bossSlain);
+  const highlandBossSlain = Boolean(allQuests.ravencragWarlord && allQuests.ravencragWarlord.bossSlain);
 
   let description = sceneDef.description;
   const actions = (sceneDef.actions || []).map((act) => {
@@ -2975,11 +3990,20 @@ function resolveLandmarkSceneState(db, character, currentTile, activeEncounter =
         label: bossSlain ? 'Goblin Chieftain Vanquished' : act.label
       };
     }
+    if (act.action === 'CONFRONT_HIGHLAND_WARLORD') {
+      return {
+        ...act,
+        disabled: highlandBossSlain,
+        label: highlandBossSlain ? 'Warlord Kraug Vanquished' : act.label
+      };
+    }
     return { ...act };
   });
 
   if (sceneDef.sceneKey === 'GOBLIN_STRONGHOLD' && bossSlain) {
     description = 'The war-drums of the Goblin Stronghold have fallen silent. Warchief Grak lies vanquished, and the surviving goblins have scattered into the deep woods.';
+  } else if (sceneDef.sceneKey === 'RAVENCRAG_CITADEL' && highlandBossSlain) {
+    description = 'The storm-forges of Ravencrag Citadel stand cold. Warlord Kraug the Crag-Breaker lies broken before the iron throne, and the highland clans have retreated into the northern peaks.';
   }
 
   return {
@@ -2992,8 +4016,12 @@ function resolveLandmarkSceneState(db, character, currentTile, activeEncounter =
     artworkUrl: sceneDef.artworkUrl,
     isMajorLandmark: true,
     isActive,
-    bossSlain: sceneDef.sceneKey === 'GOBLIN_STRONGHOLD' ? bossSlain : undefined,
-    canChallengeBoss: sceneDef.sceneKey === 'GOBLIN_STRONGHOLD' ? !bossSlain : undefined,
+    bossSlain: sceneDef.sceneKey === 'GOBLIN_STRONGHOLD'
+      ? bossSlain
+      : (sceneDef.sceneKey === 'RAVENCRAG_CITADEL' ? highlandBossSlain : undefined),
+    canChallengeBoss: sceneDef.sceneKey === 'GOBLIN_STRONGHOLD'
+      ? !bossSlain
+      : (sceneDef.sceneKey === 'RAVENCRAG_CITADEL' ? !highlandBossSlain : undefined),
     tileId: currentTile.id,
     tileCoord: { x: Number(currentTile.x), y: Number(currentTile.y) },
     actions
@@ -3019,14 +4047,15 @@ function runPhase9MonteCarloSimulation(db, options = {}) {
   const routeTiles = routeCoords.map(([x, y]) => {
     const meta = TILE_META_BY_COORD.get(`${x},${y}`) || {};
     return {
-      id: y * 30 + x + 1,
+      id: y * TOPDOWN_REGION_BOUNDS.width + x + 1,
       x,
       y,
       name: meta.name || `Tile [${x},${y}]`,
       terrain: meta.terrain || 'FOREST',
       feature: meta.feature || null,
       is_safe: meta.is_safe || 0,
-      landmark_key: meta.landmarkKey || null
+      landmark_key: meta.landmarkKey || null,
+      region_key: meta.region_key || 'BLACKWOOD_FOREST'
     };
   });
 
@@ -3118,13 +4147,16 @@ function buildTopdownMapPayload(db, character, currentTile) {
   const heroY = currentTile ? Number(currentTile.y) : TOWN_COORD.y;
   const heroFacing = (character && character.facing) || 'NORTH';
   const visionRadius = getHeroVisionRadius(character);
+  const inDungeon = Boolean(character && character.active_dungeon_key);
 
-  if (character && character.id) {
+  if (character && character.id && !inDungeon) {
     recordTileDiscovery(db, character, heroX, heroY);
   }
 
   const discoveredSet = getDiscoveredCoordSet(db, character ? character.id : null);
-  const questState = syncCharacterQuestState(db, character ? character.id : null);
+  const allQuests = syncAllCharacterQuests(db, character ? character.id : null);
+  const questState = allQuests.goblinChieftain;
+  const highlandQuestState = allQuests.ravencragWarlord;
 
   const rows = db.prepare(`
     SELECT id, x, y, name, terrain, feature, description, is_passable, is_safe,
@@ -3159,10 +4191,12 @@ function buildTopdownMapPayload(db, character, currentTile) {
     const isStronghold = isGoblinStrongholdTile(r);
     const isGoblinCave = isGoblinCaveTile(r);
     const isAncientCrypt = isAncientCryptTile(r);
+    const isRavencragCitadel = isRavencragCitadelTile(r);
     const isTown = r.terrain === 'CITY' && Number(r.is_safe) === 1;
-    const regionKey = r.region_key || meta.region_key || (Number(r.x) >= 23 && Number(r.y) <= 26 ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST');
+    const regionKey = r.region_key || meta.region_key || (Number(r.x) >= 30 ? 'RAVENCRAG_HIGHLANDS' : (Number(r.x) >= 23 && Number(r.y) <= 26 ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST'));
     const biome = r.biome || meta.biome || regionKey;
     const isUndeadLands = regionKey === 'UNDEAD_LANDS';
+    const isRavencragHighlands = regionKey === 'RAVENCRAG_HIGHLANDS';
     const visualType = r.visual_type || meta.visualType || (isTown ? 'TOWN_SANCTUARY' : 'DEEP_FOREST');
     const visualKind = r.visual_kind || meta.visualKind || 'DENSE_WOODS';
 
@@ -3179,7 +4213,7 @@ function buildTopdownMapPayload(db, character, currentTile) {
     const dx = Number(r.x) - heroX;
     const dy = Number(r.y) - heroY;
     const distSq = dx * dx + dy * dy;
-    const isVisibleNow = distSq <= maxVisibleDistSq;
+    const isVisibleNow = !inDungeon && (distSq <= maxVisibleDistSq);
     const isDiscovered = isVisibleNow || discoveredSet.has(coordKey);
     const isLandmark = Boolean(Number(r.is_landmark) === 1 || meta.isLandmark);
     const landmarkKey = r.landmark_key || meta.landmarkKey || null;
@@ -3198,7 +4232,9 @@ function buildTopdownMapPayload(db, character, currentTile) {
       isStronghold,
       isGoblinCave,
       isAncientCrypt,
+      isRavencragCitadel,
       isUndeadLands,
+      isRavencragHighlands,
       regionKey,
       biome,
       isLandmark,
@@ -3208,24 +4244,30 @@ function buildTopdownMapPayload(db, character, currentTile) {
       visualType,
       visualKind,
       pathConnections,
-      hasNemesis: Boolean(inst && !isStronghold),
-      strongholdBossActive: isStronghold ? Boolean(questState && !questState.bossSlain) : false
+      hasNemesis: Boolean(inst && !isStronghold && !isRavencragCitadel),
+      strongholdBossActive: isStronghold ? Boolean(questState && !questState.bossSlain) : false,
+      citadelBossActive: isRavencragCitadel ? Boolean(highlandQuestState && !highlandQuestState.bossSlain) : false
     };
   });
 
   const atStronghold = isGoblinStrongholdTile(currentTile);
   const atGoblinCave = isGoblinCaveTile(currentTile);
   const atAncientCrypt = isAncientCryptTile(currentTile);
+  const atRavencragCitadel = isRavencragCitadelTile(currentTile);
   const bossSlain = Boolean(questState && questState.bossSlain);
+  const highlandBossSlain = Boolean(highlandQuestState && highlandQuestState.bossSlain);
   const strongholdDiscovered = discoveredSet.has(`${STRONGHOLD_COORD.x},${STRONGHOLD_COORD.y}`);
   const goblinCaveDiscovered = discoveredSet.has(`${GOBLIN_CAVE_COORD.x},${GOBLIN_CAVE_COORD.y}`);
   const ancientCryptDiscovered = discoveredSet.has(`${ANCIENT_CRYPT_COORD.x},${ANCIENT_CRYPT_COORD.y}`);
+  const ravencragCitadelDiscovered = discoveredSet.has(`${RAVENCRAG_CITADEL_COORD.x},${RAVENCRAG_CITADEL_COORD.y}`);
 
   const currentMeta = TILE_META_BY_COORD.get(`${heroX},${heroY}`) || {};
-  const currentRegionKey = (currentTile && currentTile.region_key) || currentMeta.region_key || (heroX >= 23 && heroY <= 26 ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST');
-  const currentRegionName = currentRegionKey === 'UNDEAD_LANDS'
-    ? 'The Undead Lands (Ashen Barrowlands & Necropolis)'
-    : 'Blackwood Forest (Goblin Forest)';
+  const currentRegionKey = (currentTile && currentTile.region_key) || currentMeta.region_key || (heroX >= 30 ? 'RAVENCRAG_HIGHLANDS' : (heroX >= 23 && heroY <= 26 ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST'));
+  const currentRegionName = currentRegionKey === 'RAVENCRAG_HIGHLANDS'
+    ? 'Ravencrag Highlands (Stormpeak Crags & Shattered Gorge)'
+    : currentRegionKey === 'UNDEAD_LANDS'
+      ? 'The Undead Lands (Ashen Barrowlands & Necropolis)'
+      : 'Blackwood Forest (Goblin Forest)';
 
   // Build Region Map summary (only includes discovered landmarks + Oakhaven)
   const discoveredLandmarks = Object.values(LANDMARK_DEFINITIONS)
@@ -3236,12 +4278,15 @@ function buildTopdownMapPayload(db, character, currentTile) {
       category: lm.category,
       x: lm.x,
       y: lm.y,
-      regionKey: lm.x >= 23 && lm.y <= 26 ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST',
+      regionKey: lm.x >= 30 ? 'RAVENCRAG_HIGHLANDS' : (lm.x >= 23 && lm.y <= 26 ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST'),
       isDiscovered: true,
       isStronghold: lm.key === 'GOBLIN_STRONGHOLD',
       isGoblinCave: lm.key === 'GOBLIN_CAVE',
       isAncientCrypt: lm.key === 'ANCIENT_CRYPT',
-      bossSlain: lm.key === 'GOBLIN_STRONGHOLD' ? bossSlain : undefined
+      isRavencragCitadel: lm.key === 'RAVENCRAG_CITADEL',
+      bossSlain: lm.key === 'GOBLIN_STRONGHOLD'
+        ? bossSlain
+        : (lm.key === 'RAVENCRAG_CITADEL' ? highlandBossSlain : undefined)
     }));
 
   const discoveredCount = tiles.filter((t) => t.isDiscovered).length;
@@ -3266,11 +4311,15 @@ function buildTopdownMapPayload(db, character, currentTile) {
     strongholdCoord: STRONGHOLD_COORD,
     goblinCaveCoord: GOBLIN_CAVE_COORD,
     ancientCryptCoord: ANCIENT_CRYPT_COORD,
+    ravencragCitadelCoord: RAVENCRAG_CITADEL_COORD,
     strongholdDiscovered,
     goblinCaveDiscovered,
     ancientCryptDiscovered,
+    ravencragCitadelDiscovered,
     currentRegionKey,
     currentRegionName,
+    regionKey: currentRegionKey,
+    regionName: currentRegionName,
     heroCoord: { x: heroX, y: heroY },
     heroX,
     heroY,
@@ -3280,9 +4329,11 @@ function buildTopdownMapPayload(db, character, currentTile) {
     discoveredTileCount: discoveredCount,
     totalTiles: TOPDOWN_REGION_BOUNDS.totalTiles,
     bossSlain,
+    highlandBossSlain,
     atStronghold,
     atGoblinCave,
     atAncientCrypt,
+    atRavencragCitadel,
     strongholdEntrance: {
       title: STRONGHOLD_BOSS_PROFILE.entranceTitle,
       description: STRONGHOLD_BOSS_PROFILE.entranceDescription,
@@ -3304,6 +4355,11 @@ function buildTopdownMapPayload(db, character, currentTile) {
           key: 'UNDEAD_LANDS',
           name: 'The Undead Lands',
           majorLandmarks: ['ANCIENT_CRYPT']
+        },
+        {
+          key: 'RAVENCRAG_HIGHLANDS',
+          name: 'Ravencrag Highlands',
+          majorLandmarks: ['RAVENCRAG_CITADEL']
         }
       ],
       discoveredCount,
@@ -3314,6 +4370,7 @@ function buildTopdownMapPayload(db, character, currentTile) {
       strongholdDiscovered,
       goblinCaveDiscovered,
       ancientCryptDiscovered,
+      ravencragCitadelDiscovered,
       landmarks: discoveredLandmarks,
       discoveredLandmarks
     },
@@ -3387,22 +4444,29 @@ module.exports = {
   STRONGHOLD_COORD,
   GOBLIN_CAVE_COORD,
   ANCIENT_CRYPT_COORD,
+  RAVENCRAG_CITADEL_COORD,
   LANDMARK_DEFINITIONS,
   LANDMARK_METADATA: LANDMARK_DEFINITIONS,
   ROUTE_A_MAIN_TRAIL,
   ROUTE_B_WESTERN_WILDERNESS,
   ROUTE_C_EASTERN_RIVER,
   ROUTE_D_UNDEAD_SEPULCHER_ROAD,
+  ROUTE_E_RAVENCRAG_HIGHLAND_ROAD,
   QUEST_GOBLIN_CHIEFTAIN,
+  QUEST_ANCIENT_CRYPT,
+  QUEST_RAVENCRAG_WARLORD,
   QUEST_STATUS_LABELS,
   STRONGHOLD_BOSS_PROFILE,
+  HIGHLAND_BOSS_PROFILE,
   TOPDOWN_REGION_TILES,
   TOPDOWN_TILES: TOPDOWN_REGION_TILES,
   computeCameraViewportMetrics,
   isCoordInTopdownRegion,
+  isTileCoordInRavencragHighlands,
   isGoblinStrongholdTile,
   isGoblinCaveTile,
   isAncientCryptTile,
+  isRavencragCitadelTile,
   isMajorLandmarkTile,
   getHeroVisionRadius,
   recordTileDiscovery,
@@ -3410,16 +4474,24 @@ module.exports = {
   mapLegacyCoordToPhase8,
   applyTopdownExperimentWorld,
   ensureStrongholdBossInstance,
+  ensureHighlandBossInstance,
   markStrongholdBossSlain,
+  markHighlandBossSlain,
+  markAncientCryptBossSlain,
   syncCharacterQuestState,
+  syncAllCharacterQuests,
   getCharacterQuests,
   acceptGoblinChieftainQuest,
+  acceptQuestByKey,
   claimGoblinChieftainReward,
+  claimQuestRewardByKey,
   startStrongholdBossEncounter,
+  startHighlandBossEncounter,
   startLandmarkDungeonEncounter,
   selectGoblinForestMonster,
   selectGoblinCaveMonster,
   selectUndeadLandsMonster,
+  selectRavencragHighlandsMonster,
   selectRegionalEncounterMonster,
   computePhase8StepEncounterChance,
   checkGoblinForestEncounter,

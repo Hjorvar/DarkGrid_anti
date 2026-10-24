@@ -108,7 +108,7 @@ export function renderModalContent(modalName) {
 }
 
 export function renderRegionMapModal(titleEl, bodyEl) {
-  titleEl.textContent = '🗺️ Region Map — Goblin Forest & The Undead Lands [M]';
+  titleEl.textContent = '🗺️ Region Map — Goblin Forest, The Undead Lands & Ravencrag Highlands [M]';
   const st = store.currentState || {};
   const mapData = st.topdownMap || {};
   const regionMap = mapData.regionMap || {};
@@ -116,6 +116,7 @@ export function renderRegionMapModal(titleEl, bodyEl) {
   const shDiscovered = Boolean(regionMap.strongholdDiscovered);
   const caveDiscovered = Boolean(regionMap.goblinCaveDiscovered || mapData.goblinCaveDiscovered);
   const cryptDiscovered = Boolean(regionMap.ancientCryptDiscovered || mapData.ancientCryptDiscovered);
+  const citadelDiscovered = Boolean(regionMap.ravencragCitadelDiscovered || mapData.ravencragCitadelDiscovered);
   const currentTileName = (st.currentTile && st.currentTile.name) || 'Oakhaven';
 
   const landmarkRowsHtml = discoveredLandmarks.map(lm => {
@@ -123,17 +124,25 @@ export function renderRegionMapModal(titleEl, bodyEl) {
     const isStronghold = key === 'GOBLIN_STRONGHOLD';
     const isGoblinCave = key === 'GOBLIN_CAVE';
     const isAncientCrypt = key === 'ANCIENT_CRYPT';
+    const isRavencragCitadel = key === 'RAVENCRAG_CITADEL';
     const isCity = key === 'OAKHAVEN' || key === 'OAKHAVEN_CITY';
     const isUndead = lm.regionKey === 'UNDEAD_LANDS';
+    const isHighland = lm.regionKey === 'RAVENCRAG_HIGHLANDS';
 
     let badgeColor = '#e6be6e';
-    let badgeText = isUndead ? 'Undead Lands Landmark' : 'Discovered Landmark';
+    let badgeText = isHighland
+      ? 'Ravencrag Highlands Landmark'
+      : (isUndead ? 'Undead Lands Landmark' : 'Discovered Landmark');
     let icon = '🏛️';
 
     if (isStronghold) {
       badgeColor = mapData.bossSlain ? '#86efac' : '#fca5a5';
       badgeText = mapData.bossSlain ? 'Stronghold Cleared' : 'Goblin Stronghold';
       icon = '👹';
+    } else if (isRavencragCitadel) {
+      badgeColor = mapData.highlandBossSlain ? '#86efac' : '#fdba74';
+      badgeText = mapData.highlandBossSlain ? 'Citadel Cleared' : 'Major Landmark (Citadel)';
+      icon = '⛰️';
     } else if (isGoblinCave) {
       badgeColor = '#fcd34d';
       badgeText = 'Major Landmark (Cave)';
@@ -146,6 +155,9 @@ export function renderRegionMapModal(titleEl, bodyEl) {
       badgeColor = '#fde047';
       badgeText = 'Safe Sanctuary';
       icon = '🏰';
+    } else if (isHighland) {
+      badgeColor = '#fdba74';
+      icon = '🏔️';
     } else if (isUndead) {
       badgeColor = '#c4b5fd';
       icon = '🪦';
@@ -197,10 +209,16 @@ export function renderRegionMapModal(titleEl, bodyEl) {
         </span>
         <span class="stat-lbl">Ancient Crypt</span>
       </div>
+      <div class="atlas-stat-pill">
+        <span class="stat-val" style="color:${citadelDiscovered ? (mapData.highlandBossSlain ? '#86efac' : '#fdba74') : '#94a3b8'};">
+          ${citadelDiscovered ? (mapData.highlandBossSlain ? 'Cleared' : 'Discovered') : 'Unknown'}
+        </span>
+        <span class="stat-lbl">Ravencrag Citadel</span>
+      </div>
     </div>
 
-    <div style="display:grid; grid-template-columns: minmax(0, auto) minmax(260px, 1fr); gap:16px; align-items:start;">
-      <div class="qa-card" style="padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
+    <div style="display:grid; grid-template-columns: minmax(0, auto) minmax(240px, 1fr); gap:14px; align-items:start;">
+      <div class="qa-card" style="padding:10px; display:flex; flex-direction:column; align-items:center; gap:8px; overflow-x:auto;">
         <canvas id="region-map-overview-canvas" style="border-radius:6px; box-shadow:0 8px 24px rgba(0,0,0,0.85);"></canvas>
         <div style="display:flex; flex-wrap:wrap; gap:10px; font-size:0.70rem; color:var(--text-muted); font-family:var(--font-mono);">
           <span>🔵 Hero</span>
@@ -209,19 +227,20 @@ export function renderRegionMapModal(titleEl, bodyEl) {
           <span>🔴 Stronghold</span>
           <span>🟢 Ancient Crypt</span>
           <span>🟣 Undead Lands</span>
+          <span>⛰️ Ravencrag Citadel</span>
         </div>
       </div>
 
       <div style="display:flex; flex-direction:column; gap:10px;">
         <div class="qa-card" style="padding:12px 14px;">
           <div style="font-family:var(--font-serif); font-size:0.86rem; font-weight:700; color:var(--accent-gold-bright); margin-bottom:6px;">
-            🧭 Known Routes Across the Realm
+            🧭 Known Routes Across the Three Regions
           </div>
-          <div style="display:flex; flex-direction:column; gap:6px; font-size:0.76rem; color:var(--text-body); line-height:1.4;">
-            <div><strong style="color:#fde68a;">Main Forest Trail (Central):</strong> Leads North from Oakhaven through Blackwood Crossroads and the Ancient Black Oak to the Goblin Stronghold.</div>
+          <div style="display:flex; flex-direction:column; gap:6px; font-size:0.75rem; color:var(--text-body); line-height:1.4;">
+            <div><strong style="color:#fde68a;">Main Forest Trail (Goblin Forest):</strong> Leads North from Oakhaven through Blackwood Crossroads and the Ancient Black Oak to the Goblin Stronghold.</div>
             <div><strong style="color:#fcd34d;">Western Crag &amp; Cave Route:</strong> Branches West from the Crossroads past The Broken Shrine to <strong>The Goblin Cave</strong> beneath Whispering Crags.</div>
-            <div><strong style="color:#93c5fd;">Eastern River Route:</strong> Crosses The Old Stone Bridge past the Abandoned Watchpost along the river gorge.</div>
-            <div><strong style="color:#6ee7b7;">Undead Sepulcher Road (Far East):</strong> Branches East from the Watchpost into <strong>The Undead Lands</strong> through Deadman’s Mire and the Weeping Cairn to <strong>The Ancient Crypt</strong>.</div>
+            <div><strong style="color:#6ee7b7;">Undead Sepulcher Road (Middle East):</strong> Crosses The Old Stone Bridge and branches East into <strong>The Undead Lands</strong> to <strong>The Ancient Crypt</strong>.</div>
+            <div><strong style="color:#fdba74;">Highland Ridge Road (Far East):</strong> Ascends East through Windscar Gate and across Giant’s Span Bridge in <strong>Ravencrag Highlands</strong> to <strong>Ravencrag Citadel</strong>.</div>
           </div>
         </div>
 
@@ -242,7 +261,7 @@ export function renderRegionMapModal(titleEl, bodyEl) {
 }
 
 export function renderQuestsModal(titleEl, bodyEl) {
-  titleEl.textContent = '📜 Quests & Bounties — Oakhaven & Blackwood Forest [J]';
+  titleEl.textContent = '📜 Quests & Bounties — Oakhaven & The Three Regions [J]';
   const st = store.currentState || {};
   const activeTab = store.currentQuestsTab === 'BOUNTIES' ? 'BOUNTIES' : 'QUESTS';
   const questsList = Array.isArray(st.quests) && st.quests.length > 0
@@ -289,63 +308,70 @@ export function renderQuestsModal(titleEl, bodyEl) {
     REWARD_CLAIMED: '#60a5fa'
   };
 
-  const questsCardsHtml = questsList.map(q => {
+  const questsCardsHtml = questsList.map((q, idx) => {
+    const qKey = q.key || 'THE_GOBLIN_CHIEFTAIN';
     const badgeColor = statusColorMap[q.status] || '#fde68a';
+    const isPrimary = idx === 0;
+    const acceptBtnId = isPrimary ? 'modal-btn-accept-quest' : `modal-btn-accept-quest-${qKey}`;
+    const claimBtnId = isPrimary ? 'modal-btn-claim-quest-reward' : `modal-btn-claim-quest-reward-${qKey}`;
+    const targetName = q.targetBossName || (qKey === 'THE_ANCIENT_CRYPT' ? 'Lord Malakor the Barrow-Wight King' : (qKey === 'THE_RAVENCRAG_WARLORD' ? 'Warlord Kraug the Crag-Breaker' : 'Warchief Grak the Goblin Chieftain'));
+    const targetLoc = q.targetLocation || (qKey === 'THE_ANCIENT_CRYPT' ? 'The Ancient Crypt (Undead Lands)' : (qKey === 'THE_RAVENCRAG_WARLORD' ? 'Ravencrag Citadel (Ravencrag Highlands)' : 'Goblin Stronghold'));
+
     let actionSectionHtml = '';
     if (q.status === 'NOT_ACCEPTED') {
       if (st.isSafeCity) {
         actionSectionHtml = `
-          <button type="button" class="btn-action-gold" id="modal-btn-accept-quest" style="padding: 7px 16px; font-size: 0.82rem;" onclick="dispatchAction('ACCEPT_QUEST', { questKey: '${escapeHtml(q.key || 'THE_GOBLIN_CHIEFTAIN')}' })">
-            ${q.bossSlain ? 'Report Chieftain Slain & Accept Quest' : `Accept Quest: ${escapeHtml(q.title)}`}
+          <button type="button" class="btn-action-gold" id="${acceptBtnId}" data-quest-key="${escapeHtml(qKey)}" style="padding: 7px 16px; font-size: 0.82rem;" onclick="dispatchAction('ACCEPT_QUEST', { questKey: '${escapeHtml(qKey)}' })">
+            ${q.bossSlain ? `Report ${escapeHtml(targetName)} Slain & Accept Quest` : `Accept Quest: ${escapeHtml(q.title)}`}
           </button>
         `;
       } else {
         actionSectionHtml = `
           <div style="font-size: 0.78rem; color: var(--text-muted);">
-            Return to <strong>Oakhaven Sanctuary</strong> to formally accept this quest from Captain Vane (or venture North to the <strong>Goblin Stronghold</strong>).
+            Return to <strong>Oakhaven Sanctuary</strong> to formally accept this quest from ${escapeHtml(q.giverName || 'Captain Vane')} (or venture directly to <strong>${escapeHtml(targetLoc)}</strong>).
           </div>
         `;
       }
     } else if (q.status === 'ACTIVE') {
       actionSectionHtml = `
         <div style="font-size: 0.80rem; color: #fde68a;">
-          <strong>Objective:</strong> Travel North through Blackwood Forest along the forest trails to the <strong>Goblin Stronghold</strong> and defeat <strong>Warchief Grak the Goblin Chieftain</strong>.
+          <strong>Objective:</strong> Travel to <strong>${escapeHtml(targetLoc)}</strong> and defeat <strong>${escapeHtml(targetName)}</strong>.
         </div>
       `;
     } else if (q.status === 'COMPLETED') {
       if (st.isSafeCity) {
         actionSectionHtml = `
-          <button type="button" class="btn-action-gold" id="modal-btn-claim-quest-reward" style="padding: 7px 16px; font-size: 0.82rem;" onclick="dispatchAction('CLAIM_QUEST_REWARD', { questKey: '${escapeHtml(q.key || 'THE_GOBLIN_CHIEFTAIN')}' })">
+          <button type="button" class="btn-action-gold" id="${claimBtnId}" data-quest-key="${escapeHtml(qKey)}" style="padding: 7px 16px; font-size: 0.82rem;" onclick="dispatchAction('CLAIM_QUEST_REWARD', { questKey: '${escapeHtml(qKey)}' })">
             Claim Reward (+${q.rewardGold} Gold, +${q.rewardXp} XP)
           </button>
         `;
       } else {
         actionSectionHtml = `
           <div style="font-size: 0.80rem; color: #86efac; font-weight: 600;">
-            Warchief Grak is slain! Return South to <strong>Oakhaven Sanctuary</strong> to claim your reward (+${q.rewardGold} Gold &amp; +${q.rewardXp} XP).
+            ${escapeHtml(targetName)} is slain! Return to <strong>Oakhaven Sanctuary</strong> to claim your reward (+${q.rewardGold} Gold &amp; +${q.rewardXp} XP).
           </div>
         `;
       }
     } else if (q.status === 'REWARD_CLAIMED') {
       actionSectionHtml = `
         <div style="font-size: 0.80rem; color: #86efac; font-weight: 600;">
-          Quest Complete &amp; Reward Claimed — Oakhaven honors your victory over the Goblin Stronghold!
+          Quest Complete &amp; Reward Claimed — Oakhaven honors your victory at ${escapeHtml(targetLoc)}!
         </div>
       `;
     }
 
     return `
-      <div class="qa-card" style="padding: 16px 18px; border-color: var(--border-gold);">
+      <div class="qa-card" style="padding: 16px 18px; border-color: var(--border-gold); margin-bottom: 10px;" data-quest-card="${escapeHtml(qKey)}">
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px; margin-bottom: 12px;">
           <div>
             <div style="font-family: var(--font-serif); font-size: 1.05rem; font-weight: 800; color: var(--accent-gold-bright);">
               ${escapeHtml(q.title)}
             </div>
             <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">
-              Given by ${escapeHtml(q.giverName || 'Captain Vane')} • ${escapeHtml(q.giverLocation || 'Oakhaven Sanctuary')} • Target: ${escapeHtml(q.targetLocation || 'Goblin Stronghold')}
+              Given by ${escapeHtml(q.giverName || 'Captain Vane')} • ${escapeHtml(q.giverLocation || 'Oakhaven Sanctuary')} • Target: ${escapeHtml(targetLoc)}
             </div>
           </div>
-          <span class="lab-badge" id="quest-status-badge" style="font-size: 0.75rem; padding: 4px 10px; color: ${badgeColor}; border-color: ${badgeColor};">
+          <span class="lab-badge" id="${isPrimary ? 'quest-status-badge' : `quest-status-badge-${qKey}`}" style="font-size: 0.75rem; padding: 4px 10px; color: ${badgeColor}; border-color: ${badgeColor};">
             Status: ${escapeHtml(q.statusLabel)}
           </span>
         </div>
@@ -357,7 +383,7 @@ export function renderQuestsModal(titleEl, bodyEl) {
         <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; font-family: var(--font-mono); font-size: 0.80rem;">
           <span style="color: var(--accent-gold-bright);">Reward: <strong>+${q.rewardGold} Gold</strong></span>
           <span style="color: #93c5fd;">Experience: <strong>+${q.rewardXp} XP</strong></span>
-          <span style="color: ${q.bossSlain ? '#86efac' : '#fca5a5'};">Stronghold Chieftain: <strong>${q.bossSlain ? 'Defeated' : 'Alive in Northern Stronghold'}</strong></span>
+          <span style="color: ${q.bossSlain ? '#86efac' : '#fca5a5'};">Target: <strong>${q.bossSlain ? 'Defeated' : escapeHtml(targetName)}</strong></span>
         </div>
 
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--border-subtle);">
@@ -827,9 +853,13 @@ export function renderDirectorModal(titleEl, bodyEl) {
           <button type="button" class="btn-action-gold" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('CITY'); closeLabModal();">🏰 Oakhaven Safe City</button>
           <button type="button" class="btn-action-stone" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('WILDERNESS'); closeLabModal();">🌲 Forest Trail</button>
           <button type="button" class="btn-action-gold" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('GOBLIN_CAVE'); closeLabModal();">🕳️ The Goblin Cave</button>
+          <button type="button" class="btn-action-gold" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('GOBLIN_CAVE_DUNGEON'); closeLabModal();">🔦 Goblin Cave Dungeon</button>
           <button type="button" class="btn-action-gold" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('GOBLIN_STRONGHOLD'); closeLabModal();">👹 Goblin Stronghold</button>
           <button type="button" class="btn-action-stone" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('UNDEAD_LANDS'); closeLabModal();">🪦 Undead Lands</button>
           <button type="button" class="btn-action-gold" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('ANCIENT_CRYPT'); closeLabModal();">⚰️ The Ancient Crypt</button>
+          <button type="button" class="btn-action-gold" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('ANCIENT_CRYPT_DUNGEON'); closeLabModal();">🕯️ Ancient Crypt Dungeon</button>
+          <button type="button" class="btn-action-stone" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('RAVENCRAG_HIGHLANDS'); closeLabModal();">🏔️ Ravencrag Highlands</button>
+          <button type="button" class="btn-action-gold" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('RAVENCRAG_CITADEL'); closeLabModal();">⛰️ Ravencrag Citadel</button>
           <button type="button" class="btn-action-stone" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('SHADOW'); closeLabModal();">👁️ Shadow in Mist</button>
           <button type="button" class="btn-action-gold" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('COMBAT'); closeLabModal();">⚔️ Stage Active Combat</button>
           <button type="button" class="btn-action-stone" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('WOUNDED'); closeLabModal();">🩸 Critical HP (3 HP)</button>

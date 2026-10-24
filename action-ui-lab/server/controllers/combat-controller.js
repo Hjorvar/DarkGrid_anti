@@ -25,52 +25,161 @@ const {
 } = require('../services/combat-sequence-service');
 const { buildClientState } = require('../services/client-state-service');
 const {
+  HIGHLAND_BOSS_PROFILE,
   startStrongholdBossEncounter,
+  startHighlandBossEncounter,
   startLandmarkDungeonEncounter,
-  syncCharacterQuestState
+  markHighlandBossSlain,
+  markAncientCryptBossSlain,
+  syncCharacterQuestState,
+  syncAllCharacterQuests
 } = require('../services/topdown-world-service');
+const {
+  DUNGEON_BOSS_PROFILES,
+  startDungeonBossEncounter,
+  markDungeonEventResolved
+} = require('../services/dungeon-service');
+
+function resolvePostVictoryHooks(db, characterId, encounterId) {
+  if (!db || !characterId || !encounterId) return;
+  try {
+    const encRow = db.prepare('SELECT monster_instance_id, combat_state_json FROM encounters WHERE id = ?').get(encounterId);
+    if (encRow) {
+      if (encRow.combat_state_json) {
+        let meta = {};
+        try {
+          meta = JSON.parse(encRow.combat_state_json) || {};
+        } catch {
+          meta = {};
+        }
+        const goldBoost = Math.max(0, Number(meta.goldBoost || 0));
+        if (goldBoost > 0 && !meta.goldBoostAwarded) {
+          db.prepare('UPDATE characters SET gold = gold + ? WHERE id = ?').run(goldBoost, characterId);
+          meta.goldBoostAwarded = true;
+          db.prepare('UPDATE encounters SET combat_state_json = ? WHERE id = ?').run(JSON.stringify(meta), encounterId);
+        }
+        if (meta.isDungeonBoss && meta.dungeonKey && meta.dungeonBossKey) {
+          markDungeonEventResolved(db, characterId, meta.dungeonKey, meta.dungeonBossKey, 'BOSS');
+          if (meta.dungeonKey === 'ANCIENT_CRYPT') {
+            markAncientCryptBossSlain(db, characterId);
+          }
+        }
+        if (meta.dungeonEventKey && meta.dungeonKey) {
+          markDungeonEventResolved(db, characterId, meta.dungeonKey, meta.dungeonEventKey, 'FIXED_ENCOUNTER');
+        }
+      }
+      if (encRow.monster_instance_id) {
+        const inst = db.prepare('SELECT custom_title FROM monster_instances WHERE id = ?').get(encRow.monster_instance_id);
+        if (inst && inst.custom_title === HIGHLAND_BOSS_PROFILE.customTitle) {
+          markHighlandBossSlain(db, characterId);
+        }
+        if (inst && inst.custom_title === DUNGEON_BOSS_PROFILES.GOBLIN_CAVE.customTitle) {
+          markDungeonEventResolved(
+            db,
+            characterId,
+            'GOBLIN_CAVE',
+            DUNGEON_BOSS_PROFILES.GOBLIN_CAVE.bossKey,
+            'BOSS',
+            DUNGEON_BOSS_PROFILES.GOBLIN_CAVE.x,
+            DUNGEON_BOSS_PROFILES.GOBLIN_CAVE.y
+          );
+        }
+        if (inst && inst.custom_title === DUNGEON_BOSS_PROFILES.ANCIENT_CRYPT.customTitle) {
+          markDungeonEventResolved(
+            db,
+            characterId,
+            'ANCIENT_CRYPT',
+            DUNGEON_BOSS_PROFILES.ANCIENT_CRYPT.bossKey,
+            'BOSS',
+            DUNGEON_BOSS_PROFILES.ANCIENT_CRYPT.x,
+            DUNGEON_BOSS_PROFILES.ANCIENT_CRYPT.y
+          );
+          markAncientCryptBossSlain(db, characterId);
+        }
+      }
+    }
+  } catch {
+    // Non-fatal
+  }
+  syncCharacterQuestState(db, characterId);
+  syncAllCharacterQuests(db, characterId);
+}
 
 function handleCombatAction({ db, userId, options, action, payload, character, labToolsAllowed = false, res }) {
-  // 1a. MAJOR LANDMARK DUNGEON / CRYPT ENTRANCE DELVE (Goblin Cave [9, 12] / Ancient Crypt [26, 5])
-  if (action === 'EXPLORE_GOBLIN_CAVE' || action === 'ENTER_ANCIENT_CRYPT') {
-    const landmarkKey = action === 'ENTER_ANCIENT_CRYPT' ? 'ANCIENT_CRYPT' : 'GOBLIN_CAVE';
+  // 1a. DUNGEON BOSS ENGAGEMENT (Inside Goblin Cave [16, 2] or Ancient Crypt [10, 2])
+  if (action === 'ENGAGE_DUNGEON_BOSS' || action === 'CHALLENGE_DUNGEON_BOSS') {
     const currentTile = getTileById(db, character.tile_id);
-    const delveResult = startLandmarkDungeonEncounter(db, character, landmarkKey, options);
-    const enc = delveResult.encounter;
+    const bossResult = startDungeonBossEncounter(db, character, options);
+    const enc = bossResult.encounter;
     const beforeSnap = captureCombatBeforeSnapshot(db, character, enc);
-    const monsterName = (enc && enc.monster && enc.monster.name) || (landmarkKey === 'ANCIENT_CRYPT' ? 'Crypt Guardian' : 'Cave Stalker');
+    const bossTitle = (bossResult.bossDef && bossResult.bossDef.customTitle) || 'Dungeon Boss';
     const isOpeningVictory =
       (enc && enc.status === 'VICTORY') ||
-      Boolean(delveResult.investigateResult && (delveResult.investigateResult.status === 'VICTORY' || delveResult.investigateResult.monsterDied));
+      Boolean(bossResult.investigateResult && (bossResult.investigateResult.status === 'VICTORY' || bossResult.investigateResult.monsterDied));
 
     if (isOpeningVictory) {
-      db.prepare('UPDATE characters SET pending_victory_encounter_id = ? WHERE id = ?').run(delveResult.encounterId, character.id);
-      syncCharacterQuestState(db, character.id);
-      const victoryData = getVictoryData(db, character.id, delveResult.encounterId);
-      recordEncounterOutcome(character.id, currentTile, monsterName, 'VICTORY');
+      db.prepare('UPDATE characters SET pending_victory_encounter_id = ? WHERE id = ?').run(bossResult.encounterId, character.id);
+      resolvePostVictoryHooks(db, character.id, bossResult.encounterId);
+      const victoryData = getVictoryData(db, character.id, bossResult.encounterId);
+      recordEncounterOutcome(character.id, currentTile, bossTitle, 'VICTORY');
       const nextState = buildClientState(db, userId, {
         labToolsAllowed,
         victory: victoryData,
         fxCue: { type: 'VICTORY', openingShotKill: true }
       });
-      nextState.combatSequence = buildCombatSequence(db, delveResult.encounterId, 0, beforeSnap, nextState);
+      nextState.combatSequence = buildCombatSequence(db, bossResult.encounterId, 0, beforeSnap, nextState);
       return res.json({ ok: true, state: nextState });
     }
 
     const advState = getOrCreateAdventureState(character.id, currentTile);
     recordEncounterStart(advState, currentTile, {
       status: 'IN_COMBAT',
-      monsterName
+      monsterName: bossTitle
     });
-    const infoMsg = landmarkKey === 'ANCIENT_CRYPT'
-      ? `You breach the obsidian threshold of the Ancient Crypt—a ${monsterName} rises from the sepulcher shadows!`
-      : `You step into the torch-lit mouth of the Goblin Cave—a ${monsterName} lunges from the stalagmites!`;
     const nextState = buildClientState(db, userId, {
       labToolsAllowed,
-      infoMessage: infoMsg,
-      fxCue: { type: 'REVEAL_MONSTER' }
+      infoMessage: `${bossTitle} rises within the inner sanctum to challenge you!`,
+      fxCue: { type: 'REVEAL_MONSTER', isBoss: true }
     });
-    nextState.combatSequence = buildCombatSequence(db, delveResult.encounterId, 0, beforeSnap, nextState);
+    nextState.combatSequence = buildCombatSequence(db, bossResult.encounterId, 0, beforeSnap, nextState);
+    return res.json({ ok: true, state: nextState });
+  }
+
+  // 1a-ii. RAVENCRAG HIGHLANDS BOSS: CONFRONT WARLORD KRAUG AT [37, 3]
+  if (action === 'CONFRONT_HIGHLAND_WARLORD' || action === 'ENGAGE_HIGHLAND_BOSS' || action === 'CHALLENGE_HIGHLAND_BOSS') {
+    const currentTile = getTileById(db, character.tile_id);
+    const bossResult = startHighlandBossEncounter(db, character, options);
+    const enc = bossResult.encounter;
+    const beforeSnap = captureCombatBeforeSnapshot(db, character, enc);
+    const isOpeningVictory =
+      (enc && enc.status === 'VICTORY') ||
+      Boolean(bossResult.investigateResult && (bossResult.investigateResult.status === 'VICTORY' || bossResult.investigateResult.monsterDied));
+
+    if (isOpeningVictory) {
+      db.prepare('UPDATE characters SET pending_victory_encounter_id = ? WHERE id = ?').run(bossResult.encounterId, character.id);
+      resolvePostVictoryHooks(db, character.id, bossResult.encounterId);
+      const victoryData = getVictoryData(db, character.id, bossResult.encounterId);
+      recordEncounterOutcome(character.id, currentTile, HIGHLAND_BOSS_PROFILE.customTitle, 'VICTORY');
+      const nextState = buildClientState(db, userId, {
+        labToolsAllowed,
+        victory: victoryData,
+        fxCue: { type: 'VICTORY', openingShotKill: true }
+      });
+      nextState.combatSequence = buildCombatSequence(db, bossResult.encounterId, 0, beforeSnap, nextState);
+      return res.json({ ok: true, state: nextState });
+    }
+
+    const advState = getOrCreateAdventureState(character.id, currentTile);
+    recordEncounterStart(advState, currentTile, {
+      status: 'IN_COMBAT',
+      monsterName: HIGHLAND_BOSS_PROFILE.customTitle
+    });
+    const nextState = buildClientState(db, userId, {
+      labToolsAllowed,
+      infoMessage: 'The iron-bound gates of Ravencrag Citadel groan open! Warlord Kraug the Crag-Breaker strides into the storm!',
+      fxCue: { type: 'REVEAL_MONSTER', isBoss: true }
+    });
+    nextState.combatSequence = buildCombatSequence(db, bossResult.encounterId, 0, beforeSnap, nextState);
     return res.json({ ok: true, state: nextState });
   }
 
@@ -86,7 +195,7 @@ function handleCombatAction({ db, userId, options, action, payload, character, l
 
     if (isOpeningVictory) {
       db.prepare('UPDATE characters SET pending_victory_encounter_id = ? WHERE id = ?').run(bossResult.encounterId, character.id);
-      syncCharacterQuestState(db, character.id);
+      resolvePostVictoryHooks(db, character.id, bossResult.encounterId);
       const victoryData = getVictoryData(db, character.id, bossResult.encounterId);
       recordEncounterOutcome(character.id, currentTile, 'Warchief Grak the Goblin Chieftain', 'VICTORY');
       const nextState = buildClientState(db, userId, {
@@ -124,7 +233,7 @@ function handleCombatAction({ db, userId, options, action, payload, character, l
     const result = investigateEncounter(db, character.id, activeEnc.id, character.class);
     if (result && (result.status === 'VICTORY' || result.monsterDied)) {
       db.prepare('UPDATE characters SET pending_victory_encounter_id = ? WHERE id = ?').run(activeEnc.id, character.id);
-      syncCharacterQuestState(db, character.id);
+      resolvePostVictoryHooks(db, character.id, activeEnc.id);
       const victoryData = getVictoryData(db, character.id, activeEnc.id);
       recordEncounterOutcome(
         character.id,
@@ -227,7 +336,7 @@ function handleCombatAction({ db, userId, options, action, payload, character, l
 
     if (resultState.encounter && resultState.encounter.status === 'VICTORY') {
       db.prepare('UPDATE characters SET pending_victory_encounter_id = ? WHERE id = ?').run(activeEnc.id, character.id);
-      syncCharacterQuestState(db, character.id);
+      resolvePostVictoryHooks(db, character.id, activeEnc.id);
       const victoryData = getVictoryData(db, character.id, activeEnc.id);
       recordEncounterOutcome(
         character.id,

@@ -69,13 +69,20 @@ const {
 } = require('./legacy-compatibility-service');
 const {
   STRONGHOLD_BOSS_PROFILE,
+  HIGHLAND_BOSS_PROFILE,
+  DANGER_ZONE_PROFILES,
   isGoblinStrongholdTile,
+  isRavencragCitadelTile,
   syncCharacterQuestState,
   getCharacterQuests,
   resolveTileDangerZone,
   resolveLandmarkSceneState,
   buildTopdownMapPayload
 } = require('./topdown-world-service');
+const {
+  buildDungeonMapPayload,
+  getDungeonTile
+} = require('./dungeon-service');
 
 function normalizeContractGrammar(text) {
   if (!text || typeof text !== 'string') return '';
@@ -172,13 +179,21 @@ function buildClientState(db, userId, extra = {}) {
 
   let charRowRaw = {};
   try {
-    charRowRaw = db.prepare('SELECT facing, pending_victory_encounter_id, scene_mode, active_landmark_scene_key, dismissed_landmark_tile_id FROM characters WHERE id = ?').get(character.id) || {};
+    charRowRaw = db.prepare(`
+      SELECT facing, pending_victory_encounter_id, scene_mode,
+             active_landmark_scene_key, dismissed_landmark_tile_id,
+             active_dungeon_key, dungeon_x, dungeon_y
+      FROM characters WHERE id = ?
+    `).get(character.id) || {};
   } catch {
     charRowRaw = db.prepare('SELECT facing, pending_victory_encounter_id, scene_mode FROM characters WHERE id = ?').get(character.id) || {};
   }
   const facing = normalizeFacing(charRowRaw.facing || 'NORTH');
   const sceneMode = normalizeSceneMode(charRowRaw.scene_mode || 'C');
   let pendingVictoryEncounterId = charRowRaw.pending_victory_encounter_id || null;
+  character.active_dungeon_key = charRowRaw.active_dungeon_key || null;
+  character.dungeon_x = charRowRaw.dungeon_x !== undefined && charRowRaw.dungeon_x !== null ? Number(charRowRaw.dungeon_x) : null;
+  character.dungeon_y = charRowRaw.dungeon_y !== undefined && charRowRaw.dungeon_y !== null ? Number(charRowRaw.dungeon_y) : null;
 
   const currentTile = getTileById(db, character.tile_id);
   const isSafeCity = Boolean(currentTile && currentTile.terrain === 'CITY' && currentTile.is_safe === 1);
@@ -333,7 +348,45 @@ function buildClientState(db, userId, extra = {}) {
   });
   const activeContract = getActiveContractForCharacter(db, character.id);
   const minimap = getMinimapData(db, currentTile, 2);
-  const directions = getAvailableDirections(db, currentTile);
+  effectiveHero.active_dungeon_key = character.active_dungeon_key || null;
+  effectiveHero.dungeon_x = character.dungeon_x;
+  effectiveHero.dungeon_y = character.dungeon_y;
+  const dungeonMap = buildDungeonMapPayload(db, effectiveHero);
+  const inDungeon = Boolean(dungeonMap && dungeonMap.inDungeon);
+
+  let directions = getAvailableDirections(db, currentTile);
+  if (inDungeon && Array.isArray(dungeonMap.tiles)) {
+    const dirSpecs = [
+      { key: 'NORTH', name: 'North', dx: 0, dy: -1 },
+      { key: 'SOUTH', name: 'South', dx: 0, dy: 1 },
+      { key: 'WEST', name: 'West', dx: -1, dy: 0 },
+      { key: 'EAST', name: 'East', dx: 1, dy: 0 }
+    ];
+    const dObj = {};
+    for (const d of dirSpecs) {
+      const nx = Number(dungeonMap.heroX) + d.dx;
+      const ny = Number(dungeonMap.heroY) + d.dy;
+      const nTile = dungeonMap.tiles.find((t) => t.x === nx && t.y === ny);
+      const rawTile = getDungeonTile(dungeonMap.dungeonKey, nx, ny);
+      const passable = Boolean(rawTile && rawTile.isPassable);
+      const visibleName = (nTile && nTile.isDiscovered) ? nTile.name : (passable ? 'Shadowed Passage' : 'Dungeon Wall');
+      dObj[d.key] = {
+        direction: d.key,
+        name: d.name,
+        available: passable,
+        reason: passable ? null : 'Blocked by Solid Dungeon Wall',
+        tileName: visibleName,
+        terrain: 'UNDERGROUND_RUINS',
+        tile: {
+          x: nx,
+          y: ny,
+          name: visibleName,
+          isPassable: passable
+        }
+      };
+    }
+    directions = dObj;
+  }
 
   const modifiers = {
     strength: formatModifier(effectiveHero.strength),
@@ -371,18 +424,29 @@ function buildClientState(db, userId, extra = {}) {
         resolvedDescription: activeEncounter.resolvedDescription
       };
     } else if (activeEncounter.status === 'IN_COMBAT') {
-      const cleanMonsterName = (activeEncounter.monster_name || '').replace(/\[.*?\]/g, '').trim();
+      const dungeonBossTitle = parsedEncounterStateMeta && parsedEncounterStateMeta.isDungeonBoss && parsedEncounterStateMeta.dungeonBossName
+        ? String(parsedEncounterStateMeta.dungeonBossName)
+        : null;
+      const cleanMonsterName = dungeonBossTitle || (activeEncounter.monster_name || '').replace(/\[.*?\]/g, '').trim();
       const cleanBaseMonsterName = (activeEncounter.base_monster_name || activeEncounter.monster_name || '').replace(/\[.*?\]/g, '').trim();
       const isStrongholdBoss =
         activeEncounter.custom_title === STRONGHOLD_BOSS_PROFILE.customTitle ||
         /Warchief Grak/i.test(cleanMonsterName) ||
         Boolean(currentTile && isGoblinStrongholdTile(currentTile) && activeEncounter.monster_instance_id);
+      const isHighlandBoss =
+        activeEncounter.custom_title === HIGHLAND_BOSS_PROFILE.customTitle ||
+        /Warlord Kraug/i.test(cleanMonsterName) ||
+        Boolean(currentTile && isRavencragCitadelTile(currentTile) && activeEncounter.monster_instance_id);
       const cleanSlug = isStrongholdBoss
         ? STRONGHOLD_BOSS_PROFILE.combatImageSlug
-        : (activeEncounter.imageSlug || cleanBaseMonsterName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''));
+        : isHighlandBoss
+          ? HIGHLAND_BOSS_PROFILE.combatImageSlug
+          : (activeEncounter.imageSlug || cleanBaseMonsterName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''));
       const imageUrl = isStrongholdBoss
         ? STRONGHOLD_BOSS_PROFILE.combatImageUrl
-        : (activeEncounter.imageUrl || (`/images/monsters/${cleanSlug}.png`));
+        : isHighlandBoss
+          ? HIGHLAND_BOSS_PROFILE.combatImageUrl
+          : (activeEncounter.imageUrl || (`/images/monsters/${cleanSlug}.png`));
       const isAirborne = Boolean(
         activeEncounter.movement_type === 'FLY' ||
         activeEncounter.movement_type === 'FLYING' ||
@@ -454,7 +518,8 @@ function buildClientState(db, userId, extra = {}) {
         adaptiveScale: integratedProfile.adaptiveScale || null,
         isBountyTarget: Boolean(activeEncounter.isBountyTarget),
         bountyTraitNotice: activeEncounter.bountyTraitNotice || null,
-        customTitle: activeEncounter.custom_title || null,
+        customTitle: dungeonBossTitle || activeEncounter.custom_title || null,
+        isDungeonBoss: Boolean(dungeonBossTitle),
         isRangerSpecial: Boolean(activeEncounter.isRangerSpecial),
         isAirborne,
         resolvedDescription: activeEncounter.resolvedDescription,
@@ -534,14 +599,109 @@ function buildClientState(db, userId, extra = {}) {
   const quest = syncCharacterQuestState(db, character.id);
   const quests = getCharacterQuests(db, character.id);
   const topdownMap = buildTopdownMapPayload(db, effectiveHero, currentTile);
-  const dangerZone = resolveTileDangerZone(db, currentTile);
-  const landmarkScene = resolveLandmarkSceneState(
-    db,
-    { ...character, ...charRowRaw },
-    currentTile,
-    safeEncounter,
-    resolvedVictory
-  );
+  let dangerZone = resolveTileDangerZone(db, currentTile);
+  if (inDungeon) {
+    const dTile = getDungeonTile(dungeonMap.dungeonKey, dungeonMap.heroX, dungeonMap.heroY);
+    const dZoneKey = (dTile && dTile.dangerZoneKey) || (dungeonMap.dungeonKey === 'ANCIENT_CRYPT' ? 'CRYPT_OUTER_GALLERIES' : 'GOBLIN_CAVE_TUNNELS');
+    dangerZone = DANGER_ZONE_PROFILES[dZoneKey]
+      ? { ...DANGER_ZONE_PROFILES[dZoneKey] }
+      : {
+          zoneKey: dZoneKey,
+          zoneName: `${dungeonMap.dungeonName} (${(dTile && dTile.name) || 'Subterranean Passage'})`,
+          dangerLevel: dungeonMap.dungeonKey === 'ANCIENT_CRYPT' ? 'EXTREME' : 'HIGH',
+          dangerLabel: 'Subterranean Dungeon'
+        };
+  }
+  const landmarkScene = inDungeon
+    ? null
+    : resolveLandmarkSceneState(
+        db,
+        { ...character, ...charRowRaw },
+        currentTile,
+        safeEncounter,
+        resolvedVictory
+      );
+
+  let effectiveCurrentTile = currentTile;
+  let effectiveMinimap = minimap;
+  if (inDungeon) {
+    const dTile = getDungeonTile(dungeonMap.dungeonKey, dungeonMap.heroX, dungeonMap.heroY);
+    effectiveCurrentTile = {
+      ...(currentTile || {}),
+      overworld_x: currentTile ? currentTile.x : 0,
+      overworld_y: currentTile ? currentTile.y : 0,
+      overworld_name: currentTile ? currentTile.name : 'Overworld',
+      x: dungeonMap.heroX,
+      y: dungeonMap.heroY,
+      name: (dTile && dTile.name) || dungeonMap.currentRoomName || dungeonMap.dungeonName,
+      description: (dTile && dTile.description) || dungeonMap.subtitle,
+      terrain: 'UNDERGROUND_RUINS',
+      is_safe: 0,
+      isDungeonTile: true,
+      dungeonKey: dungeonMap.dungeonKey,
+      dungeonName: dungeonMap.dungeonName
+    };
+    const dRows = [];
+    for (let my = dungeonMap.heroY - 2; my <= dungeonMap.heroY + 2; my++) {
+      const row = [];
+      for (let mx = dungeonMap.heroX - 2; mx <= dungeonMap.heroX + 2; mx++) {
+        const mt = dungeonMap.tiles.find((t) => t.x === mx && t.y === my);
+        const isPlayer = (mx === dungeonMap.heroX && my === dungeonMap.heroY);
+        if (!mt || !mt.isDiscovered) {
+          row.push({
+            x: mx,
+            y: my,
+            exists: false,
+            isPlayer: false,
+            isPassable: false,
+            symbol: ' ',
+            char: '?',
+            color: '#05070b',
+            label: 'Unexplored Darkness'
+          });
+        } else {
+          let symbol = mt.isPassable ? '·' : '█';
+          let color = mt.isPassable ? (mt.isVisibleNow ? '#94a3b8' : '#475569') : '#1e293b';
+          if (isPlayer) {
+            symbol = '@';
+            color = '#facc15';
+          } else if (mt.roomType === 'EXIT_STAIRS') {
+            symbol = '🪜';
+            color = '#fde047';
+          } else if (mt.roomType === 'BOSS') {
+            symbol = '💀';
+            color = dungeonMap.bossSlain ? '#4ade80' : '#ef4444';
+          } else if (mt.roomType === 'TREASURE' && !mt.eventResolved) {
+            symbol = '📦';
+            color = '#fbbf24';
+          } else if (mt.roomType === 'HAZARD') {
+            symbol = '⚠️';
+            color = '#f97316';
+          }
+          row.push({
+            x: mx,
+            y: my,
+            exists: true,
+            name: mt.name,
+            terrain: 'DUNGEON',
+            isPlayer,
+            isPassable: Boolean(mt.isPassable),
+            isSafe: false,
+            symbol,
+            char: symbol,
+            color,
+            label: isPlayer ? `You are here (${mt.name})` : mt.name
+          });
+        }
+      }
+      dRows.push(row);
+    }
+    effectiveMinimap = {
+      centerX: dungeonMap.heroX,
+      centerY: dungeonMap.heroY,
+      rows: dRows
+    };
+  }
 
   return {
     mode: safeEncounter ? safeEncounter.status : (isSafeCity ? 'CITY' : 'EXPLORATION'),
@@ -556,6 +716,7 @@ function buildClientState(db, userId, extra = {}) {
     sceneMode,
     viewportScene,
     topdownMap,
+    dungeonMap,
     dangerZone,
     landmarkScene,
     quest,
@@ -595,6 +756,9 @@ function buildClientState(db, userId, extra = {}) {
       secondWindStatus,
       divine_charges: Number(effectiveHero.divine_charges || 0),
       max_divine_charges: Number(effectiveHero.max_divine_charges || 0),
+      active_dungeon_key: effectiveHero.active_dungeon_key || null,
+      dungeon_x: effectiveHero.dungeon_x,
+      dungeon_y: effectiveHero.dungeon_y,
       facing,
       sceneMode
     },
@@ -639,10 +803,10 @@ function buildClientState(db, userId, extra = {}) {
     clericHealInfo,
     clericDivineInfo,
     clericDivineChargeInfo: clericDivineInfo,
-    currentTile,
-    isSafeCity,
+    currentTile: effectiveCurrentTile,
+    isSafeCity: inDungeon ? false : isSafeCity,
     terrainArtwork,
-    minimap,
+    minimap: effectiveMinimap,
     directions,
     encounter: safeEncounter,
     victory: resolvedVictory,

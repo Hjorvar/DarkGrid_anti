@@ -43,6 +43,11 @@ const {
   dismissLandmarkScene,
   openLandmarkScene
 } = require('../services/topdown-world-service');
+const {
+  enterDungeon,
+  exitDungeon,
+  moveInDungeon
+} = require('../services/dungeon-service');
 
 function handleNavigationAction({ db, userId, options, action, payload, character, currentFacing, labToolsAllowed = false, res }) {
       // 0a. SET_SCENE_MODE ('A' | 'B' | 'C' | 'LEGACY') — Live comparison switcher
@@ -111,6 +116,44 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
         return res.json({
           ok: true,
           state: buildClientState(db, userId)
+        });
+      }
+
+      // 0d. PHASE 9C: ENTER / EXIT LARGE DUNGEONS (Goblin Cave [9, 12] & Ancient Crypt [26, 5])
+      if (action === 'EXPLORE_GOBLIN_CAVE' || action === 'ENTER_ANCIENT_CRYPT' || action === 'ENTER_DUNGEON') {
+        const activeEnc = getActiveEncounterForCharacter(db, character.id, character.class);
+        if (activeEnc) {
+          throw new Error('Cannot enter a dungeon while engaged in an active encounter.');
+        }
+        const dungeonKey = action === 'ENTER_ANCIENT_CRYPT'
+          ? 'ANCIENT_CRYPT'
+          : action === 'EXPLORE_GOBLIN_CAVE'
+            ? 'GOBLIN_CAVE'
+            : String(payload.dungeonKey || 'GOBLIN_CAVE').toUpperCase();
+        const enterRes = enterDungeon(db, character, dungeonKey);
+        return res.json({
+          ok: true,
+          state: buildClientState(db, userId, {
+            labToolsAllowed,
+            infoMessage: enterRes.message,
+            fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+          })
+        });
+      }
+
+      if (action === 'EXIT_DUNGEON') {
+        const activeEnc = getActiveEncounterForCharacter(db, character.id, character.class);
+        if (activeEnc && activeEnc.status === 'IN_COMBAT') {
+          throw new Error('Cannot ascend from the dungeon while engaged in combat!');
+        }
+        const exitRes = exitDungeon(db, character);
+        return res.json({
+          ok: true,
+          state: buildClientState(db, userId, {
+            labToolsAllowed,
+            infoMessage: exitRes.message,
+            fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+          })
         });
       }
 
@@ -187,6 +230,76 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
               })
             });
           }
+        }
+
+        // PHASE 9C: SUBTERRANEAN DUNGEON GRID MOVEMENT
+        if (character.active_dungeon_key) {
+          const effectiveFacing = updateFacingToDirection ? direction : currentFacing;
+          const dungeonMoveOpts = {};
+          if (options.rng) dungeonMoveOpts.rng = options.rng;
+          if (labToolsAllowed) {
+            if (payload.testForceOutcome) dungeonMoveOpts.forceOutcome = String(payload.testForceOutcome).toUpperCase();
+            if (payload.testForceAmbush !== undefined) dungeonMoveOpts.forceAmbush = Boolean(payload.testForceAmbush);
+            if (payload.testForceEncounter !== undefined) {
+              dungeonMoveOpts.forcedChance = payload.testForceEncounter ? 100 : 0;
+            }
+          }
+
+          let bypassedEncounter = false;
+          if (activeEnc && activeEnc.status === 'DISCOVERED') {
+            ignoreEncounter(db, character.id, activeEnc.id);
+            bypassedEncounter = true;
+          }
+
+          const moveRes = moveInDungeon(db, character, direction, dungeonMoveOpts);
+          if (!moveRes.ok) {
+            return res.json({
+              ok: false,
+              state: buildClientState(db, userId, {
+                labToolsAllowed,
+                errorMessage: moveRes.error || 'Passage blocked by solid subterranean stone.',
+                fxCue: { type: 'BLOCKED_MOVE', direction, moveKind, relativeMove: moveKind }
+              })
+            });
+          }
+
+          db.prepare('UPDATE characters SET facing = ?, pending_victory_encounter_id = NULL WHERE id = ?').run(
+            effectiveFacing,
+            character.id
+          );
+
+          const spawnedEncounter = moveRes.encounter || null;
+          const isAmbushTriggered = Boolean(spawnedEncounter && (spawnedEncounter.status === 'IN_COMBAT' || spawnedEncounter.isAmbush));
+          const msgParts = [];
+          if (moveRes.treasureFound && moveRes.treasureFound.message) {
+            msgParts.push(moveRes.treasureFound.message);
+          }
+          if (moveRes.hazardMessage) {
+            msgParts.push(moveRes.hazardMessage);
+          }
+          if (isAmbushTriggered) {
+            msgParts.push(`AMBUSH! ${spawnedEncounter.monster_name || 'A lurking subterranean horror'} strikes from the darkness! Retreat is cut off for 2 rounds!`);
+          } else if (bypassedEncounter) {
+            msgParts.push(`You slipped past the threat in the dark and moved ${FACING_VECTORS[direction].label.toLowerCase()} into ${moveRes.targetTile.name}.`);
+          }
+          const infoMessage = msgParts.length > 0 ? msgParts.join(' ') : null;
+
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              labToolsAllowed,
+              infoMessage,
+              fxCue: {
+                type: isAmbushTriggered ? 'AMBUSH_STARTED' : (spawnedEncounter ? 'ENCOUNTER_DISCOVERED' : 'STEP'),
+                direction,
+                moveKind,
+                relativeMove: moveKind,
+                facing: effectiveFacing,
+                bypassedEncounter,
+                bypassedPrevious: bypassedEncounter
+              }
+            })
+          });
         }
 
         // Validate target tile coordinates and passability BEFORE modifying any DISCOVERED encounter
@@ -400,7 +513,7 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
           UPDATE encounters SET status = 'ESCAPED'
           WHERE character_id = ? AND status IN ('DISCOVERED', 'IN_COMBAT')
         `).run(character.id);
-        db.prepare('UPDATE characters SET tile_id = ?, facing = ?, pending_victory_encounter_id = NULL WHERE id = ?').run(
+        db.prepare('UPDATE characters SET tile_id = ?, facing = ?, pending_victory_encounter_id = NULL, active_dungeon_key = NULL, dungeon_x = NULL, dungeon_y = NULL WHERE id = ?').run(
           targetTile.id,
           targetFacing,
           character.id

@@ -17,6 +17,7 @@ const config = require('../../../src/config');
 const { SqliteSessionStore } = require('../../../src/db/session-store');
 const { FORBIDDEN_CLIENT_FIELDS, securityHeaders } = require('../../../src/middleware/security');
 const { initSceneCatalogTables } = require('../../scene-catalog');
+const { syncDungeonTables } = require('./dungeon-service');
 const {
   getRangerSelectableFamilies,
   getFamilyMetadata,
@@ -94,6 +95,27 @@ function ensureNonDestructiveLabAdapter(db) {
   }
   if (!cols.includes('dismissed_landmark_tile_id')) {
     db.exec('ALTER TABLE characters ADD COLUMN dismissed_landmark_tile_id INTEGER DEFAULT NULL;');
+  }
+  if (!cols.includes('active_dungeon_key')) {
+    db.exec('ALTER TABLE characters ADD COLUMN active_dungeon_key TEXT DEFAULT NULL;');
+  }
+  if (!cols.includes('dungeon_x')) {
+    db.exec('ALTER TABLE characters ADD COLUMN dungeon_x INTEGER DEFAULT NULL;');
+  }
+  if (!cols.includes('dungeon_y')) {
+    db.exec('ALTER TABLE characters ADD COLUMN dungeon_y INTEGER DEFAULT NULL;');
+  }
+  if (!cols.includes('quest_ancient_crypt_status')) {
+    db.exec("ALTER TABLE characters ADD COLUMN quest_ancient_crypt_status TEXT NOT NULL DEFAULT 'NOT_ACCEPTED';");
+  }
+  if (!cols.includes('ancient_crypt_boss_slain')) {
+    db.exec('ALTER TABLE characters ADD COLUMN ancient_crypt_boss_slain INTEGER NOT NULL DEFAULT 0;');
+  }
+  if (!cols.includes('quest_ravencrag_warlord_status')) {
+    db.exec("ALTER TABLE characters ADD COLUMN quest_ravencrag_warlord_status TEXT NOT NULL DEFAULT 'NOT_ACCEPTED';");
+  }
+  if (!cols.includes('ravencrag_warlord_slain')) {
+    db.exec('ALTER TABLE characters ADD COLUMN ravencrag_warlord_slain INTEGER NOT NULL DEFAULT 0;');
   }
   db.exec(`
     UPDATE characters
@@ -243,6 +265,7 @@ function ensureNonDestructiveLabAdapter(db) {
   `);
 
   initSceneCatalogTables(db);
+  syncDungeonTables(db);
 }
 
 /**

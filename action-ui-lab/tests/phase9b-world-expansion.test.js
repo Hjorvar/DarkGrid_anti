@@ -136,7 +136,7 @@ describe('Phase 9B — World Expansion: Undead Lands, Goblin Cave, Ancient Crypt
 
     // Verify live HTTP step at Level 1 into an Ambush enters IN_COMBAT and locks Flee for 2 rounds
     await apiAction('TELEPORT_TO_TILE', { x: 15, y: 23, facing: 'NORTH' });
-    db.prepare('UPDATE characters SET level = 1, current_hp = 28, max_hp = 28').run();
+    db.prepare('UPDATE characters SET level = 1, current_hp = 80, max_hp = 80').run();
 
     const stepAmbush = await apiAction('MOVE', {
       direction: 'NORTH',
@@ -160,7 +160,7 @@ describe('Phase 9B — World Expansion: Undead Lands, Goblin Cave, Ancient Crypt
     db.prepare("UPDATE encounters SET current_monster_hp = 80, monster_max_hp = 80 WHERE status = 'IN_COMBAT'").run();
     const atk1 = await apiAction('ATTACK');
     assert.equal(atk1.ok, true);
-    db.prepare('UPDATE characters SET current_hp = 28').run();
+    db.prepare('UPDATE characters SET current_hp = 80').run();
     assert.equal(atk1.state.encounter.fleeLocked, true);
     assert.equal(atk1.state.encounter.ambushFleeLockedRoundsRemaining, 1);
 
@@ -169,7 +169,7 @@ describe('Phase 9B — World Expansion: Undead Lands, Goblin Cave, Ancient Crypt
 
     const atk2 = await apiAction('ATTACK');
     assert.equal(atk2.ok, true);
-    db.prepare('UPDATE characters SET current_hp = 28').run();
+    db.prepare('UPDATE characters SET current_hp = 80').run();
     assert.equal(atk2.state.encounter.fleeLocked, false);
     assert.equal(atk2.state.encounter.ambushFleeLockedRoundsRemaining, 0);
 
@@ -177,9 +177,9 @@ describe('Phase 9B — World Expansion: Undead Lands, Goblin Cave, Ancient Crypt
     assert.equal(fleeR3.ok, true, 'Level 1 hero can flee on Round 3+ after surviving the 2-round ambush lock');
   });
 
-  it('2. World Expansion & Undead Lands Identity: 2 regions, 3 undead sub-biomes, Sepulcher Road, and regional undead monsters', () => {
-    assert.equal(TOPDOWN_WORLD_VERSION, 'PHASE_9B_WORLD_EXPANSION');
-    assert.equal(TOPDOWN_BOUNDS.totalTiles, 900);
+  it('2. World Expansion & Undead Lands Identity: 3 regions, 3 undead sub-biomes, Sepulcher Road, and regional undead monsters', () => {
+    assert.equal(TOPDOWN_WORLD_VERSION, 'PHASE_9C_DUNGEONS_AND_HIGHLANDS');
+    assert.equal(TOPDOWN_BOUNDS.totalTiles, 1320);
 
     const blackwoodCount = db.prepare("SELECT COUNT(*) AS cnt FROM map_tiles WHERE region_key = 'BLACKWOOD_FOREST'").get().cnt;
     const undeadCount = db.prepare("SELECT COUNT(*) AS cnt FROM map_tiles WHERE region_key = 'UNDEAD_LANDS'").get().cnt;
@@ -269,11 +269,14 @@ describe('Phase 9B — World Expansion: Undead Lands, Goblin Cave, Ancient Crypt
     assert.equal(reArrive.state.landmarkScene.sceneKey, 'GOBLIN_CAVE');
     assert.equal(reArrive.state.landmarkScene.isActive, true);
 
-    // Clicking "Delve into the Cave Mouth" starts combat and suppresses landmarkScene during combat
+    // Clicking "Delve into the Cave Mouth" enters the Goblin Cave dungeon and suppresses landmarkScene
     const delveRes = await apiAction('EXPLORE_GOBLIN_CAVE');
     assert.equal(delveRes.ok, true);
-    assert.ok(delveRes.state.encounter || delveRes.state.victory, 'Delving into Goblin Cave must trigger an encounter');
-    assert.equal(delveRes.state.landmarkScene, null, 'Landmark scene must not overlap with active combat/victory');
+    assert.ok(delveRes.state.dungeonMap && delveRes.state.dungeonMap.inDungeon, 'Delving into Goblin Cave must enter the Goblin Cave dungeon map');
+    assert.equal(delveRes.state.dungeonMap.dungeonKey, 'GOBLIN_CAVE');
+    assert.equal(delveRes.state.landmarkScene, null, 'Landmark scene must not overlap with active dungeon exploration');
+    const exitCave = await apiAction('EXIT_DUNGEON');
+    assert.equal(exitCave.ok, true);
   });
 
   it('4. The Ancient Crypt [26, 5]: Auto-opens Major Landmark Scene on arrival, respects anti-interruption, and supports Crypt Breach', async () => {
@@ -313,10 +316,13 @@ describe('Phase 9B — World Expansion: Undead Lands, Goblin Cave, Ancient Crypt
     assert.equal(reArrive.state.landmarkScene.sceneKey, 'ANCIENT_CRYPT');
     assert.equal(reArrive.state.landmarkScene.isActive, true);
 
-    // Clicking "Breach the Sepulcher Vault" starts combat and suppresses landmarkScene during combat
+    // Clicking "Breach the Sepulcher Vault" enters the Ancient Crypt dungeon and suppresses landmarkScene
     const breachRes = await apiAction('ENTER_ANCIENT_CRYPT');
     assert.equal(breachRes.ok, true);
-    assert.ok(breachRes.state.encounter || breachRes.state.victory, 'Breaching the Ancient Crypt must trigger an encounter');
-    assert.equal(breachRes.state.landmarkScene, null, 'Landmark scene must not overlap with active combat/victory');
+    assert.ok(breachRes.state.dungeonMap && breachRes.state.dungeonMap.inDungeon, 'Breaching the Ancient Crypt must enter the Ancient Crypt dungeon map');
+    assert.equal(breachRes.state.dungeonMap.dungeonKey, 'ANCIENT_CRYPT');
+    assert.equal(breachRes.state.landmarkScene, null, 'Landmark scene must not overlap with active dungeon exploration');
+    const exitCrypt = await apiAction('EXIT_DUNGEON');
+    assert.equal(exitCrypt.ok, true);
   });
 });

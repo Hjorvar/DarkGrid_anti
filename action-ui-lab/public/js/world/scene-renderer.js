@@ -831,6 +831,104 @@ export function renderViewportCenterStage(state) {
       `;
       return;
     }
+
+    if (lm.sceneKey === 'RAVENCRAG_CITADEL') {
+      const highlandBossSlain = Boolean(lm.bossSlain || (state.topdownMap && state.topdownMap.highlandBossSlain));
+      stage.innerHTML = `
+        <div class="major-landmark-scene-overlay is-ravencrag-citadel-scene" id="major-landmark-scene-panel" data-scene-key="RAVENCRAG_CITADEL">
+          <div class="major-landmark-artwork-frame">
+            <img src="${escapeHtml(lm.artworkUrl)}" alt="${escapeHtml(lm.title)}" class="major-landmark-artwork-img">
+            <div class="major-landmark-vignette"></div>
+          </div>
+          <div class="major-landmark-card is-ravencrag-citadel-card">
+            <div class="major-landmark-kicker">${highlandBossSlain ? 'MAJOR LANDMARK • CITADEL BROKEN' : 'MAJOR LANDMARK • STORMPEAK WARLORD FORTRESS'}</div>
+            <h2 class="major-landmark-title">${escapeHtml(lm.title)}</h2>
+            <div class="major-landmark-subtitle">${escapeHtml(lm.subtitle || 'Iron-Bound Mountain Fortress of Warlord Kraug')}</div>
+            <p class="major-landmark-desc">${escapeHtml(lm.description)}</p>
+            <div class="major-landmark-actions" id="major-landmark-actions">
+              ${!highlandBossSlain ? `
+                <button type="button" class="btn-action-gold landmark-scene-btn" id="btn-confront-highland-warlord" data-landmark-action="CONFRONT_HIGHLAND_WARLORD" onclick="dispatchAction('CONFRONT_HIGHLAND_WARLORD')">
+                  ⚔️ Confront the Highland Warlord
+                </button>
+              ` : `
+                <span class="landmark-boss-slain-pill">✓ Warlord Kraug the Crag-Breaker Vanquished</span>
+              `}
+              <button type="button" class="btn-action-stone landmark-scene-btn is-continue-btn" id="btn-landmark-continue" data-landmark-action="CONTINUE_EXPLORING" onclick="dispatchAction('DISMISS_LANDMARK_SCENE')">
+                🧭 Continue Exploring
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+  }
+
+  // CASE D.0b: ACTIVE SUBTERRANEAN DUNGEON EXPLORATION (Goblin Cave / Ancient Crypt)
+  if (state.dungeonMap && state.dungeonMap.inDungeon) {
+    const dMap = state.dungeonMap;
+    const isCrypt = dMap.dungeonKey === 'ANCIENT_CRYPT';
+    if (dMap.atBossTile) {
+      stage.innerHTML = `
+        <div class="fp-threat-whisper-plate topdown-stronghold-card" id="dungeon-boss-sanctum-card" style="margin-top: auto; max-width: 660px; border-color: ${dMap.bossSlain ? 'rgba(74, 222, 128, 0.65)' : (isCrypt ? 'rgba(52, 211, 153, 0.75)' : 'rgba(239, 68, 68, 0.75)')};">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; text-align: left;">
+            <div style="flex: 1; min-width: 220px;">
+              <div style="font-family: var(--font-serif); font-size: 0.90rem; color: ${dMap.bossSlain ? '#86efac' : (isCrypt ? '#6ee7b7' : '#fca5a5')}; font-weight: 800;">
+                ${escapeHtml(dMap.currentRoomName)} — ${escapeHtml(dMap.dungeonName)} [${dMap.heroX}, ${dMap.heroY}]
+              </div>
+              <div style="font-size: 0.74rem; color: var(--text-body); margin-top: 2px;">
+                ${dMap.bossSlain
+                  ? `<strong>${escapeHtml(dMap.bossName)}</strong> lies vanquished in the sanctum.`
+                  : `<strong>${escapeHtml(dMap.bossName)}</strong> commands this inner sanctum!`}
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              ${!dMap.bossSlain ? `
+                <button type="button" class="btn-action-gold" id="btn-engage-dungeon-boss" style="padding: 5px 14px; font-size: 0.76rem;" onclick="dispatchAction('ENGAGE_DUNGEON_BOSS')">
+                  ⚔️ Challenge ${escapeHtml(dMap.bossName)} [Space]
+                </button>
+              ` : `
+                <span class="lab-badge" style="color:#86efac; border-color:#4ade80;">✓ Sanctum Cleared</span>
+              `}
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    if (dMap.atExitTile) {
+      stage.innerHTML = `
+        <div class="fp-threat-whisper-plate topdown-stronghold-card" id="dungeon-exit-stairs-card" style="margin-top: auto; max-width: 660px; border-color: rgba(250, 204, 21, 0.65);">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; text-align: left;">
+            <div style="flex: 1; min-width: 220px;">
+              <div style="font-family: var(--font-serif); font-size: 0.88rem; color: #fef08a; font-weight: 800;">
+                🪜 ${escapeHtml(dMap.currentRoomName)} — ${escapeHtml(dMap.dungeonName)} [${dMap.heroX}, ${dMap.heroY}]
+              </div>
+              <div style="font-size: 0.74rem; color: var(--text-body); margin-top: 2px;">
+                ${escapeHtml(state.infoMessage || 'Step deeper into the dungeon corridors or ascend the stairs back to the Overworld.')}
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn-action-gold" id="btn-exit-dungeon" style="padding: 5px 14px; font-size: 0.75rem;" onclick="dispatchAction('EXIT_DUNGEON')">
+                🪜 Ascend to Overworld [Space]
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    const dMsg = state.infoMessage || state.errorMessage || (state.currentTile && state.currentTile.description) || `Exploring ${dMap.dungeonName} (${dMap.discoveryPercent}% mapped).`;
+    stage.innerHTML = `
+      <div class="fp-vista-bar ${state.errorMessage ? 'is-blocked-vista' : ''}" id="dungeon-vista-bar" data-revisit-status="DUNGEON_EXPLORATION">
+        <span class="fp-vista-text" style="font-size: 0.76rem; color: ${state.errorMessage ? '#fca5a5' : 'var(--text-body)'};">
+          🔦 <strong>${escapeHtml(dMap.currentRoomName)}</strong> [${dMap.heroX}, ${dMap.heroY}] • ${escapeHtml(dMsg)}
+        </span>
+      </div>
+    `;
+    return;
   }
 
   // CASE D: SAFE HAVEN CITY (Compact non-intrusive sanctuary bar at bottom of stage)
@@ -979,6 +1077,43 @@ export function renderViewportCenterStage(state) {
               </button>
               <button type="button" class="btn-action-stone" id="btn-reopen-landmark-scene" style="padding: 4px 11px; font-size: 0.74rem;" onclick="dispatchAction('OPEN_LANDMARK_SCENE')">
                 🖼️ Crypt View
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // CASE D.5: RAVENCRAG CITADEL AT [37, 3] (Compact Landmark Bar when Scene Dismissed)
+  const isAtRavencragCitadel = Boolean(
+    (state.topdownMap && state.topdownMap.atRavencragCitadel) ||
+    (state.currentTile && (state.currentTile.feature === 'RAVENCRAG_CITADEL' || state.currentTile.landmark_key === 'RAVENCRAG_CITADEL'))
+  );
+  if (isAtRavencragCitadel) {
+    const highlandBossSlain = Boolean(state.topdownMap && state.topdownMap.highlandBossSlain);
+    stage.innerHTML = `
+      <div class="fp-threat-whisper-plate topdown-stronghold-card" id="ravencrag-citadel-entrance-card" style="margin-top: auto; max-width: 640px; border-color: ${highlandBossSlain ? 'rgba(74, 222, 128, 0.55)' : 'rgba(249, 115, 22, 0.65)'};">
+        <div style="display: flex; align-items: center; gap: 14px; text-align: left;">
+          <img src="/lab-assets/images/terrain/mountains_high_pass_pov.jpg" alt="Ravencrag Citadel" style="width: 112px; height: 74px; object-fit: cover; border-radius: 5px; border: 1px solid ${highlandBossSlain ? 'rgba(74, 222, 128, 0.45)' : 'rgba(249, 115, 22, 0.55)'}; flex-shrink: 0;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-family: var(--font-serif); font-size: 0.90rem; color: ${highlandBossSlain ? '#86efac' : '#fdba74'}; font-weight: 800;">
+              RAVENCRAG CITADEL — ${highlandBossSlain ? 'WARLORD VANQUISHED' : 'STORMPEAK WARLORD FORTRESS'}
+            </div>
+            <p style="font-size: 0.74rem; color: var(--text-body); margin: 2px 0 6px 0; line-height: 1.35;">
+              ${highlandBossSlain
+                ? 'Warlord Kraug the Crag-Breaker lies defeated and the highland siege is broken.'
+                : 'Cyclopean basalt ramparts and iron war-gates crown the highest ridge where Warlord Kraug commands his host.'}
+            </p>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              ${!highlandBossSlain ? `
+                <button type="button" class="btn-action-gold" id="btn-confront-highland-warlord" style="padding: 4px 12px; font-size: 0.74rem;" onclick="dispatchAction('CONFRONT_HIGHLAND_WARLORD')">
+                  ⚔️ Confront the Highland Warlord [Space]
+                </button>
+              ` : ''}
+              <button type="button" class="btn-action-stone" id="btn-reopen-landmark-scene" style="padding: 4px 11px; font-size: 0.74rem;" onclick="dispatchAction('OPEN_LANDMARK_SCENE')">
+                🖼️ Citadel View
               </button>
             </div>
           </div>

@@ -32,8 +32,11 @@ export function renderActionDeckAndPad(state) {
   const slot3 = document.getElementById('action-slot-3');
   const slot4 = document.getElementById('action-slot-4');
 
+  const dMap = state.dungeonMap;
+  const inDungeon = Boolean(dMap && dMap.inDungeon);
   const shCoord = (state.topdownMap && state.topdownMap.strongholdCoord) || { x: 15, y: 2 };
   const isAtStrongholdGate = Boolean(
+    !inDungeon &&
     state.topdownMap &&
     !state.topdownMap.bossSlain &&
     (state.topdownMap.atStronghold ||
@@ -41,8 +44,14 @@ export function renderActionDeckAndPad(state) {
         Number(state.currentTile.x) === Number(shCoord.x) &&
         Number(state.currentTile.y) === Number(shCoord.y)))
   );
+  const isAtRavencragCitadel = Boolean(
+    !inDungeon &&
+    state.topdownMap &&
+    !state.topdownMap.highlandBossSlain &&
+    state.topdownMap.atRavencragCitadel
+  );
 
-  // SLOT 1: Primary Context Action (Attack / Fight Threat / Stronghold Boss / Sanctuary Rest / Inspect Landmark / Continue)
+  // SLOT 1: Primary Context Action (Attack / Fight Threat / Dungeon Boss or Exit / Stronghold Boss / Highland Boss / Sanctuary Rest / Inspect Landmark / Continue)
   if (enc && enc.status === 'IN_COMBAT') {
     slot1.disabled = false;
     document.getElementById('slot1-icon').textContent = cStats.isRangedActive ? '🏹' : '⚔️';
@@ -56,12 +65,30 @@ export function renderActionDeckAndPad(state) {
     document.getElementById('slot1-title').textContent = enc.isAmbush ? 'Face Ambush' : 'Fight';
     document.getElementById('slot1-sub').textContent = 'Engage in Combat';
     slot1.title = 'Step forward and fight the spotted threat [Space / 1]';
+  } else if (inDungeon && dMap.atBossTile && !dMap.bossSlain && !state.victory) {
+    slot1.disabled = false;
+    document.getElementById('slot1-icon').textContent = '⚔️';
+    document.getElementById('slot1-title').textContent = 'Challenge Boss';
+    document.getElementById('slot1-sub').textContent = dMap.bossName || 'Dungeon Boss';
+    slot1.title = `Challenge ${dMap.bossName || 'the Dungeon Boss'} [Space / 1]`;
+  } else if (inDungeon && dMap.atExitTile && !state.victory) {
+    slot1.disabled = false;
+    document.getElementById('slot1-icon').textContent = '🪜';
+    document.getElementById('slot1-title').textContent = 'Ascend Stairs';
+    document.getElementById('slot1-sub').textContent = 'Exit to Overworld';
+    slot1.title = 'Ascend the stairs and return to the Overworld [Space / 1]';
   } else if (isAtStrongholdGate && !state.victory) {
     slot1.disabled = false;
     document.getElementById('slot1-icon').textContent = '⚔️';
     document.getElementById('slot1-title').textContent = 'Challenge Chieftain';
     document.getElementById('slot1-sub').textContent = 'Goblin Stronghold Boss';
     slot1.title = 'Challenge Warchief Grak the Goblin Chieftain at the Stronghold Gates [Space / 1]';
+  } else if (isAtRavencragCitadel && !state.victory) {
+    slot1.disabled = false;
+    document.getElementById('slot1-icon').textContent = '⚔️';
+    document.getElementById('slot1-title').textContent = 'Confront Warlord';
+    document.getElementById('slot1-sub').textContent = 'Ravencrag Citadel Boss';
+    slot1.title = 'Confront Warlord Kraug the Crag-Breaker at Ravencrag Citadel [Space / 1]';
   } else if (state.isSafeCity) {
     slot1.disabled = false;
     document.getElementById('slot1-icon').textContent = '🛌';
@@ -197,21 +224,21 @@ export function renderActionDeckAndPad(state) {
   const isPlayerMode = store.devToolsCollapsed !== false;
   document.getElementById('pad-center-glyph').textContent = isPlayerMode ? '🧭' : fMeta.arrow;
   document.getElementById('pad-center-lbl').textContent = isPlayerMode
-    ? (state.isSafeCity ? 'Town' : 'Wilds')
+    ? (inDungeon ? 'Dungeon' : (state.isSafeCity ? 'Town' : 'Wilds'))
     : (state.currentTile ? `[${state.currentTile.x},${state.currentTile.y}]` : facing);
 
   const dirs = state.directions || {};
-  const mapTiles = (state.topdownMap && Array.isArray(state.topdownMap.tiles)) ? state.topdownMap.tiles : [];
+  const mapTiles = (!inDungeon && state.topdownMap && Array.isArray(state.topdownMap.tiles)) ? state.topdownMap.tiles : [];
   const checkCardinalOpen = (cardinal) => {
     const dInfo = dirs[cardinal];
     if (!dInfo || !dInfo.available) return { open: false, name: (dInfo && dInfo.tile && dInfo.tile.name) || 'Blocked', reason: (dInfo && dInfo.reason) || 'Impassable' };
-    if (mapTiles.length > 0 && dInfo.tile) {
+    if (!inDungeon && mapTiles.length > 0 && dInfo.tile) {
       const inRegion = mapTiles.find(t => t.x === dInfo.tile.x && t.y === dInfo.tile.y);
       if (!inRegion || !inRegion.isPassable) {
         return { open: false, name: dInfo.tile.name || 'Forest Edge', reason: 'Dense forest boundary' };
       }
     }
-    return { open: true, name: (dInfo.tile && dInfo.tile.name) || cardinal, reason: null };
+    return { open: true, name: (dInfo.tile && dInfo.tile.name) || dInfo.tileName || cardinal, reason: null };
   };
 
   const padCardinalMap = [
