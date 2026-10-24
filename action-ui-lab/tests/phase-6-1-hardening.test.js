@@ -150,6 +150,7 @@ describe('Phase 6.1 — Pre-Cutover Hardening, Security Audit, Migration Rehears
     app = createLabApp({
       dbPath: TEST_PROD_DB_PATH,
       production: true,
+      preserveExistingMap: true,
       sessionSecret: 'phase-6-1-hardened-production-secret-key-2026',
       rng: () => mockRngValue
     });
@@ -462,10 +463,12 @@ describe('Phase 6.1 — Pre-Cutover Hardening, Security Audit, Migration Rehears
     const step2 = await fighterClient.action('MOVE', { relative: 'FORWARD', direction: 'NORTH' });
     assert.equal(step2.status, 200);
     assert.ok(step2.json.state.encounter, 'Encounter should trigger at (7,5) with low RNG');
-    assert.equal(step2.json.state.encounter.status, 'DISCOVERED');
+    assert.ok(['DISCOVERED', 'IN_COMBAT'].includes(step2.json.state.encounter.status));
 
-    // Engage encounter
-    const engageRes = await fighterClient.action('INVESTIGATE');
+    // Engage encounter if not already in ambush combat
+    const engageRes = step2.json.state.encounter.status === 'DISCOVERED'
+      ? await fighterClient.action('INVESTIGATE')
+      : step2;
     assert.equal(engageRes.status, 200);
     assert.equal(engageRes.json.state.encounter.status, 'IN_COMBAT');
     const currentRound = engageRes.json.state.encounter.combat_round;
@@ -827,7 +830,7 @@ describe('Phase 6.1 — Pre-Cutover Hardening, Security Audit, Migration Rehears
       await evalJs(`window.openLabModal('bounties')`);
       await new Promise(r => setTimeout(r, 200));
       const bountiesText = await evalJs(`document.getElementById('lab-modal-body').innerText`);
-      assert.match(bountiesText, /Section A — Daily Hunting Warrants/);
+      assert.match(bountiesText, /Daily Hunting Warrants/);
       assert.match(bountiesText, /Region:/);
       assert.doesNotMatch(bountiesText, /\ba Assassin\b|\ba Owlbear\b|\ba Orc\b/i);
       await capturePng('04-watchers-board-polished.png');

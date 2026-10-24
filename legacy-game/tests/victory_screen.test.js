@@ -1,13 +1,13 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('http');
-const app = require('../src/app');
+const app = require('../app');
 const { createTestDb } = require('./test_helpers');
-const { setDb, closeDb } = require('../src/db/connection');
-const { registerUser } = require('../src/domain/auth/service');
-const { createCharacter } = require('../src/domain/character/rules');
-const { handlePlayerDeath, handleMonsterDefeat } = require('../src/domain/monsters/persistence');
-const { getVictoryData, resolveDefeatDescription } = require('../src/domain/combat/victory');
+const { setDb, closeDb } = require('../../src/db/connection');
+const { registerUser } = require('../../src/domain/auth/service');
+const { createCharacter } = require('../../src/domain/character/rules');
+const { handlePlayerDeath, handleMonsterDefeat } = require('../../src/domain/monsters/persistence');
+const { getVictoryData, resolveDefeatDescription } = require('../../src/domain/combat/victory');
 
 let server;
 let baseUrl;

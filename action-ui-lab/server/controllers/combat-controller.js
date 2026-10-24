@@ -25,10 +25,12 @@ const {
 } = require('../services/combat-sequence-service');
 const { buildClientState } = require('../services/client-state-service');
 const {
+  STRONGHOLD_BOSS_PROFILE,
   HIGHLAND_BOSS_PROFILE,
   startStrongholdBossEncounter,
   startHighlandBossEncounter,
   startLandmarkDungeonEncounter,
+  markStrongholdBossSlain,
   markHighlandBossSlain,
   markAncientCryptBossSlain,
   syncCharacterQuestState,
@@ -70,6 +72,9 @@ function resolvePostVictoryHooks(db, characterId, encounterId) {
       }
       if (encRow.monster_instance_id) {
         const inst = db.prepare('SELECT custom_title FROM monster_instances WHERE id = ?').get(encRow.monster_instance_id);
+        if (inst && inst.custom_title === STRONGHOLD_BOSS_PROFILE.customTitle) {
+          markStrongholdBossSlain(db, characterId);
+        }
         if (inst && inst.custom_title === HIGHLAND_BOSS_PROFILE.customTitle) {
           markHighlandBossSlain(db, characterId);
         }

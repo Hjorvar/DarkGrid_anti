@@ -51,22 +51,25 @@ function applyLabSchemaAndTestMap(db, { preserveExistingMap = false } = {}) {
 }
 
 function initSandboxDb(customDbPath = null, options = {}) {
-  const targetDbPath = customDbPath || DEFAULT_DB_PATH;
-  if (targetDbPath !== ':memory:') {
-    const targetDir = path.dirname(targetDbPath);
-    if (!fs.existsSync(targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true });
-    }
-  }
-  const db = new DatabaseSync(targetDbPath);
-  db.exec('PRAGMA foreign_keys = ON;');
-  db.exec('PRAGMA journal_mode = WAL;');
-  db.exec('PRAGMA busy_timeout = 5000;');
-
   const prodOrAuth = isProductionMode(options) || isAuthRequired(options);
   const preserveExistingMap = options.preserveExistingMap !== undefined
     ? Boolean(options.preserveExistingMap)
-    : prodOrAuth;
+    : false;
+
+  let db = options.db || null;
+  let targetDbPath = customDbPath || DEFAULT_DB_PATH;
+  if (!db) {
+    if (targetDbPath !== ':memory:') {
+      const targetDir = path.dirname(targetDbPath);
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+      }
+    }
+    db = new DatabaseSync(targetDbPath);
+    db.exec('PRAGMA foreign_keys = ON;');
+    db.exec('PRAGMA journal_mode = WAL;');
+    db.exec('PRAGMA busy_timeout = 5000;');
+  }
 
   runMigrations(db);
   runSeeds(db);

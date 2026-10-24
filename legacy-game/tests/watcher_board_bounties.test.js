@@ -1,9 +1,9 @@
 const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { createTestDb } = require('./test_helpers');
-const { setDb, closeDb } = require('../src/db/connection');
-const { registerUser } = require('../src/domain/auth/service');
-const { createCharacter } = require('../src/domain/character/rules');
+const { setDb, closeDb } = require('../../src/db/connection');
+const { registerUser } = require('../../src/domain/auth/service');
+const { createCharacter } = require('../../src/domain/character/rules');
 const {
   getOrGenerateContracts,
   getActiveContractForCharacter,
@@ -11,16 +11,16 @@ const {
   abandonContract,
   autoClaimCompletedBounties,
   getWildernessThreats,
-} = require('../src/domain/bounties/board');
+} = require('../../src/domain/bounties/board');
 const {
   checkTileEncounter,
   investigateEncounter,
-} = require('../src/domain/encounters/engine');
+} = require('../../src/domain/encounters/engine');
 const {
   getCombatState,
   executeCombatRound,
-} = require('../src/domain/combat/engine');
-const { getVictoryData } = require('../src/domain/combat/victory');
+} = require('../../src/domain/combat/engine');
+const { getVictoryData } = require('../../src/domain/combat/victory');
 
 describe("The Watcher's Board & Bounty Hunting System", () => {
   let db;
@@ -505,9 +505,9 @@ describe("The Watcher's Board & Bounty Hunting System", () => {
   });
 
   it("9. UI & View Rendering: renders The Watcher's Board (Section A & B), Named Bounty crimson frame in combat, Victory banner, and Oakhaven auto-claim alert without leaking hidden names or numbers", async () => {
-    const app = require('../src/app');
-    const { getMinimapData, getAvailableDirections } = require('../src/domain/world/map');
-    const { formatModifier } = require('../src/domain/character/rules');
+    const app = require('../app');
+    const { getMinimapData, getAvailableDirections } = require('../../src/domain/world/map');
+    const { formatModifier } = require('../../src/domain/character/rules');
 
     const hero = createTestHero('Haldor the Bold', 2);
     const contracts = getOrGenerateContracts(db, hero);

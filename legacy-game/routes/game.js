@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth } = require('../../src/middleware/auth');
 const {
   getLivingCharacterByUserId,
   getModifier,
@@ -23,38 +23,38 @@ const {
   getEffectiveStats,
   reconcileCharacterHpOnLoad,
   spendAttributePoint
-} = require('../domain/character/rules');
+} = require('../../src/domain/character/rules');
 const {
   calculateHeroAC,
   calculateHeroAttackBonus
-} = require('../domain/combat/rules');
+} = require('../../src/domain/combat/rules');
 const {
   evaluateHeroMonsterKnowledge,
   getCharacterCompendiumKnowledge
-} = require('../domain/combat/knowledge');
+} = require('../../src/domain/combat/knowledge');
 const {
   getCityStoreStock,
   buyItem,
   sellItem
-} = require('../domain/economy/shop');
+} = require('../../src/domain/economy/shop');
 const {
   getTileById,
   getMinimapData,
   getAvailableDirections,
   validateMovement
-} = require('../domain/world/map');
+} = require('../../src/domain/world/map');
 const {
   checkTileEncounter,
   getActiveEncounterForCharacter,
   ignoreEncounter,
   investigateEncounter
-} = require('../domain/encounters/engine');
+} = require('../../src/domain/encounters/engine');
 const {
   getCombatState,
   executeCombatRound
-} = require('../domain/combat/engine');
-const { getVictoryData } = require('../domain/combat/victory');
-const { getTerrainArtworkForTile } = require('../domain/world/artwork');
+} = require('../../src/domain/combat/engine');
+const { getVictoryData } = require('../../src/domain/combat/victory');
+const { getTerrainArtworkForTile } = require('../../src/domain/world/artwork');
 const {
   getOrGenerateContracts,
   getActiveContractForCharacter,
@@ -62,8 +62,8 @@ const {
   abandonContract,
   autoClaimCompletedBounties,
   getWildernessThreats
-} = require('../domain/bounties/board');
-const { withTransaction } = require('../db/connection');
+} = require('../../src/domain/bounties/board');
+const { withTransaction } = require('../../src/db/connection');
 
 router.use(requireAuth);
 

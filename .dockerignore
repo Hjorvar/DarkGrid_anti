@@ -1,9 +1,12 @@
 node_modules
 dist
 data/*.sqlite*
+action-ui-lab/data/*.sqlite*
+action-ui-lab/tests
 .git
 .agents
 docs
 tests
+legacy-game/tests
 *.log
 .env

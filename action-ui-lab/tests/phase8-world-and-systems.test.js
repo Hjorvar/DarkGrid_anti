@@ -232,7 +232,7 @@ describe('Phase 8 — 30×30 World Architecture, Camera Viewport, Discovery, Que
     await postAction('TELEPORT_TO_TILE', { x: 15, y: 2, facing: 'NORTH' });
     const stBefore = await getState();
     const heroAId = stBefore.character.id;
-    db.prepare('UPDATE characters SET gold = 75, current_hp = 1, dexterity = 4 WHERE id = ?').run(heroAId);
+    db.prepare('UPDATE characters SET gold = 75, current_hp = 1, strength = 1, dexterity = 4 WHERE id = ?').run(heroAId);
 
     // Engage Warchief Grak
     const engageA = await postAction('ENGAGE_STRONGHOLD_BOSS');

@@ -2,16 +2,16 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 const { createTestDb } = require('./test_helpers');
-const { setDb } = require('../src/db/connection');
-const app = require('../src/app');
-const { createCharacter, performClericSelfHeal, validateCharacterCreation } = require('../src/domain/character/rules');
-const { buyItem } = require('../src/domain/economy/shop');
-const { startCombat, executeCombatRound, getCombatState } = require('../src/domain/combat/engine');
-const { parseDiceFormula, rollDice } = require('../src/domain/combat/dice');
-const { describeHeroAttack, describeMonsterAttack, describePotionDrink, describeFleeAttempt } = require('../src/domain/combat/narrative');
-const { handleMonsterDefeat } = require('../src/domain/monsters/persistence');
-const { checkTileEncounter } = require('../src/domain/encounters/engine');
-const config = require('../src/config');
+const { setDb } = require('../../src/db/connection');
+const app = require('../app');
+const { createCharacter, performClericSelfHeal, validateCharacterCreation } = require('../../src/domain/character/rules');
+const { buyItem } = require('../../src/domain/economy/shop');
+const { startCombat, executeCombatRound, getCombatState } = require('../../src/domain/combat/engine');
+const { parseDiceFormula, rollDice } = require('../../src/domain/combat/dice');
+const { describeHeroAttack, describeMonsterAttack, describePotionDrink, describeFleeAttempt } = require('../../src/domain/combat/narrative');
+const { handleMonsterDefeat } = require('../../src/domain/monsters/persistence');
+const { checkTileEncounter } = require('../../src/domain/encounters/engine');
+const config = require('../../src/config');
 
 function ensureUser(db, userId, username = 'testuser') {
   db.prepare(`

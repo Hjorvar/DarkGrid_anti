@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const config = require('../config');
-const { requireAuth } = require('../middleware/auth');
+const config = require('../../src/config');
+const { requireAuth } = require('../../src/middleware/auth');
 const {
   getLivingCharacterByUserId,
   createCharacter,
   getModifier,
   formatModifier,
   getAttributeTierLabel
-} = require('../domain/character/rules');
-const { getRangerSelectableFamilies } = require('../domain/monsters/taxonomy');
+} = require('../../src/domain/character/rules');
+const { getRangerSelectableFamilies } = require('../../src/domain/monsters/taxonomy');
 
 router.use(requireAuth);
 

@@ -273,7 +273,8 @@ function ensureNonDestructiveLabAdapter(db) {
  */
 function isProductionMode(options = {}) {
   const env = options.nodeEnv || process.env.NODE_ENV || config.nodeEnv || 'development';
-  return Boolean(options.production === true || env === 'production');
+  const publicMode = process.env.DARKGRID_PUBLIC_MODE === 'true' || options.publicMode === true;
+  return Boolean(options.production === true || env === 'production' || publicMode);
 }
 
 /**

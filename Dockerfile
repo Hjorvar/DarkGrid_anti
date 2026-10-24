@@ -7,8 +7,10 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-# Copy application source, database migrations/seeds, views, and static assets
+# Copy application source, main game modules, database migrations/seeds, and static assets
+COPY index.js ./
 COPY src ./src
+COPY action-ui-lab ./action-ui-lab
 COPY db ./db
 COPY public ./public
 COPY images ./images

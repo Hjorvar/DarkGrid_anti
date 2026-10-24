@@ -1,29 +1,29 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const app = require('../src/app');
+const app = require('../app');
 const { createTestDb } = require('./test_helpers');
-const { registerUser } = require('../src/domain/auth/service');
-const { createCharacter, getCharacterPotionCount, getCharacterEquipment, formatModifier } = require('../src/domain/character/rules');
-const { getTileByCoords, validateMovement, getMinimapData, getAvailableDirections } = require('../src/domain/world/map');
+const { registerUser } = require('../../src/domain/auth/service');
+const { createCharacter, getCharacterPotionCount, getCharacterEquipment, formatModifier } = require('../../src/domain/character/rules');
+const { getTileByCoords, validateMovement, getMinimapData, getAvailableDirections } = require('../../src/domain/world/map');
 const {
   checkTileEncounter,
   getActiveEncounterForCharacter,
   investigateEncounter,
   ignoreEncounter
-} = require('../src/domain/encounters/engine');
+} = require('../../src/domain/encounters/engine');
 const {
   startCombat,
   getCombatState,
   executeCombatRound,
   getHealthBracket
-} = require('../src/domain/combat/engine');
+} = require('../../src/domain/combat/engine');
 const {
   resolveAttackRoll,
   resolveDamage,
   calculateHeroAC,
   calculateHeroAttackBonus
-} = require('../src/domain/combat/rules');
-const { handlePlayerDeath, handleMonsterDefeat } = require('../src/domain/monsters/persistence');
+} = require('../../src/domain/combat/rules');
+const { handlePlayerDeath, handleMonsterDefeat } = require('../../src/domain/monsters/persistence');
 
 // Helper to render game view to HTML string for testing
 function renderGame(db, character, currentTile, encounter) {

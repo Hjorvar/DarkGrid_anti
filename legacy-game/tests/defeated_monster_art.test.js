@@ -3,14 +3,14 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
-const app = require('../src/app');
+const app = require('../app');
 const { createTestDb } = require('./test_helpers');
-const { setDb, closeDb } = require('../src/db/connection');
-const { registerUser } = require('../src/domain/auth/service');
-const { createCharacter } = require('../src/domain/character/rules');
-const { handleMonsterDefeat } = require('../src/domain/monsters/persistence');
-const { getEncounterById } = require('../src/domain/encounters/engine');
-const { getVictoryData } = require('../src/domain/combat/victory');
+const { setDb, closeDb } = require('../../src/db/connection');
+const { registerUser } = require('../../src/domain/auth/service');
+const { createCharacter } = require('../../src/domain/character/rules');
+const { handleMonsterDefeat } = require('../../src/domain/monsters/persistence');
+const { getEncounterById } = require('../../src/domain/encounters/engine');
+const { getVictoryData } = require('../../src/domain/combat/victory');
 
 let server;
 let baseUrl;
@@ -241,8 +241,8 @@ test('5. HTTP /game/victory renders defeated monster artwork and Vanquished badg
 });
 
 test('6. Assets integrity: goblin_defeated.png exists in both project root and public images directory', () => {
-  const rootPath = path.join(__dirname, '../images/monsters/goblin_defeated.png');
-  const pubPath = path.join(__dirname, '../public/images/monsters/goblin_defeated.png');
+  const rootPath = path.join(__dirname, '../../images/monsters/goblin_defeated.png');
+  const pubPath = path.join(__dirname, '../../public/images/monsters/goblin_defeated.png');
 
   assert.ok(fs.existsSync(rootPath), 'Root images/monsters/goblin_defeated.png must exist');
   assert.ok(fs.existsSync(pubPath), 'Public images/monsters/goblin_defeated.png must exist');
@@ -258,8 +258,8 @@ test('7. Comprehensive catalog audit: all 98 active monsters have defeated artwo
 
   for (const m of monsters) {
     assert.ok(m.defeated_image_path, `Monster ${m.name} must have defeated_image_path column`);
-    const rootPath = path.join(__dirname, '..', m.defeated_image_path);
-    const pubPath = path.join(__dirname, '../public', m.defeated_image_path);
+    const rootPath = path.join(__dirname, '../..', m.defeated_image_path);
+    const pubPath = path.join(__dirname, '../../public', m.defeated_image_path);
 
     assert.ok(fs.existsSync(rootPath), `Root file must exist on disk for ${m.name}: ${m.defeated_image_path}`);
     assert.ok(fs.existsSync(pubPath), `Public file must exist on disk for ${m.name}: ${m.defeated_image_path}`);

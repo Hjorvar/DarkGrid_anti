@@ -1,17 +1,17 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const app = require('../src/app');
+const app = require('../app');
 const { createTestDb } = require('./test_helpers');
-const { registerUser } = require('../src/domain/auth/service');
-const { createCharacter } = require('../src/domain/character/rules');
-const { getTileByCoords, validateMovement, getMinimapData, getAvailableDirections } = require('../src/domain/world/map');
+const { registerUser } = require('../../src/domain/auth/service');
+const { createCharacter } = require('../../src/domain/character/rules');
+const { getTileByCoords, validateMovement, getMinimapData, getAvailableDirections } = require('../../src/domain/world/map');
 const {
   checkTileEncounter,
   getActiveEncounterForCharacter,
   investigateEncounter,
   ignoreEncounter
-} = require('../src/domain/encounters/engine');
-const { formatModifier } = require('../src/domain/character/rules');
+} = require('../../src/domain/encounters/engine');
+const { formatModifier } = require('../../src/domain/character/rules');
 
 // Helper to render game view to HTML string for testing
 function renderGame(db, character, currentTile, encounter) {
@@ -153,7 +153,7 @@ test('Encounter Revelation Stage 2: Proceeding reveals exact same monster, name,
   assert.equal(moveAttemptBlocked.allowed, false, 'Movement must remain locked during active combat');
 
   // 7. Legal Flee action resolves combat with Attack of Opportunity and unlocks movement
-  const { executeCombatRound } = require('../src/domain/combat/engine');
+  const { executeCombatRound } = require('../../src/domain/combat/engine');
   const fleeState = executeCombatRound(db, hero.id, revealedEncounter.id, 'FLEE');
   assert.equal(fleeState.encounter.status, 'ESCAPED', 'Legal flee must set status to ESCAPED');
 

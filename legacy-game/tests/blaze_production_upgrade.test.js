@@ -20,13 +20,13 @@ const path = require('path');
 const os = require('os');
 
 const { createTestDb } = require('./test_helpers');
-const { setDb, getDb, closeDb } = require('../src/db/connection');
-const app = require('../src/app');
-const { loginUser } = require('../src/domain/auth/service');
-const { buyItem, sellItem } = require('../src/domain/economy/shop');
-const { checkTileEncounter, investigateEncounter, ignoreEncounter, getActiveEncounterForCharacter } = require('../src/domain/encounters/engine');
-const { executeCombatRound, startCombat } = require('../src/domain/combat/engine');
-const { handlePlayerDeath, handleMonsterDefeat } = require('../src/domain/monsters/persistence');
+const { setDb, getDb, closeDb } = require('../../src/db/connection');
+const app = require('../app');
+const { loginUser } = require('../../src/domain/auth/service');
+const { buyItem, sellItem } = require('../../src/domain/economy/shop');
+const { checkTileEncounter, investigateEncounter, ignoreEncounter, getActiveEncounterForCharacter } = require('../../src/domain/encounters/engine');
+const { executeCombatRound, startCombat } = require('../../src/domain/combat/engine');
+const { handlePlayerDeath, handleMonsterDefeat } = require('../../src/domain/monsters/persistence');
 const {
   exportDynamicState,
   importDynamicState,
@@ -34,10 +34,10 @@ const {
   saveSnapshotToFile,
   restoreSnapshotFromFile,
   uidToNumericId
-} = require('../src/db/durable-store');
-const { restoreFromBackupObject, verifyBackupFile } = require('../scripts/restore_database');
-const { migrateFirestoreCollectionsToSqlite } = require('../scripts/migrate_from_firestore');
-const { getRecentSecurityLogs } = require('../src/utils/logger');
+} = require('../../src/db/durable-store');
+const { restoreFromBackupObject, verifyBackupFile } = require('../../scripts/restore_database');
+const { migrateFirestoreCollectionsToSqlite } = require('../../scripts/migrate_from_firestore');
+const { getRecentSecurityLogs } = require('../../src/utils/logger');
 
 let server;
 let baseUrl;

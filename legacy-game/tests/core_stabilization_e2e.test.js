@@ -2,9 +2,9 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const http = require('node:http');
-const app = require('../src/app');
-const { initializeDatabase, setDb, closeDb, withTransaction } = require('../src/db/connection');
-const { runMigrations, runSeeds } = require('../src/db/migrate');
+const app = require('../app');
+const { initializeDatabase, setDb, closeDb, withTransaction } = require('../../src/db/connection');
+const { runMigrations, runSeeds } = require('../../src/db/migrate');
 const {
   createCharacter,
   getCharacterEquipment,
@@ -17,24 +17,24 @@ const {
   performCityRest,
   getEffectiveStats,
   getRangerFavoredEnemyBonus
-} = require('../src/domain/character/rules');
+} = require('../../src/domain/character/rules');
 const {
   checkTileEncounter,
   getEncounterById,
   ignoreEncounter,
   investigateEncounter
-} = require('../src/domain/encounters/engine');
+} = require('../../src/domain/encounters/engine');
 const {
   startCombat,
   getCombatState,
   executeCombatRound
-} = require('../src/domain/combat/engine');
+} = require('../../src/domain/combat/engine');
 const {
   calculateHeroAC,
   calculateHeroAttackBonus,
   getHeroDamageFormula
-} = require('../src/domain/combat/rules');
-const { sellItem } = require('../src/domain/economy/shop');
+} = require('../../src/domain/combat/rules');
+const { sellItem } = require('../../src/domain/economy/shop');
 
 function setupTestDb() {
   const db = initializeDatabase(':memory:');

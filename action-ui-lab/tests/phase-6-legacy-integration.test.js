@@ -126,6 +126,7 @@ describe('Phase 6 — Full Legacy Integration & Complete Player Journey Verifica
     cleanupTestDb();
     app = createLabApp({
       dbPath: TEST_DB_PATH,
+      preserveExistingMap: true,
       allowLabTools: true,
       rng: () => mockRngValue,
       firebaseVerifier: async (username, password) => {
@@ -795,9 +796,9 @@ describe('Phase 6 — Full Legacy Integration & Complete Player Journey Verifica
           bodyText: document.getElementById('lab-modal-body')?.innerText || ''
         };
       })()`);
-      assert.match(boardDom.title, /Watcher's Board/i);
-      assert.match(boardDom.bodyText, /Section A/i);
-      assert.match(boardDom.bodyText, /Section B/i);
+      assert.match(boardDom.title, /Watcher's Board|Quests & Bounties/i);
+      assert.match(boardDom.bodyText, /Daily Hunting Warrants/i);
+      assert.match(boardDom.bodyText, /Wilderness Threat Intelligence/i);
       await saveScreenshot('04_phase6_watchers_board_warrants_and_threats.png');
 
       // 11e. Close modal, step into Mirkwood and verify Stage 2 Combat presentation

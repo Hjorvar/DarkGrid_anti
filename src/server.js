@@ -1,8 +1,15 @@
+/**
+ * DARKGRID — Main Game Server Entrypoint (src/server.js)
+ *
+ * Starts the main DarkGrid RPG web server from the repository root (`npm start` / `npm run dev`),
+ * with full SQLite initialization, 3-region overworld + 2 large dungeons, and durable
+ * Cloud Firestore / snapshot persistence for production Cloud Run deployments.
+ */
+
 const fs = require('fs');
-const app = require('./app');
 const config = require('./config');
 const { getDb, closeDb } = require('./db/connection');
-const { runMigrations, runSeeds } = require('./db/migrate');
+const { createMainApp } = require('./app');
 const {
   loadDurableSnapshotFile,
   saveDurableSnapshotFile,
@@ -16,19 +23,17 @@ function isFirestoreSyncEnabled() {
   return process.env.ENABLE_FIRESTORE_SYNC === 'true' || process.env.FIRESTORE_DURABLE_SYNC === 'true';
 }
 
-async function startServer() {
-  console.log('--- Darkgrid Server Startup ---');
-  const db = getDb();
+async function startServer(options = {}) {
+  console.log('--- Darkgrid Main Game Server Startup ---');
+  const db = options.db || getDb();
+  let app;
   try {
-    const migrations = runMigrations(db);
-    if (migrations.length > 0) {
-      console.log(`Applied migrations: ${migrations.join(', ')}`);
-    }
-    // Execute any pending seeds tracked via schema_seeds (safe on both empty and populated DBs)
-    const seeds = runSeeds(db);
-    if (seeds.length > 0) {
-      console.log(`Executed seeds: ${seeds.join(', ')}`);
-    }
+    app = createMainApp({
+      db,
+      dbPath: config.dbPath,
+      sessionSecret: config.sessionSecret,
+      ...options
+    });
 
     // Hydrate from durable snapshot file if configured and already present on disk
     if (process.env.DURABLE_SNAPSHOT_PATH && fs.existsSync(process.env.DURABLE_SNAPSHOT_PATH)) {
@@ -37,19 +42,22 @@ async function startServer() {
 
     primeRowHashCache(db);
   } catch (err) {
-    console.error('Fatal: Could not initialize database schema/seeds:', err);
+    console.error('Fatal: Could not initialize Darkgrid main game server:', err);
     process.exit(1);
   }
 
+  const port = options.port !== undefined ? options.port : config.port;
+
   // Bind to 0.0.0.0:PORT immediately so Cloud Run health checks succeed without waiting on network I/O
-  const server = app.listen(config.port, '0.0.0.0', () => {
-    console.log(`===============================================`);
-    console.log(` DARKGRID running at: http://0.0.0.0:${config.port}`);
+  const server = app.listen(port, '0.0.0.0', () => {
+    const actualPort = server.address()?.port || port;
+    console.log('===============================================');
+    console.log(` DARKGRID (Main Game) running at: http://0.0.0.0:${actualPort}`);
     console.log(` Environment: ${config.nodeEnv}`);
     console.log(` Database: ${config.dbPath}`);
-    console.log(`===============================================`);
-    logInfo('SERVER_STARTED', 'Darkgrid server started', {
-      port: config.port,
+    console.log('===============================================');
+    logInfo('SERVER_STARTED', 'Darkgrid main game server started', {
+      port: actualPort,
       nodeEnv: config.nodeEnv
     });
   });
@@ -87,12 +95,11 @@ async function startServer() {
 
   process.on('SIGINT', handleShutdown);
   process.on('SIGTERM', handleShutdown);
-  return server;
+  return { app, server, db };
 }
 
 if (require.main === module) {
   startServer();
 }
 
-module.exports = { startServer };
-
+module.exports = { startServer, createMainApp };

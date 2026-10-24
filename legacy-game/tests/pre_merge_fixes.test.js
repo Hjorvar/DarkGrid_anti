@@ -1,11 +1,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('http');
-const config = require('../src/config');
-const app = require('../src/app');
+const config = require('../../src/config');
+const app = require('../app');
 const { createTestDb } = require('./test_helpers');
-const { getDb, setDb, closeDb } = require('../src/db/connection');
-const { registerUser } = require('../src/domain/auth/service');
+const { getDb, setDb, closeDb } = require('../../src/db/connection');
+const { registerUser } = require('../../src/domain/auth/service');
 const {
   createCharacter,
   performCityRest,
@@ -14,13 +14,13 @@ const {
   getActiveWeapon,
   getCharacterPotions,
   getCharacterPotionCount
-} = require('../src/domain/character/rules');
+} = require('../../src/domain/character/rules');
 const {
   calculateHeroAC,
   calculateHeroAttackBonus,
   resolvePotionHealing
-} = require('../src/domain/combat/rules');
-const { executeCombatRound, getCombatState } = require('../src/domain/combat/engine');
+} = require('../../src/domain/combat/rules');
+const { executeCombatRound, getCombatState } = require('../../src/domain/combat/engine');
 
 let server;
 let baseUrl;

@@ -2,8 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('http');
 const { createTestDb } = require('./test_helpers');
-const { setDb, closeDb } = require('../src/db/connection');
-const app = require('../src/app');
+const { setDb, closeDb } = require('../../src/db/connection');
+const app = require('../app');
 
 let server;
 let baseUrl;

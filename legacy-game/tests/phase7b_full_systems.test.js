@@ -18,10 +18,10 @@ const assert = require('node:assert/strict');
 const http = require('http');
 
 const { createTestDb } = require('./test_helpers');
-const { setDb, closeDb } = require('../src/db/connection');
-const app = require('../src/app');
-const config = require('../src/config');
-const { registerUser } = require('../src/domain/auth/service');
+const { setDb, closeDb } = require('../../src/db/connection');
+const app = require('../app');
+const config = require('../../src/config');
+const { registerUser } = require('../../src/domain/auth/service');
 
 const {
   getModifier,
@@ -48,7 +48,7 @@ const {
   unequipItem,
   spendAttributePoint,
   applyCharacterLevelUp
-} = require('../src/domain/character/rules');
+} = require('../../src/domain/character/rules');
 
 const {
   MONSTER_FAMILIES,
@@ -60,7 +60,7 @@ const {
   resolveMonsterFamily,
   validateRangerFavoredEnemyChoice,
   auditDatabaseMonsterTaxonomy
-} = require('../src/domain/monsters/taxonomy');
+} = require('../../src/domain/monsters/taxonomy');
 
 const {
   getFighterKnowYourEnemyBonus,
@@ -75,28 +75,28 @@ const {
   recordMonsterVictory,
   evaluateHeroMonsterKnowledge,
   getCharacterCompendiumKnowledge
-} = require('../src/domain/combat/knowledge');
+} = require('../../src/domain/combat/knowledge');
 
 const {
   calculateHeroAttackBonus,
   calculateHeroAC,
   getHeroDamageFormula
-} = require('../src/domain/combat/rules');
+} = require('../../src/domain/combat/rules');
 
 const {
   resolveFighterSecondWind
-} = require('../src/domain/combat/abilities');
+} = require('../../src/domain/combat/abilities');
 
 const {
   startCombat,
   executeCombatRound,
   getCombatState
-} = require('../src/domain/combat/engine');
+} = require('../../src/domain/combat/engine');
 
 const {
   checkTileEncounter,
   getActiveEncounterForCharacter
-} = require('../src/domain/encounters/engine');
+} = require('../../src/domain/encounters/engine');
 
 let userCounter = 0;
 async function createTestUser(db, prefix = 'p7b') {
@@ -767,9 +767,9 @@ test('Phase 7B.9 — Action-UI-Lab HTTP/API Integration: Point-Buy, 14-Family Ra
   const fs = require('node:fs');
   const path = require('node:path');
   const http = require('node:http');
-  const { createLabApp } = require('../action-ui-lab/server');
+  const { createLabApp } = require('../../action-ui-lab/server');
 
-  const tmpDbPath = path.join(__dirname, '../data/test_phase7b_api_integration.sqlite');
+  const tmpDbPath = path.join(__dirname, '../../data/test_phase7b_api_integration.sqlite');
   for (const suffix of ['', '-wal', '-shm']) {
     if (fs.existsSync(tmpDbPath + suffix)) {
       try { fs.unlinkSync(tmpDbPath + suffix); } catch { /* ignore */ }

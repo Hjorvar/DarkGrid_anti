@@ -159,7 +159,7 @@ function handleNavigationAction({ db, userId, options, action, payload, characte
 
       // 1. MOVEMENT (Relative FORWARD / BACKWARD / STRAFE_LEFT / STRAFE_RIGHT or Cardinal NORTH / EAST / SOUTH / WEST)
       if (action === 'MOVE') {
-        if (payload.testForceEncounter !== undefined && !labToolsAllowed) {
+        if ((payload.testForceEncounter !== undefined || payload.testForceAmbush !== undefined) && !labToolsAllowed) {
           return res.status(403).json({
             ok: false,
             error: 'Forbidden: Encounter forcing is restricted to Lab Tools mode.',

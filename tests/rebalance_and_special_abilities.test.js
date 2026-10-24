@@ -67,7 +67,7 @@ describe('Rebalance & Monster Special Abilities Suite', () => {
     }
 
     // Verify EJS template rendering hides weapon damage dice and armor AC numbers
-    const gameTemplatePath = path.resolve(__dirname, '../src/views/game.ejs');
+    const gameTemplatePath = path.resolve(__dirname, '../legacy-game/views/game.ejs');
     const templateSource = fs.readFileSync(gameTemplatePath, 'utf8');
     assert.equal(templateSource.includes('Dmg: <%= character.equipped.melee.damage_dice %>'), false);
     assert.equal(templateSource.includes('AC+<%= character.equipped.armor.armor_bonus %>'), false);

@@ -186,10 +186,36 @@ async function buildAndDeployCloudRun(token) {
     fs.copyFileSync(path.join(repoRoot, 'Dockerfile'), path.join(stageDir, 'Dockerfile'));
     fs.copyFileSync(path.join(repoRoot, 'package.json'), path.join(stageDir, 'package.json'));
     fs.copyFileSync(path.join(repoRoot, 'package-lock.json'), path.join(stageDir, 'package-lock.json'));
+    if (fs.existsSync(path.join(repoRoot, 'index.js'))) {
+      fs.copyFileSync(path.join(repoRoot, 'index.js'), path.join(stageDir, 'index.js'));
+    }
     fs.cpSync(path.join(repoRoot, 'src'), path.join(stageDir, 'src'), { recursive: true });
     fs.cpSync(path.join(repoRoot, 'scripts'), path.join(stageDir, 'scripts'), { recursive: true });
     fs.cpSync(path.join(repoRoot, 'db', 'migrations'), path.join(stageDir, 'db', 'migrations'), { recursive: true });
     fs.cpSync(path.join(repoRoot, 'db', 'seeds'), path.join(stageDir, 'db', 'seeds'), { recursive: true });
+
+    // Stage main game code & frontend HTML/CSS/JS from action-ui-lab
+    const stageLabDir = path.join(stageDir, 'action-ui-lab');
+    fs.mkdirSync(stageLabDir, { recursive: true });
+    for (const rootFile of [
+      'server.js',
+      'scene-catalog.js',
+      'adventure-engine.js',
+      'monster-size-catalog.js',
+      'travel-continuity.js',
+      'monster-artwork-inventory.json',
+      'monster-asset-manifest.json'
+    ]) {
+      const srcFile = path.join(repoRoot, 'action-ui-lab', rootFile);
+      if (fs.existsSync(srcFile)) {
+        fs.copyFileSync(srcFile, path.join(stageLabDir, rootFile));
+      }
+    }
+    fs.cpSync(path.join(repoRoot, 'action-ui-lab', 'server'), path.join(stageLabDir, 'server'), { recursive: true });
+    fs.cpSync(path.join(repoRoot, 'action-ui-lab', 'public', 'css'), path.join(stageLabDir, 'public', 'css'), { recursive: true });
+    fs.cpSync(path.join(repoRoot, 'action-ui-lab', 'public', 'js'), path.join(stageLabDir, 'public', 'js'), { recursive: true });
+    fs.copyFileSync(path.join(repoRoot, 'action-ui-lab', 'public', 'index.html'), path.join(stageLabDir, 'public', 'index.html'));
+
     fs.mkdirSync(path.join(stageDir, 'public', 'css'), { recursive: true });
     if (fs.existsSync(path.join(repoRoot, 'public', 'css', 'style.css'))) {
       fs.copyFileSync(path.join(repoRoot, 'public', 'css', 'style.css'), path.join(stageDir, 'public', 'css', 'style.css'));
@@ -208,7 +234,7 @@ async function buildAndDeployCloudRun(token) {
 
     const tarPath = path.join(os.tmpdir(), `darkgrid-source-${Date.now()}.tgz`);
     execSync(
-      `tar -czf "${tarPath}" Dockerfile package.json package-lock.json db public images src scripts`,
+      `tar -czf "${tarPath}" Dockerfile package.json package-lock.json index.js db public images src action-ui-lab scripts`,
       { cwd: stageDir, stdio: 'inherit' }
     );
     const tarBytes = fs.readFileSync(tarPath);
@@ -417,6 +443,27 @@ function prepareStaticHostingAssets() {
   // Copy static CSS/JS from public/ and artwork from images/ so CDN serves them with 0 Cloud Run cost
   fs.cpSync(path.join(repoRoot, 'public'), distDir, { recursive: true });
   fs.cpSync(path.join(repoRoot, 'images'), path.join(distDir, 'images'), { recursive: true });
+
+  // Copy main game frontend static assets under dist/lab-assets/ (without index.html so `/` routes to Cloud Run)
+  const labAssetsDist = path.join(distDir, 'lab-assets');
+  fs.mkdirSync(labAssetsDist, { recursive: true });
+  fs.cpSync(path.join(repoRoot, 'action-ui-lab', 'public', 'css'), path.join(labAssetsDist, 'css'), { recursive: true });
+  fs.cpSync(path.join(repoRoot, 'action-ui-lab', 'public', 'js'), path.join(labAssetsDist, 'js'), { recursive: true });
+  if (fs.existsSync(path.join(repoRoot, 'action-ui-lab', 'public', 'images'))) {
+    fs.cpSync(path.join(repoRoot, 'action-ui-lab', 'public', 'images'), path.join(labAssetsDist, 'images'), { recursive: true });
+  }
+  if (fs.existsSync(path.join(repoRoot, 'action-ui-lab', 'monster-size-catalog.js'))) {
+    fs.copyFileSync(path.join(repoRoot, 'action-ui-lab', 'monster-size-catalog.js'), path.join(labAssetsDist, 'monster-size-catalog.js'));
+  }
+  if (fs.existsSync(path.join(repoRoot, 'action-ui-lab', 'docs', 'phase-5', 'art-candidates'))) {
+    fs.cpSync(path.join(repoRoot, 'action-ui-lab', 'docs', 'phase-5', 'art-candidates'), path.join(labAssetsDist, 'art-candidates'), { recursive: true });
+  }
+
+  // Remove internal dev review HTML files from production dist
+  for (const devFile of ['monster_review.html', 'monster_comparison.html', 'index.html']) {
+    const p = path.join(distDir, devFile);
+    if (fs.existsSync(p)) fs.rmSync(p, { force: true });
+  }
 }
 
 async function main() {
@@ -499,5 +546,6 @@ module.exports = {
   checkBillingStatus,
   configureLogRetention,
   configureBillingBudget,
-  buildAndDeployCloudRun
+  buildAndDeployCloudRun,
+  prepareStaticHostingAssets
 };

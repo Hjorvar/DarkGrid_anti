@@ -32,8 +32,39 @@ const DYNAMIC_TABLES = [
   'combat_events',
   'user_sessions',
   'action_idempotency_log',
-  'world_sync_meta'
+  'world_sync_meta',
+  'character_discovered_tiles',
+  'character_dungeon_discovered_tiles',
+  'character_dungeon_events',
+  'character_monster_knowledge',
+  'character_quests'
 ];
+
+function getTableOrderBy(table) {
+  switch (table) {
+    case 'user_sessions': return 'sid ASC';
+    case 'world_sync_meta': return 'key ASC';
+    case 'character_discovered_tiles': return 'character_id ASC, y ASC, x ASC';
+    case 'character_dungeon_discovered_tiles': return 'character_id ASC, dungeon_key ASC, y ASC, x ASC';
+    case 'character_dungeon_events': return 'character_id ASC, dungeon_key ASC, event_key ASC';
+    case 'character_monster_knowledge': return 'character_id ASC, monster_id ASC';
+    case 'character_quests': return 'character_id ASC, quest_key ASC';
+    default: return 'id ASC';
+  }
+}
+
+function getTableRowPrimaryKey(table, row) {
+  switch (table) {
+    case 'user_sessions': return String(row.sid);
+    case 'world_sync_meta': return String(row.key);
+    case 'character_discovered_tiles': return `${row.character_id}_${row.x}_${row.y}`;
+    case 'character_dungeon_discovered_tiles': return `${row.character_id}_${row.dungeon_key}_${row.x}_${row.y}`;
+    case 'character_dungeon_events': return `${row.character_id}_${row.dungeon_key}_${row.event_key}`;
+    case 'character_monster_knowledge': return `${row.character_id}_${row.monster_id}`;
+    case 'character_quests': return `${row.character_id}_${row.quest_key}`;
+    default: return String(row.id);
+  }
+}
 
 // Per-database state cache for differential write-through
 const lastRowHashesByDb = new WeakMap();
@@ -77,7 +108,7 @@ function exportDynamicState(db) {
       tables[table] = [];
       continue;
     }
-    const orderBy = table === 'user_sessions' ? 'sid ASC' : (table === 'world_sync_meta' ? 'key ASC' : 'id ASC');
+    const orderBy = getTableOrderBy(table);
     const rows = db.prepare(`SELECT * FROM ${table} ORDER BY ${orderBy}`).all();
     tables[table] = rows.map(r => ({ ...r }));
   }
@@ -367,6 +398,22 @@ function importDynamicState(db, snapshot, options = {}) {
             ch.id
           );
         }
+
+        const charCols = new Set(tx.prepare("PRAGMA table_info('characters')").all().map(c => c.name));
+        const extendedCols = [
+          'facing', 'pending_victory_encounter_id', 'scene_mode', 'attribute_points',
+          'initial_attributes_json', 'favored_enemy_family', 'divine_charges',
+          'quest_goblin_chieftain_status', 'goblin_chieftain_slain',
+          'quest_ancient_crypt_status', 'ancient_crypt_boss_slain',
+          'quest_ravencrag_warlord_status', 'ravencrag_warlord_slain',
+          'active_landmark_scene_key', 'dismissed_landmark_tile_id',
+          'active_dungeon_key', 'dungeon_x', 'dungeon_y'
+        ].filter(col => charCols.has(col) && ch[col] !== undefined);
+        if (extendedCols.length > 0) {
+          const setClause = extendedCols.map(col => `${col} = ?`).join(', ');
+          const values = extendedCols.map(col => ch[col]);
+          tx.prepare(`UPDATE characters SET ${setClause} WHERE id = ?`).run(...values, ch.id);
+        }
       }
     }
 
@@ -607,6 +654,28 @@ function importDynamicState(db, snapshot, options = {}) {
       }
     }
 
+    // 11. Extended Discovery, Dungeon & Quest Tables
+    const extendedTables = [
+      'character_discovered_tiles',
+      'character_dungeon_discovered_tiles',
+      'character_dungeon_events',
+      'character_monster_knowledge',
+      'character_quests'
+    ];
+    for (const extTable of extendedTables) {
+      if (Array.isArray(t[extTable]) && tableExists(tx, extTable)) {
+        const schemaCols = tx.prepare(`PRAGMA table_info('${extTable}')`).all().map(c => c.name);
+        for (const r of t[extTable]) {
+          const validCols = schemaCols.filter(col => r[col] !== undefined);
+          if (validCols.length > 0) {
+            const placeholders = validCols.map(() => '?').join(', ');
+            const vals = validCols.map(col => r[col]);
+            tx.prepare(`INSERT OR REPLACE INTO ${extTable} (${validCols.join(', ')}) VALUES (${placeholders})`).run(...vals);
+          }
+        }
+      }
+    }
+
     syncSqliteSequences(tx);
   });
 
@@ -649,11 +718,10 @@ function computeTableRowMap(db) {
   const map = new Map();
   for (const table of DYNAMIC_TABLES) {
     if (!tableExists(db, table)) continue;
-    const pkCol = table === 'user_sessions' ? 'sid' : (table === 'world_sync_meta' ? 'key' : 'id');
     const rows = db.prepare(`SELECT * FROM ${table}`).all();
     const tableMap = new Map();
     for (const r of rows) {
-      const key = String(r[pkCol]);
+      const key = getTableRowPrimaryKey(table, r);
       tableMap.set(key, { row: { ...r }, hash: sha256(r) });
     }
     map.set(table, tableMap);
@@ -853,9 +921,8 @@ async function pushDeltaToFirestoreServer(db, options = {}) {
   const writes = [];
 
   for (const [table, rows] of Object.entries(delta.upserts)) {
-    const pkCol = table === 'user_sessions' ? 'sid' : (table === 'world_sync_meta' ? 'key' : 'id');
     for (const row of rows) {
-      const docId = encodeURIComponent(String(row[pkCol]));
+      const docId = encodeURIComponent(getTableRowPrimaryKey(table, row));
       const fields = {};
       for (const [k, v] of Object.entries(row)) {
         fields[k] = toFirestoreValue(v);

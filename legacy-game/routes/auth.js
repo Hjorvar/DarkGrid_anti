@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, loginUser } = require('../domain/auth/service');
-const { deriveCsrfToken } = require('../middleware/csrf');
+const { registerUser, loginUser } = require('../../src/domain/auth/service');
+const { deriveCsrfToken } = require('../../src/middleware/csrf');
 
 // Lightweight in-memory rate limiter for auth endpoints (M3)
 const authAttempts = new Map();

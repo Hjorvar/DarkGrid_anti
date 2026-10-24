@@ -4,6 +4,13 @@
 const express = require('express');
 const session = require('express-session');
 const config = require('../../../src/config');
+const { saveDurableSnapshotFile, pushDeltaToFirestoreServer } = require('../../../src/db/durable-store');
+const {
+  gameRateLimiter,
+  maintenanceModeGuard,
+  budgetKillSwitchHandler
+} = require('../../../src/middleware/security');
+const { logError } = require('../../../src/utils/logger');
 const { createStateControllers } = require('../controllers/state-controller');
 const { createActionController } = require('../controllers/action-controller');
 const { createAuthAndCharacterRoutes } = require('../controllers/auth-character-controller');
@@ -20,8 +27,22 @@ function registerApiRoutes(app, { db, userId, options = {} }) {
   const isProd = isProductionMode(options);
   const sessionSecret = options.sessionSecret || process.env.SESSION_SECRET || config.sessionSecret;
 
+  // Lightweight health check for Cloud Run / App Hosting probes (zero DB/Firestore read cost)
+  app.get(['/healthz', '/api/health'], (req, res) => {
+    res.status(200).json({
+      status: 'ok',
+      service: 'darkgrid-rpg',
+      environment: config.nodeEnv
+    });
+  });
+
+  // Cloud Billing Pub/Sub Hard Kill-Switch Webhook
+  app.post('/internal/budget-killswitch', budgetKillSwitchHandler);
+
   // Security headers & persistent SQLite session middleware (__session cookie)
   app.use(securityHeaders);
+  app.use(maintenanceModeGuard);
+  app.use(gameRateLimiter());
   app.use(
     session({
       name: '__session',
@@ -37,6 +58,27 @@ function registerApiRoutes(app, { db, userId, options = {} }) {
       }
     })
   );
+
+  // Durable write-through after state-changing POST requests in production / durable mode
+  app.use((req, res, next) => {
+    if (req.method === 'POST') {
+      res.on('finish', () => {
+        try {
+          if (process.env.DURABLE_SNAPSHOT_PATH && db) {
+            saveDurableSnapshotFile(db, process.env.DURABLE_SNAPSHOT_PATH);
+          }
+          if ((process.env.ENABLE_FIRESTORE_SYNC === 'true' || process.env.FIRESTORE_DURABLE_SYNC === 'true') && db) {
+            pushDeltaToFirestoreServer(db).catch(err => {
+              logError('FIRESTORE_SYNC_ERROR', 'Async Firestore delta sync failed', { error: err.message });
+            });
+          }
+        } catch (err) {
+          logError('DURABLE_SNAPSHOT_ERROR', 'Failed to write durable snapshot', { error: err.message });
+        }
+      });
+    }
+    next();
+  });
 
   // Anti-tamper & idempotency protection for all state-mutating POST requests
   const idempotencyGuard = createLabIdempotencyMiddleware({ db, defaultUserId: userId, options });
