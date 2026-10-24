@@ -53,9 +53,18 @@ function inspectSceneTile(db, tx, ty, cardinalDirection = null) {
   const legacyUrl = art ? art.imageUrl : '/images/terrain/terrain_fallback.webp';
   const variant = resolveTileVariant(db, tile);
   const isStrongholdTile = tile.feature === 'GOBLIN_STRONGHOLD' || tile.feature === 'STRONGHOLD_BASTION';
-  const resolvedUrl = isStrongholdTile
-    ? '/images/terrain/terrain_town_gates.webp'
-    : (variant && variant.imageUrl ? variant.imageUrl : legacyUrl);
+  const isGoblinCaveTile = tile.feature === 'GOBLIN_CAVE' || tile.terrain === 'CAVES' || tile.terrain === 'UNDERGROUND';
+  const isCryptOrUndeadRuin = tile.feature === 'ANCIENT_CRYPT' || tile.feature === 'CRYPT_BASTION' || tile.feature === 'UNDEAD_RUINS';
+  let resolvedUrl = variant && variant.imageUrl ? variant.imageUrl : legacyUrl;
+  if (isStrongholdTile) {
+    resolvedUrl = '/images/terrain/terrain_town_gates.webp';
+  } else if (isGoblinCaveTile) {
+    resolvedUrl = '/lab-assets/images/terrain/hills_raven_crags_ravine_pov.jpg';
+  } else if (isCryptOrUndeadRuin) {
+    resolvedUrl = '/images/terrain/terrain_underground_ruins.webp';
+  } else if (tile.feature === 'NECROTIC_POOL' || tile.terrain === 'SWAMP') {
+    resolvedUrl = '/images/terrain/terrain_swamp.webp';
+  }
 
   const persistent = db.prepare(
     "SELECT id, kill_count, custom_title FROM monster_instances WHERE tile_id = ? AND status = 'ACTIVE'"
@@ -144,6 +153,14 @@ function buildViewportScene(db, currentTile, facing, directions, activeEncounter
         sc.imageUrl = '/images/terrain/terrain_town_gates.webp';
         sc.primaryUrl = '/images/terrain/terrain_town_gates.webp';
         sc.horizonUrl = '/images/terrain/terrain_forest.webp';
+      } else if (current.feature === 'GOBLIN_CAVE') {
+        sc.imageUrl = '/lab-assets/images/terrain/hills_raven_crags_ravine_pov.jpg';
+        sc.primaryUrl = '/lab-assets/images/terrain/hills_raven_crags_ravine_pov.jpg';
+        sc.horizonUrl = '/images/terrain/terrain_hills.webp';
+      } else if (current.feature === 'ANCIENT_CRYPT' || current.feature === 'UNDEAD_RUINS') {
+        sc.imageUrl = '/images/terrain/terrain_underground_ruins.webp';
+        sc.primaryUrl = '/images/terrain/terrain_underground_ruins.webp';
+        sc.horizonUrl = '/images/terrain/terrain_swamp.webp';
       }
       sc.effectProfile = resolveAtmosphereEffectProfile(sc.atmosphereProfile, current, ahead1, normFacing);
       sc.pointOfInterest = pointOfInterest;

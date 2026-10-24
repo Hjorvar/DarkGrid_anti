@@ -57,8 +57,8 @@ test('Encounter Secrecy Stage 1: Threat is unknown, name & image are hidden in H
   const forestTile = getTileByCoords(db, 7, 5); // Forest
   assert.equal(forestTile.is_safe, 0);
 
-  // Trigger encounter with forced roll
-  const encounter = checkTileEncounter(db, hero, forestTile, { rng: () => 0.01 });
+  // Trigger spotted encounter with forced roll
+  const encounter = checkTileEncounter(db, hero, forestTile, { rng: () => 0.01, ambushRng: () => 0.95 });
   assert.ok(encounter);
   assert.equal(encounter.status, 'DISCOVERED');
   assert.equal(encounter.isRevealed, false);
@@ -108,7 +108,7 @@ test('Encounter Revelation Stage 2: Proceeding reveals exact same monster, name,
   });
 
   const forestTile = getTileByCoords(db, 7, 5);
-  const initialEncounter = checkTileEncounter(db, hero, forestTile, { rng: () => 0.01 });
+  const initialEncounter = checkTileEncounter(db, hero, forestTile, { rng: () => 0.01, ambushRng: () => 0.95 });
   assert.ok(initialEncounter);
   const initialMonsterId = initialEncounter.monster_id;
   const initialMonsterName = initialEncounter.monster_name.replace(/\[.*?\]/g, '').trim();

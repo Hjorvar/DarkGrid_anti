@@ -137,8 +137,8 @@ test('Encounter lifecycle: locks movement, survives refresh, and unlocks on Igno
   const forestTile = getTileByCoords(db, 7, 5); // Forest
   assert.equal(forestTile.is_safe, 0);
 
-  // Force encounter trigger on stepping into forest
-  const encounter = checkTileEncounter(db, hero, forestTile, { rng: () => 0.05 });
+  // Force spotted encounter trigger on stepping into forest
+  const encounter = checkTileEncounter(db, hero, forestTile, { rng: () => 0.05, ambushRng: () => 0.95 });
   assert.ok(encounter);
   assert.equal(encounter.status, 'DISCOVERED');
 

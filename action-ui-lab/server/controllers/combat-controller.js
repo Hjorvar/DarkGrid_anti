@@ -26,11 +26,55 @@ const {
 const { buildClientState } = require('../services/client-state-service');
 const {
   startStrongholdBossEncounter,
+  startLandmarkDungeonEncounter,
   syncCharacterQuestState
 } = require('../services/topdown-world-service');
 
 function handleCombatAction({ db, userId, options, action, payload, character, labToolsAllowed = false, res }) {
-  // 1b. STRONGHOLD BOSS: ENGAGE THE GOBLIN CHIEFTAIN AT [7, 1]
+  // 1a. MAJOR LANDMARK DUNGEON / CRYPT ENTRANCE DELVE (Goblin Cave [9, 12] / Ancient Crypt [26, 5])
+  if (action === 'EXPLORE_GOBLIN_CAVE' || action === 'ENTER_ANCIENT_CRYPT') {
+    const landmarkKey = action === 'ENTER_ANCIENT_CRYPT' ? 'ANCIENT_CRYPT' : 'GOBLIN_CAVE';
+    const currentTile = getTileById(db, character.tile_id);
+    const delveResult = startLandmarkDungeonEncounter(db, character, landmarkKey, options);
+    const enc = delveResult.encounter;
+    const beforeSnap = captureCombatBeforeSnapshot(db, character, enc);
+    const monsterName = (enc && enc.monster && enc.monster.name) || (landmarkKey === 'ANCIENT_CRYPT' ? 'Crypt Guardian' : 'Cave Stalker');
+    const isOpeningVictory =
+      (enc && enc.status === 'VICTORY') ||
+      Boolean(delveResult.investigateResult && (delveResult.investigateResult.status === 'VICTORY' || delveResult.investigateResult.monsterDied));
+
+    if (isOpeningVictory) {
+      db.prepare('UPDATE characters SET pending_victory_encounter_id = ? WHERE id = ?').run(delveResult.encounterId, character.id);
+      syncCharacterQuestState(db, character.id);
+      const victoryData = getVictoryData(db, character.id, delveResult.encounterId);
+      recordEncounterOutcome(character.id, currentTile, monsterName, 'VICTORY');
+      const nextState = buildClientState(db, userId, {
+        labToolsAllowed,
+        victory: victoryData,
+        fxCue: { type: 'VICTORY', openingShotKill: true }
+      });
+      nextState.combatSequence = buildCombatSequence(db, delveResult.encounterId, 0, beforeSnap, nextState);
+      return res.json({ ok: true, state: nextState });
+    }
+
+    const advState = getOrCreateAdventureState(character.id, currentTile);
+    recordEncounterStart(advState, currentTile, {
+      status: 'IN_COMBAT',
+      monsterName
+    });
+    const infoMsg = landmarkKey === 'ANCIENT_CRYPT'
+      ? `You breach the obsidian threshold of the Ancient Crypt—a ${monsterName} rises from the sepulcher shadows!`
+      : `You step into the torch-lit mouth of the Goblin Cave—a ${monsterName} lunges from the stalagmites!`;
+    const nextState = buildClientState(db, userId, {
+      labToolsAllowed,
+      infoMessage: infoMsg,
+      fxCue: { type: 'REVEAL_MONSTER' }
+    });
+    nextState.combatSequence = buildCombatSequence(db, delveResult.encounterId, 0, beforeSnap, nextState);
+    return res.json({ ok: true, state: nextState });
+  }
+
+  // 1b. STRONGHOLD BOSS: ENGAGE THE GOBLIN CHIEFTAIN AT [15, 2]
   if (action === 'ENGAGE_STRONGHOLD_BOSS' || action === 'CHALLENGE_STRONGHOLD_BOSS') {
     const currentTile = getTileById(db, character.tile_id);
     const bossResult = startStrongholdBossEncounter(db, character, options);

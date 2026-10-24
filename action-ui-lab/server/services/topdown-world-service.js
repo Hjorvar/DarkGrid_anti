@@ -30,7 +30,7 @@ const {
 } = require('../../../src/domain/encounters/engine');
 const { startCombat } = require('../../../src/domain/combat/engine');
 
-const TOPDOWN_WORLD_VERSION = 'PHASE_8_30X30';
+const TOPDOWN_WORLD_VERSION = 'PHASE_9B_WORLD_EXPANSION';
 
 const TOPDOWN_REGION_BOUNDS = Object.freeze({
   minX: 0,
@@ -47,6 +47,8 @@ const TOPDOWN_REGION_BOUNDS = Object.freeze({
 const TOWN_COORD = Object.freeze({ x: 15, y: 27 });
 const NORTH_GATE_COORD = Object.freeze({ x: 15, y: 26 });
 const STRONGHOLD_COORD = Object.freeze({ x: 15, y: 2 });
+const GOBLIN_CAVE_COORD = Object.freeze({ x: 9, y: 12 });
+const ANCIENT_CRYPT_COORD = Object.freeze({ x: 26, y: 5 });
 
 const LANDMARK_DEFINITIONS = Object.freeze({
   OAKHAVEN: {
@@ -55,6 +57,7 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     y: 27,
     name: 'Oakhaven',
     category: 'TOWN',
+    regionKey: 'BLACKWOOD_FOREST',
     terrain: 'CITY',
     feature: 'MARKETPLACE',
     visualType: 'TOWN_SANCTUARY',
@@ -70,6 +73,7 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     y: 26,
     name: 'Oakhaven North Gate',
     category: 'GATE',
+    regionKey: 'BLACKWOOD_FOREST',
     terrain: 'PLAINS',
     feature: 'TOWN_GATES',
     visualType: 'TOWN_GATE_NORTH',
@@ -85,6 +89,7 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     y: 23,
     name: 'Blackwood Crossroads',
     category: 'CROSSROADS',
+    regionKey: 'BLACKWOOD_FOREST',
     terrain: 'FOREST',
     feature: 'FOREST_CROSSROADS',
     visualType: 'FOREST_CROSSROADS',
@@ -100,6 +105,7 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     y: 25,
     name: 'The Old Stone Bridge',
     category: 'BRIDGE',
+    regionKey: 'BLACKWOOD_FOREST',
     terrain: 'BRIDGE',
     feature: 'ANCIENT_BRIDGE',
     visualType: 'STONE_BRIDGE',
@@ -107,7 +113,7 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     isSafe: 0,
     alwaysKnown: false,
     description:
-      'An ancient mossy stone arch bridge spanning the churning black waters of the Blackwater River east of Oakhaven.'
+      'An ancient mossy stone arch bridge spanning the churning black waters of the Blackwater River east of Oakhaven, linking Goblin Forest toward the Undead Lands.'
   },
   ABANDONED_WATCHPOST: {
     key: 'ABANDONED_WATCHPOST',
@@ -115,6 +121,7 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     y: 25,
     name: 'Abandoned Watchpost',
     category: 'RUINS',
+    regionKey: 'BLACKWOOD_FOREST',
     terrain: 'UNDERGROUND_RUINS',
     feature: 'SUNK_RUIN',
     visualType: 'WATCHPOST_RUIN',
@@ -122,7 +129,7 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     isSafe: 0,
     alwaysKnown: false,
     description:
-      'Weathered stone watchpost ruins guarding the eastern bank beyond the Old Stone Bridge, with a narrow ranger trail leading north along the river gorge.'
+      'Weathered stone watchpost ruins guarding the eastern bank beyond the Old Stone Bridge. North follows the river ravine; East crosses into the mist-shrouded Undead Lands.'
   },
   BROKEN_SHRINE: {
     key: 'BROKEN_SHRINE',
@@ -130,6 +137,7 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     y: 17,
     name: 'The Broken Shrine',
     category: 'SHRINE',
+    regionKey: 'BLACKWOOD_FOREST',
     terrain: 'UNDERGROUND_RUINS',
     feature: 'BROKEN_SHRINE',
     visualType: 'BROKEN_SHRINE',
@@ -145,6 +153,7 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     y: 13,
     name: 'Old Charcoal Camp',
     category: 'CAMP',
+    regionKey: 'BLACKWOOD_FOREST',
     terrain: 'FOREST',
     feature: 'ABANDONED_CAMP',
     visualType: 'CAMP_CLEARING',
@@ -154,12 +163,29 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     description:
       'Cold ash-mounds and a collapsed timber kiln sit abandoned beneath the western pines where woodcutters once worked.'
   },
+  GOBLIN_CAVE: {
+    key: 'GOBLIN_CAVE',
+    x: 9,
+    y: 12,
+    name: 'Goblin Cave',
+    category: 'DUNGEON_ENTRANCE',
+    regionKey: 'BLACKWOOD_FOREST',
+    terrain: 'UNDERGROUND_RUINS',
+    feature: 'GOBLIN_CAVE',
+    visualType: 'GOBLIN_CAVE_ENTRANCE',
+    visualKind: 'CAVE_ENTRANCE',
+    isSafe: 0,
+    alwaysKnown: false,
+    description:
+      'A jagged cavern maw carved into the black granite of Whispering Crags. Flickering goblin torches, bone-totems, and chittering echoes mark the subterranean lair.'
+  },
   ANCIENT_BLACK_OAK: {
     key: 'ANCIENT_BLACK_OAK',
     x: 15,
     y: 15,
     name: 'Ancient Black Oak',
     category: 'LANDMARK',
+    regionKey: 'BLACKWOOD_FOREST',
     terrain: 'FOREST',
     feature: 'ANCIENT_OAK',
     visualType: 'ANCIENT_OAK_LANDMARK',
@@ -175,6 +201,7 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     y: 15,
     name: 'Ravine East Overlook',
     category: 'OVERLOOK',
+    regionKey: 'BLACKWOOD_FOREST',
     terrain: 'FOREST',
     feature: 'RAVINE_OVERLOOK',
     visualType: 'FOREST_CLEARING',
@@ -182,7 +209,7 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     isSafe: 0,
     alwaysKnown: false,
     description:
-      'A rocky shelf above the eastern rim of Blackwater Ravine where mist rises from the roaring rapids below.'
+      'A rocky shelf above the eastern rim of Blackwater Ravine where mist rises from the rapids below and a weathered causeway branches east into the Ashen Barrowlands.'
   },
   OLD_LOG_CROSSING: {
     key: 'OLD_LOG_CROSSING',
@@ -190,6 +217,7 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     y: 9,
     name: 'Old Log Crossing',
     category: 'BRIDGE',
+    regionKey: 'BLACKWOOD_FOREST',
     terrain: 'FOREST',
     feature: 'LOG_CROSSING',
     visualType: 'LOG_BRIDGE_PATH',
@@ -205,6 +233,7 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     y: 9,
     name: 'Goblin Hunting Grounds',
     category: 'DANGER',
+    regionKey: 'BLACKWOOD_FOREST',
     terrain: 'FOREST',
     feature: 'GOBLIN_HUNTING_GROUNDS',
     visualType: 'GOBLIN_TOTEM_CLEARING',
@@ -220,6 +249,7 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     y: 3,
     name: 'Stronghold Approach',
     category: 'APPROACH',
+    regionKey: 'BLACKWOOD_FOREST',
     terrain: 'FOREST',
     feature: 'STRONGHOLD_APPROACH',
     visualType: 'STRONGHOLD_APPROACH',
@@ -235,6 +265,7 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     y: 2,
     name: 'Goblin Stronghold',
     category: 'STRONGHOLD',
+    regionKey: 'BLACKWOOD_FOREST',
     terrain: 'FOREST',
     feature: 'GOBLIN_STRONGHOLD',
     visualType: 'STRONGHOLD_GATE',
@@ -244,6 +275,105 @@ const LANDMARK_DEFINITIONS = Object.freeze({
     bossKey: 'WARCHIEF_GRAK',
     description:
       'The fortified timber gate and watchtower of the Goblin Stronghold. Torchlight flickers across tribal war-banners where Warchief Grak holds court.'
+  },
+  // ==========================================================================
+  // PHASE 9B — UNDEAD LANDS LANDMARKS (Minor POIs + Ancient Crypt Major Scene)
+  // ==========================================================================
+  GALLOWS_CROSSROADS: {
+    key: 'GALLOWS_CROSSROADS',
+    x: 25,
+    y: 23,
+    name: 'Gallows Crossroads',
+    category: 'CROSSROADS',
+    regionKey: 'UNDEAD_LANDS',
+    terrain: 'UNDERGROUND_RUINS',
+    feature: 'GALLOWS_CROSSROADS',
+    visualType: 'UNDEAD_CROSSROADS',
+    visualKind: 'UNDEAD_LANDMARK',
+    isSafe: 0,
+    alwaysKnown: false,
+    description:
+      'A leaning iron gibbet and cracked stone obelisk stand where the Watchpost causeway enters the mist-choked Undead Lands and the Sepulcher Road turns north.'
+  },
+  DROWNED_OSSUARY: {
+    key: 'DROWNED_OSSUARY',
+    x: 26,
+    y: 19,
+    name: 'Drowned Ossuary',
+    category: 'RUINS',
+    regionKey: 'UNDEAD_LANDS',
+    terrain: 'SWAMP',
+    feature: 'DROWNED_OSSUARY',
+    visualType: 'OSSUARY_RUIN',
+    visualKind: 'UNDEAD_LANDMARK',
+    isSafe: 0,
+    alwaysKnown: false,
+    description:
+      'Half-sunken marble colonnades and flooded bone-vaults jut from the black waters of Deadman’s Mire, lit by drifting pale corpse-candles.'
+  },
+  WEEPING_CAIRN: {
+    key: 'WEEPING_CAIRN',
+    x: 26,
+    y: 15,
+    name: 'The Weeping Barrow',
+    category: 'BARROW',
+    regionKey: 'UNDEAD_LANDS',
+    terrain: 'HILLS',
+    feature: 'WEEPING_CAIRN',
+    visualType: 'BARROW_CAIRN',
+    visualKind: 'UNDEAD_LANDMARK',
+    isSafe: 0,
+    alwaysKnown: false,
+    description:
+      'A great slate-and-ash burial mound ringed by weathered standing monoliths at the center of the Ashen Barrowlands.'
+  },
+  BLIGHTED_CHAPEL: {
+    key: 'BLIGHTED_CHAPEL',
+    x: 26,
+    y: 9,
+    name: 'Blighted Chapel',
+    category: 'SHRINE',
+    regionKey: 'UNDEAD_LANDS',
+    terrain: 'UNDERGROUND_RUINS',
+    feature: 'BLIGHTED_CHAPEL',
+    visualType: 'CHAPEL_RUIN',
+    visualKind: 'UNDEAD_LANDMARK',
+    isSafe: 0,
+    alwaysKnown: false,
+    description:
+      'The roofless gothic nave and desecrated altar of a forgotten funerary chapel guarding the northern road to the Ancient Crypt.'
+  },
+  CRYPT_APPROACH: {
+    key: 'CRYPT_APPROACH',
+    x: 26,
+    y: 6,
+    name: 'Sepulcher Terrace',
+    category: 'APPROACH',
+    regionKey: 'UNDEAD_LANDS',
+    terrain: 'UNDERGROUND_RUINS',
+    feature: 'CRYPT_APPROACH',
+    visualType: 'CRYPT_APPROACH',
+    visualKind: 'UNDEAD_PATH',
+    isSafe: 0,
+    alwaysKnown: false,
+    description:
+      'Broad obsidian processional steps flanked by spectral green-flame braziers ascending directly to the sealed threshold of the Ancient Crypt.'
+  },
+  ANCIENT_CRYPT: {
+    key: 'ANCIENT_CRYPT',
+    x: 26,
+    y: 5,
+    name: 'Ancient Crypt',
+    category: 'CRYPT',
+    regionKey: 'UNDEAD_LANDS',
+    terrain: 'UNDERGROUND_RUINS',
+    feature: 'ANCIENT_CRYPT',
+    visualType: 'ANCIENT_CRYPT_GATE',
+    visualKind: 'CRYPT_GATE',
+    isSafe: 0,
+    alwaysKnown: false,
+    description:
+      'A monumental gothic mausoleum of black obsidian and iron gates rising from the northern Necropolis. Necrotic mist coils around the catacomb threshold where the Barrow Kings slumber.'
   }
 });
 
@@ -317,6 +447,16 @@ const ROUTE_C_EASTERN_RIVER = Object.freeze([
   [15, 8], [15, 7], [14, 7], [14, 6], [14, 5], [15, 5], [15, 4], [15, 3], [15, 2]
 ]);
 
+const ROUTE_D_UNDEAD_SEPULCHER_ROAD = Object.freeze([
+  [15, 27], [15, 26], [15, 25],
+  [16, 25], [17, 25], [18, 25], [19, 25], [20, 25], [21, 25],
+  [22, 25], [23, 25], [24, 25], [25, 25], [25, 24], [25, 23],
+  [25, 22], [25, 21], [26, 21], [26, 20], [26, 19],
+  [26, 18], [26, 17], [26, 16], [26, 15],
+  [26, 14], [26, 13], [26, 12], [26, 11], [26, 10], [26, 9],
+  [26, 8], [26, 7], [26, 6], [26, 5]
+]);
+
 const CONNECTOR_TRAILS = Object.freeze([
   // Westgate outer commons connector
   [14, 27], [14, 26], [13, 26], [12, 26], [12, 25], [12, 24], [12, 23],
@@ -324,13 +464,25 @@ const CONNECTOR_TRAILS = Object.freeze([
   [16, 27], [17, 27], [17, 26], [17, 25],
   // Shrine-to-Ancient-Oak mid-forest cross trail
   [7, 15], [8, 15], [9, 15], [10, 15], [11, 15], [12, 15], [13, 15], [14, 15], [15, 15],
+  // Goblin Cave spur trail (connects Route B [7,12], Goblin Cave [9,12], [9,9], and [9,15])
+  [7, 12], [8, 12], [9, 12], [9, 11], [9, 10], [9, 9], [9, 13], [9, 14], [9, 15],
   // Oak-to-River-Bank outlook trail
   [15, 15], [16, 15], [17, 15], [18, 15],
   // Western trail to Hunting Grounds connector
   [9, 9], [10, 9], [11, 9], [12, 9], [13, 9], [14, 9], [15, 9],
   // Upper Eastern Smuggler Ridge & Upper Ford Stones [20, 4]
-  [21, 9], [21, 8], [21, 7], [21, 6], [21, 5], [21, 4], [20, 4], [19, 4], [18, 4], [18, 3], [17, 3], [16, 3], [15, 3]
+  [21, 9], [21, 8], [21, 7], [21, 6], [21, 5], [21, 4], [20, 4], [19, 4], [18, 4], [18, 3], [17, 3], [16, 3], [15, 3],
+  // Undead Lands Mid-Barrow Causeway (Ravine East Overlook [22,15] -> Weeping Barrow [26,15])
+  [22, 15], [23, 15], [24, 15], [25, 15], [26, 15],
+  // Undead Lands Northern Ossuary Trail (Eastbank [22,9] -> Blighted Chapel [26,9])
+  [22, 9], [23, 9], [24, 9], [25, 9], [26, 9],
+  // Undead Lands Western Barrow Ridge Path
+  [24, 23], [24, 22], [24, 21], [24, 20], [24, 19], [24, 18], [24, 17], [24, 16], [24, 15]
 ]);
+
+function isTileCoordInUndeadLands(x, y) {
+  return Number(x) >= 23 && Number(x) <= 29 && Number(y) >= 0 && Number(y) <= 26;
+}
 
 function buildPhase8RegionTiles() {
   const landmarkByCoord = new Map();
@@ -339,7 +491,13 @@ function buildPhase8RegionTiles() {
   }
 
   const trailSet = new Set();
-  for (const list of [ROUTE_A_MAIN_TRAIL, ROUTE_B_WESTERN_WILDERNESS, ROUTE_C_EASTERN_RIVER, CONNECTOR_TRAILS]) {
+  for (const list of [
+    ROUTE_A_MAIN_TRAIL,
+    ROUTE_B_WESTERN_WILDERNESS,
+    ROUTE_C_EASTERN_RIVER,
+    ROUTE_D_UNDEAD_SEPULCHER_ROAD,
+    CONNECTOR_TRAILS
+  ]) {
     for (const [x, y] of list) {
       trailSet.add(`${x},${y}`);
     }
@@ -362,7 +520,7 @@ function buildPhase8RegionTiles() {
   riverSet.delete('20,9');
   riverSet.delete('20,4');
 
-  // Impassable Rock Crags (Stonefang Crag & Whispering Crags)
+  // Impassable Rock Crags (Stonefang Crag, Whispering Crags & Tombstone Monoliths)
   const cragCoords = new Map([
     ['11,19', 'Stonefang Crag North-West'],
     ['12,19', 'Stonefang Crag North-East'],
@@ -374,16 +532,22 @@ function buildPhase8RegionTiles() {
     ['11,12', 'Whispering Crag East'],
     ['10,13', 'Whispering Crag Base'],
     ['11,13', 'Whispering Crag Ledge'],
-    ['25,7', 'granite Outcrop'],
-    ['25,8', 'Granite Outcrop']
+    ['24,11', 'Obsidian Barrow Monolith'],
+    ['24,12', 'Shattered Sepulcher Spire'],
+    ['28,12', 'Jagged Tombstone Crag'],
+    ['28,13', 'Weathered Mausoleum Cliff']
   ]);
 
-  // Impassable Briar Thickets in deep forest
+  // Impassable Briar Thickets in Goblin Forest
   const thicketCoords = new Set([
     '3,7', '4,7', '3,8',
-    '4,21', '4,22',
-    '25,16', '26,16', '25,17',
-    '26,22', '26,23'
+    '4,21', '4,22'
+  ]);
+
+  // Impassable Necrotic Blight Pools in Deadman's Mire (Undead Lands)
+  const blightPoolCoords = new Set([
+    '27,20', '28,20',
+    '27,21', '28,21'
   ]);
 
   const tiles = [];
@@ -393,6 +557,7 @@ function buildPhase8RegionTiles() {
       const key = `${x},${y}`;
       const lm = landmarkByCoord.get(key) || null;
       const isOnTrail = trailSet.has(key);
+      const inUndeadRegion = isTileCoordInUndeadLands(x, y);
 
       // Compute cardinal path connections for trail tiles
       const pathConnections = [];
@@ -405,6 +570,12 @@ function buildPhase8RegionTiles() {
 
       // 1. Explicit Landmarks
       if (lm) {
+        const lmRegion = lm.regionKey || (inUndeadRegion ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST');
+        const lmBiome = lm.terrain === 'CITY'
+          ? 'SANCTUARY'
+          : (lmRegion === 'UNDEAD_LANDS'
+            ? (y <= 7 ? 'NECROPOLIS_SANCTUM' : (y <= 16 ? 'ASHEN_BARROWLANDS' : 'DEADMANS_MIRE'))
+            : 'BLACKWOOD_FOREST');
         tiles.push({
           x,
           y,
@@ -413,14 +584,14 @@ function buildPhase8RegionTiles() {
           feature: lm.feature,
           is_passable: 1,
           is_safe: lm.isSafe,
-          region_key: 'BLACKWOOD_FOREST',
-          biome: lm.terrain === 'CITY' ? 'SANCTUARY' : 'BLACKWOOD_FOREST',
+          region_key: lmRegion,
+          biome: lmBiome,
           visualType: lm.visualType,
           visualKind: lm.visualKind,
           pathConnections,
           isLandmark: true,
           landmarkKey: lm.key,
-          encounterProfileKey: lm.isSafe ? 'SAFE_NONE' : 'GOBLIN_FOREST',
+          encounterProfileKey: lm.isSafe ? 'SAFE_NONE' : (lmRegion === 'UNDEAD_LANDS' ? 'UNDEAD_LANDS' : 'GOBLIN_FOREST'),
           bossKey: lm.bossKey || null,
           description: lm.description
         });
@@ -495,6 +666,30 @@ function buildPhase8RegionTiles() {
         continue;
       }
 
+      // 2b. Ancient Crypt Flanking Catacomb Bastion in Northern Undead Lands ([25..27, 4] and [25, 5], [27, 5])
+      if ((y === 4 && x >= 25 && x <= 27) || (y === 5 && (x === 25 || x === 27))) {
+        tiles.push({
+          x,
+          y,
+          name: y === 4 ? 'Ancient Crypt Inner Mausoleum' : 'Obsidian Crypt Retaining Wall',
+          terrain: 'UNDERGROUND_RUINS',
+          feature: 'CRYPT_BASTION',
+          is_passable: 0,
+          is_safe: 0,
+          region_key: 'UNDEAD_LANDS',
+          biome: 'NECROPOLIS_SANCTUM',
+          visualType: 'CRYPT_WALL',
+          visualKind: 'CRYPT_WALL',
+          pathConnections: [],
+          isLandmark: false,
+          landmarkKey: null,
+          encounterProfileKey: 'SAFE_NONE',
+          bossKey: null,
+          description: 'Towering black obsidian mausoleum walls and wrought-iron catacomb grilles sealing the inner burial vaults of the Barrow Kings.'
+        });
+        continue;
+      }
+
       // 3. Blackwater River channel
       if (riverSet.has(key)) {
         tiles.push({
@@ -514,24 +709,25 @@ function buildPhase8RegionTiles() {
           landmarkKey: null,
           encounterProfileKey: 'SAFE_NONE',
           bossKey: null,
-          description: 'A deep, turbulent gorge of pitch-black water cutting through the forest floor. Impassable without a bridge.'
+          description: 'A deep, turbulent gorge of pitch-black water dividing Blackwood Forest from the eastern borderlands. Impassable without a bridge.'
         });
         continue;
       }
 
       // 4. Outer World Perimeter (`x=0`, `x=29`, `y=0`, `y=29`)
       if (x === 0 || x === 29 || y === 0 || y === 29) {
-        const isCliff = (y >= 25) || (y === 0 && x >= 11 && x <= 19);
+        const isUndeadBorder = inUndeadRegion;
+        const isCliff = isUndeadBorder || (y >= 25) || (y === 0 && x >= 11 && x <= 19);
         tiles.push({
           x,
           y,
-          name: isCliff ? 'Frontier Escarpment' : 'Impassable Blackwood Bramble',
+          name: isUndeadBorder ? 'Necropolis Chasm Escarpment' : (isCliff ? 'Frontier Escarpment' : 'Impassable Blackwood Bramble'),
           terrain: isCliff ? 'MOUNTAINS' : 'FOREST',
           feature: isCliff ? 'BORDER_CLIFF' : 'IMPASSABLE_THICKET',
           is_passable: 0,
           is_safe: 0,
-          region_key: 'BLACKWOOD_FOREST',
-          biome: 'BLACKWOOD_BORDER',
+          region_key: isUndeadBorder ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST',
+          biome: isUndeadBorder ? 'UNDEAD_BORDER' : 'BLACKWOOD_BORDER',
           visualType: isCliff ? 'ROCK_CRAG' : 'THICKET_BLOCK',
           visualKind: isCliff ? 'MOUNTAIN_CRAG' : 'DENSE_WOODS',
           pathConnections: [],
@@ -539,9 +735,11 @@ function buildPhase8RegionTiles() {
           landmarkKey: null,
           encounterProfileKey: 'SAFE_NONE',
           bossKey: null,
-          description: isCliff
-            ? 'Sheer frontier cliffs sealing the outer boundary of the valley.'
-            : 'An impenetrable wall of primeval ironwood and razor-sharp blackbriar.'
+          description: isUndeadBorder
+            ? 'Jagged slate cliffs and abyssal fissures sealing the outer boundary of the Undead Lands.'
+            : (isCliff
+              ? 'Sheer frontier cliffs sealing the outer boundary of the valley.'
+              : 'An impenetrable wall of primeval ironwood and razor-sharp blackbriar.')
         });
         continue;
       }
@@ -573,7 +771,7 @@ function buildPhase8RegionTiles() {
         continue;
       }
 
-      // 6. Named Interior Crags (Stonefang Crag & Whispering Crags)
+      // 6. Named Interior Crags (Stonefang Crag, Whispering Crags & Undead Monoliths)
       if (cragCoords.has(key)) {
         const cragName = cragCoords.get(key);
         tiles.push({
@@ -581,11 +779,11 @@ function buildPhase8RegionTiles() {
           y,
           name: cragName,
           terrain: 'MOUNTAINS',
-          feature: 'STONEFANG_CRAG',
+          feature: inUndeadRegion ? 'BARROW_MONOLITH' : 'STONEFANG_CRAG',
           is_passable: 0,
           is_safe: 0,
-          region_key: 'BLACKWOOD_FOREST',
-          biome: 'BLACKWOOD_HIGHLANDS',
+          region_key: inUndeadRegion ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST',
+          biome: inUndeadRegion ? 'ASHEN_BARROWLANDS' : 'BLACKWOOD_HIGHLANDS',
           visualType: 'ROCK_CRAG',
           visualKind: 'MOUNTAIN_CRAG',
           pathConnections: [],
@@ -593,12 +791,14 @@ function buildPhase8RegionTiles() {
           landmarkKey: null,
           encounterProfileKey: 'SAFE_NONE',
           bossKey: null,
-          description: 'A sheer wall of jagged black granite rising abruptly from the forest floor, blocking direct passage.'
+          description: inUndeadRegion
+            ? 'Shattered black-slate monoliths and collapsed tomb masonry blocking direct passage.'
+            : 'A sheer wall of jagged black granite rising abruptly from the forest floor, blocking direct passage.'
         });
         continue;
       }
 
-      // 7. Interior Briar Thickets
+      // 7. Interior Briar Thickets (Goblin Forest) & Necrotic Blight Pools (Undead Lands)
       if (thicketCoords.has(key)) {
         tiles.push({
           x,
@@ -618,6 +818,29 @@ function buildPhase8RegionTiles() {
           encounterProfileKey: 'SAFE_NONE',
           bossKey: null,
           description: 'An impenetrable knot of deadfall and razor-sharp blackbriar.'
+        });
+        continue;
+      }
+
+      if (blightPoolCoords.has(key)) {
+        tiles.push({
+          x,
+          y,
+          name: 'Necrotic Blight Pool',
+          terrain: 'SWAMP',
+          feature: 'BLIGHT_POOL',
+          is_passable: 0,
+          is_safe: 0,
+          region_key: 'UNDEAD_LANDS',
+          biome: 'DEADMANS_MIRE',
+          visualType: 'BLIGHT_POOL',
+          visualKind: 'BLIGHT_POOL',
+          pathConnections: [],
+          isLandmark: false,
+          landmarkKey: null,
+          encounterProfileKey: 'SAFE_NONE',
+          bossKey: null,
+          description: 'A bottomless sinkhole of stagnant, corpse-pale mire water exhaling noxious vapors.'
         });
         continue;
       }
@@ -646,12 +869,50 @@ function buildPhase8RegionTiles() {
         continue;
       }
 
-      // 9. Passable Trail Tiles (Route A, Route B, Route C & Connectors)
+      // 9. Passable Trail Tiles (Goblin Forest Trails vs Undead Lands Sepulcher Roads)
       if (isOnTrail) {
+        if (inUndeadRegion) {
+          const isNecropolis = y <= 8;
+          const isMire = y >= 18;
+          const undeadTrailName = isNecropolis
+            ? 'Necropolis Processional'
+            : (isMire ? 'Deadman’s Causeway' : 'The Sepulcher Road');
+          const undeadTrailDesc = isNecropolis
+            ? 'Cracked obsidian flagstones and cold iron funerary lanterns line the processional way toward the Ancient Crypt.'
+            : (isMire
+              ? 'Sunken stone slabs raised above the black waters of Deadman’s Mire, shrouded in drifting grave-mist.'
+              : 'An ancient funerary road of pale weathered flagstones winding between bone-white cairns and silent barrow mounds.');
+
+          tiles.push({
+            x,
+            y,
+            name: undeadTrailName,
+            terrain: isMire ? 'SWAMP' : 'UNDERGROUND_RUINS',
+            feature: 'SEPULCHER_ROAD',
+            is_passable: 1,
+            is_safe: 0,
+            region_key: 'UNDEAD_LANDS',
+            biome: isNecropolis ? 'NECROPOLIS_SANCTUM' : (isMire ? 'DEADMANS_MIRE' : 'ASHEN_BARROWLANDS'),
+            visualType: 'UNDEAD_TRAIL',
+            visualKind: 'UNDEAD_PATH',
+            pathConnections,
+            isLandmark: false,
+            landmarkKey: null,
+            encounterProfileKey: 'UNDEAD_LANDS',
+            bossKey: null,
+            description: undeadTrailDesc
+          });
+          continue;
+        }
+
         const isSouthernOutskirts = y >= 25 && x >= 12 && x <= 18;
+        const isCaveApproachTrail = (x >= 7 && x <= 9 && y >= 10 && y <= 14);
         let trailName = 'Blackwood Forest Trail';
         let trailDesc = 'A winding needle-strewn woodland path threading beneath ancient oaks and dark pines.';
-        if (x >= 13 && x <= 16 && y >= 4 && y <= 25) {
+        if (isCaveApproachTrail) {
+          trailName = 'Whispering Crag Cave Path';
+          trailDesc = 'A narrow rocky track strewn with gnawed bones and goblin soot leading toward the Goblin Cave in Whispering Crags.';
+        } else if (x >= 13 && x <= 16 && y >= 4 && y <= 25) {
           trailName = y >= 18 ? 'King’s Road South' : (y >= 10 ? 'Heartwood Central Trail' : 'Northern War-Trail');
           trailDesc = 'The ancient road from Oakhaven winds deeper into Blackwood Forest, hemmed in by towering timber and drifting mist.';
         } else if (x <= 12) {
@@ -667,7 +928,7 @@ function buildPhase8RegionTiles() {
           y,
           name: trailName,
           terrain: isSouthernOutskirts ? 'PLAINS' : 'FOREST',
-          feature: 'FOREST_TRAIL',
+          feature: isCaveApproachTrail ? 'CAVE_APPROACH_TRAIL' : 'FOREST_TRAIL',
           is_passable: 1,
           is_safe: 0,
           region_key: 'BLACKWOOD_FOREST',
@@ -684,7 +945,50 @@ function buildPhase8RegionTiles() {
         continue;
       }
 
-      // 10. Off-Trail Passable Woodland & Eaves (`DEEP_FOREST`, `FOREST_CLEARING`, `FOREST_EDGE`)
+      // 10. Off-Trail Passable Wilderness (Undead Lands vs Goblin Forest)
+      if (inUndeadRegion) {
+        const isNecropolis = y <= 7;
+        const isMire = y >= 17;
+        const isCairnClearing = ((x * 5 + y * 11) % 7 === 0);
+        const undeadTerrain = isNecropolis ? 'UNDERGROUND_RUINS' : (isMire ? 'SWAMP' : 'HILLS');
+        const undeadBiome = isNecropolis ? 'NECROPOLIS_SANCTUM' : (isMire ? 'DEADMANS_MIRE' : 'ASHEN_BARROWLANDS');
+        const undeadVisualType = isNecropolis
+          ? 'CRYPT_PRECINCT'
+          : (isMire ? 'NECROTIC_MIRE' : 'ASHEN_MOUND');
+        const undeadVisualKind = isMire ? 'UNDEAD_MIRE' : 'UNDEAD_BARROWS';
+        const undeadTileName = isNecropolis
+          ? (isCairnClearing ? 'Shattered Sarcophagus Court' : 'Obsidian Grave Terrace')
+          : (isMire
+            ? (isCairnClearing ? 'Corpse-Candle Hollow' : 'Deadman’s Mire')
+            : (isCairnClearing ? 'Bone-Cairn Hollow' : 'Ashen Burial Mounds'));
+        const undeadTileDesc = isNecropolis
+          ? 'Cracked marble tombs, leafless dead trees, and cold emerald-violet mist surrounding the Ancient Crypt.'
+          : (isMire
+            ? 'Sunken graves, stagnant black water, and skeletal willow roots where the restless dead stir beneath the mire.'
+            : 'Wind-scoured grey ash, tilted headstones, and ancient barrow mounds where skeletal sentries prowl.');
+
+        tiles.push({
+          x,
+          y,
+          name: undeadTileName,
+          terrain: undeadTerrain,
+          feature: isNecropolis ? 'NECROPOLIS_GROUNDS' : (isMire ? 'DEADMANS_MIRE' : 'BARROW_MOUND'),
+          is_passable: 1,
+          is_safe: 0,
+          region_key: 'UNDEAD_LANDS',
+          biome: undeadBiome,
+          visualType: undeadVisualType,
+          visualKind: undeadVisualKind,
+          pathConnections: [],
+          isLandmark: false,
+          landmarkKey: null,
+          encounterProfileKey: 'UNDEAD_LANDS',
+          bossKey: null,
+          description: undeadTileDesc
+        });
+        continue;
+      }
+
       const isNearTown = y >= 25 && x >= 9 && x <= 21;
       const isClearing = ((x * 7 + y * 13) % 9 === 0);
       const terrain = isNearTown ? 'PLAINS' : (x <= 4 && y >= 20 ? 'HILLS' : 'FOREST');
@@ -745,7 +1049,39 @@ function isGoblinStrongholdTile(tile) {
   return (
     (Number(tile.x) === STRONGHOLD_COORD.x && Number(tile.y) === STRONGHOLD_COORD.y) ||
     tile.feature === 'GOBLIN_STRONGHOLD' ||
-    tile.landmark_key === 'GOBLIN_STRONGHOLD'
+    tile.landmark_key === 'GOBLIN_STRONGHOLD' ||
+    tile.landmarkKey === 'GOBLIN_STRONGHOLD'
+  );
+}
+
+function isGoblinCaveTile(tile) {
+  if (!tile) return false;
+  return (
+    (Number(tile.x) === GOBLIN_CAVE_COORD.x && Number(tile.y) === GOBLIN_CAVE_COORD.y) ||
+    tile.feature === 'GOBLIN_CAVE' ||
+    tile.landmark_key === 'GOBLIN_CAVE' ||
+    tile.landmarkKey === 'GOBLIN_CAVE'
+  );
+}
+
+function isAncientCryptTile(tile) {
+  if (!tile) return false;
+  return (
+    (Number(tile.x) === ANCIENT_CRYPT_COORD.x && Number(tile.y) === ANCIENT_CRYPT_COORD.y) ||
+    tile.feature === 'ANCIENT_CRYPT' ||
+    tile.landmark_key === 'ANCIENT_CRYPT' ||
+    tile.landmarkKey === 'ANCIENT_CRYPT'
+  );
+}
+
+function isMajorLandmarkTile(tile) {
+  if (!tile) return false;
+  return (
+    (Number(tile.x) === TOWN_COORD.x && Number(tile.y) === TOWN_COORD.y) ||
+    (tile.terrain === 'CITY' && Number(tile.is_safe) === 1) ||
+    isGoblinStrongholdTile(tile) ||
+    isGoblinCaveTile(tile) ||
+    isAncientCryptTile(tile)
   );
 }
 
@@ -990,6 +1326,54 @@ const DANGER_ZONE_PROFILES = Object.freeze({
     streakDampeningPerEvent: 0.08,
     monsterPool: ['Goblin', 'Hobgoblin', 'Bugbear', 'Worg', 'Hobgoblin Captain'],
     description: 'The heavily guarded northern perimeter surrounding the Goblin Stronghold. Sentry ambushes are frequent.'
+  },
+  GOBLIN_CAVE_APPROACH: {
+    zoneKey: 'GOBLIN_CAVE_APPROACH',
+    zoneName: 'Goblin Cave Approach',
+    dangerLevel: 'VERY_HIGH',
+    dangerLabel: 'Very High',
+    encounterRate: 0.30,
+    ambushShare: 0.46,
+    minStepsBetweenCombats: 1,
+    streakDampeningPerEvent: 0.08,
+    monsterPool: ['Goblin', 'Hobgoblin', 'Bugbear', 'Giant Spider', 'Stirge', 'Mite'],
+    description: 'Craggy ravines and bone-totem ledges leading to the Goblin Cave mouth. Cave lookouts and subterranean vermin lurk in the clefts.'
+  },
+  UNDEAD_BARROW_ROAD: {
+    zoneKey: 'UNDEAD_BARROW_ROAD',
+    zoneName: 'Sepulcher Road in Undead Lands',
+    dangerLevel: 'HIGH',
+    dangerLabel: 'High',
+    encounterRate: 0.24,
+    ambushShare: 0.36,
+    minStepsBetweenCombats: 1,
+    streakDampeningPerEvent: 0.07,
+    monsterPool: ['Skeleton', 'Zombie', 'Ghoul', 'Crawling Claw', 'Shadow'],
+    description: 'Cracked flagstone causeways and burial roads winding through the Undead Lands. Restless dead march along the old procession stones.'
+  },
+  UNDEAD_MIRE_OFF_ROAD: {
+    zoneKey: 'UNDEAD_MIRE_OFF_ROAD',
+    zoneName: 'Ashen Barrows & Deadman’s Mire',
+    dangerLevel: 'VERY_HIGH',
+    dangerLabel: 'Very High',
+    encounterRate: 0.30,
+    ambushShare: 0.45,
+    minStepsBetweenCombats: 1,
+    streakDampeningPerEvent: 0.08,
+    monsterPool: ['Skeleton', 'Zombie', 'Ghoul', 'Shadow', 'Wight', 'Will-o-Wisp', 'Crawling Claw'],
+    description: 'Grave-choked mires and collapsed burial mounds off the road where drowned corpses and shadows lunge from the necrotic fog.'
+  },
+  CRYPT_SEPULCHER_APPROACH: {
+    zoneKey: 'CRYPT_SEPULCHER_APPROACH',
+    zoneName: 'Near the Ancient Crypt',
+    dangerLevel: 'EXTREME',
+    dangerLabel: 'Extreme',
+    encounterRate: 0.36,
+    ambushShare: 0.50,
+    minStepsBetweenCombats: 1,
+    streakDampeningPerEvent: 0.08,
+    monsterPool: ['Skeleton', 'Ghoul', 'Shadow', 'Wight', 'Wraith', 'Specter'],
+    description: 'The cursed Necropolis Sanctum surrounding the Ancient Crypt. Elite Barrow-Wights and incorporeal horrors guard the sepulcher steps.'
   }
 });
 
@@ -1026,6 +1410,36 @@ const LANDMARK_SCENE_DEFINITIONS = Object.freeze({
       { key: 'CONTINUE_EXPLORING', label: 'Continue Exploring', action: 'DISMISS_LANDMARK_SCENE', style: 'ghost' }
     ]
   },
+  GOBLIN_CAVE: {
+    sceneKey: 'GOBLIN_CAVE',
+    landmarkType: 'DUNGEON_ENTRANCE',
+    category: 'DUNGEON_ENTRANCE',
+    title: 'The Goblin Cave',
+    subtitle: 'Subterranean Lair of the Whispering Crags',
+    description: 'A jagged limestone maw yawns beneath the western cliffs, flanked by crude bone-totems, guttering pitch-torches, and gnawed shields. Chittering voices, clattering iron, and the dank stench of subterranean dens echo up from the dark warrens below.',
+    artworkUrl: '/lab-assets/images/terrain/hills_raven_crags_ravine_pov.jpg',
+    isMajorLandmark: true,
+    autoOpenOnArrival: true,
+    actions: [
+      { key: 'DELVE_GOBLIN_CAVE', label: 'Delve into the Cave Mouth', action: 'EXPLORE_GOBLIN_CAVE', style: 'danger' },
+      { key: 'CONTINUE_EXPLORING', label: 'Continue Exploring', action: 'DISMISS_LANDMARK_SCENE', style: 'ghost' }
+    ]
+  },
+  ANCIENT_CRYPT: {
+    sceneKey: 'ANCIENT_CRYPT',
+    landmarkType: 'CRYPT',
+    category: 'CRYPT',
+    title: 'The Ancient Crypt',
+    subtitle: 'Dread Sepulcher of the Undead Lands',
+    description: 'Towering obsidian obelisks and cracked marble archways frame a sunken staircase descending into the Necropolis Sanctum. Pale necrotic fire burns cold in iron braziers while the whispers of entombed Barrow-Kings echo from the sealed vault below.',
+    artworkUrl: '/images/terrain/terrain_underground_ruins.webp',
+    isMajorLandmark: true,
+    autoOpenOnArrival: true,
+    actions: [
+      { key: 'ENTER_ANCIENT_CRYPT', label: 'Breach the Sepulcher Vault', action: 'ENTER_ANCIENT_CRYPT', style: 'danger' },
+      { key: 'CONTINUE_EXPLORING', label: 'Continue Exploring', action: 'DISMISS_LANDMARK_SCENE', style: 'ghost' }
+    ]
+  },
   ANCIENT_DUNGEON_ENTRANCE: {
     sceneKey: 'ANCIENT_DUNGEON_ENTRANCE',
     landmarkType: 'DUNGEON_ENTRANCE',
@@ -1033,7 +1447,7 @@ const LANDMARK_SCENE_DEFINITIONS = Object.freeze({
     title: 'Ancient Dungeon Entrance',
     subtitle: 'Sealed Underworld Descent',
     description: 'Weathered stone steps descend into yawning darkness beneath the roots of the mountain.',
-    artworkUrl: '/images/terrain/terrain_caves.webp',
+    artworkUrl: '/lab-assets/images/terrain/hills_raven_crags_ravine_pov.jpg',
     isMajorLandmark: true,
     autoOpenOnArrival: false,
     actions: [
@@ -1047,7 +1461,7 @@ const LANDMARK_SCENE_DEFINITIONS = Object.freeze({
     title: 'Sunken Crypt',
     subtitle: 'Forsaken Vault of the Restless Dead',
     description: 'Cracked marble archways and cold sepulchral mist mark an ancient burial vault.',
-    artworkUrl: '/images/terrain/terrain_ruins.webp',
+    artworkUrl: '/images/terrain/terrain_underground_ruins.webp',
     isMajorLandmark: true,
     autoOpenOnArrival: false,
     actions: [
@@ -1752,6 +2166,199 @@ function startStrongholdBossEncounter(db, character, options = {}) {
 }
 
 /**
+ * Initiates a delve/breach encounter at the Goblin Cave [9, 12] or Ancient Crypt [26, 5]
+ * when the hero clicks the landmark action button in the Major Landmark Scene.
+ */
+function startLandmarkDungeonEncounter(db, character, landmarkKey, options = {}) {
+  const currentTile = getTileById(db, character.tile_id);
+  const key = String(landmarkKey || '').toUpperCase();
+  if (key === 'GOBLIN_CAVE' && !isGoblinCaveTile(currentTile)) {
+    throw new Error(`You must stand at the Goblin Cave entrance [${GOBLIN_CAVE_COORD.x}, ${GOBLIN_CAVE_COORD.y}] to delve into the warrens.`);
+  }
+  if (key === 'ANCIENT_CRYPT' && !isAncientCryptTile(currentTile)) {
+    throw new Error(`You must stand at the Ancient Crypt [${ANCIENT_CRYPT_COORD.x}, ${ANCIENT_CRYPT_COORD.y}] to breach the sepulcher vault.`);
+  }
+
+  const activeCombat = db.prepare(`
+    SELECT id FROM encounters
+    WHERE character_id = ? AND status = 'IN_COMBAT'
+    LIMIT 1
+  `).get(character.id);
+  if (activeCombat) {
+    throw new Error('You are already engaged in active combat.');
+  }
+
+  const rng = options.rng || Math.random;
+  const pickedResult = key === 'ANCIENT_CRYPT'
+    ? selectUndeadLandsMonster(db, Math.max(2, Number(character.level || 1)), rng)
+    : selectGoblinCaveMonster(db, Math.max(1, Number(character.level || 1)), rng);
+  const pickedMonster = pickedResult && pickedResult.monster ? pickedResult.monster : pickedResult;
+  if (!pickedMonster) {
+    throw new Error('No creature stirs within the threshold right now.');
+  }
+
+  return withTransaction(db, (tx) => {
+    tx.prepare(`
+      UPDATE encounters
+      SET status = 'ESCAPED'
+      WHERE character_id = ? AND status = 'DISCOVERED'
+    `).run(character.id);
+
+    const initialHp = Number(pickedMonster.base_hp || 8);
+    const ins = tx.prepare(`
+      INSERT INTO encounters (
+        character_id, tile_id, monster_id,
+        status, current_monster_hp, monster_max_hp, combat_round,
+        spotted_by_hero, is_ambush, opening_shot_resolved
+      ) VALUES (?, ?, ?, 'DISCOVERED', ?, ?, 0, 1, 0, 0)
+    `).run(
+      character.id,
+      currentTile.id,
+      pickedMonster.id,
+      initialHp,
+      initialHp
+    );
+
+    const encounterId = Number(ins.lastInsertRowid);
+    const investigateResult = investigateEncounter(
+      tx,
+      character.id,
+      encounterId,
+      character.class,
+      options.rng ? { rng: options.rng } : {}
+    );
+    const encounter = getEncounterById(tx, encounterId, character.class);
+    if (encounter && encounter.status === 'VICTORY') {
+      tx.prepare('UPDATE characters SET pending_victory_encounter_id = ? WHERE id = ?').run(encounterId, character.id);
+    }
+    return {
+      encounterId,
+      investigateResult,
+      encounter,
+      ...(encounter || {})
+    };
+  });
+}
+
+/**
+ * Selects a monster for Goblin Cave / Cave Approach encounters.
+ */
+function selectGoblinCaveMonster(db, heroLevelOrRng = 1, maybeRng = Math.random) {
+  const isSecondFn = typeof heroLevelOrRng === 'function';
+  const lvl = isSecondFn ? 1 : Math.max(1, Number(heroLevelOrRng || 1));
+  const rng = isSecondFn ? heroLevelOrRng : (typeof maybeRng === 'function' ? maybeRng : Math.random);
+
+  const wrapResult = (monster, bucket) => {
+    if (!monster) return null;
+    return { ...monster, monster, bucket };
+  };
+
+  const caveNames = lvl <= 1
+    ? ['Goblin', 'Hobgoblin', 'Giant Spider', 'Stirge', 'Mite']
+    : ['Goblin', 'Hobgoblin', 'Bugbear', 'Giant Spider', 'Stirge', 'Hobgoblin Captain'];
+  const placeholders = caveNames.map(() => '?').join(', ');
+  const pool = db.prepare(`
+    SELECT * FROM monsters
+    WHERE name IN (${placeholders})
+    ORDER BY challenge_rating ASC, id ASC
+  `).all(...caveNames);
+
+  if (pool.length > 0) {
+    const idx = Math.min(pool.length - 1, Math.floor(rng() * pool.length));
+    return wrapResult(pool[idx], 'CAVE');
+  }
+
+  return selectGoblinForestMonster(db, lvl, rng);
+}
+
+/**
+ * Selects an Undead monster for Undead Lands travel encounters (85% Undead / 15% Blighted Swamp & Grave scavengers).
+ */
+function selectUndeadLandsMonster(db, heroLevelOrRng = 1, maybeRng = Math.random) {
+  const isSecondFn = typeof heroLevelOrRng === 'function';
+  const lvl = isSecondFn ? 1 : Math.max(1, Number(heroLevelOrRng || 1));
+  const rng = isSecondFn ? heroLevelOrRng : (typeof maybeRng === 'function' ? maybeRng : Math.random);
+  const categoryRoll = rng();
+
+  const wrapResult = (monster, bucket) => {
+    if (!monster) return null;
+    return { ...monster, monster, bucket };
+  };
+
+  // Bucket 1: 85% Core Undead Horrors
+  if (categoryRoll < 0.85) {
+    const undeadNames = lvl <= 1
+      ? ['Skeleton', 'Zombie', 'Crawling Claw', 'Shadow', 'Ghoul']
+      : (lvl === 2
+        ? ['Skeleton', 'Zombie', 'Ghoul', 'Shadow', 'Wight', 'Specter']
+        : ['Skeleton', 'Zombie', 'Ghoul', 'Shadow', 'Wight', 'Wraith', 'Specter', 'Ghast']);
+    const placeholders = undeadNames.map(() => '?').join(', ');
+    const undead = db.prepare(`
+      SELECT * FROM monsters
+      WHERE name IN (${placeholders})
+      ORDER BY challenge_rating ASC, id ASC
+    `).all(...undeadNames);
+
+    if (undead.length > 0) {
+      const weights = undead.map((m) => {
+        if (m.name === 'Skeleton' || m.name === 'Zombie') return 55;
+        if (m.name === 'Crawling Claw' || m.name === 'Ghoul' || m.name === 'Shadow') return 32;
+        return 16;
+      });
+      const total = weights.reduce((a, b) => a + b, 0);
+      let r = rng() * total;
+      for (let i = 0; i < undead.length; i++) {
+        if (r < weights[i]) return wrapResult(undead[i], 'UNDEAD');
+        r -= weights[i];
+      }
+      return wrapResult(undead[0], 'UNDEAD');
+    }
+  }
+
+  // Bucket 2: 15% Mire & Barrow Scavengers (Will-o-Wisp, Stirge, Giant Spider, Carrion Crawler)
+  const mireNames = lvl <= 1
+    ? ['Stirge', 'Giant Spider', 'Dire Rat']
+    : ['Will-o-Wisp', 'Stirge', 'Giant Spider', 'Carrion Crawler'];
+  const placeholders = mireNames.map(() => '?').join(', ');
+  const scavengers = db.prepare(`
+    SELECT * FROM monsters
+    WHERE name IN (${placeholders})
+    ORDER BY challenge_rating ASC, id ASC
+  `).all(...mireNames);
+
+  if (scavengers.length > 0) {
+    const idx = Math.min(scavengers.length - 1, Math.floor(rng() * scavengers.length));
+    return wrapResult(scavengers[idx], 'MIRE_SCAVENGER');
+  }
+
+  const fallback = db.prepare("SELECT * FROM monsters WHERE name IN ('Skeleton', 'Zombie', 'Goblin') ORDER BY id ASC LIMIT 1").get();
+  return wrapResult(fallback, 'UNDEAD');
+}
+
+function selectRegionalEncounterMonster(db, targetTile, heroLevelOrRng = 1, maybeRng = Math.random) {
+  if (!targetTile) {
+    return selectGoblinForestMonster(db, heroLevelOrRng, maybeRng);
+  }
+  const x = Number(targetTile.x);
+  const y = Number(targetTile.y);
+  const meta = TILE_META_BY_COORD.get(`${x},${y}`);
+  const regionKey = targetTile.region_key || (meta && meta.region_key) || 'BLACKWOOD_FOREST';
+  const encounterProfileKey = targetTile.encounter_profile_key || (meta && meta.encounterProfileKey) || 'GOBLIN_FOREST';
+
+  if (regionKey === 'UNDEAD_LANDS' || encounterProfileKey === 'UNDEAD_LANDS') {
+    return selectUndeadLandsMonster(db, heroLevelOrRng, maybeRng);
+  }
+  if (
+    encounterProfileKey === 'GOBLIN_CAVE' ||
+    isGoblinCaveTile(targetTile) ||
+    (Math.abs(x - GOBLIN_CAVE_COORD.x) <= 2 && Math.abs(y - GOBLIN_CAVE_COORD.y) <= 2)
+  ) {
+    return selectGoblinCaveMonster(db, heroLevelOrRng, maybeRng);
+  }
+  return selectGoblinForestMonster(db, heroLevelOrRng, maybeRng);
+}
+
+/**
  * Selects a monster for Goblin Forest travel encounters using the required
  * 80% Goblin-related / 15% Forest Animals / 5% Other Forest Monsters distribution,
  * backed by `encounter_profiles` and filtered appropriately by hero level.
@@ -1842,8 +2449,7 @@ function selectGoblinForestMonster(db, heroLevelOrRng = 1, maybeRng = Math.rando
 }
 
 /**
- * Computes calibrated Phase 8 Goblin Forest step encounter chance (0..100) so a normal
- * 25–30 step route from Oakhaven [15,27] to Goblin Stronghold [15,2] averages ~2.5–3.5 encounters.
+ * Resolves the data-driven Danger Zone profile for any tile across Goblin Forest and Undead Lands.
  */
 function resolveTileDangerZone(db, tile) {
   if (!tile || Number(tile.is_safe) === 1 || tile.terrain === 'CITY') {
@@ -1863,24 +2469,67 @@ function resolveTileDangerZone(db, tile) {
       description: 'The fortified inner stockade of Warchief Grak.'
     };
   }
+  if (isGoblinCaveTile(tile)) {
+    return {
+      zoneKey: 'GOBLIN_CAVE_ENTRANCE',
+      zoneName: 'The Goblin Cave Entrance',
+      dangerLevel: 'VERY_HIGH',
+      dangerLabel: 'Major Landmark (Dungeon Entrance)',
+      encounterRate: 0.0,
+      ambushShare: 0.0,
+      minStepsBetweenCombats: 0,
+      streakDampeningPerEvent: 0.0,
+      monsterPool: ['Goblin', 'Hobgoblin', 'Bugbear', 'Giant Spider'],
+      description: 'The yawning subterranean mouth of the Goblin Cave beneath Whispering Crags.'
+    };
+  }
+  if (isAncientCryptTile(tile)) {
+    return {
+      zoneKey: 'ANCIENT_CRYPT_ENTRANCE',
+      zoneName: 'The Ancient Crypt Entrance',
+      dangerLevel: 'EXTREME',
+      dangerLabel: 'Major Landmark (Crypt Sepulcher)',
+      encounterRate: 0.0,
+      ambushShare: 0.0,
+      minStepsBetweenCombats: 0,
+      streakDampeningPerEvent: 0.0,
+      monsterPool: ['Skeleton', 'Ghoul', 'Shadow', 'Wight', 'Wraith'],
+      description: 'The sealed obsidian sepulcher of the Ancient Crypt.'
+    };
+  }
 
   const x = Number(tile.x);
   const y = Number(tile.y);
   const meta = TILE_META_BY_COORD.get(`${x},${y}`);
   const landmarkKey = tile.landmark_key || (meta && meta.landmarkKey) || null;
+  const regionKey = tile.region_key || (meta && meta.region_key) || (x >= 23 && y <= 26 ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST');
   const hasPathConnections = Boolean(
     (meta && Array.isArray(meta.pathConnections) && meta.pathConnections.length > 0) ||
     tile.feature === 'FOREST_TRAIL' ||
-    tile.terrain === 'BRIDGE'
+    tile.feature === 'SEPULCHER_ROAD' ||
+    tile.terrain === 'BRIDGE' ||
+    tile.terrain === 'ROAD'
   );
 
   let selectedKey = 'GOBLIN_FOREST_OFF_ROAD';
   const distToStrongholdX = Math.abs(x - STRONGHOLD_COORD.x);
   const distToStrongholdY = Math.abs(y - STRONGHOLD_COORD.y);
+  const distToGoblinCaveX = Math.abs(x - GOBLIN_CAVE_COORD.x);
+  const distToGoblinCaveY = Math.abs(y - GOBLIN_CAVE_COORD.y);
 
-  if ((distToStrongholdX <= 2 && distToStrongholdY <= 3) || (y <= 5 && x >= 12 && x <= 18)) {
+  if (regionKey === 'UNDEAD_LANDS') {
+    if (y <= 8 || landmarkKey === 'CRYPT_APPROACH' || landmarkKey === 'BLIGHTED_CHAPEL') {
+      selectedKey = 'CRYPT_SEPULCHER_APPROACH';
+    } else if (hasPathConnections) {
+      selectedKey = 'UNDEAD_BARROW_ROAD';
+    } else {
+      selectedKey = 'UNDEAD_MIRE_OFF_ROAD';
+    }
+  } else if ((distToStrongholdX <= 2 && distToStrongholdY <= 3) || (y <= 5 && x >= 12 && x <= 18)) {
     selectedKey = 'STRONGHOLD_APPROACH';
-  } else if (landmarkKey === 'GOBLIN_HUNTING_GROUNDS' || (x >= 18 && x <= 24 && y >= 10 && y <= 15 && !hasPathConnections)) {
+  } else if (distToGoblinCaveX <= 2 && distToGoblinCaveY <= 2) {
+    selectedKey = 'GOBLIN_CAVE_APPROACH';
+  } else if (landmarkKey === 'GOBLIN_HUNTING_GROUNDS' || (x >= 18 && x <= 22 && y >= 10 && y <= 15 && !hasPathConnections)) {
     selectedKey = 'GOBLIN_HUNTING_GROUNDS';
   } else if (hasPathConnections) {
     selectedKey = 'GOBLIN_FOREST_ROAD';
@@ -1925,7 +2574,7 @@ function computePhase9ThreatDecision(db, character, currentTile, targetTile, opt
   const rng = options.rng || Math.random;
   const zone = resolveTileDangerZone(db, targetTile);
 
-  if (!targetTile || Number(targetTile.is_safe) === 1 || isGoblinStrongholdTile(targetTile)) {
+  if (!targetTile || Number(targetTile.is_safe) === 1 || isMajorLandmarkTile(targetTile)) {
     return {
       outcome: 'NORMAL',
       encounterChancePercent: 0,
@@ -1990,7 +2639,6 @@ function computePhase9ThreatDecision(db, character, currentTile, targetTile, opt
   }
 
   const heroClass = String((character && character.class) || 'FIGHTER').toUpperCase();
-  const heroLevel = Number((character && character.level) || 1);
   const wisMod = Math.floor(((Number((character && character.wisdom) || 10)) - 10) / 2);
   const monsterInitBonus = Number((options.monster && options.monster.initiative_bonus) || 0);
 
@@ -2002,7 +2650,9 @@ function computePhase9ThreatDecision(db, character, currentTile, targetTile, opt
 
   let wantsAmbush = false;
   let ambushFoiledByRanger = false;
-  let level1AmbushProtected = false;
+  // Phase 9B Owner Decision: Level 1 Ambush protection removed everywhere.
+  // Level 1 heroes face the exact same ambush rules as Level 2+.
+  const level1AmbushProtected = false;
 
   if (options.forceOutcome === 'AMBUSH' || options.forceAmbush === true) {
     wantsAmbush = true;
@@ -2020,12 +2670,7 @@ function computePhase9ThreatDecision(db, character, currentTile, targetTile, opt
     }
   }
 
-  let wouldHaveBeenAmbushAtLevel2Plus = wantsAmbush;
-  if (wantsAmbush && heroLevel <= 1 && !options.allowLevel1Ambush && !options.labForcedAmbush) {
-    // Preserve Level 1 Ambush Protection rule until owner approves changing it
-    wantsAmbush = false;
-    level1AmbushProtected = true;
-  }
+  const wouldHaveBeenAmbushAtLevel2Plus = wantsAmbush;
 
   return {
     outcome: wantsAmbush ? 'AMBUSH' : 'ENCOUNTER',
@@ -2040,18 +2685,13 @@ function computePhase9ThreatDecision(db, character, currentTile, targetTile, opt
 }
 
 function computePhase8StepEncounterChance(db, character, currentTile, targetTile, rawPacingChance = null) {
-  if (!targetTile || targetTile.is_safe === 1 || isGoblinStrongholdTile(targetTile)) {
+  if (!targetTile || targetTile.is_safe === 1 || isMajorLandmarkTile(targetTile)) {
     return 0;
   }
   if (rawPacingChance !== null && rawPacingChance !== undefined && Number(rawPacingChance) <= 0) {
     return 0;
   }
 
-  const meta = TILE_META_BY_COORD.get(`${targetTile.x},${targetTile.y}`);
-  const isTrail = Boolean(meta && meta.pathConnections && meta.pathConnections.length > 0);
-  const isHuntingGrounds = Boolean(meta && meta.landmarkKey === 'GOBLIN_HUNTING_GROUNDS');
-
-  // Base rate: 11.5% on trails, 14.5% off-trail in deep woods, 20% at Goblin Hunting Grounds
   const zone = resolveTileDangerZone(db, targetTile);
   let chance = Number((zone.encounterRate || 0) * 100);
 
@@ -2061,16 +2701,16 @@ function computePhase8StepEncounterChance(db, character, currentTile, targetTile
     chance = Math.round(chance * ratio * 10) / 10;
   }
 
-  return Math.min(35, Math.max(0, chance));
+  return Math.min(38, Math.max(0, chance));
 }
 
 /**
- * Rolls for a Goblin Forest encounter when stepping onto a non-safe, non-stronghold tile.
- * Preserves Nemesis / persistent monster encounters on normal forest tiles if a hero died there.
+ * Rolls for a regional travel encounter when stepping onto a non-safe, non-major-landmark tile.
+ * Preserves Nemesis / persistent monster encounters on normal tiles if a hero died there.
  */
 function checkGoblinForestEncounter(db, character, targetTile, options = {}) {
   if (!targetTile || targetTile.is_safe === 1) return null;
-  if (isGoblinStrongholdTile(targetTile)) {
+  if (isMajorLandmarkTile(targetTile)) {
     return null;
   }
 
@@ -2108,7 +2748,7 @@ function checkGoblinForestEncounter(db, character, targetTile, options = {}) {
     return null;
   }
 
-  const pickedResult = selectGoblinForestMonster(db, rng);
+  const pickedResult = selectRegionalEncounterMonster(db, targetTile, character.level || 1, rng);
   const pickedMonster = pickedResult && pickedResult.monster ? pickedResult.monster : pickedResult;
   if (!pickedMonster) return null;
 
@@ -2121,7 +2761,7 @@ function checkGoblinForestEncounter(db, character, targetTile, options = {}) {
     dangerLevel: decision.zone.dangerLevel,
     ambushFoiledByRanger: Boolean(decision.ambushFoiledByRanger),
     level1AmbushProtected: Boolean(decision.level1AmbushProtected),
-    allowLevel1Ambush: Boolean(options.allowLevel1Ambush),
+    allowLevel1Ambush: true,
     labForcedAmbush: Boolean(options.labForcedAmbush)
   });
 
@@ -2156,48 +2796,6 @@ function checkGoblinForestEncounter(db, character, targetTile, options = {}) {
     resolvedEnc.level1AmbushProtected = Boolean(decision.level1AmbushProtected);
   }
   return resolvedEnc;
-  const chancePercent = 0;
-  if (chancePercent <= 0) return null;
-  const roll = rng() * 100;
-  if (roll >= chancePercent) {
-    return null;
-  }
-
-  const monster = selectGoblinForestMonster(db, character.level, rng);
-  if (!monster) return null;
-
-  const heroLevel = Number(character.level || 1);
-  let isAmbush = 0;
-  let spottedByHero = 1;
-  if (heroLevel > 1) {
-    const wisMod = Math.floor(((character.wisdom || 10) - 10) / 2);
-    const perceptionBonus = String(character.class || '').toUpperCase() === 'RANGER' ? wisMod + 3 : wisMod;
-    const d20 = Math.floor(rng() * 20) + 1;
-    const monsterStealth = 10 + Number(monster.initiative_bonus || 0);
-    if (d20 + perceptionBonus < monsterStealth) {
-      isAmbush = 1;
-      spottedByHero = 0;
-    }
-  }
-
-  const initialHp = Number(monster.base_hp || 6);
-  const ins = db.prepare(`
-    INSERT INTO encounters (
-      character_id, tile_id, monster_id, status,
-      current_monster_hp, monster_max_hp, combat_round,
-      spotted_by_hero, is_ambush, opening_shot_resolved
-    ) VALUES (?, ?, ?, 'DISCOVERED', ?, ?, 0, ?, ?, 0)
-  `).run(
-    character.id,
-    targetTile.id,
-    monster.id,
-    initialHp,
-    initialHp,
-    spottedByHero,
-    isAmbush
-  );
-
-  return getEncounterById(db, Number(ins.lastInsertRowid), character.class);
 }
 
 /**
@@ -2219,6 +2817,10 @@ function getMajorLandmarkSceneForTile(db, tile) {
     sceneKey = 'OAKHAVEN';
   } else if (isGoblinStrongholdTile(tile) || landmarkKey === 'GOBLIN_STRONGHOLD') {
     sceneKey = 'GOBLIN_STRONGHOLD';
+  } else if (isGoblinCaveTile(tile) || landmarkKey === 'GOBLIN_CAVE') {
+    sceneKey = 'GOBLIN_CAVE';
+  } else if (isAncientCryptTile(tile) || landmarkKey === 'ANCIENT_CRYPT') {
+    sceneKey = 'ANCIENT_CRYPT';
   } else if (landmarkKey && LANDMARK_SCENE_DEFINITIONS[landmarkKey]) {
     sceneKey = landmarkKey;
   }
@@ -2526,7 +3128,8 @@ function buildTopdownMapPayload(db, character, currentTile) {
 
   const rows = db.prepare(`
     SELECT id, x, y, name, terrain, feature, description, is_passable, is_safe,
-           visual_type, visual_kind, path_connections, is_landmark, landmark_key
+           region_key, biome, visual_type, visual_kind, path_connections,
+           is_landmark, landmark_key, encounter_profile_key
     FROM map_tiles
     WHERE x BETWEEN ? AND ? AND y BETWEEN ? AND ?
     ORDER BY y ASC, x ASC
@@ -2554,7 +3157,12 @@ function buildTopdownMapPayload(db, character, currentTile) {
     const meta = TILE_META_BY_COORD.get(coordKey) || {};
     const inst = instanceByTileId.get(Number(r.id));
     const isStronghold = isGoblinStrongholdTile(r);
+    const isGoblinCave = isGoblinCaveTile(r);
+    const isAncientCrypt = isAncientCryptTile(r);
     const isTown = r.terrain === 'CITY' && Number(r.is_safe) === 1;
+    const regionKey = r.region_key || meta.region_key || (Number(r.x) >= 23 && Number(r.y) <= 26 ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST');
+    const biome = r.biome || meta.biome || regionKey;
+    const isUndeadLands = regionKey === 'UNDEAD_LANDS';
     const visualType = r.visual_type || meta.visualType || (isTown ? 'TOWN_SANCTUARY' : 'DEEP_FOREST');
     const visualKind = r.visual_kind || meta.visualKind || 'DENSE_WOODS';
 
@@ -2588,6 +3196,11 @@ function buildTopdownMapPayload(db, character, currentTile) {
       isSafe: Number(r.is_safe) === 1,
       isTown,
       isStronghold,
+      isGoblinCave,
+      isAncientCrypt,
+      isUndeadLands,
+      regionKey,
+      biome,
       isLandmark,
       landmarkKey,
       isDiscovered,
@@ -2601,8 +3214,18 @@ function buildTopdownMapPayload(db, character, currentTile) {
   });
 
   const atStronghold = isGoblinStrongholdTile(currentTile);
+  const atGoblinCave = isGoblinCaveTile(currentTile);
+  const atAncientCrypt = isAncientCryptTile(currentTile);
   const bossSlain = Boolean(questState && questState.bossSlain);
   const strongholdDiscovered = discoveredSet.has(`${STRONGHOLD_COORD.x},${STRONGHOLD_COORD.y}`);
+  const goblinCaveDiscovered = discoveredSet.has(`${GOBLIN_CAVE_COORD.x},${GOBLIN_CAVE_COORD.y}`);
+  const ancientCryptDiscovered = discoveredSet.has(`${ANCIENT_CRYPT_COORD.x},${ANCIENT_CRYPT_COORD.y}`);
+
+  const currentMeta = TILE_META_BY_COORD.get(`${heroX},${heroY}`) || {};
+  const currentRegionKey = (currentTile && currentTile.region_key) || currentMeta.region_key || (heroX >= 23 && heroY <= 26 ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST');
+  const currentRegionName = currentRegionKey === 'UNDEAD_LANDS'
+    ? 'The Undead Lands (Ashen Barrowlands & Necropolis)'
+    : 'Blackwood Forest (Goblin Forest)';
 
   // Build Region Map summary (only includes discovered landmarks + Oakhaven)
   const discoveredLandmarks = Object.values(LANDMARK_DEFINITIONS)
@@ -2613,8 +3236,11 @@ function buildTopdownMapPayload(db, character, currentTile) {
       category: lm.category,
       x: lm.x,
       y: lm.y,
+      regionKey: lm.x >= 23 && lm.y <= 26 ? 'UNDEAD_LANDS' : 'BLACKWOOD_FOREST',
       isDiscovered: true,
       isStronghold: lm.key === 'GOBLIN_STRONGHOLD',
+      isGoblinCave: lm.key === 'GOBLIN_CAVE',
+      isAncientCrypt: lm.key === 'ANCIENT_CRYPT',
       bossSlain: lm.key === 'GOBLIN_STRONGHOLD' ? bossSlain : undefined
     }));
 
@@ -2638,7 +3264,13 @@ function buildTopdownMapPayload(db, character, currentTile) {
     townCoord: TOWN_COORD,
     northGateCoord: NORTH_GATE_COORD,
     strongholdCoord: STRONGHOLD_COORD,
+    goblinCaveCoord: GOBLIN_CAVE_COORD,
+    ancientCryptCoord: ANCIENT_CRYPT_COORD,
     strongholdDiscovered,
+    goblinCaveDiscovered,
+    ancientCryptDiscovered,
+    currentRegionKey,
+    currentRegionName,
     heroCoord: { x: heroX, y: heroY },
     heroX,
     heroY,
@@ -2649,6 +3281,8 @@ function buildTopdownMapPayload(db, character, currentTile) {
     totalTiles: TOPDOWN_REGION_BOUNDS.totalTiles,
     bossSlain,
     atStronghold,
+    atGoblinCave,
+    atAncientCrypt,
     strongholdEntrance: {
       title: STRONGHOLD_BOSS_PROFILE.entranceTitle,
       description: STRONGHOLD_BOSS_PROFILE.entranceDescription,
@@ -2658,14 +3292,28 @@ function buildTopdownMapPayload(db, character, currentTile) {
       canChallengeBoss: Boolean(atStronghold && !bossSlain)
     },
     regionMap: {
-      regionKey: 'BLACKWOOD_FOREST',
-      regionName: 'Blackwood Forest (Goblin Forest)',
+      regionKey: currentRegionKey,
+      regionName: currentRegionName,
+      regions: [
+        {
+          key: 'BLACKWOOD_FOREST',
+          name: 'Blackwood Forest (Goblin Forest)',
+          majorLandmarks: ['OAKHAVEN', 'GOBLIN_CAVE', 'GOBLIN_STRONGHOLD']
+        },
+        {
+          key: 'UNDEAD_LANDS',
+          name: 'The Undead Lands',
+          majorLandmarks: ['ANCIENT_CRYPT']
+        }
+      ],
       discoveredCount,
       discoveredPassableCount,
       totalPassableCount,
       discoveryPercent,
       totalTiles: TOPDOWN_REGION_BOUNDS.totalTiles,
       strongholdDiscovered,
+      goblinCaveDiscovered,
+      ancientCryptDiscovered,
       landmarks: discoveredLandmarks,
       discoveredLandmarks
     },
@@ -2737,11 +3385,14 @@ module.exports = {
   TOWN_COORD,
   NORTH_GATE_COORD,
   STRONGHOLD_COORD,
+  GOBLIN_CAVE_COORD,
+  ANCIENT_CRYPT_COORD,
   LANDMARK_DEFINITIONS,
   LANDMARK_METADATA: LANDMARK_DEFINITIONS,
   ROUTE_A_MAIN_TRAIL,
   ROUTE_B_WESTERN_WILDERNESS,
   ROUTE_C_EASTERN_RIVER,
+  ROUTE_D_UNDEAD_SEPULCHER_ROAD,
   QUEST_GOBLIN_CHIEFTAIN,
   QUEST_STATUS_LABELS,
   STRONGHOLD_BOSS_PROFILE,
@@ -2750,6 +3401,9 @@ module.exports = {
   computeCameraViewportMetrics,
   isCoordInTopdownRegion,
   isGoblinStrongholdTile,
+  isGoblinCaveTile,
+  isAncientCryptTile,
+  isMajorLandmarkTile,
   getHeroVisionRadius,
   recordTileDiscovery,
   getDiscoveredCoordSet,
@@ -2762,7 +3416,11 @@ module.exports = {
   acceptGoblinChieftainQuest,
   claimGoblinChieftainReward,
   startStrongholdBossEncounter,
+  startLandmarkDungeonEncounter,
   selectGoblinForestMonster,
+  selectGoblinCaveMonster,
+  selectUndeadLandsMonster,
+  selectRegionalEncounterMonster,
   computePhase8StepEncounterChance,
   checkGoblinForestEncounter,
   buildTopdownMapPayload,

@@ -24,6 +24,8 @@ const {
   TOWN_COORD,
   NORTH_GATE_COORD,
   STRONGHOLD_COORD,
+  GOBLIN_CAVE_COORD,
+  ANCIENT_CRYPT_COORD,
   STRONGHOLD_BOSS_PROFILE,
   ensureStrongholdBossInstance,
   recordTileDiscovery,
@@ -395,16 +397,64 @@ function handleAdventureScenarioAction({ db, userId, options = {}, action, paylo
         }
 
         if (scenario === 'DEADMANS_MIRE' || scenario === 'MIRE') {
-          const mireTile = getTileByCoords(db, 7, 17);
+          const mireTile = getTileByCoords(db, 26, 19);
           const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
           if (mireTile) {
-            db.prepare('UPDATE characters SET tile_id = ?, facing = ? WHERE id = ?').run(mireTile.id, targetFacing, character.id);
+            db.prepare('UPDATE characters SET tile_id = ?, facing = ?, active_landmark_scene_key = NULL, dismissed_landmark_tile_id = NULL WHERE id = ?').run(mireTile.id, targetFacing, character.id);
             recordTileDiscovery(db, character, mireTile.x, mireTile.y);
           }
           return res.json({
             ok: true,
             state: buildClientState(db, userId, {
-              infoMessage: `Positioned at The Broken Shrine [7, 17] Facing ${targetFacing}.`,
+              infoMessage: `Positioned at Drowned Ossuary [26, 19] in Deadman’s Mire (Undead Lands) Facing ${targetFacing}.`,
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
+        if (scenario === 'UNDEAD_LANDS' || scenario === 'BARROWLANDS' || scenario === 'WEEPING_CAIRN') {
+          const barrowTile = getTileByCoords(db, 26, 15);
+          const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
+          if (barrowTile) {
+            db.prepare('UPDATE characters SET tile_id = ?, facing = ?, active_landmark_scene_key = NULL, dismissed_landmark_tile_id = NULL WHERE id = ?').run(barrowTile.id, targetFacing, character.id);
+            recordTileDiscovery(db, character, barrowTile.x, barrowTile.y);
+          }
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: `Positioned at Weeping Cairn [26, 15] in the Undead Lands Facing ${targetFacing}.`,
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
+        if (scenario === 'GOBLIN_CAVE' || scenario === 'CAVE') {
+          const caveTile = getTileByCoords(db, GOBLIN_CAVE_COORD.x, GOBLIN_CAVE_COORD.y);
+          const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'WEST';
+          if (caveTile) {
+            db.prepare('UPDATE characters SET tile_id = ?, facing = ?, active_landmark_scene_key = ?, dismissed_landmark_tile_id = NULL WHERE id = ?').run(caveTile.id, targetFacing, 'GOBLIN_CAVE', character.id);
+            recordTileDiscovery(db, character, caveTile.x, caveTile.y);
+          }
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: `Positioned at The Goblin Cave [${GOBLIN_CAVE_COORD.x}, ${GOBLIN_CAVE_COORD.y}].`,
+              fxCue: { type: 'STEP', moveKind: 'FORWARD' }
+            })
+          });
+        }
+
+        if (scenario === 'ANCIENT_CRYPT' || scenario === 'CRYPT') {
+          const cryptTile = getTileByCoords(db, ANCIENT_CRYPT_COORD.x, ANCIENT_CRYPT_COORD.y);
+          const targetFacing = payload.facing ? normalizeFacing(payload.facing) : 'NORTH';
+          if (cryptTile) {
+            db.prepare('UPDATE characters SET tile_id = ?, facing = ?, active_landmark_scene_key = ?, dismissed_landmark_tile_id = NULL WHERE id = ?').run(cryptTile.id, targetFacing, 'ANCIENT_CRYPT', character.id);
+            recordTileDiscovery(db, character, cryptTile.x, cryptTile.y);
+          }
+          return res.json({
+            ok: true,
+            state: buildClientState(db, userId, {
+              infoMessage: `Positioned at The Ancient Crypt [${ANCIENT_CRYPT_COORD.x}, ${ANCIENT_CRYPT_COORD.y}] in the Undead Lands.`,
               fxCue: { type: 'STEP', moveKind: 'FORWARD' }
             })
           });

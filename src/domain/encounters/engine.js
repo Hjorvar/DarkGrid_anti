@@ -204,10 +204,9 @@ function resolveMonsterDescription(descriptionsJson, heroClassOrCharacter, state
 
 /**
  * Resolves hero detection (spottedByHero) and ambush status (isAmbush).
- * Enforces the rule: Level 1 characters can NEVER be ambushed (isAmbush is always 0 at Level 1).
+ * Phase 9B Owner Decision: Level 1 heroes can be ambushed just like Level 2+.
  */
 function resolveDetectionAndAmbush(character, monster, options = {}, defaults = {}) {
-  const heroLevel = Number((character && character.level) || 1);
   let isAmbush = 0;
   let spottedByHero = 1;
 
@@ -232,10 +231,6 @@ function resolveDetectionAndAmbush(character, monster, options = {}, defaults = 
       isAmbush = 1;
       spottedByHero = 0;
     }
-  }
-
-  if (heroLevel <= 1) {
-    isAmbush = 0;
   }
 
   return { isAmbush, spottedByHero };
@@ -460,16 +455,6 @@ function getEncounterById(db, encounterId, heroClass) {
 
   if (!encounter) return null;
 
-  if (Number(encounter.character_level || 1) <= 1 && Number(encounter.is_ambush) === 1 && !hasExplicitAmbushOverride(encounter)) {
-    db.prepare(`
-      UPDATE encounters
-      SET is_ambush = 0, spotted_by_hero = 0
-      WHERE id = ?
-    `).run(encounter.id);
-    encounter.is_ambush = 0;
-    encounter.spotted_by_hero = 0;
-  }
-
   const monsterFamily = encounter.monster_family || resolveMonsterFamily({
     id: encounter.monster_id,
     name: encounter.base_monster_name,
@@ -644,7 +629,7 @@ function ignoreEncounter(db, characterId, encounterId) {
       throw new Error(`Encounter cannot be ignored in status: ${enc.status}`);
     }
 
-    const effectiveAmbush = (Number(enc.character_level || 1) <= 1 && !hasExplicitAmbushOverride(enc)) ? 0 : Number(enc.is_ambush || 0);
+    const effectiveAmbush = Number(enc.is_ambush || 0);
     if (effectiveAmbush === 1) {
       throw new Error('Ambush! Your path is cut off—you cannot bypass this threat and must face the ambush!');
     }
@@ -652,10 +637,9 @@ function ignoreEncounter(db, characterId, encounterId) {
     tx.prepare(`
       UPDATE encounters
       SET status = 'IGNORED',
-          is_ambush = CASE WHEN ? <= 1 THEN 0 ELSE is_ambush END,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(Number(enc.character_level || 1), encounterId);
+    `).run(encounterId);
 
     if (enc.monster_instance_id) {
       tx.prepare("UPDATE monster_instances SET current_hp = max_hp WHERE id = ? AND status = 'ACTIVE'").run(enc.monster_instance_id);
@@ -690,9 +674,7 @@ function investigateEncounter(db, characterId, encounterId, heroClass) {
       }
     }
 
-    if (Number(enc.character_level || 1) <= 1 && Number(enc.is_ambush) === 1 && !hasExplicitAmbushOverride(enc)) {
-      txDb.prepare('UPDATE encounters SET is_ambush = 0, spotted_by_hero = 0 WHERE id = ?').run(encounterId);
-    } else if (enc.status === 'DISCOVERED' && Number(enc.is_ambush || 0) === 0) {
+    if (enc.status === 'DISCOVERED' && Number(enc.is_ambush || 0) === 0) {
       txDb.prepare('UPDATE encounters SET is_ambush = 0, spotted_by_hero = 1 WHERE id = ?').run(encounterId);
     }
 

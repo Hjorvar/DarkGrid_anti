@@ -108,28 +108,54 @@ export function renderModalContent(modalName) {
 }
 
 export function renderRegionMapModal(titleEl, bodyEl) {
-  titleEl.textContent = '🗺️ Region Map — Blackwood / Goblin Forest [M]';
+  titleEl.textContent = '🗺️ Region Map — Goblin Forest & The Undead Lands [M]';
   const st = store.currentState || {};
   const mapData = st.topdownMap || {};
   const regionMap = mapData.regionMap || {};
   const discoveredLandmarks = regionMap.discoveredLandmarks || [];
   const shDiscovered = Boolean(regionMap.strongholdDiscovered);
+  const caveDiscovered = Boolean(regionMap.goblinCaveDiscovered || mapData.goblinCaveDiscovered);
+  const cryptDiscovered = Boolean(regionMap.ancientCryptDiscovered || mapData.ancientCryptDiscovered);
   const currentTileName = (st.currentTile && st.currentTile.name) || 'Oakhaven';
 
   const landmarkRowsHtml = discoveredLandmarks.map(lm => {
-    const isStronghold = lm.landmarkKey === 'GOBLIN_STRONGHOLD';
-    const isCity = lm.landmarkKey === 'OAKHAVEN_CITY';
-    const badgeColor = isStronghold
-      ? (mapData.bossSlain ? '#86efac' : '#fca5a5')
-      : (isCity ? '#fde047' : '#e6be6e');
-    const badgeText = isStronghold
-      ? (mapData.bossSlain ? 'Stronghold Cleared' : 'Goblin Stronghold')
-      : (isCity ? 'Safe Sanctuary' : 'Discovered Landmark');
+    const key = lm.key || lm.landmarkKey || '';
+    const isStronghold = key === 'GOBLIN_STRONGHOLD';
+    const isGoblinCave = key === 'GOBLIN_CAVE';
+    const isAncientCrypt = key === 'ANCIENT_CRYPT';
+    const isCity = key === 'OAKHAVEN' || key === 'OAKHAVEN_CITY';
+    const isUndead = lm.regionKey === 'UNDEAD_LANDS';
+
+    let badgeColor = '#e6be6e';
+    let badgeText = isUndead ? 'Undead Lands Landmark' : 'Discovered Landmark';
+    let icon = '🏛️';
+
+    if (isStronghold) {
+      badgeColor = mapData.bossSlain ? '#86efac' : '#fca5a5';
+      badgeText = mapData.bossSlain ? 'Stronghold Cleared' : 'Goblin Stronghold';
+      icon = '👹';
+    } else if (isGoblinCave) {
+      badgeColor = '#fcd34d';
+      badgeText = 'Major Landmark (Cave)';
+      icon = '🕳️';
+    } else if (isAncientCrypt) {
+      badgeColor = '#6ee7b7';
+      badgeText = 'Major Landmark (Crypt)';
+      icon = '⚰️';
+    } else if (isCity) {
+      badgeColor = '#fde047';
+      badgeText = 'Safe Sanctuary';
+      icon = '🏰';
+    } else if (isUndead) {
+      badgeColor = '#c4b5fd';
+      icon = '🪦';
+    }
+
     return `
       <div class="qa-card" style="padding: 8px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
         <div>
           <div style="font-family:var(--font-serif); font-size:0.84rem; font-weight:700; color:var(--text-heading);">
-            ${isCity ? '🏰' : (isStronghold ? '👹' : '🏛️')} ${escapeHtml(lm.name)}
+            ${icon} ${escapeHtml(lm.name)}
           </div>
         </div>
         <span class="lab-badge" style="color:${badgeColor}; border-color:${badgeColor}66; font-size:0.68rem;">
@@ -147,11 +173,17 @@ export function renderRegionMapModal(titleEl, bodyEl) {
       </div>
       <div class="atlas-stat-pill">
         <span class="stat-val">${regionMap.discoveryPercent || 0}%</span>
-        <span class="stat-lbl">Forest Explored (${regionMap.discoveredPassableCount || 0}/${regionMap.totalPassableCount || 152})</span>
+        <span class="stat-lbl">World Explored (${regionMap.discoveredPassableCount || 0}/${regionMap.totalPassableCount || 200})</span>
       </div>
       <div class="atlas-stat-pill">
         <span class="stat-val">${discoveredLandmarks.length}</span>
         <span class="stat-lbl">Landmarks Discovered</span>
+      </div>
+      <div class="atlas-stat-pill">
+        <span class="stat-val" style="color:${caveDiscovered ? '#fcd34d' : '#94a3b8'};">
+          ${caveDiscovered ? 'Discovered' : 'Unknown'}
+        </span>
+        <span class="stat-lbl">Goblin Cave</span>
       </div>
       <div class="atlas-stat-pill">
         <span class="stat-val" style="color:${shDiscovered ? (mapData.bossSlain ? '#86efac' : '#fca5a5') : '#94a3b8'};">
@@ -159,29 +191,37 @@ export function renderRegionMapModal(titleEl, bodyEl) {
         </span>
         <span class="stat-lbl">Goblin Stronghold</span>
       </div>
+      <div class="atlas-stat-pill">
+        <span class="stat-val" style="color:${cryptDiscovered ? '#6ee7b7' : '#94a3b8'};">
+          ${cryptDiscovered ? 'Discovered' : 'Unknown'}
+        </span>
+        <span class="stat-lbl">Ancient Crypt</span>
+      </div>
     </div>
 
     <div style="display:grid; grid-template-columns: minmax(0, auto) minmax(260px, 1fr); gap:16px; align-items:start;">
       <div class="qa-card" style="padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
         <canvas id="region-map-overview-canvas" style="border-radius:6px; box-shadow:0 8px 24px rgba(0,0,0,0.85);"></canvas>
-        <div style="display:flex; flex-wrap:wrap; gap:12px; font-size:0.70rem; color:var(--text-muted); font-family:var(--font-mono);">
-          <span>🔵 Your Hero</span>
-          <span>🟡 Oakhaven Sanctuary</span>
-          <span>🟤 Known Trails</span>
-          <span>🏛️ Landmarks</span>
-          ${shDiscovered ? '<span>🔴 Goblin Stronghold</span>' : '<span>⬛ Unexplored Forest</span>'}
+        <div style="display:flex; flex-wrap:wrap; gap:10px; font-size:0.70rem; color:var(--text-muted); font-family:var(--font-mono);">
+          <span>🔵 Hero</span>
+          <span>🟡 Oakhaven</span>
+          <span>🟠 Goblin Cave</span>
+          <span>🔴 Stronghold</span>
+          <span>🟢 Ancient Crypt</span>
+          <span>🟣 Undead Lands</span>
         </div>
       </div>
 
       <div style="display:flex; flex-direction:column; gap:10px;">
         <div class="qa-card" style="padding:12px 14px;">
           <div style="font-family:var(--font-serif); font-size:0.86rem; font-weight:700; color:var(--accent-gold-bright); margin-bottom:6px;">
-            🧭 Known Routes Through Blackwood Forest
+            🧭 Known Routes Across the Realm
           </div>
           <div style="display:flex; flex-direction:column; gap:6px; font-size:0.76rem; color:var(--text-body); line-height:1.4;">
-            <div><strong style="color:#fde68a;">Main Forest Trail (Central):</strong> Leads North from Oakhaven North Gate through Blackwood Crossroads and the Ancient Black Oak.</div>
-            <div><strong style="color:#86efac;">Western Wilderness Route:</strong> Branches West from the Crossroads past The Broken Shrine and Old Charcoal Camp.</div>
-            <div><strong style="color:#93c5fd;">Eastern River Route:</strong> Crosses The Old Stone Bridge past the Abandoned Watchpost along the river gorge to the Old Log Crossing.</div>
+            <div><strong style="color:#fde68a;">Main Forest Trail (Central):</strong> Leads North from Oakhaven through Blackwood Crossroads and the Ancient Black Oak to the Goblin Stronghold.</div>
+            <div><strong style="color:#fcd34d;">Western Crag &amp; Cave Route:</strong> Branches West from the Crossroads past The Broken Shrine to <strong>The Goblin Cave</strong> beneath Whispering Crags.</div>
+            <div><strong style="color:#93c5fd;">Eastern River Route:</strong> Crosses The Old Stone Bridge past the Abandoned Watchpost along the river gorge.</div>
+            <div><strong style="color:#6ee7b7;">Undead Sepulcher Road (Far East):</strong> Branches East from the Watchpost into <strong>The Undead Lands</strong> through Deadman’s Mire and the Weeping Cairn to <strong>The Ancient Crypt</strong>.</div>
           </div>
         </div>
 
@@ -782,10 +822,14 @@ export function renderDirectorModal(titleEl, bodyEl) {
 
     <div class="director-modal-grid">
       <div class="qa-card">
-        <div class="qa-card-title"><span>⚡ Core Scenario Staging</span></div>
+        <div class="qa-card-title"><span>⚡ Core Scenario &amp; Landmark Staging</span></div>
         <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
           <button type="button" class="btn-action-gold" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('CITY'); closeLabModal();">🏰 Oakhaven Safe City</button>
           <button type="button" class="btn-action-stone" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('WILDERNESS'); closeLabModal();">🌲 Forest Trail</button>
+          <button type="button" class="btn-action-gold" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('GOBLIN_CAVE'); closeLabModal();">🕳️ The Goblin Cave</button>
+          <button type="button" class="btn-action-gold" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('GOBLIN_STRONGHOLD'); closeLabModal();">👹 Goblin Stronghold</button>
+          <button type="button" class="btn-action-stone" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('UNDEAD_LANDS'); closeLabModal();">🪦 Undead Lands</button>
+          <button type="button" class="btn-action-gold" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('ANCIENT_CRYPT'); closeLabModal();">⚰️ The Ancient Crypt</button>
           <button type="button" class="btn-action-stone" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('SHADOW'); closeLabModal();">👁️ Shadow in Mist</button>
           <button type="button" class="btn-action-gold" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('COMBAT'); closeLabModal();">⚔️ Stage Active Combat</button>
           <button type="button" class="btn-action-stone" style="padding:4px 10px; font-size:0.74rem;" onclick="triggerLabScenario('WOUNDED'); closeLabModal();">🩸 Critical HP (3 HP)</button>

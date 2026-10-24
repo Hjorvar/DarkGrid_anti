@@ -504,14 +504,14 @@ test('Section 4: Ranger Favored Enemy & Opening Shot — All humanoid subtypes w
     assert.equal(getRangerFavoredEnemyBonus({ ...beastRanger, favored_enemy_type: 'UNDEAD' }, skeleton).attack, 0);
 
     // Opening Shot negative conditions:
-    // Condition A: Level 1 Ranger fails perception (spotted_by_hero = 0, is_ambush = 0 due to Level 1 rule) -> NO Opening Shot!
+    // Condition A: Level 1 Ranger fails perception (spotted_by_hero = 0, is_ambush = 1 under Phase 9B) -> NO Opening Shot!
     const encUnspotted = checkTileEncounter(db, beastRanger, wildTile, {
       forcedChance: 100,
       rng: () => 0.1,
       ambushRng: () => 0.0 // d20 = 1 -> fails perception
     });
     assert.ok(encUnspotted);
-    assert.equal(encUnspotted.isAmbush, false, 'Level 1 Ranger must not be ambushed');
+    assert.equal(encUnspotted.isAmbush, true, 'Phase 9B: Level 1 Ranger failing perception is ambushed');
     assert.equal(encUnspotted.spottedByHero, false, 'Failed perception must set spottedByHero = false');
 
     const startedUnspotted = startCombat(db, beastRanger.id, encUnspotted.id, { rng: () => 0.5 });
@@ -689,10 +689,10 @@ test('Section 6: Encounter Secrecy & DISCOVERED Lock — No Hero Panel stat leak
   }
 });
 
-test('Section 7: Approved Rule — No Ambush at Level 1 across all encounter paths, and normal Ambush restored at Level 2+', () => {
+test('Section 7: Phase 9B Owner Decision — Level 1 Ambush Protection Removed (Level 1 heroes face Ambush & 2-round flee lock identical to Level 2+)', () => {
   const db = setupTestDb();
   try {
-    const userId = createTestUser(db, 'lvl1_no_ambush');
+    const userId = createTestUser(db, 'lvl1_ambush_enabled');
     const hero = createCharacter(db, {
       userId,
       name: 'RookieFighter',
@@ -702,43 +702,43 @@ test('Section 7: Approved Rule — No Ambush at Level 1 across all encounter pat
 
     const wildTile = db.prepare("SELECT * FROM map_tiles WHERE is_safe = 0 AND is_passable = 1 LIMIT 1").get();
 
-    // 1. Random encounter at Level 1 with worst possible perception roll (d20 = 1)
+    // 1. Random encounter at Level 1 with failed perception roll (d20 = 1) triggers Ambush!
     const enc1 = checkTileEncounter(db, hero, wildTile, {
       forcedChance: 100,
       rng: () => 0.2,
       ambushRng: () => 0.0
     });
     assert.ok(enc1);
-    assert.equal(enc1.isAmbush, false, 'Level 1 random encounter must never set isAmbush = true');
-    assert.equal(enc1.is_ambush, 0);
+    assert.equal(enc1.isAmbush, true, 'Level 1 random encounter with failed perception must set isAmbush = true');
+    assert.equal(enc1.is_ambush, 1);
 
-    // 2. Ignore encounter at Level 1, then trigger another encounter with explicit isAmbush: true option
-    ignoreEncounter(db, hero.id, enc1.id);
-    const enc2 = checkTileEncounter(db, hero, wildTile, {
-      forcedChance: 100,
-      rng: () => 0.2,
-      isAmbush: true
-    });
-    assert.ok(enc2);
-    assert.equal(enc2.isAmbush, false, 'Level 1 encounter after Ignore must never be Ambush even if isAmbush=true is requested');
-    assert.equal(enc2.is_ambush, 0);
+    // 2. Level 1 hero cannot bypass an Ambush via ignoreEncounter
+    assert.throws(
+      () => ignoreEncounter(db, hero.id, enc1.id),
+      /Ambush! Your path is cut off/,
+      'Level 1 Ambush must block free bypass'
+    );
 
-    // 3. Even if a legacy DB row has is_ambush = 1 for a Level 1 character, getEncounterById and startCombat sanitize it to 0
-    db.prepare('UPDATE encounters SET is_ambush = 1 WHERE id = ?').run(enc2.id);
-    const fetched2 = getEncounterById(db, enc2.id, hero.class);
-    assert.equal(fetched2.isAmbush, false, 'getEncounterById must sanitize legacy is_ambush=1 to false for Level 1 character');
+    // 3. getEncounterById and startCombat preserve is_ambush = 1 for Level 1 character and enforce 2-round flee lock
+    const fetched1 = getEncounterById(db, enc1.id, hero.class);
+    assert.equal(fetched1.isAmbush, true, 'getEncounterById must preserve is_ambush=1 for Level 1 character');
 
-    db.prepare('UPDATE encounters SET is_ambush = 1 WHERE id = ?').run(enc2.id);
-    const started2 = startCombat(db, hero.id, enc2.id, { rng: () => 0.5 });
-    assert.equal(Number(started2.encounter.is_ambush), 0, 'startCombat must enforce is_ambush = 0 for Level 1 character');
+    const started1 = startCombat(db, hero.id, enc1.id, { rng: () => 0.5 });
+    assert.equal(Number(started1.encounter.is_ambush), 1, 'startCombat must preserve is_ambush = 1 for Level 1 character');
 
-    // 4. Level 1 hero can still lose combat and die permanently (not invincible)
+    assert.throws(
+      () => executeCombatRound(db, hero.id, enc1.id, 'FLEE', { rng: () => 0.5 }),
+      /AMBUSH! You cannot flee during the first 2 combat rounds/,
+      'Level 1 Ambush must enforce the 2-round flee lock on Round 1'
+    );
+
+    // 4. Level 1 hero can still lose combat and die permanently
     db.prepare('UPDATE characters SET current_hp = 1 WHERE id = ?').run(hero.id);
-    db.prepare("UPDATE encounters SET initiative_winner = 'MONSTER', current_monster_hp = 50 WHERE id = ?").run(enc2.id);
-    const deathState = executeCombatRound(db, hero.id, enc2.id, 'ATTACK', { rng: () => 0.9 });
-    assert.equal(deathState.character.is_alive, 0, 'Level 1 hero can still die in normal combat');
+    db.prepare("UPDATE encounters SET initiative_winner = 'MONSTER', current_monster_hp = 50 WHERE id = ?").run(enc1.id);
+    const deathState = executeCombatRound(db, hero.id, enc1.id, 'ATTACK', { rng: () => 0.9 });
+    assert.equal(deathState.character.is_alive, 0, 'Level 1 hero can still die in combat');
 
-    // 5. At Level 2, Ambush works normally again when perception fails
+    // 5. At Level 2, Ambush works identically when perception fails
     const user2Id = createTestUser(db, 'lvl2_ambush_user');
     const heroLvl2 = createCharacter(db, {
       userId: user2Id,

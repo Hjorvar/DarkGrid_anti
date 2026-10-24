@@ -255,8 +255,8 @@ describe('Phase 9A — Threat States, Ambush & Major Landmark Scene System', () 
       'Ranger Trail-Sense should convert a portion of potential Ambushes into spotted Encounters'
     );
 
-    assert.equal(level1Sim.avgAmbushes, 0, 'Standard Level 1 play preserves Level 1 Ambush Protection (0 forced Ambushes)');
-    assert.ok(level1Sim.level1AmbushProtections > 0, 'Telemetry tracks how many Ambushes were converted by Level 1 protection');
+    assert.ok(level1Sim.avgAmbushes > 0, 'Phase 9B Owner Decision: Level 1 heroes can be ambushed just like Level 2+');
+    assert.equal(level1Sim.level1AmbushProtections, 0, 'Phase 9B Owner Decision: Level 1 Ambush protection is completely removed');
   });
 
   it('7. Scenarios 8, 9 & 10: Major Landmark Scene auto-opens at Oakhaven & Stronghold, respects anti-interruption rules, and never overlaps Combat', async () => {

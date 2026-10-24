@@ -732,7 +732,7 @@ function abandonContract(db, characterOrId, contractId = null) {
       return { ok: false, success: false, error: 'You cannot abandon a hunting contract while locked in combat with your quarry!' };
     }
 
-    if (activeCombat && activeCombat.status === 'DISCOVERED' && Number(activeCombat.character_level || 1) > 1 && Number(activeCombat.is_ambush || 0) === 1) {
+    if (activeCombat && activeCombat.status === 'DISCOVERED' && Number(activeCombat.is_ambush || 0) === 1) {
       return { ok: false, success: false, error: 'Ambush! You cannot abandon your contract to slip away while your quarry has you ambushed!' };
     }
 

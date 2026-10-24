@@ -88,7 +88,7 @@ async function setupCombatScenario(db, username = 'HeroCombat', classType = 'FIG
   db.prepare('UPDATE characters SET tile_id = ? WHERE id = ?').run(forestTile.id, hero.id);
   hero.tile_id = forestTile.id;
 
-  const encounter = checkTileEncounter(db, hero, forestTile, { rng: () => 0.01 });
+  const encounter = checkTileEncounter(db, hero, forestTile, { rng: () => 0.01, ambushRng: () => 0.95 });
   assert.ok(encounter, 'Encounter must be generated');
 
   const revealed = investigateEncounter(db, hero.id, encounter.id, hero.class);

@@ -46,16 +46,18 @@ describe('Night Work: Gameplay Fixes, Loot Progression, and 30 New Monsters', ()
     const forestTile = db.prepare("SELECT * FROM map_tiles WHERE terrain = 'FOREST' AND is_safe = 0 AND is_passable = 1 LIMIT 1").get();
     const worg = db.prepare("SELECT * FROM monsters WHERE name = 'Worg'").get();
 
-    // At Level 1, ambush immunity applies even if is_ambush = 1 in DB
+    // Phase 9B Owner Decision: At Level 1, ambush blocks free bypass just like Level 2+
     const l1EncRes = db.prepare(`
       INSERT INTO encounters (character_id, tile_id, monster_id, status, current_monster_hp, monster_max_hp, is_ambush)
       VALUES (?, ?, ?, 'DISCOVERED', ?, ?, 1)
     `).run(hero.id, forestTile.id, worg.id, worg.base_hp, worg.base_hp);
     const l1EncId = Number(l1EncRes.lastInsertRowid);
-    const l1Ignored = ignoreEncounter(db, hero.id, l1EncId);
-    assert.equal(l1Ignored.success, true);
-    const l1EncRow = db.prepare('SELECT status FROM encounters WHERE id = ?').get(l1EncId);
-    assert.equal(l1EncRow.status, 'IGNORED', 'Level 1 hero retains ambush immunity and can bypass');
+    assert.throws(
+      () => ignoreEncounter(db, hero.id, l1EncId),
+      /Ambush! Your path is cut off/,
+      'Level 1 ambush must block free bypass just like Level 2+'
+    );
+    db.prepare("UPDATE encounters SET status = 'ESCAPED' WHERE id = ?").run(l1EncId);
 
     // Promote hero to Level 2
     db.prepare('UPDATE characters SET level = 2, current_hp = 22, max_hp = 22, tile_id = ? WHERE id = ?').run(forestTile.id, hero.id);

@@ -239,16 +239,9 @@ function hasExplicitAmbushOverride(encounter) {
   }
 }
 
-function enforceNoAmbushAtLevel1(db, character, encounter) {
-  if (character && Number(character.level || 1) <= 1 && encounter && Number(encounter.is_ambush) === 1 && !hasExplicitAmbushOverride(encounter)) {
-    db.prepare(`
-      UPDATE encounters
-      SET is_ambush = 0, spotted_by_hero = 0
-      WHERE id = ?
-    `).run(encounter.id);
-    encounter.is_ambush = 0;
-    encounter.spotted_by_hero = 0;
-  }
+function enforceNoAmbushAtLevel1(_db, _character, _encounter) {
+  // Phase 9B Owner Decision: Level 1 ambush protection has been removed everywhere.
+  // Level 1 heroes can be ambushed identically to Level 2+, with no auto-downgrade.
 }
 
 /**

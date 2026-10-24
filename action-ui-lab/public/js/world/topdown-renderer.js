@@ -446,6 +446,72 @@ function drawRockOutcrop(ctx, cx, cy, scale) {
   ctx.restore();
 }
 
+function drawDeadBarrowTree(ctx, cx, cy, scale, variant = 0) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(scale, scale);
+
+  // Cold necrotic ground shadow
+  ctx.fillStyle = 'rgba(4, 6, 10, 0.52)';
+  ctx.beginPath();
+  ctx.ellipse(2, 10, 14, 7, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Twisted ashen-grey dead trunk & bare branches
+  ctx.strokeStyle = variant > 0.5 ? '#475569' : '#334155';
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 4.2;
+  ctx.beginPath();
+  ctx.moveTo(0, 10);
+  ctx.lineTo(-1, -6);
+  ctx.stroke();
+
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  ctx.moveTo(-1, -4);
+  ctx.lineTo(-11, -15);
+  ctx.moveTo(-1, -6);
+  ctx.lineTo(10, -16);
+  ctx.moveTo(-6, -10);
+  ctx.lineTo(-3, -20);
+  ctx.moveTo(5, -11);
+  ctx.lineTo(13, -11);
+  ctx.stroke();
+
+  // Faint spectral wisp or dead moss on some barrow trees
+  if (variant > 0.62) {
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.35)';
+    ctx.beginPath();
+    ctx.arc(-8, -14, 2.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawBarrowHeadstone(ctx, cx, cy, scale) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(scale, scale);
+
+  ctx.fillStyle = 'rgba(4, 6, 10, 0.45)';
+  ctx.beginPath();
+  ctx.ellipse(1, 5, 8, 3.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#64748b';
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(-5, 5);
+  ctx.lineTo(-5, -4);
+  ctx.arc(0, -4, 5, Math.PI, 0);
+  ctx.lineTo(5, 5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawLandmarkStructure(ctx, cx, cy, tileSize, landmarkKey, bossSlain) {
   const r = tileSize * 0.44;
   ctx.save();
@@ -703,6 +769,161 @@ function drawLandmarkStructure(ctx, cx, cy, tileSize, landmarkKey, bossSlain) {
     ctx.beginPath();
     ctx.arc(cx, cy + r * 0.08, r * 0.24, 0, Math.PI * 2);
     ctx.fill();
+  } else if (landmarkKey === 'GOBLIN_CAVE') {
+    // Subterranean Goblin Cave Mouth in the western crags [9, 12]
+    const caveGlow = ctx.createRadialGradient(cx, cy, 4, cx, cy, tileSize * 1.15);
+    caveGlow.addColorStop(0, 'rgba(245, 158, 11, 0.34)');
+    caveGlow.addColorStop(1, 'rgba(245, 158, 11, 0)');
+    ctx.fillStyle = caveGlow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, tileSize * 1.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Jagged limestone crag arch
+    ctx.fillStyle = '#333b44';
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.96, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Yawning subterranean cave maw
+    ctx.fillStyle = '#07090d';
+    ctx.beginPath();
+    ctx.arc(cx, cy + r * 0.14, r * 0.56, Math.PI, 0);
+    ctx.lineTo(cx + r * 0.56, cy + r * 0.52);
+    ctx.lineTo(cx - r * 0.56, cy + r * 0.52);
+    ctx.closePath();
+    ctx.fill();
+
+    // Flanking goblin pitch-torches & skull stakes
+    ctx.fillStyle = '#fb923c';
+    ctx.beginPath();
+    ctx.arc(cx - r * 0.65, cy - r * 0.12, 3.6, 0, Math.PI * 2);
+    ctx.arc(cx + r * 0.65, cy - r * 0.12, 3.6, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (landmarkKey === 'GALLOWS_CROSSROADS') {
+    // Timber gallows & iron cage at the Undead Lands threshold [25, 23]
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = 2.6;
+    ctx.beginPath();
+    ctx.moveTo(cx - 10, cy + 10);
+    ctx.lineTo(cx - 10, cy - 12);
+    ctx.lineTo(cx + 8, cy - 12);
+    ctx.stroke();
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillRect(cx + 4, cy - 8, 7, 9);
+  } else if (landmarkKey === 'DROWNED_OSSUARY') {
+    // Half-submerged bone vault in Deadman's Mire [26, 19]
+    const mireGlow = ctx.createRadialGradient(cx, cy, 3, cx, cy, tileSize * 0.95);
+    mireGlow.addColorStop(0, 'rgba(45, 212, 191, 0.28)');
+    mireGlow.addColorStop(1, 'rgba(45, 212, 191, 0)');
+    ctx.fillStyle = mireGlow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, tileSize * 0.95, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#1e293b';
+    ctx.strokeStyle = '#5eead4';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.82, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.beginPath();
+    ctx.arc(cx, cy - 2, r * 0.36, Math.PI, 0);
+    ctx.fill();
+  } else if (landmarkKey === 'WEEPING_CAIRN') {
+    // Standing monolith ring & barrow mound at [26, 15]
+    const cairnGlow = ctx.createRadialGradient(cx, cy, 3, cx, cy, tileSize * 0.95);
+    cairnGlow.addColorStop(0, 'rgba(167, 139, 250, 0.28)');
+    cairnGlow.addColorStop(1, 'rgba(167, 139, 250, 0)');
+    ctx.fillStyle = cairnGlow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, tileSize * 0.95, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#334155';
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.86, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillRect(cx - r * 0.65, cy - r * 0.55, 6, 13);
+    ctx.fillRect(cx + r * 0.65 - 6, cy - r * 0.55, 6, 13);
+    ctx.fillRect(cx - 3, cy - r * 0.72, 6, 14);
+  } else if (landmarkKey === 'BLIGHTED_CHAPEL') {
+    // Ruined stone chapel nave & desecrated altar at [26, 9]
+    ctx.fillStyle = '#1e293b';
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 2;
+    ctx.fillRect(cx - r * 0.72, cy - r * 0.52, r * 1.44, r * 1.04);
+    ctx.strokeRect(cx - r * 0.72, cy - r * 0.52, r * 1.44, r * 1.04);
+
+    ctx.fillStyle = '#34d399';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (landmarkKey === 'CRYPT_APPROACH') {
+    // Twin obsidian obelisks with necrotic green fire braziers at [26, 6]
+    ctx.fillStyle = '#0f172a';
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 1.6;
+    ctx.fillRect(cx - r * 0.85, cy - 8, 8, 16);
+    ctx.strokeRect(cx - r * 0.85, cy - 8, 8, 16);
+    ctx.fillRect(cx + r * 0.85 - 8, cy - 8, 8, 16);
+    ctx.strokeRect(cx + r * 0.85 - 8, cy - 8, 8, 16);
+
+    ctx.fillStyle = '#34d399';
+    ctx.beginPath();
+    ctx.arc(cx - r * 0.85 + 4, cy - 10, 3.2, 0, Math.PI * 2);
+    ctx.arc(cx + r * 0.85 - 4, cy - 10, 3.2, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (landmarkKey === 'ANCIENT_CRYPT') {
+    // Major Landmark in Undead Lands: The Ancient Crypt [26, 5]
+    const cryptGlow = ctx.createRadialGradient(cx, cy, 4, cx, cy, tileSize * 1.22);
+    cryptGlow.addColorStop(0, 'rgba(52, 211, 153, 0.42)');
+    cryptGlow.addColorStop(0.55, 'rgba(139, 92, 246, 0.22)');
+    cryptGlow.addColorStop(1, 'rgba(16, 185, 129, 0)');
+    ctx.fillStyle = cryptGlow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, tileSize * 1.22, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Obsidian & bone sepulcher ring
+    ctx.fillStyle = '#0f1420';
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2.6;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Mausoleum pediment & columns
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(cx - r * 0.66, cy - r * 0.32, r * 1.32, r * 0.78);
+    ctx.fillStyle = '#64748b';
+    ctx.beginPath();
+    ctx.moveTo(cx - r * 0.76, cy - r * 0.32);
+    ctx.lineTo(cx, cy - r * 0.84);
+    ctx.lineTo(cx + r * 0.76, cy - r * 0.32);
+    ctx.closePath();
+    ctx.fill();
+
+    // Sunken necrotic vault portal
+    ctx.fillStyle = '#05070b';
+    ctx.fillRect(cx - r * 0.28, cy - r * 0.12, r * 0.56, r * 0.58);
+    ctx.fillStyle = '#34d399';
+    ctx.beginPath();
+    ctx.arc(cx - r * 0.48, cy + r * 0.08, 3.4, 0, Math.PI * 2);
+    ctx.arc(cx + r * 0.48, cy + r * 0.08, 3.4, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   ctx.restore();
@@ -767,9 +988,17 @@ export function drawTopdownWorld(state) {
       const y0 = cy - tileSize / 2;
       const n = hashCoord(gx, gy, 1);
 
+      const isUndeadTile = Boolean(tile && (tile.isUndeadLands || tile.regionKey === 'UNDEAD_LANDS'));
+
       if (!tile || !tile.isPassable) {
         if (tile && tile.visualKind === 'RIVER') {
           ctx.fillStyle = '#0b181c';
+        } else if (tile && tile.visualKind === 'BLIGHT_POOL') {
+          ctx.fillStyle = '#0d2624';
+        } else if (tile && tile.visualKind === 'CRYPT_WALL') {
+          ctx.fillStyle = '#111520';
+        } else if (isUndeadTile) {
+          ctx.fillStyle = n > 0.5 ? '#0e131b' : '#111722';
         } else if (tile && tile.visualKind === 'CLIFF_ROCK') {
           ctx.fillStyle = '#14191e';
         } else {
@@ -781,6 +1010,14 @@ export function drawTopdownWorld(state) {
           ctx.fillStyle = '#1e271c';
         } else if (tile.biome === 'STRONGHOLD') {
           ctx.fillStyle = '#201916';
+        } else if (isUndeadTile) {
+          if (tile.biome === 'NECROPOLIS_SANCTUM') {
+            ctx.fillStyle = n > 0.5 ? '#151b26' : '#181f2c';
+          } else if (tile.biome === 'DEADMANS_MIRE') {
+            ctx.fillStyle = n > 0.5 ? '#122022' : '#142426';
+          } else {
+            ctx.fillStyle = n > 0.5 ? '#161b24' : '#191f29';
+          }
         } else if (tile.visualType === 'TRAIL' || (tile.pathConnections && tile.pathConnections.length > 0)) {
           ctx.fillStyle = n > 0.5 ? '#182419' : '#1a271b';
         } else {
@@ -788,11 +1025,16 @@ export function drawTopdownWorld(state) {
         }
         ctx.fillRect(x0 - 0.5, y0 - 0.5, tileSize + 1, tileSize + 1);
 
-        // Organic woodland floor moss & grass patches
+        // Organic floor patches: necrotic teal/violet mist in Undead Lands vs. mossy green in Goblin Forest
         const patchR = tileSize * (0.28 + n * 0.16);
         const grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, patchR);
-        grad.addColorStop(0, 'rgba(42, 68, 44, 0.32)');
-        grad.addColorStop(1, 'rgba(20, 33, 23, 0)');
+        if (isUndeadTile) {
+          grad.addColorStop(0, tile.biome === 'DEADMANS_MIRE' ? 'rgba(45, 212, 191, 0.20)' : 'rgba(139, 92, 246, 0.18)');
+          grad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+        } else {
+          grad.addColorStop(0, 'rgba(42, 68, 44, 0.32)');
+          grad.addColorStop(1, 'rgba(20, 33, 23, 0)');
+        }
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.arc(cx, cy, patchR, 0, Math.PI * 2);
@@ -856,14 +1098,15 @@ export function drawTopdownWorld(state) {
     W: [-1, 0]
   };
 
-  // Outer worn trail edge
+  // Outer worn trail edge (Goblin Forest dirt vs. Undead Lands stone causeway)
   ctx.strokeStyle = 'rgba(62, 46, 30, 0.72)';
   ctx.lineWidth = Math.max(14, tileSize * 0.36);
   ctx.beginPath();
   for (let gy = startRow; gy <= endRow; gy++) {
     for (let gx = startCol; gx <= endCol; gx++) {
       const tile = tileByKey.get(`${gx},${gy}`);
-      if (!tile || !Array.isArray(tile.pathConnections) || tile.pathConnections.length === 0) continue;
+      if (!tile || tile.isUndeadLands || tile.regionKey === 'UNDEAD_LANDS') continue;
+      if (!Array.isArray(tile.pathConnections) || tile.pathConnections.length === 0) continue;
       const { cx, cy } = toScreenCenter(gx, gy);
       for (const dir of tile.pathConnections) {
         const d = dirDeltas[dir];
@@ -876,14 +1119,56 @@ export function drawTopdownWorld(state) {
   }
   ctx.stroke();
 
-  // Inner warm dirt path
+  // Inner warm dirt path (Goblin Forest)
   ctx.strokeStyle = 'rgba(104, 79, 51, 0.78)';
   ctx.lineWidth = Math.max(8, tileSize * 0.21);
   ctx.beginPath();
   for (let gy = startRow; gy <= endRow; gy++) {
     for (let gx = startCol; gx <= endCol; gx++) {
       const tile = tileByKey.get(`${gx},${gy}`);
-      if (!tile || !Array.isArray(tile.pathConnections) || tile.pathConnections.length === 0) continue;
+      if (!tile || tile.isUndeadLands || tile.regionKey === 'UNDEAD_LANDS') continue;
+      if (!Array.isArray(tile.pathConnections) || tile.pathConnections.length === 0) continue;
+      const { cx, cy } = toScreenCenter(gx, gy);
+      for (const dir of tile.pathConnections) {
+        const d = dirDeltas[dir];
+        if (!d) continue;
+        const { cx: nx, cy: ny } = toScreenCenter(gx + d[0] * 0.52, gy + d[1] * 0.52);
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(nx, ny);
+      }
+    }
+  }
+  ctx.stroke();
+
+  // Undead Lands Sepulcher Flagstone Road (Outer slate border + Inner cracked stone causeway)
+  ctx.strokeStyle = 'rgba(45, 55, 72, 0.82)';
+  ctx.lineWidth = Math.max(14, tileSize * 0.36);
+  ctx.beginPath();
+  for (let gy = startRow; gy <= endRow; gy++) {
+    for (let gx = startCol; gx <= endCol; gx++) {
+      const tile = tileByKey.get(`${gx},${gy}`);
+      if (!tile || !(tile.isUndeadLands || tile.regionKey === 'UNDEAD_LANDS')) continue;
+      if (!Array.isArray(tile.pathConnections) || tile.pathConnections.length === 0) continue;
+      const { cx, cy } = toScreenCenter(gx, gy);
+      for (const dir of tile.pathConnections) {
+        const d = dirDeltas[dir];
+        if (!d) continue;
+        const { cx: nx, cy: ny } = toScreenCenter(gx + d[0] * 0.52, gy + d[1] * 0.52);
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(nx, ny);
+      }
+    }
+  }
+  ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(100, 116, 139, 0.72)';
+  ctx.lineWidth = Math.max(8, tileSize * 0.21);
+  ctx.beginPath();
+  for (let gy = startRow; gy <= endRow; gy++) {
+    for (let gx = startCol; gx <= endCol; gx++) {
+      const tile = tileByKey.get(`${gx},${gy}`);
+      if (!tile || !(tile.isUndeadLands || tile.regionKey === 'UNDEAD_LANDS')) continue;
+      if (!Array.isArray(tile.pathConnections) || tile.pathConnections.length === 0) continue;
       const { cx, cy } = toScreenCenter(gx, gy);
       for (const dir of tile.pathConnections) {
         const d = dirDeltas[dir];
@@ -903,24 +1188,31 @@ export function drawTopdownWorld(state) {
       const tile = tileByKey.get(`${gx},${gy}`);
       if (!tile || !tile.isPassable) continue;
       const { cx, cy } = toScreenCenter(gx, gy);
+      const isUndeadTile = Boolean(tile.isUndeadLands || tile.regionKey === 'UNDEAD_LANDS');
 
-      // Small pebbles, tufts & border bushes on passable wilderness tiles
+      // Small pebbles, tufts & border bushes/headstones on passable wilderness tiles
       if (!tile.isLandmark) {
         for (let i = 0; i < 3; i++) {
           const r1 = hashCoord(gx, gy, 20 + i);
           const r2 = hashCoord(gx, gy, 40 + i);
           const px = cx + (r1 - 0.5) * tileSize * 0.65;
           const py = cy + (r2 - 0.5) * tileSize * 0.65;
-          ctx.fillStyle = i === 0 ? 'rgba(148, 163, 184, 0.16)' : 'rgba(54, 83, 58, 0.34)';
+          ctx.fillStyle = isUndeadTile
+            ? (i === 0 ? 'rgba(52, 211, 153, 0.22)' : 'rgba(148, 163, 184, 0.24)')
+            : (i === 0 ? 'rgba(148, 163, 184, 0.16)' : 'rgba(54, 83, 58, 0.34)');
           ctx.beginPath();
           ctx.arc(px, py, 1.5 + (r1 * 1.4), 0, Math.PI * 2);
           ctx.fill();
         }
-        const isOffTrailForest = !tile.pathConnections || tile.pathConnections.length === 0;
-        if (isOffTrailForest && hashCoord(gx, gy, 88) > 0.32) {
+        const isOffTrail = !tile.pathConnections || tile.pathConnections.length === 0;
+        if (isOffTrail && hashCoord(gx, gy, 88) > 0.32) {
           const bx = cx + (hashCoord(gx, gy, 89) - 0.5) * tileSize * 0.58;
           const by = cy + (hashCoord(gx, gy, 90) - 0.5) * tileSize * 0.58;
-          drawBushClump(ctx, bx, by, (tileSize / 68) * 0.76);
+          if (isUndeadTile) {
+            drawBarrowHeadstone(ctx, bx, by, (tileSize / 68) * 0.85);
+          } else {
+            drawBushClump(ctx, bx, by, (tileSize / 68) * 0.76);
+          }
         }
       }
 
@@ -930,44 +1222,53 @@ export function drawTopdownWorld(state) {
     }
   }
 
-  // 5. Dense Forest Canopy & Rocky Crags (sorted top-to-bottom for natural 2.5D overlap)
+  // 5. Dense Forest Canopy, Undead Barrow Trees & Rocky Crags (sorted top-to-bottom for natural 2.5D overlap)
   const treeScaleBase = Math.max(0.55, Math.min(1.18, tileSize / 68));
   for (let gy = startRow; gy <= endRow; gy++) {
     for (let gx = startCol; gx <= endCol; gx++) {
       const tile = tileByKey.get(`${gx},${gy}`);
+      const isUndeadTile = Boolean(tile && (tile.isUndeadLands || tile.regionKey === 'UNDEAD_LANDS'));
+
       if (tile && tile.isPassable) {
         if (tile.isLandmark) continue;
         const { cx, cy } = toScreenCenter(gx, gy);
         const hasTrail = Array.isArray(tile.pathConnections) && tile.pathConnections.length > 0;
 
         if (!hasTrail) {
-          // Off-trail passable woodland: draw 1-2 trees framing the tile corners so the forest feels lush and cohesive
           const t1x = (hashCoord(gx, gy, 111) > 0.5 ? 0.31 : -0.31) * tileSize;
           const t1y = (hashCoord(gx, gy, 112) - 0.5) * 0.34 * tileSize - 2;
           const sp1 = hashCoord(gx, gy, 113);
-          if (sp1 > 0.45) {
+          if (isUndeadTile) {
+            drawDeadBarrowTree(ctx, cx + t1x, cy + t1y, treeScaleBase * (0.78 + sp1 * 0.16), sp1);
+          } else if (sp1 > 0.45) {
             drawPineTree(ctx, cx + t1x, cy + t1y, treeScaleBase * (0.76 + sp1 * 0.16), sp1);
           } else {
             drawDeciduousTree(ctx, cx + t1x, cy + t1y, treeScaleBase * (0.74 + sp1 * 0.16), sp1);
           }
 
-          if (tile.visualType === 'DEEP_FOREST' || hashCoord(gx, gy, 114) > 0.35) {
+          if (tile.visualType === 'DEEP_FOREST' || isUndeadTile || hashCoord(gx, gy, 114) > 0.35) {
             const t2x = -t1x * 0.85 + (hashCoord(gx, gy, 115) - 0.5) * 6;
             const t2y = (hashCoord(gx, gy, 116) - 0.5) * 0.36 * tileSize + 4;
             const sp2 = hashCoord(gx, gy, 117);
-            if (sp2 > 0.5) {
+            if (isUndeadTile) {
+              drawBarrowHeadstone(ctx, cx + t2x, cy + t2y, treeScaleBase * 0.78);
+            } else if (sp2 > 0.5) {
               drawPineTree(ctx, cx + t2x, cy + t2y, treeScaleBase * 0.68, sp2);
             } else {
               drawDeciduousTree(ctx, cx + t2x, cy + t2y, treeScaleBase * 0.66, sp2);
             }
           }
         } else if (hashCoord(gx, gy, 118) > 0.48) {
-          // Trailside margin bush or sapling on a non-connected flank
+          // Trailside margin prop on a non-connected flank
           const conns = tile.pathConnections;
           const sideX = !conns.includes('W') ? -0.37 : (!conns.includes('E') ? 0.37 : 0);
           const sideY = !conns.includes('N') ? -0.35 : (!conns.includes('S') ? 0.35 : 0);
           if (sideX !== 0 || sideY !== 0) {
-            drawBushClump(ctx, cx + sideX * tileSize, cy + sideY * tileSize, treeScaleBase * 0.68);
+            if (isUndeadTile) {
+              drawBarrowHeadstone(ctx, cx + sideX * tileSize, cy + sideY * tileSize, treeScaleBase * 0.72);
+            } else {
+              drawBushClump(ctx, cx + sideX * tileSize, cy + sideY * tileSize, treeScaleBase * 0.68);
+            }
           }
         }
         continue;
@@ -982,10 +1283,37 @@ export function drawTopdownWorld(state) {
         continue;
       }
 
+      if (tile && tile.visualKind === 'BLIGHT_POOL') {
+        // Necrotic Blight Pool in Deadman's Mire
+        ctx.fillStyle = 'rgba(20, 184, 166, 0.28)';
+        ctx.strokeStyle = 'rgba(52, 211, 153, 0.62)';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, tileSize * 0.36, tileSize * 0.24, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        drawDeadBarrowTree(ctx, cx - tileSize * 0.22, cy - tileSize * 0.14, treeScaleBase * 0.72, 0.8);
+        continue;
+      }
+
+      if (tile && tile.visualKind === 'CRYPT_WALL') {
+        // Obsidian Necropolis Wall around the Ancient Crypt
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 1.8;
+        ctx.fillRect(cx - tileSize * 0.42, cy - tileSize * 0.26, tileSize * 0.84, tileSize * 0.52);
+        ctx.strokeRect(cx - tileSize * 0.42, cy - tileSize * 0.26, tileSize * 0.84, tileSize * 0.52);
+        continue;
+      }
+
       if (tile && (tile.visualKind === 'MOUNTAIN_CRAG' || tile.visualType === 'ROCK_CRAG' || tile.visualKind === 'CLIFF_ROCK')) {
         drawRockOutcrop(ctx, cx - tileSize * 0.10, cy - tileSize * 0.06, treeScaleBase * 0.96);
         drawRockOutcrop(ctx, cx + tileSize * 0.16, cy + tileSize * 0.14, treeScaleBase * 0.68);
-        drawPineTree(ctx, cx + tileSize * 0.20, cy - tileSize * 0.12, treeScaleBase * 0.72, 0.7);
+        if (isUndeadTile) {
+          drawDeadBarrowTree(ctx, cx + tileSize * 0.20, cy - tileSize * 0.12, treeScaleBase * 0.72, 0.7);
+        } else {
+          drawPineTree(ctx, cx + tileSize * 0.20, cy - tileSize * 0.12, treeScaleBase * 0.72, 0.7);
+        }
         continue;
       }
 
@@ -998,7 +1326,7 @@ export function drawTopdownWorld(state) {
         continue;
       }
 
-      // Multi-species dense forest cluster (2 trees per impassable forest tile)
+      // Impassable wilderness cluster: Dead Barrow Trees + Cairns in Undead Lands vs. Pine/Deciduous in Goblin Forest
       const o1x = (hashCoord(gx, gy, 301) - 0.5) * tileSize * 0.36;
       const o1y = (hashCoord(gx, gy, 302) - 0.5) * tileSize * 0.32 - 3;
       const o2x = (hashCoord(gx, gy, 303) - 0.5) * tileSize * 0.42;
@@ -1006,16 +1334,25 @@ export function drawTopdownWorld(state) {
       const species1 = hashCoord(gx, gy, 305);
       const species2 = hashCoord(gx, gy, 306);
 
-      if (species1 > 0.45) {
-        drawPineTree(ctx, cx + o1x, cy + o1y, treeScaleBase * (0.86 + species1 * 0.2), species1);
+      if (isUndeadTile) {
+        drawDeadBarrowTree(ctx, cx + o1x, cy + o1y, treeScaleBase * (0.86 + species1 * 0.18), species1);
+        if (species2 > 0.45) {
+          drawDeadBarrowTree(ctx, cx + o2x, cy + o2y, treeScaleBase * (0.76 + species2 * 0.16), species2);
+        } else {
+          drawBarrowHeadstone(ctx, cx + o2x, cy + o2y, treeScaleBase * 0.85);
+        }
       } else {
-        drawDeciduousTree(ctx, cx + o1x, cy + o1y, treeScaleBase * (0.84 + species1 * 0.2), species1);
-      }
+        if (species1 > 0.45) {
+          drawPineTree(ctx, cx + o1x, cy + o1y, treeScaleBase * (0.86 + species1 * 0.2), species1);
+        } else {
+          drawDeciduousTree(ctx, cx + o1x, cy + o1y, treeScaleBase * (0.84 + species1 * 0.2), species1);
+        }
 
-      if (species2 > 0.4) {
-        drawPineTree(ctx, cx + o2x, cy + o2y, treeScaleBase * (0.78 + species2 * 0.18), species2);
-      } else {
-        drawDeciduousTree(ctx, cx + o2x, cy + o2y, treeScaleBase * (0.76 + species2 * 0.18), species2);
+        if (species2 > 0.4) {
+          drawPineTree(ctx, cx + o2x, cy + o2y, treeScaleBase * (0.78 + species2 * 0.18), species2);
+        } else {
+          drawDeciduousTree(ctx, cx + o2x, cy + o2y, treeScaleBase * (0.76 + species2 * 0.18), species2);
+        }
       }
     }
   }
@@ -1092,6 +1429,8 @@ export function drawTopdownWorld(state) {
         'OAKHAVEN',
         'OAKHAVEN_CITY',
         'GOBLIN_STRONGHOLD',
+        'GOBLIN_CAVE',
+        'ANCIENT_CRYPT',
         'ANCIENT_BLACK_OAK',
         'OLD_STONE_BRIDGE',
         'ABANDONED_WATCHPOST',
@@ -1099,7 +1438,12 @@ export function drawTopdownWorld(state) {
         'GOBLIN_HUNTING_GROUNDS',
         'OLD_LOG_CROSSING',
         'SOUTHERN_CROSSROADS',
-        'BLACKWOOD_CROSSROADS'
+        'BLACKWOOD_CROSSROADS',
+        'GALLOWS_CROSSROADS',
+        'DROWNED_OSSUARY',
+        'WEEPING_CAIRN',
+        'BLIGHTED_CHAPEL',
+        'CRYPT_APPROACH'
       ].includes(tile.landmarkKey);
       const isHeroHere = (gx === heroTileX && gy === heroTileY);
       const isHovered = Boolean(hoveredGridCoord && hoveredGridCoord.x === gx && hoveredGridCoord.y === gy);
@@ -1107,12 +1451,24 @@ export function drawTopdownWorld(state) {
       if (!isMajorLandmark && !isHeroHere && !isHovered) continue;
 
       const { cx, cy } = toScreenCenter(gx, gy);
-      const borderCol = tile.landmarkKey === 'GOBLIN_STRONGHOLD'
-        ? (mapData.bossSlain ? '#4ade80' : '#f87171')
-        : (tile.landmarkKey === 'OAKHAVEN' || tile.landmarkKey === 'OAKHAVEN_CITY' ? '#fde047' : '#c5a059');
-      const textCol = tile.landmarkKey === 'GOBLIN_STRONGHOLD'
-        ? (mapData.bossSlain ? '#86efac' : '#fca5a5')
-        : (tile.landmarkKey === 'OAKHAVEN' || tile.landmarkKey === 'OAKHAVEN_CITY' ? '#fef08a' : '#e2e8f0');
+      let borderCol = '#c5a059';
+      let textCol = '#e2e8f0';
+      if (tile.landmarkKey === 'GOBLIN_STRONGHOLD') {
+        borderCol = mapData.bossSlain ? '#4ade80' : '#f87171';
+        textCol = mapData.bossSlain ? '#86efac' : '#fca5a5';
+      } else if (tile.landmarkKey === 'OAKHAVEN' || tile.landmarkKey === 'OAKHAVEN_CITY') {
+        borderCol = '#fde047';
+        textCol = '#fef08a';
+      } else if (tile.landmarkKey === 'GOBLIN_CAVE') {
+        borderCol = '#f59e0b';
+        textCol = '#fcd34d';
+      } else if (tile.landmarkKey === 'ANCIENT_CRYPT') {
+        borderCol = '#34d399';
+        textCol = '#6ee7b7';
+      } else if (tile.isUndeadLands || tile.regionKey === 'UNDEAD_LANDS') {
+        borderCol = '#a78bfa';
+        textCol = '#ddd6fe';
+      }
 
       drawMapLabel(ctx, cx, cy - tileSize * 0.42, tile.name, textCol, borderCol);
     }
@@ -1295,6 +1651,12 @@ export function renderRegionMapCanvas(canvas, state) {
       if (!t.isPassable) {
         if (t.visualKind === 'RIVER') {
           rCtx.fillStyle = '#154257';
+        } else if (t.visualKind === 'BLIGHT_POOL') {
+          rCtx.fillStyle = '#11423e';
+        } else if (t.visualKind === 'CRYPT_WALL') {
+          rCtx.fillStyle = '#1e293b';
+        } else if (t.isUndeadLands || t.regionKey === 'UNDEAD_LANDS') {
+          rCtx.fillStyle = '#151c28';
         } else if (t.visualKind === 'CLIFF_ROCK') {
           rCtx.fillStyle = '#262d36';
         } else {
@@ -1304,6 +1666,10 @@ export function renderRegionMapCanvas(canvas, state) {
         rCtx.fillStyle = '#3b331e';
       } else if (t.biome === 'STRONGHOLD') {
         rCtx.fillStyle = '#3b1d1d';
+      } else if (t.isUndeadLands || t.regionKey === 'UNDEAD_LANDS') {
+        rCtx.fillStyle = (t.visualType === 'TRAIL' || (t.pathConnections && t.pathConnections.length > 0))
+          ? '#334155'
+          : '#1e293b';
       } else if (t.visualType === 'TRAIL' || (t.pathConnections && t.pathConnections.length > 0)) {
         rCtx.fillStyle = '#4a3a28';
       } else {
@@ -1322,6 +1688,26 @@ export function renderRegionMapCanvas(canvas, state) {
   rCtx.beginPath();
   for (const t of tiles) {
     if (!t.isDiscovered || !Array.isArray(t.pathConnections) || t.pathConnections.length === 0) continue;
+    if (t.isUndeadLands || t.regionKey === 'UNDEAD_LANDS') continue;
+    const cx = pad + (t.x - minX + 0.5) * cellPx;
+    const cy = pad + (t.y - minY + 0.5) * cellPx;
+    for (const dir of t.pathConnections) {
+      const d = dirDeltas[dir];
+      if (!d) continue;
+      rCtx.moveTo(cx, cy);
+      rCtx.lineTo(cx + d[0] * (cellPx * 0.5), cy + d[1] * (cellPx * 0.5));
+    }
+  }
+  rCtx.stroke();
+
+  // Draw discovered Undead Lands Sepulcher Road connections
+  rCtx.strokeStyle = '#94a3b8';
+  rCtx.lineWidth = 3;
+  rCtx.lineCap = 'round';
+  rCtx.beginPath();
+  for (const t of tiles) {
+    if (!t.isDiscovered || !Array.isArray(t.pathConnections) || t.pathConnections.length === 0) continue;
+    if (!(t.isUndeadLands || t.regionKey === 'UNDEAD_LANDS')) continue;
     const cx = pad + (t.x - minX + 0.5) * cellPx;
     const cy = pad + (t.y - minY + 0.5) * cellPx;
     for (const dir of t.pathConnections) {
@@ -1343,13 +1729,24 @@ export function renderRegionMapCanvas(canvas, state) {
     const cy = pad + (t.y - minY + 0.5) * cellPx;
 
     const isCity = t.landmarkKey === 'OAKHAVEN' || t.landmarkKey === 'OAKHAVEN_CITY';
-    rCtx.fillStyle = t.landmarkKey === 'GOBLIN_STRONGHOLD'
-      ? (mapData.bossSlain ? '#4ade80' : '#ef4444')
-      : (isCity ? '#facc15' : '#fde68a');
+    const isMajor = isCity || t.landmarkKey === 'GOBLIN_STRONGHOLD' || t.landmarkKey === 'GOBLIN_CAVE' || t.landmarkKey === 'ANCIENT_CRYPT';
+    if (t.landmarkKey === 'GOBLIN_STRONGHOLD') {
+      rCtx.fillStyle = mapData.bossSlain ? '#4ade80' : '#ef4444';
+    } else if (t.landmarkKey === 'ANCIENT_CRYPT') {
+      rCtx.fillStyle = '#34d399';
+    } else if (t.landmarkKey === 'GOBLIN_CAVE') {
+      rCtx.fillStyle = '#f59e0b';
+    } else if (isCity) {
+      rCtx.fillStyle = '#facc15';
+    } else if (t.isUndeadLands || t.regionKey === 'UNDEAD_LANDS') {
+      rCtx.fillStyle = '#c4b5fd';
+    } else {
+      rCtx.fillStyle = '#fde68a';
+    }
     rCtx.strokeStyle = '#090d12';
     rCtx.lineWidth = 1.5;
     rCtx.beginPath();
-    rCtx.arc(cx, cy, isCity || t.landmarkKey === 'GOBLIN_STRONGHOLD' ? 5.2 : 3.8, 0, Math.PI * 2);
+    rCtx.arc(cx, cy, isMajor ? 5.2 : 3.8, 0, Math.PI * 2);
     rCtx.fill();
     rCtx.stroke();
   }

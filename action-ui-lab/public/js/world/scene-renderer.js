@@ -779,6 +779,58 @@ export function renderViewportCenterStage(state) {
       `;
       return;
     }
+
+    if (lm.sceneKey === 'GOBLIN_CAVE') {
+      stage.innerHTML = `
+        <div class="major-landmark-scene-overlay is-goblin-cave-scene" id="major-landmark-scene-panel" data-scene-key="GOBLIN_CAVE">
+          <div class="major-landmark-artwork-frame">
+            <img src="${escapeHtml(lm.artworkUrl)}" alt="${escapeHtml(lm.title)}" class="major-landmark-artwork-img">
+            <div class="major-landmark-vignette"></div>
+          </div>
+          <div class="major-landmark-card is-goblin-cave-card">
+            <div class="major-landmark-kicker">MAJOR LANDMARK • SUBTERRANEAN GOBLIN WARRENS</div>
+            <h2 class="major-landmark-title">${escapeHtml(lm.title)}</h2>
+            <div class="major-landmark-subtitle">${escapeHtml(lm.subtitle || 'Subterranean Lair of the Whispering Crags')}</div>
+            <p class="major-landmark-desc">${escapeHtml(lm.description)}</p>
+            <div class="major-landmark-actions" id="major-landmark-actions">
+              <button type="button" class="btn-action-gold landmark-scene-btn" id="btn-explore-goblin-cave" data-landmark-action="DELVE_GOBLIN_CAVE" onclick="dispatchAction('EXPLORE_GOBLIN_CAVE')">
+                🔦 Delve into the Cave Mouth
+              </button>
+              <button type="button" class="btn-action-stone landmark-scene-btn is-continue-btn" id="btn-landmark-continue" data-landmark-action="CONTINUE_EXPLORING" onclick="dispatchAction('DISMISS_LANDMARK_SCENE')">
+                🧭 Continue Exploring
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    if (lm.sceneKey === 'ANCIENT_CRYPT') {
+      stage.innerHTML = `
+        <div class="major-landmark-scene-overlay is-ancient-crypt-scene" id="major-landmark-scene-panel" data-scene-key="ANCIENT_CRYPT">
+          <div class="major-landmark-artwork-frame">
+            <img src="${escapeHtml(lm.artworkUrl)}" alt="${escapeHtml(lm.title)}" class="major-landmark-artwork-img">
+            <div class="major-landmark-vignette"></div>
+          </div>
+          <div class="major-landmark-card is-ancient-crypt-card">
+            <div class="major-landmark-kicker">MAJOR LANDMARK • NECROPOLIS SANCTUM OF THE UNDEAD LANDS</div>
+            <h2 class="major-landmark-title">${escapeHtml(lm.title)}</h2>
+            <div class="major-landmark-subtitle">${escapeHtml(lm.subtitle || 'Dread Sepulcher of the Undead Lands')}</div>
+            <p class="major-landmark-desc">${escapeHtml(lm.description)}</p>
+            <div class="major-landmark-actions" id="major-landmark-actions">
+              <button type="button" class="btn-action-gold landmark-scene-btn" id="btn-enter-ancient-crypt" data-landmark-action="ENTER_ANCIENT_CRYPT" onclick="dispatchAction('ENTER_ANCIENT_CRYPT')">
+                ⚰️ Breach the Sepulcher Vault
+              </button>
+              <button type="button" class="btn-action-stone landmark-scene-btn is-continue-btn" id="btn-landmark-continue" data-landmark-action="CONTINUE_EXPLORING" onclick="dispatchAction('DISMISS_LANDMARK_SCENE')">
+                🧭 Continue Exploring
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
   }
 
   // CASE D: SAFE HAVEN CITY (Compact non-intrusive sanctuary bar at bottom of stage)
@@ -844,6 +896,7 @@ export function renderViewportCenterStage(state) {
                 <button type="button" class="btn-action-gold" id="btn-engage-stronghold-boss" style="padding: 5px 14px; font-size: 0.76rem;" onclick="dispatchAction('ENGAGE_STRONGHOLD_BOSS')">
                   ⚔️ Challenge the Goblin Chieftain [Space]
                 </button>
+                <button type="button" class="btn-action-stone" id="btn-reopen-landmark-scene" style="padding: 4px 11px; font-size: 0.74rem;" onclick="dispatchAction('OPEN_LANDMARK_SCENE')">🖼️ Stronghold View</button>
                 <span style="font-size: 0.70rem; color: var(--text-muted);">Step South <strong>[S / ↓]</strong> to retreat down the trail</span>
               </div>
             </div>
@@ -869,6 +922,70 @@ export function renderViewportCenterStage(state) {
       `;
       return;
     }
+  }
+
+  // CASE D.3: THE GOBLIN CAVE ENTRANCE AT [9, 12] (Compact Landmark Bar when Scene Dismissed)
+  const isAtGoblinCave = Boolean(
+    (state.topdownMap && state.topdownMap.atGoblinCave) ||
+    (state.currentTile && (state.currentTile.feature === 'GOBLIN_CAVE' || state.currentTile.landmark_key === 'GOBLIN_CAVE'))
+  );
+  if (isAtGoblinCave) {
+    stage.innerHTML = `
+      <div class="fp-threat-whisper-plate topdown-stronghold-card" id="goblin-cave-entrance-card" style="margin-top: auto; max-width: 640px; border-color: rgba(245, 158, 11, 0.65);">
+        <div style="display: flex; align-items: center; gap: 14px; text-align: left;">
+          <img src="/lab-assets/images/terrain/hills_raven_crags_ravine_pov.jpg" alt="The Goblin Cave" style="width: 112px; height: 74px; object-fit: cover; border-radius: 5px; border: 1px solid rgba(245, 158, 11, 0.55); flex-shrink: 0;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-family: var(--font-serif); font-size: 0.90rem; color: #fcd34d; font-weight: 800;">
+              THE GOBLIN CAVE — SUBTERRANEAN WARRENS
+            </div>
+            <p style="font-size: 0.74rem; color: var(--text-body); margin: 2px 0 6px 0; line-height: 1.35;">
+              Pitch-torches gutter beside a jagged limestone maw beneath the Whispering Crags.
+            </p>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn-action-gold" id="btn-explore-goblin-cave" style="padding: 4px 12px; font-size: 0.74rem;" onclick="dispatchAction('EXPLORE_GOBLIN_CAVE')">
+                🔦 Delve into the Cave Mouth
+              </button>
+              <button type="button" class="btn-action-stone" id="btn-reopen-landmark-scene" style="padding: 4px 11px; font-size: 0.74rem;" onclick="dispatchAction('OPEN_LANDMARK_SCENE')">
+                🖼️ Cave View
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // CASE D.4: THE ANCIENT CRYPT ENTRANCE AT [26, 5] (Compact Landmark Bar when Scene Dismissed)
+  const isAtAncientCrypt = Boolean(
+    (state.topdownMap && state.topdownMap.atAncientCrypt) ||
+    (state.currentTile && (state.currentTile.feature === 'ANCIENT_CRYPT' || state.currentTile.landmark_key === 'ANCIENT_CRYPT'))
+  );
+  if (isAtAncientCrypt) {
+    stage.innerHTML = `
+      <div class="fp-threat-whisper-plate topdown-stronghold-card" id="ancient-crypt-entrance-card" style="margin-top: auto; max-width: 640px; border-color: rgba(52, 211, 153, 0.65);">
+        <div style="display: flex; align-items: center; gap: 14px; text-align: left;">
+          <img src="/images/terrain/terrain_underground_ruins.webp" alt="The Ancient Crypt" style="width: 112px; height: 74px; object-fit: cover; border-radius: 5px; border: 1px solid rgba(52, 211, 153, 0.55); flex-shrink: 0;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-family: var(--font-serif); font-size: 0.90rem; color: #6ee7b7; font-weight: 800;">
+              THE ANCIENT CRYPT — DREAD SEPULCHER
+            </div>
+            <p style="font-size: 0.74rem; color: var(--text-body); margin: 2px 0 6px 0; line-height: 1.35;">
+              Pale necrotic fire burns in obsidian braziers flanking the sunken sepulcher vault.
+            </p>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn-action-gold" id="btn-enter-ancient-crypt" style="padding: 4px 12px; font-size: 0.74rem;" onclick="dispatchAction('ENTER_ANCIENT_CRYPT')">
+                ⚰️ Breach the Sepulcher Vault
+              </button>
+              <button type="button" class="btn-action-stone" id="btn-reopen-landmark-scene" style="padding: 4px 11px; font-size: 0.74rem;" onclick="dispatchAction('OPEN_LANDMARK_SCENE')">
+                🖼️ Crypt View
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
   }
 
   // CASE E: CLEAR WILDERNESS VISTA (Unobstructed first-person view of the cohesive scene)

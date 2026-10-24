@@ -1862,6 +1862,18 @@
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.94), 0 0 24px rgba(158, 42, 43, 0.28);
 }
 
+.major-landmark-card.is-goblin-cave-card {
+  border-color: rgba(245, 158, 11, 0.75);
+  background: linear-gradient(180deg, rgba(24, 18, 14, 0.94) 0%, rgba(12, 9, 7, 0.98) 100%);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.95), 0 0 26px rgba(180, 83, 9, 0.28);
+}
+
+.major-landmark-card.is-ancient-crypt-card {
+  border-color: rgba(52, 211, 153, 0.72);
+  background: linear-gradient(180deg, rgba(13, 22, 27, 0.95) 0%, rgba(8, 12, 18, 0.98) 100%);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.96), 0 0 28px rgba(16, 185, 129, 0.25);
+}
+
 .major-landmark-kicker {
   font-family: var(--font-mono);
   font-size: 0.66rem;
@@ -1874,6 +1886,18 @@
 
 .major-landmark-card.is-stronghold-card .major-landmark-kicker {
   color: #fca5a5;
+}
+
+.major-landmark-card.is-goblin-cave-card .major-landmark-kicker {
+  color: #fcd34d;
+}
+
+.major-landmark-card.is-ancient-crypt-card .major-landmark-kicker {
+  color: #6ee7b7;
+}
+
+.major-landmark-card.is-ancient-crypt-card .major-landmark-subtitle {
+  color: #99f6e4;
 }
 
 .major-landmark-title {
